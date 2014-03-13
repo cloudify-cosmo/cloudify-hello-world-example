@@ -32,12 +32,6 @@ setup(
         'python-keystoneclient',
         'python-neutronclient',
         'PyYAML==3.10',
-
-        # When this was writen the published version was 5.3 but it had
-        # problems with its 'progressbar>=2.3' dependency which was not out
-        # yet. you can probably remove the explicit version or write a newer
-        # explicit version # sometime in the future when this versioning issue
-        # is resolved
-        'attest==0.5.1'
+        'nose'
     ],
 )

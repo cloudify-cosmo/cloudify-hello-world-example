@@ -13,18 +13,25 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
-__author__ = 'nirb'
+__author__ = 'dan'
+
+import unittest
+import logging
 
 
-from cosmo_tester.framework import testenv
+class TestCase(unittest.TestCase):
 
-import cosmo_tester.framework.cloud_bootstrapper as bootstrapper
+    @classmethod
+    def setUpClass(cls):
+        pass
 
+    @classmethod
+    def tearDownClass(cls):
+        pass
 
-class BootstrapTest(testenv.TestCase):
+    def setUp(self):
+        self.logger = logging.getLogger(self._testMethodName)
+        self.logger.setLevel(logging.INFO)
 
-    def test_hello_world_on_hp(self):
-
-        # bootstrapper.bootstrap('hp-cloudify-config.yaml')
-
-        self.assertEquals(1+1, 2)
+    def tearDown(self):
+        pass
