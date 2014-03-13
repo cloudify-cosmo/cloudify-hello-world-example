@@ -3,32 +3,33 @@ keystone:
     password: <pass>
     tenant_name: <tenant>
     auth_url: https://region-b.geo-1.identity.hpcloudsvc.com:35357/v2.0/
-#
+
 networking:
-    neutron_supported_region: True
+    neutron_supported_region: true
     neutron_url: https://region-b.geo-1.network.hpcloudsvc.com
     int_network:
-        externally_provisioned: False
+        use_existing: false
         name: cloudify-admin-network
     subnet:
-        externally_provisioned: False
+        use_existing: false
         name: cloudify-admin-network-subnet
         ip_version: 4
         cidr: 10.67.80.0/24
+
     ext_network:
-        externally_provisioned: True #For now, this must be 'externally_provisioned': True
+        use_existing: true 
         name: Ext-Net
     router:
-        externally_provisioned: True
+        use_existing: false
         name: cloudify-router
     agents_security_group:
-            externally_provisioned: False
-            name: cloudify-sg-agents
+        use_existing: false
+        name: cloudify-sg-agents
     management_security_group:
-        externally_provisioned: False
+        use_existing: false
         name: cloudify-sg-management
         cidr: 0.0.0.0/0
-#
+
 compute:
     region: region-b.geo-1
     management_server:
@@ -36,34 +37,21 @@ compute:
         user_on_management: ubuntu
         userhome_on_management: /home/ubuntu
         instance:
-            externally_provisioned: False
+            use_existing: false
             name: cloudify-management-server
             image: fc369a68-65c6-4bad-8786-dfd5769cff0a
             flavor: 102
         management_keypair:
-            externally_provisioned: False
+            use_existing: false
             name: cloudify-management-kp
-            #provided:
-                #public_key_filepath: [PUBLIC-KEY-PATH]
-                #private_key_filepath: [PRIVATE-KEY-PATH]
             auto_generated:
                 private_key_target_path: ~/.ssh/cloudify-management-kp.pem
     agent_servers:
         agents_keypair:
-            externally_provisioned: False
+            use_existing: false
             name: cloudify-agents-kp
-            #provided:
-                #public_key_filepath: [PUBLIC-KEY-PATH]
-                #private_key_filepath: [PRIVATE-KEY-PATH]
             auto_generated:
                 private_key_target_path: ~/.ssh/cloudify-agents-kp.pem
 
-#cloudify:
-#    cloudify_branch: develop
-#    cloudify_components_package_url: https://s3-us-west-1.amazonaws.com/gigaspaces-cosmo-packages/cloudify3-components_3.0.0_amd64.deb
-#    cloudify_components_package_url: https://dl.dropboxusercontent.com/u/407576/cloudify3-components_3.0.0_amd64.deb
-#    cloudify_package_url: https://s3-us-west-1.amazonaws.com/gigaspaces-cosmo-packages/cloudify3_3.0.0_amd64.deb
-#    cloudify_package_url: https://dl.dropboxusercontent.com/u/407576/cloudify3_3.0.0_amd64.deb
-#    cloudify_packages_path: /cloudify
-#    cloudify_components_package_path: /cloudify3-components
-#    cloudify_package_path: /cloudify3
+cloudify:
+   cloudify_branch: develop

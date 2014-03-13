@@ -32,11 +32,6 @@ def teardown(cloud_config_file_name):
                               region_name=creds['region_name'],
                               auth_url=creds['auth_url'])
 
-    # for router in neutron.list_routers()['routers']:
-    #     if router_name == router['name']:
-    #         neutron.add_interface_router(router['id'])
-    #         break
-
     for network in neutron.list_networks()['networks']:
         if network_name == network['name']:
             neutron.delete_network(network['id'])

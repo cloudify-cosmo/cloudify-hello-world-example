@@ -8,6 +8,6 @@ cosmo_test = Tests()
 @cosmo_test.test
 def test_hello_world_on_hp():
 
-    bootstrapper.bootstrap('hp-cloudify-config.yaml')
+    # bootstrapper.bootstrap('hp-cloudify-config.yaml')
 
     assert 1 + 1 == 2
