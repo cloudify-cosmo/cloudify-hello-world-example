@@ -22,7 +22,7 @@ import sh
 from path import path
 
 from cosmo_cli.cosmo_cli import _load_cosmo_working_dir_settings
-from cosmo_tester.framework.testenv import sh_bake
+from cosmo_tester.framework.util import sh_bake
 
 
 cfy = sh_bake(sh.cfy)

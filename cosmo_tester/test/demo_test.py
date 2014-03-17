@@ -51,5 +51,5 @@ class BootstrapTest(testenv.TestCase):
 
     def test_clone(self):
         git_helper.clone_if_needed(
-            url='git@github.com:CloudifySource/cloudify-hello-world.git',
+            url='https://github.com/CloudifySource/cloudify-hello-world.git',
             target='/tmp/hello-world-tmp')

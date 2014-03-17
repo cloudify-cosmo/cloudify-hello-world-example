@@ -1,0 +1,48 @@
+imports:
+    - cloudify.openstack
+
+plugins:
+    python_webserver_installer:
+        derived_from: cloudify.plugins.agent_plugin
+        properties:
+            url: https://github.com/CloudifySource/cosmo-plugin-python-webserver/archive/develop.zip
+
+types:
+    web_server:
+        derived_from: cloudify.types.web_server
+        properties:
+            -   port
+        interfaces:
+            cloudify.interfaces.lifecycle:
+                -   configure: python_webserver_installer.tasks.configure
+                -   start: python_webserver_installer.tasks.start
+                -   stop: python_webserver_installer.tasks.stop
+
+
+# Test is in charge if filling in missing properties
+type_implementations:
+
+    vm_openstack_host_impl:
+        type: cloudify.openstack.server
+        node_ref: vm
+        properties:
+            install_agent: true
+            worker_config:
+                user: ubuntu
+                port: 22
+
+    http_web_server_web_server_impl:
+        type: web_server
+        node_ref: http_web_server
+
+    virtual_ip_impl:
+        type: cloudify.openstack.floatingip
+        node_ref: virtual_ip
+        properties: {}
+
+relationship_implementations:
+
+    vm_connected_to_virutal_ip_impl:
+        type: cloudify.openstack.server_connected_to_floating_ip
+        source_node_ref: vm
+        target_node_ref: virtual_ip
