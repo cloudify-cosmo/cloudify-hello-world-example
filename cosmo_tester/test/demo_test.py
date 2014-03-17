@@ -16,15 +16,40 @@
 __author__ = 'nirb'
 
 
+from cosmo_tester.framework import cfy_helper, git_helper
 from cosmo_tester.framework import testenv
-
-import cosmo_tester.framework.cloud_bootstrapper as bootstrapper
 
 
 class BootstrapTest(testenv.TestCase):
 
-    def test_hello_world_on_hp(self):
+    def test_bootstrap(self):
+        cfy = cfy_helper.CfyHelper()
 
-        # bootstrapper.bootstrap('hp-cloudify-config.yaml')
+        cfy.bootstrap(
+            '/home/dan/work/cfy-openstack/cloudify-config.yaml',
+            keep_up_on_failure=True,
+            verbose=True,
+            dev_mode=False,
+            alternate_bootstrap_method=True
+        )
 
-        self.assertEquals(1+1, 2)
+        cfy.upload_deploy_and_execute_install(
+            '/home/dan/dev/cosmo/cloudify-hello-world/openstack/blueprint.yaml',
+            blueprint_id='b1',
+            deployment_id='d1',
+            verbose=False,
+        )
+
+    def test_uninstall(self):
+        cfy = cfy_helper.CfyHelper('/tmp/tmp6mNw0o')
+        cfy.execute_uninstall(deployment_id='d1',
+                              verbose=False)
+
+    def test_install(self):
+        cfy = cfy_helper.CfyHelper(management_ip='192.168.15.15')
+        cfy.execute_install(deployment_id='d1')
+
+    def test_clone(self):
+        git_helper.clone_if_needed(
+            url='git@github.com:CloudifySource/cloudify-hello-world.git',
+            target='/tmp/hello-world-tmp')

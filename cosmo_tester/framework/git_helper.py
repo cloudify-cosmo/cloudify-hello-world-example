@@ -13,9 +13,27 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
-__author__ = 'nirb'
+__author__ = 'dank'
 
-host_address = ''
-user = ''
-password = ''
-keyfile_path = ''
+import sh
+from path import path
+import logging
+
+from cosmo_tester.framework.testenv import sh_bake
+
+
+logger = logging.getLogger('git')
+logger.setLevel(logging.INFO)
+git = sh_bake(sh.git)
+
+
+def clone_if_needed(url,
+                    target,
+                    branch='develop'):
+    target = path(target)
+    if target.isdir():
+        logger.info('{0} is already cloned.'.format(target))
+    else:
+        git.clone(url, str(target)).wait()
+    with target:
+        git.checkout(branch).wait()

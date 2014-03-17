@@ -17,6 +17,40 @@ __author__ = 'dan'
 
 import unittest
 import logging
+import sys
+import os
+
+from cosmo_tester import resources
+
+root = logging.getLogger()
+ch = logging.StreamHandler(sys.stdout)
+ch.setLevel(logging.DEBUG)
+formatter = logging.Formatter(fmt='%(asctime)s [%(levelname)s] '
+                                  '[%(name)s] %(message)s',
+                              datefmt='%H:%M:%S')
+ch.setFormatter(formatter)
+
+# clear all other handlers
+for handler in root.handlers:
+    root.removeHandler(handler)
+
+root.addHandler(ch)
+logger = logging.getLogger("TESTENV")
+logger.setLevel(logging.DEBUG)
+
+
+def sh_bake(command):
+    return command.bake(_out=lambda line: sys.stdout.write(line),
+                        _err=lambda line: sys.stderr.write(line))
+
+
+def get_resource_path(resource_name):
+    resources_dir = os.path.dirname(resources.__file__)
+    return os.path.join(resources_dir, resource_name)
+
+
+# alias
+resource = get_resource_path
 
 
 class TestCase(unittest.TestCase):
