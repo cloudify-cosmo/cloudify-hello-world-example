@@ -41,7 +41,7 @@ class HelloWorldTest(testenv.TestCase):
     image_name = 'Ubuntu 12.04 64bit'
     key_name = 'dank-cloudify-agents-kp'
     management_network_name = 'dank-cloudify-admin-network'
-    security_groups = ['dank-cloudify-sg-agents']
+    security_groups = ['dank-cloudify-sg-agents', 'webserver_security_group']
     floating_network_name = 'public'
 
     def test_hello_world(self):
@@ -160,7 +160,7 @@ class HelloWorldTest(testenv.TestCase):
         self.logger.info('Current manager state: {0}'.format(delta))
 
         self.assertEqual(len(delta['blueprints']), 1,
-                         'Expected 1 blueprint: {0}'.format(delta))
+                         'blueprint: {0}'.format(delta))
 
         blueprint_from_list = delta['blueprints'].values()[0]
         blueprint_by_id = self.rest._blueprints_api\
@@ -172,7 +172,7 @@ class HelloWorldTest(testenv.TestCase):
                          yaml.dump(blueprint_by_id))
 
         self.assertEqual(len(delta['deployments']), 1,
-                         'Expected 1 deployment: {0}'.format(delta))
+                         'deployment: {0}'.format(delta))
 
         deployment_from_list = delta['deployments'].values()[0]
         deployment_by_id = self.rest._deployments_api\
@@ -184,7 +184,7 @@ class HelloWorldTest(testenv.TestCase):
         executions = self.rest._deployments_api\
             .listExecutions(deployment_by_id.id)
         self.assertEqual(len(executions), 1,
-                         'Expected 1 execution: {0}'.format(executions))
+                         'execution: {0}'.format(executions))
 
         execution_from_list = executions[0]
         execution_by_id = self.rest._executions_api\
@@ -196,20 +196,20 @@ class HelloWorldTest(testenv.TestCase):
                          execution_by_id.blueprintId)
 
         self.assertEqual(len(delta['deployment_nodes']), 1,
-                         'Expected 1 deployment_nodes: {0}'.format(delta))
+                         'deployment_nodes: {0}'.format(delta))
 
         self.assertEqual(len(delta['node_state']), 1,
-                         'Expected 1 node_state: {0}'.format(delta))
+                         'node_state: {0}'.format(delta))
 
-        self.assertEqual(len(delta['nodes']), 2,
-                         'Expected 2 nodes: {0}'.format(delta))
+        self.assertEqual(len(delta['nodes']), 4,
+                         'nodes: {0}'.format(delta))
 
         self.assertEqual(len(delta['workflows']), 1,
-                         'Expected 1 workflows: {0}'.format(delta))
+                         'workflows: {0}'.format(delta))
 
         nodes_state = delta['node_state'].values()[0]
-        self.assertEqual(len(nodes_state), 2,
-                         'Expected 2 node_state: {0}'.format(nodes_state))
+        self.assertEqual(len(nodes_state), 4,
+                         'nodes_state: {0}'.format(nodes_state))
 
         public_ip = None
         webserver_node_id = None
@@ -221,14 +221,11 @@ class HelloWorldTest(testenv.TestCase):
                 self.assertTrue('networks' in value['runtimeInfo'],
                                 'Missing networks in runtimeInfo: {0}'
                                 .format(nodes_state))
-                private_ip = value['runtimeInfo']['ip']
-                networks = value['runtimeInfo']['networks']
-                ips = self.flatten_ips(networks)
-                self.logger.info('host ips are: {0}'.format(ips))
-                public_ip = filter(lambda ip: ip != private_ip, ips)[0]
                 self.assertEqual(value['state'], 'started',
                                  'vm node should be started: {0}'
                                  .format(nodes_state))
+            elif key.startswith('virtual_ip'):
+                public_ip = value['runtimeInfo']['floating_ip_address']
             else:
                 webserver_node_id = key
 

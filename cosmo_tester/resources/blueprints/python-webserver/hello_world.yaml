@@ -40,6 +40,17 @@ type_implementations:
         node_ref: virtual_ip
         properties: {}
 
+    security_group_impl:
+        type: cloudfiy.openstack.security_group
+        node_ref: security_group
+        properties:
+            security_group:
+                name: webserver_security_group
+            rules:
+                -   remote_ip_prefix: 0.0.0.0/0
+                    port: 8080
+
+
 relationship_implementations:
 
     vm_connected_to_virutal_ip_impl:
