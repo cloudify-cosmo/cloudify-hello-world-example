@@ -34,8 +34,6 @@ class PythonWebServerTest(TestCase):
     floating_network_name = 'public'
 
     def test_hello_world(self):
-        self.bootstrap()
-
         blueprint_path = self.copy_blueprint('python-webserver')
         self.blueprint_yaml = blueprint_path / 'blueprint.yaml'
         self.webserver_yaml = blueprint_path / 'python_webserver.yaml'

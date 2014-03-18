@@ -1,5 +1,5 @@
 imports:
-    - hello_world.yaml
+    - python_webserver.yaml
 
 blueprint:
     name: hello_world

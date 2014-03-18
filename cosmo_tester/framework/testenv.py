@@ -69,7 +69,6 @@ class TestCase(unittest.TestCase):
                                         management_ip=self.management_ip)
         self.rest = CosmoManagerRestClient(self.management_ip)
         self.test_id = uuid.uuid4()
-
         self.blueprint_yaml = None
 
     def tearDown(self):
