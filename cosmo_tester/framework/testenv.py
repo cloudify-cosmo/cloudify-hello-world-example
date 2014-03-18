@@ -28,7 +28,9 @@ from cosmo_manager_rest_client.cosmo_manager_rest_client import (
     CosmoManagerRestClient)
 
 from cosmo_tester.framework import cfy_helper
-from cosmo_tester.framework.util import get_blueprint_path
+from cosmo_tester.framework.util import (get_blueprint_path,
+                                         Singleton,
+                                         CloudifyConfigReader)
 
 root = logging.getLogger()
 ch = logging.StreamHandler(sys.stdout)
@@ -47,11 +49,38 @@ logger = logging.getLogger("TESTENV")
 logger.setLevel(logging.DEBUG)
 
 
-class TestCase(unittest.TestCase):
+class TestEnvironment(object):
+    __metaclass__ = Singleton
 
-    cloudify_config_path = '/home/dan/work/cfy-openstack/cloudify-config.yaml'
-    management_ip = '192.168.15.15'
-    management_network_name = 'dank-cloudify-admin-network'
+    def __init__(self):
+        self.cloudify_config_path = \
+            '/home/dan/work/cfy-openstack/cloudify-config.yaml'
+        self.management_ip = '192.168.15.15'
+        self._config_reader = CloudifyConfigReader(self.cloudify_config_path)
+        self.rest_client = CosmoManagerRestClient(self.management_ip)
+
+    @property
+    def management_network_name(self):
+        return self._config_reader.management_network_name
+
+    @property
+    def agent_key_path(self):
+        return self._config_reader.agent_key_path
+
+    @property
+    def agent_keypair_name(self):
+        return self._config_reader.agent_keypair_name
+
+    @property
+    def external_network_name(self):
+        return self._config_reader.external_network_name
+
+    @property
+    def agents_security_group(self):
+        return self._config_reader.agents_security_group
+
+
+class TestCase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -62,12 +91,13 @@ class TestCase(unittest.TestCase):
         pass
 
     def setUp(self):
+        self.env = TestEnvironment()
         self.logger = logging.getLogger(self._testMethodName)
         self.logger.setLevel(logging.INFO)
         self.workdir = tempfile.mkdtemp(prefix='cosmo-test-')
         self.cfy = cfy_helper.CfyHelper(cfy_workdir=self.workdir,
-                                        management_ip=self.management_ip)
-        self.rest = CosmoManagerRestClient(self.management_ip)
+                                        management_ip=self.env.management_ip)
+        self.rest = self.env.rest_client
         self.test_id = uuid.uuid4()
         self.blueprint_yaml = None
 
@@ -76,7 +106,7 @@ class TestCase(unittest.TestCase):
 
     def bootstrap(self):
         self.cfy.bootstrap(
-            self.cloudify_config_path,
+            self.env.cloudify_config_path,
             keep_up_on_failure=True,
             verbose=True,
             dev_mode=False,
@@ -147,6 +177,6 @@ class TestCase(unittest.TestCase):
 
     def copy_blueprint(self, blueprint_dir_name):
         blueprint_path = path(self.workdir) / blueprint_dir_name
-        shutil.copytree(get_blueprint_path('python-webserver'),
+        shutil.copytree(get_blueprint_path(blueprint_dir_name),
                         str(blueprint_path))
         return blueprint_path

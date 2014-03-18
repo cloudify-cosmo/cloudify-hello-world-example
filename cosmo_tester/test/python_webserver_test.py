@@ -26,14 +26,13 @@ from cosmo_tester.framework.util import YamlPatcher
 class PythonWebServerTest(TestCase):
 
     flavor_name = 'm1.small'
-    key_path = '~/.ssh/dank-cloudify-agents-kp-pclab-devstack.pem'
     host_name = 'danktestvm'
     image_name = 'Ubuntu 12.04 64bit'
-    key_name = 'dank-cloudify-agents-kp'
-    security_groups = ['dank-cloudify-sg-agents', 'webserver_security_group']
-    floating_network_name = 'public'
+    security_groups = ['webserver_security_group']
 
     def test_hello_world(self):
+        self.security_groups.append(self.env.agents_security_group)
+
         blueprint_path = self.copy_blueprint('python-webserver')
         self.blueprint_yaml = blueprint_path / 'blueprint.yaml'
         self.webserver_yaml = blueprint_path / 'python_webserver.yaml'
@@ -51,20 +50,20 @@ class PythonWebServerTest(TestCase):
         with YamlPatcher(self.webserver_yaml) as patch:
             vm_path = 'type_implementations.vm_openstack_host_impl.properties'
             patch.set_value('{0}.management_network_name'.format(vm_path),
-                            self.management_network_name)
+                            self.env.management_network_name)
             patch.set_value('{0}.worker_config.key'.format(vm_path),
-                            self.key_path)
+                            self.env.agent_key_path)
             patch.merge_obj('{0}.server'.format(vm_path), {
                 'name': self.host_name,
                 'image_name': self.image_name,
                 'flavor_name': self.flavor_name,
-                'key_name': self.key_name,
+                'key_name': self.env.agent_keypair_name,
                 'security_groups': self.security_groups,
             })
             ip_path = 'type_implementations.virtual_ip_impl.properties'
             patch.set_value(
                 '{0}.floatingip.floating_network_name'.format(ip_path),
-                self.floating_network_name)
+                self.env.external_network_name)
 
     def post_install_assertions(self, before_state, after_state):
         delta = self.get_manager_state_delta(before_state, after_state)

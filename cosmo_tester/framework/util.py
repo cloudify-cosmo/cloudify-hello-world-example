@@ -91,3 +91,42 @@ class YamlPatcher(object):
 
     def _raise_illegal(self, prop_path):
         raise RuntimeError('illegal path: {0}'.format(prop_path))
+
+
+class Singleton(type):
+
+    _instances = {}
+
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            cls._instances[cls] = \
+                super(Singleton, cls).__call__(*args, **kwargs)
+        return cls._instances[cls]
+
+
+class CloudifyConfigReader(object):
+
+    def __init__(self, config_path):
+        self.config = yaml.load(config_path.text())
+
+    @property
+    def management_network_name(self):
+        return self.config['networking']['int_network']['name']
+
+    @property
+    def agent_key_path(self):
+        return self.config['compute']['agent_servers']['agents_keypair']\
+                          ['auto_generated']['private_key_target_path']
+
+    @property
+    def agent_keypair_name(self):
+        return self.config['compute']['agent_servers']['agents_keypair']\
+                          ['name']
+
+    @property
+    def external_network_name(self):
+        return self.config['networking']['ext_network']['name']
+
+    @property
+    def agents_security_group(self):
+        return self.config['networking']['agents_security_group']['name']
