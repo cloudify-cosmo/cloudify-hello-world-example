@@ -16,14 +16,11 @@
 
 __author__ = 'dan'
 
-import shutil
-
 import requests
 import yaml
-from path import path
 
 from cosmo_tester.framework.testenv import TestCase
-from cosmo_tester.framework.util import get_blueprint_path
+from cosmo_tester.framework.util import YamlPatcher
 
 
 class PythonWebServerTest(TestCase):
@@ -50,33 +47,24 @@ class PythonWebServerTest(TestCase):
 
         self.post_uninstall_assertions()
 
-    def copy_python_webserver_blueprint(self, target):
-        shutil.copytree(get_blueprint_path('python-webserver'), target)
-
     def modify_hello_world(self):
-        webserver_dict = yaml.load(self.webserver_yaml.text())
-
-        # make modifications
-        vm_props = webserver_dict['type_implementations']\
-            ['vm_openstack_host_impl']['properties']
-        vm_props['management_network_name'] = \
-            self.management_network_name
-        vm_props['worker_config']['key'] = self.key_path
-        vm_props['server'] = {
-            'name': self.host_name,
-            'image_name': self.image_name,
-            'flavor_name': self.flavor_name,
-            'key_name': self.key_name,
-            'security_groups': self.security_groups,
-        }
-
-        ip_props = webserver_dict['type_implementations']\
-            ['virtual_ip_impl']['properties']
-        ip_props['floatingip'] = {
-            'floating_network_name': self.floating_network_name
-        }
-
-        self.webserver_yaml.write_text(yaml.dump(webserver_dict))
+        with YamlPatcher(self.webserver_yaml) as patch:
+            vm_path = 'type_implementations.vm_openstack_host_impl.properties'
+            patch.set_value('{0}.management_network_name'.format(vm_path),
+                            self.management_network_name)
+            patch.set_value('{0}.worker_config.key'.format(vm_path),
+                            self.key_path)
+            patch.merge_obj('{0}.server'.format(vm_path), {
+                'name': self.host_name,
+                'image_name': self.image_name,
+                'flavor_name': self.flavor_name,
+                'key_name': self.key_name,
+                'security_groups': self.security_groups,
+            })
+            ip_path = 'type_implementations.virtual_ip_impl.properties'
+            patch.set_value(
+                '{0}.floatingip.floating_network_name'.format(ip_path),
+                self.floating_network_name)
 
     def post_install_assertions(self, before_state, after_state):
         delta = self.get_manager_state_delta(before_state, after_state)
@@ -166,4 +154,5 @@ class PythonWebServerTest(TestCase):
                         .format(webserver_node_id, web_server_page_response))
 
     def post_uninstall_assertions(self):
+        #TODO
         pass

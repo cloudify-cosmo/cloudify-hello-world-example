@@ -18,6 +18,7 @@ __author__ = 'dan'
 
 import sys
 import os
+import re
 
 from path import path
 import yaml
@@ -42,6 +43,8 @@ def get_blueprint_path(blueprint_name):
 
 class YamlPatcher(object):
 
+    pattern = re.compile("(.+)\[(\d+)\]")
+
     def __init__(self, yaml_path):
         self.yaml_path = path(yaml_path)
         self.obj = yaml.load(self.yaml_path.text())
@@ -52,7 +55,39 @@ class YamlPatcher(object):
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.yaml_path.write_text(yaml.dump(self.obj))
 
-    def modify_server(self, server_prop_path, new_props):
-        
+    def merge_obj(self, obj_prop_path, merged_props):
+        obj = self._get_object_by_path(obj_prop_path)
+        for key, value in merged_props.items():
+            obj[key] = value
 
+    def set_value(self, prop_path, new_value):
+        obj, prop_name = self._get_parent_obj_prop_name_by_path(prop_path)
+        obj[prop_name] = new_value
 
+    def _get_object_by_path(self, prop_path):
+        current = self.obj
+        for prop_segment in prop_path.split('.'):
+            match = self.pattern.match(prop_segment)
+            if match:
+                index = int(match.group(2))
+                property_name = match.group(1)
+                if property_name not in current:
+                    self._raise_illegal(prop_path)
+                if type(current[property_name]) != list:
+                    self._raise_illegal(prop_path)
+                current = current[property_name][index]
+            else:
+                if prop_segment not in current:
+                    current[prop_segment] = {}
+                current = current[prop_segment]
+        return current
+
+    def _get_parent_obj_prop_name_by_path(self, prop_path):
+        split = prop_path.split('.')
+        parent_path = '.'.join(split[:-1])
+        parent_obj = self._get_object_by_path(parent_path)
+        prop_name = split[-1]
+        return parent_obj, prop_name
+
+    def _raise_illegal(self, prop_path):
+        raise RuntimeError('illegal path: {0}'.format(prop_path))

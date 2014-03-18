@@ -19,17 +19,23 @@ import yaml
 import novaclient.v1_1.client as nvclient
 import neutronclient.v2_0.client as neclient
 
+from cosmo_tester.framework.util import get_resource_path
+
 
 def teardown(cloud_config_file_name):
-    cloud_config_file_path = '../resources/' + cloud_config_file_name
+    cloud_config_file_path = get_resource_path(cloud_config_file_name)
     creds = get_client_creds(cloud_config_file_path)
     nova = nvclient.Client(**creds)
+    neutron = neclient.Client(username=creds['username'],
+                              password=creds['api_key'],
+                              tenant_name=creds['project_id'],
+                              region_name=creds['region_name'],
+                              auth_url=creds['auth_url'])
 
-    stream = open(cloud_config_file_path, 'r')
-    config_yaml = yaml.load(stream)
+    cloud_config = yaml.load(open(cloud_config_file_path, 'r'))
 
-    networking = config_yaml['networking']
-    compute = config_yaml['compute']
+    networking = cloud_config['networking']
+    compute = cloud_config['compute']
     management_server = compute['management_server']
 
     mng_instance_name = management_server['instance']['name']
@@ -44,12 +50,6 @@ def teardown(cloud_config_file_name):
             server.delete()
             break
 
-    neutron = neclient.Client(username=creds['username'],
-                              password=creds['api_key'],
-                              tenant_name=creds['project_id'],
-                              region_name=creds['region_name'],
-                              auth_url=creds['auth_url'])
-
     for network in neutron.list_networks()['networks']:
         if network_name == network['name']:
             neutron.delete_network(network['id'])
@@ -58,18 +58,14 @@ def teardown(cloud_config_file_name):
     for keypair in nova.keypairs.list():
         if mng_keypair_name == keypair.name:
             nova.keypairs.delete(keypair)
-            break
-        if agents_keypair_name == keypair.name:
+        elif agents_keypair_name == keypair.name:
             nova.keypairs.delete(keypair)
-            break
 
     for sg in nova.security_groups.list():
         if mng_security_group_name == sg.name:
             nova.security_groups.delete(sg)
-            break
-        if agents_security_group_name == sg.name:
+        elif agents_security_group_name == sg.name:
             nova.security_groups.delete(sg)
-            break
 
 
 def get_client_creds(cloud_config_file_path):
