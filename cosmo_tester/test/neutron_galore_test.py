@@ -16,62 +16,48 @@
 
 __author__ = 'dan'
 
-import uuid
-import copy
+
 import shutil
 
 import requests
 import yaml
 from path import path
-from cosmo_manager_rest_client.cosmo_manager_rest_client import (
-    CosmoManagerRestClient)
 
-from cosmo_tester.framework import cfy_helper, testenv, util
+from cosmo_tester.framework.testenv import TestCase
 from cosmo_tester.framework.util import get_blueprint_path
 
 
-class HelloWorldTest(testenv.TestCase):
+class NeutronGaloreTest(TestCase):
 
-    uuid = uuid.uuid4()
-
-    management_ip = '192.168.15.15'
     flavor_name = 'm1.small'
     key_path = '~/.ssh/dank-cloudify-agents-kp-pclab-devstack.pem'
     host_name = 'danktestvm'
     image_name = 'Ubuntu 12.04 64bit'
     key_name = 'dank-cloudify-agents-kp'
-    management_network_name = 'dank-cloudify-admin-network'
     security_groups = ['dank-cloudify-sg-agents', 'webserver_security_group']
     floating_network_name = 'public'
 
     def test_hello_world(self):
-        with util.TemporaryDirectory() as tmpdir:
-            self.cfy = cfy_helper.CfyHelper(cfy_workdir=tmpdir,
-                                            management_ip=self.management_ip)
-            self.rest = CosmoManagerRestClient(self.management_ip)
+        blueprint_path = self.copy_blueprint('neutron-galore')
+        self.blueprint_yaml = blueprint_path / 'blueprint.yaml'
+        self.modify_neutron_galore()
 
-            blueprint_path = path(tmpdir) / 'python-webserver'
-            self.copy_python_webserver_blueprint(str(blueprint_path))
-            self.blueprint_yaml = blueprint_path / 'blueprint.yaml'
-            self.hello_world_yaml = blueprint_path / 'hello_world.yaml'
-            self.modify_hello_world()
+        before, after = self.upload_deploy_and_execute_install()
 
-            before, after = self.upload_deploy_and_execute_install()
+        self.post_install_assertions(before, after)
 
-            self.post_install_assertions(before, after)
+        self.execute_uninstall()
 
-            self.execute_uninstall()
-
-            self.post_uninstall_assertions()
+        self.post_uninstall_assertions()
 
     def copy_python_webserver_blueprint(self, target):
-        shutil.copytree(get_blueprint_path('python-webserver'), target)
+        shutil.copytree(get_blueprint_path('neutron-galore'), target)
 
-    def modify_hello_world(self):
-        hello_yaml = yaml.load(self.hello_world_yaml.text())
+    def modify_neutron_galore(self):
+        blueprint_dict = yaml.load(self.blueprint_yaml.text())
 
         # make modifications
-        vm_props = hello_yaml['type_implementations']\
+        vm_props = blueprint_dict['type_implementations']\
             ['vm_openstack_host_impl']['properties']
         vm_props['management_network_name'] = \
             self.management_network_name
@@ -84,75 +70,13 @@ class HelloWorldTest(testenv.TestCase):
             'security_groups': self.security_groups,
         }
 
-        ip_props = hello_yaml['type_implementations']\
+        ip_props = blueprint_dict['type_implementations']\
             ['virtual_ip_impl']['properties']
         ip_props['floatingip'] = {
             'floating_network_name': self.floating_network_name
         }
 
-        self.hello_world_yaml.write_text(yaml.dump(hello_yaml))
-
-    def upload_deploy_and_execute_install(self):
-        before_state = self.get_manager_state()
-        self.cfy.upload_deploy_and_execute_install(
-            str(self.blueprint_yaml),
-            blueprint_id=self.uuid,
-            deployment_id=self.uuid,
-        )
-        after_state = self.get_manager_state()
-        return before_state, after_state
-
-    def execute_uninstall(self):
-        self.cfy.execute_uninstall(deployment_id=self.uuid)
-
-    def get_manager_state(self):
-        self.logger.info('Fetching manager current state')
-        blueprints = {}
-        for blueprint in self.rest.list_blueprints():
-            blueprints[blueprint.id] = blueprint
-        deployments = {}
-        for deployment in self.rest.list_deployments():
-            deployments[deployment.id] = deployment
-        nodes = {}
-        for deployment_id in deployments.keys():
-            for node in self.rest.list_deployment_nodes(deployment_id).nodes:
-                nodes[node.id] = node
-        workflows = {}
-        deployment_nodes = {}
-        node_state = {}
-        for deployment_id in deployments.keys():
-            workflows[deployment_id] = self.rest.list_workflows(deployment_id)
-            deployment_nodes[deployment_id] = self.rest.list_deployment_nodes(
-                deployment_id,
-                get_state=True)
-            node_state[deployment_id] = {}
-            for node in deployment_nodes[deployment_id].nodes:
-                node_state[deployment_id][node.id] = self.rest.get_node_state(
-                    node.id,
-                    get_state=True,
-                    get_runtime_properties=True)
-
-        return {
-            'blueprints': blueprints,
-            'deployments': deployments,
-            'workflows': workflows,
-            'nodes': nodes,
-            'node_state': node_state,
-            'deployment_nodes': deployment_nodes
-        }
-
-    def get_manager_state_delta(self, before, after):
-        after = copy.deepcopy(after)
-        for blueprint_id in before['blueprints'].keys():
-            del after['blueprints'][blueprint_id]
-        for deployment_id in before['deployments'].keys():
-            del after['deployments'][deployment_id]
-            del after['workflows'][deployment_id]
-            del after['deployment_nodes'][deployment_id]
-            del after['node_state'][deployment_id]
-        for node_id in before['nodes'].keys():
-            del after['nodes'][node_id]
-        return after
+        self.blueprint_yaml.write_text(yaml.dump(blueprint_dict))
 
     def post_install_assertions(self, before_state, after_state):
         delta = self.get_manager_state_delta(before_state, after_state)
@@ -240,16 +164,6 @@ class HelloWorldTest(testenv.TestCase):
         self.assertTrue(webserver_node_id in web_server_page_response.text,
                         'Expected to find {0} in web server response: {1}'
                         .format(webserver_node_id, web_server_page_response))
-
-    def flatten_ips(self, networks):
-        flattened_ips = []
-        for k, v in networks.iteritems():
-            if not isinstance(v, list):
-                flattened_ips.append(v)
-            else:
-                for ip in v:
-                    flattened_ips.append(ip)
-        return flattened_ips
 
     def post_uninstall_assertions(self):
         pass

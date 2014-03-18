@@ -18,8 +18,9 @@ __author__ = 'dan'
 
 import sys
 import os
-import tempfile
-import shutil
+
+from path import path
+import yaml
 
 from cosmo_tester import resources
 
@@ -39,14 +40,19 @@ def get_blueprint_path(blueprint_name):
     return os.path.join(resources_dir, 'blueprints', blueprint_name)
 
 
-# conceptually taken from the builtin python3 class
-class TemporaryDirectory(object):
+class YamlPatcher(object):
 
-    def __init__(self, suffix="", prefix='cosmo', dir=None):
-        self.name = tempfile.mkdtemp(suffix, prefix, dir)
+    def __init__(self, yaml_path):
+        self.yaml_path = path(yaml_path)
+        self.obj = yaml.load(self.yaml_path.text())
 
     def __enter__(self):
-        return self.name
+        return self
 
-    def __exit__(self, exc, value, tb):
-        shutil.rmtree(self.name)
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.yaml_path.write_text(yaml.dump(self.obj))
+
+    def modify_server(self, server_prop_path, new_props):
+        
+
+

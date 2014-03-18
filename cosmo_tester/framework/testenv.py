@@ -18,6 +18,17 @@ __author__ = 'dan'
 import unittest
 import logging
 import sys
+import shutil
+import tempfile
+import copy
+import uuid
+
+from path import path
+from cosmo_manager_rest_client.cosmo_manager_rest_client import (
+    CosmoManagerRestClient)
+
+from cosmo_tester.framework import cfy_helper
+from cosmo_tester.framework.util import get_blueprint_path
 
 root = logging.getLogger()
 ch = logging.StreamHandler(sys.stdout)
@@ -38,6 +49,9 @@ logger.setLevel(logging.DEBUG)
 
 class TestCase(unittest.TestCase):
 
+    management_ip = '192.168.15.15'
+    management_network_name = 'dank-cloudify-admin-network'
+
     @classmethod
     def setUpClass(cls):
         pass
@@ -49,6 +63,81 @@ class TestCase(unittest.TestCase):
     def setUp(self):
         self.logger = logging.getLogger(self._testMethodName)
         self.logger.setLevel(logging.INFO)
+        self.workdir = tempfile.mkdtemp(prefix='cosmo-test-')
+        self.cfy = cfy_helper.CfyHelper(cfy_workdir=self.workdir,
+                                        management_ip=self.management_ip)
+        self.rest = CosmoManagerRestClient(self.management_ip)
+        self.test_id = uuid.uuid4()
+
+        self.blueprint_yaml = None
 
     def tearDown(self):
-        pass
+        shutil.rmtree(self.workdir)
+
+    def get_manager_state(self):
+        self.logger.info('Fetching manager current state')
+        blueprints = {}
+        for blueprint in self.rest.list_blueprints():
+            blueprints[blueprint.id] = blueprint
+        deployments = {}
+        for deployment in self.rest.list_deployments():
+            deployments[deployment.id] = deployment
+        nodes = {}
+        for deployment_id in deployments.keys():
+            for node in self.rest.list_deployment_nodes(deployment_id).nodes:
+                nodes[node.id] = node
+        workflows = {}
+        deployment_nodes = {}
+        node_state = {}
+        for deployment_id in deployments.keys():
+            workflows[deployment_id] = self.rest.list_workflows(deployment_id)
+            deployment_nodes[deployment_id] = self.rest.list_deployment_nodes(
+                deployment_id,
+                get_state=True)
+            node_state[deployment_id] = {}
+            for node in deployment_nodes[deployment_id].nodes:
+                node_state[deployment_id][node.id] = self.rest.get_node_state(
+                    node.id,
+                    get_state=True,
+                    get_runtime_properties=True)
+
+        return {
+            'blueprints': blueprints,
+            'deployments': deployments,
+            'workflows': workflows,
+            'nodes': nodes,
+            'node_state': node_state,
+            'deployment_nodes': deployment_nodes
+        }
+
+    def get_manager_state_delta(self, before, after):
+        after = copy.deepcopy(after)
+        for blueprint_id in before['blueprints'].keys():
+            del after['blueprints'][blueprint_id]
+        for deployment_id in before['deployments'].keys():
+            del after['deployments'][deployment_id]
+            del after['workflows'][deployment_id]
+            del after['deployment_nodes'][deployment_id]
+            del after['node_state'][deployment_id]
+        for node_id in before['nodes'].keys():
+            del after['nodes'][node_id]
+        return after
+
+    def upload_deploy_and_execute_install(self):
+        before_state = self.get_manager_state()
+        self.cfy.upload_deploy_and_execute_install(
+            str(self.blueprint_yaml),
+            blueprint_id=self.test_id,
+            deployment_id=self.test_id,
+        )
+        after_state = self.get_manager_state()
+        return before_state, after_state
+
+    def execute_uninstall(self):
+        self.cfy.execute_uninstall(deployment_id=self.test_id)
+
+    def copy_blueprint(self, blueprint_dir_name):
+        blueprint_path = path(self.workdir) / blueprint_dir_name
+        shutil.copytree(get_blueprint_path('python-webserver'),
+                        str(blueprint_path))
+        return blueprint_path
