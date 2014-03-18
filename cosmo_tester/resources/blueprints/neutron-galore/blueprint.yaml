@@ -2,7 +2,7 @@ imports:
     - cloudify.openstack
 
 blueprint:
-    name: neutron-test-everything
+    name: neutron-galore
     nodes:
         -   name: nova_server
             type: cloudify.openstack.server
@@ -12,18 +12,10 @@ blueprint:
                -   type: cloudify.relationships.depends_on
                    target: security_group_dst
             properties:
-                server:
-                    name: nova_server_test
-                    flavor_name: m1.small
-                    image_name: Ubuntu 12.04 64bit
-                    key_name: dank-cloudify-agents-kp
-                    security_groups: ['dank-cloudify-sg-agents', 'neutron_test_security_group_dst']
-                management_network_name: dank-cloudify-admin-network
                 install_agent: true
                 worker_config:
                     user: ubuntu
                     port: 22
-                    key: ~/.ssh/dank-cloudify-agents-kp-pclab-devstack.pem
         -   name: neutron_network
             type: cloudify.openstack.network
             properties:
@@ -46,8 +38,6 @@ blueprint:
             properties:
                 router:
                     name: neutron_router_test
-                    external_gateway_info:
-                        network_name: public
         -   name: neutron_port
             type: cloudify.openstack.port
             properties:
@@ -86,6 +76,3 @@ blueprint:
                     target: security_group_src
         -   name: floatingip
             type: cloudify.openstack.floatingip
-            properties:
-                floatingip:
-                    floating_network_name: public

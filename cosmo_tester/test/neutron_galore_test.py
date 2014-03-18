@@ -30,16 +30,17 @@ class NeutronGaloreTest(TestCase):
 
     flavor_name = 'm1.small'
     key_path = '~/.ssh/dank-cloudify-agents-kp-pclab-devstack.pem'
-    host_name = 'danktestvm'
+    host_name = 'novaservertest'
     image_name = 'Ubuntu 12.04 64bit'
     key_name = 'dank-cloudify-agents-kp'
-    security_groups = ['dank-cloudify-sg-agents', 'webserver_security_group']
+    security_groups = ['dank-cloudify-sg-agents',
+                       'neutron_test_security_group_dst']
     floating_network_name = 'public'
 
     def test_hello_world(self):
         blueprint_path = self.copy_blueprint('neutron-galore')
         self.blueprint_yaml = blueprint_path / 'blueprint.yaml'
-        self.modify_neutron_galore()
+        self.modify_blueprint()
 
         before, after = self.upload_deploy_and_execute_install()
 
@@ -52,7 +53,7 @@ class NeutronGaloreTest(TestCase):
     def copy_python_webserver_blueprint(self, target):
         shutil.copytree(get_blueprint_path('neutron-galore'), target)
 
-    def modify_neutron_galore(self):
+    def modify_blueprint(self):
         with YamlPatcher(self.blueprint_yaml) as patch:
             vm_path = 'blueprint.nodes.[0].properties'
             patch.set_value('{0}.management_network_name'.format(vm_path),

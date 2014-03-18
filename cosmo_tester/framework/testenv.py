@@ -49,6 +49,7 @@ logger.setLevel(logging.DEBUG)
 
 class TestCase(unittest.TestCase):
 
+    cloudify_config_path = '/home/dan/work/cfy-openstack/cloudify-config.yaml'
     management_ip = '192.168.15.15'
     management_network_name = 'dank-cloudify-admin-network'
 
@@ -73,6 +74,15 @@ class TestCase(unittest.TestCase):
 
     def tearDown(self):
         shutil.rmtree(self.workdir)
+
+    def bootstrap(self):
+        self.cfy.bootstrap(
+            self.cloudify_config_path,
+            keep_up_on_failure=True,
+            verbose=True,
+            dev_mode=False,
+            alternate_bootstrap_method=True
+        )
 
     def get_manager_state(self):
         self.logger.info('Fetching manager current state')

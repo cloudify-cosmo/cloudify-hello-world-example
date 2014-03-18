@@ -34,10 +34,12 @@ class PythonWebServerTest(TestCase):
     floating_network_name = 'public'
 
     def test_hello_world(self):
+        self.bootstrap()
+
         blueprint_path = self.copy_blueprint('python-webserver')
         self.blueprint_yaml = blueprint_path / 'blueprint.yaml'
         self.webserver_yaml = blueprint_path / 'python_webserver.yaml'
-        self.modify_hello_world()
+        self.modify_blueprint()
 
         before, after = self.upload_deploy_and_execute_install()
 
@@ -47,7 +49,7 @@ class PythonWebServerTest(TestCase):
 
         self.post_uninstall_assertions()
 
-    def modify_hello_world(self):
+    def modify_blueprint(self):
         with YamlPatcher(self.webserver_yaml) as patch:
             vm_path = 'type_implementations.vm_openstack_host_impl.properties'
             patch.set_value('{0}.management_network_name'.format(vm_path),
