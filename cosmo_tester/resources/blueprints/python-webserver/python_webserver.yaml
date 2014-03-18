@@ -12,6 +12,7 @@ types:
         derived_from: cloudify.types.web_server
         properties:
             -   port
+            -   image_path
         interfaces:
             cloudify.interfaces.lifecycle:
                 -   configure: python_webserver_installer.tasks.configure
@@ -34,6 +35,8 @@ type_implementations:
     http_web_server_web_server_impl:
         type: web_server
         node_ref: http_web_server
+        properties:
+            image_path: images/cloudify-logo.png
 
     virtual_ip_impl:
         type: cloudify.openstack.floatingip

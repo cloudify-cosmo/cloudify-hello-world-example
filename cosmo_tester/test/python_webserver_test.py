@@ -155,6 +155,23 @@ class PythonWebServerTest(TestCase):
                         'Expected to find {0} in web server response: {1}'
                         .format(webserver_node_id, web_server_page_response))
 
+        img_tag = "<img src='"
+        fail_message = \
+            'Expected to find an img tag with src attribute in web server ' \
+            'response: {0}'.format(web_server_page_response)
+        self.assertTrue(img_tag in web_server_page_response.text, fail_message)
+
+        src_start = web_server_page_response.text.index(img_tag) + len(img_tag)
+        src_end = src_start + \
+            web_server_page_response.text[src_start:].index("'")
+
+        img_src = web_server_page_response.text[src_start:src_end]
+        img_url = 'http://{0}:8080/{1}'.format(public_ip, img_src)
+        img_response = requests.get(img_url)
+        self.assertEqual(200, img_response.status_code,
+                         'Failed to get image from web server at {0}'
+                         .format(img_url))
+
     def post_uninstall_assertions(self):
         #TODO
         pass
