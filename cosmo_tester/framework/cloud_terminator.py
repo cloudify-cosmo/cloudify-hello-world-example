@@ -15,10 +15,16 @@
 
 __author__ = 'nirb'
 
+import logging
+
 import yaml
 import novaclient.v1_1.client as nvclient
 import neutronclient.v2_0.client as neclient
 from path import path
+
+
+logger = logging.getLogger('cloud-terminator')
+logger.setLevel(logging.INFO)
 
 
 def teardown(cloud_config_file_path,
@@ -26,6 +32,8 @@ def teardown(cloud_config_file_path,
              remove_network=False,
              remove_security_groups=False,
              remove_keypairs=False):
+    logger.info('Terminating cloud bootstrapped earlier using configuration'
+                ' from {0}'.format(cloud_config_file_path))
 
     cloud_config = yaml.load(path(cloud_config_file_path).text())
 
