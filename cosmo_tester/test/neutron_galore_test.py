@@ -30,7 +30,7 @@ class NeutronGaloreTest(TestCase):
     image_name = 'Ubuntu 12.04 64bit'
     security_groups = ['neutron_test_security_group_dst']
 
-    def test_hello_world(self):
+    def test_neutron_galore(self):
         self.security_groups.append(self.env.agents_security_group)
 
         blueprint_path = self.copy_blueprint('neutron-galore')

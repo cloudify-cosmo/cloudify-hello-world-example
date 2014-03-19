@@ -30,7 +30,7 @@ class PythonWebServerTest(TestCase):
     image_name = 'Ubuntu 12.04 64bit'
     security_groups = ['webserver_security_group']
 
-    def test_hello_world(self):
+    def test_python_webserver(self):
         self.security_groups.append(self.env.agents_security_group)
 
         blueprint_path = self.copy_blueprint('python-webserver')

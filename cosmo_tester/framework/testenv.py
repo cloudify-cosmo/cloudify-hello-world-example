@@ -22,12 +22,13 @@ import shutil
 import tempfile
 import copy
 import uuid
+import os
 
 from path import path
 from cosmo_manager_rest_client.cosmo_manager_rest_client import (
     CosmoManagerRestClient)
 
-from cosmo_tester.framework import cfy_helper
+from cosmo_tester.framework.cfy_helper import CfyHelper
 from cosmo_tester.framework.util import (get_blueprint_path,
                                          Singleton,
                                          CloudifyConfigReader)
@@ -49,15 +50,62 @@ logger = logging.getLogger("TESTENV")
 logger.setLevel(logging.DEBUG)
 
 
+CLOUDIFY_TEST_MANAGEMENT_IP = 'CLOUDIFY_TEST_MANAGEMENT_IP'
+CLOUDIFY_TEST_CONFIG_PATH = 'CLOUDIFY_TEST_CONFIG_PATH'
+
+
 class TestEnvironment(object):
     __metaclass__ = Singleton
 
     def __init__(self):
-        self.cloudify_config_path = \
-            '/home/dan/work/cfy-openstack/cloudify-config.yaml'
-        self.management_ip = '192.168.15.15'
+        self._management_running = False
+
+        self.rest_client = None
+        self.management_ip = None
+
+        if not CLOUDIFY_TEST_CONFIG_PATH in os.environ:
+            raise RuntimeError('a path to cloudify-config must be configured '
+                               'in "CLOUDIFY_TEST_CONFIG_PATH" env variable')
+
+        self.cloudify_config_path = path(os.environ[CLOUDIFY_TEST_CONFIG_PATH])
+
+        if not self.cloudify_config_path.isfile():
+            raise RuntimeError('cloud-config file configured in env variable'
+                               ' {0} does not seem to exist'
+                               .format(self.cloudify_config_path))
+
+        if CLOUDIFY_TEST_MANAGEMENT_IP in os.environ:
+            self._running_env_setup(os.environ[CLOUDIFY_TEST_MANAGEMENT_IP])
+
         self._config_reader = CloudifyConfigReader(self.cloudify_config_path)
+
+    def bootstrap_if_necessary(self):
+        if self._management_running:
+            return self
+
+        cfy = CfyHelper()
+        try:
+            cfy.bootstrap(
+                self.cloudify_config_path,
+                keep_up_on_failure=True,
+                verbose=True,
+                dev_mode=True,
+                alternate_bootstrap_method=False
+            )
+            self._running_env_setup(cfy.get_management_ip())
+        finally:
+            cfy.close()
+
+        return self
+
+    def _running_env_setup(self, management_ip):
+        self.management_ip = management_ip
         self.rest_client = CosmoManagerRestClient(self.management_ip)
+        response = self.rest_client.status()
+        if not response.status == 'running':
+            raise RuntimeError('Manager at {0} is not running.'
+                               .format(self.management_ip))
+        self._management_running = True
 
     @property
     def management_network_name(self):
@@ -91,12 +139,12 @@ class TestCase(unittest.TestCase):
         pass
 
     def setUp(self):
-        self.env = TestEnvironment()
+        self.env = TestEnvironment().bootstrap_if_necessary()
         self.logger = logging.getLogger(self._testMethodName)
         self.logger.setLevel(logging.INFO)
         self.workdir = tempfile.mkdtemp(prefix='cosmo-test-')
-        self.cfy = cfy_helper.CfyHelper(cfy_workdir=self.workdir,
-                                        management_ip=self.env.management_ip)
+        self.cfy = CfyHelper(cfy_workdir=self.workdir,
+                             management_ip=self.env.management_ip)
         self.rest = self.env.rest_client
         self.test_id = uuid.uuid4()
         self.blueprint_yaml = None
