@@ -32,6 +32,7 @@ from cosmo_tester.framework.cfy_helper import CfyHelper
 from cosmo_tester.framework.util import (get_blueprint_path,
                                          Singleton,
                                          CloudifyConfigReader)
+from cosmo_tester.framework import cloud_terminator
 
 root = logging.getLogger()
 ch = logging.StreamHandler(sys.stdout)
@@ -54,10 +55,12 @@ CLOUDIFY_TEST_MANAGEMENT_IP = 'CLOUDIFY_TEST_MANAGEMENT_IP'
 CLOUDIFY_TEST_CONFIG_PATH = 'CLOUDIFY_TEST_CONFIG_PATH'
 
 
+# Singleton class
 class TestEnvironment(object):
     __metaclass__ = Singleton
 
     def __init__(self):
+        self._bootstrapped_in_test_env = False
         self._management_running = False
 
         self.rest_client = None
@@ -89,14 +92,21 @@ class TestEnvironment(object):
                 self.cloudify_config_path,
                 keep_up_on_failure=True,
                 verbose=True,
-                dev_mode=True,
-                alternate_bootstrap_method=False
+                dev_mode=False,
+                alternate_bootstrap_method=True
             )
             self._running_env_setup(cfy.get_management_ip())
+            self._bootstrapped_in_test_env = True
         finally:
             cfy.close()
 
         return self
+
+    def teardown_if_necessary(self):
+        if not self._bootstrapped_in_test_env:
+            return self
+
+        cloud_terminator.teardown(self.cloudify_config_path)
 
     def _running_env_setup(self, management_ip):
         self.management_ip = management_ip
@@ -139,7 +149,7 @@ class TestCase(unittest.TestCase):
         pass
 
     def setUp(self):
-        self.env = TestEnvironment().bootstrap_if_necessary()
+        self.env = TestEnvironment()
         self.logger = logging.getLogger(self._testMethodName)
         self.logger.setLevel(logging.INFO)
         self.workdir = tempfile.mkdtemp(prefix='cosmo-test-')
@@ -151,15 +161,6 @@ class TestCase(unittest.TestCase):
 
     def tearDown(self):
         shutil.rmtree(self.workdir)
-
-    def bootstrap(self):
-        self.cfy.bootstrap(
-            self.env.cloudify_config_path,
-            keep_up_on_failure=True,
-            verbose=True,
-            dev_mode=False,
-            alternate_bootstrap_method=True
-        )
 
     def get_manager_state(self):
         self.logger.info('Fetching manager current state')

@@ -137,7 +137,7 @@ class PythonWebServerTest(TestCase):
                                  .format(nodes_state))
             elif key.startswith('virtual_ip'):
                 public_ip = value['runtimeInfo']['floating_ip_address']
-            else:
+            elif key.startswith('http_web_server'):
                 webserver_node_id = key
 
         events, total_events = self.rest\
