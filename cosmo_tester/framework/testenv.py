@@ -24,6 +24,7 @@ import copy
 import uuid
 import os
 
+import yaml
 from path import path
 from cosmo_manager_rest_client.cosmo_manager_rest_client import (
     CosmoManagerRestClient)
@@ -32,7 +33,9 @@ from cosmo_tester.framework.cfy_helper import CfyHelper
 from cosmo_tester.framework.util import (get_blueprint_path,
                                          Singleton,
                                          CloudifyConfigReader)
-from cosmo_tester.framework import cloud_terminator
+from cosmo_tester.framework.openstack_api import (openstack_infra_state,
+                                                  openstack_infra_state_delta,
+                                                  remove_openstack_resources)
 
 root = logging.getLogger()
 ch = logging.StreamHandler(sys.stdout)
@@ -55,12 +58,19 @@ CLOUDIFY_TEST_MANAGEMENT_IP = 'CLOUDIFY_TEST_MANAGEMENT_IP'
 CLOUDIFY_TEST_CONFIG_PATH = 'CLOUDIFY_TEST_CONFIG_PATH'
 
 
+class BootstrapContext(object):
+
+    def __init__(self, cloudify_config):
+        self.before_bootstrap = openstack_infra_state(cloudify_config)
+        self.before_teardown = None
+
+
 # Singleton class
 class TestEnvironment(object):
     __metaclass__ = Singleton
 
     def __init__(self):
-        self._bootstrapped_in_test_env = False
+        self._bootstrap_context = None
         self._management_running = False
 
         self.rest_client = None
@@ -77,36 +87,47 @@ class TestEnvironment(object):
                                ' {0} does not seem to exist'
                                .format(self.cloudify_config_path))
 
+        self.cloudify_config = yaml.load(self.cloudify_config_path.text())
+
         if CLOUDIFY_TEST_MANAGEMENT_IP in os.environ:
             self._running_env_setup(os.environ[CLOUDIFY_TEST_MANAGEMENT_IP])
 
-        self._config_reader = CloudifyConfigReader(self.cloudify_config_path)
+        self._config_reader = CloudifyConfigReader(self.cloudify_config)
 
     def bootstrap_if_necessary(self):
         if self._management_running:
             return self
 
+        self._bootstrap_context = BootstrapContext(self.cloudify_config)
         cfy = CfyHelper()
         try:
             cfy.bootstrap(
                 self.cloudify_config_path,
                 keep_up_on_failure=True,
                 verbose=True,
-                dev_mode=False,
-                alternate_bootstrap_method=True
+                dev_mode=True,
+                alternate_bootstrap_method=False
             )
             self._running_env_setup(cfy.get_management_ip())
-            self._bootstrapped_in_test_env = True
         finally:
             cfy.close()
 
         return self
 
     def teardown_if_necessary(self):
-        if not self._bootstrapped_in_test_env:
+        if self._bootstrap_context is None:
             return self
 
-        cloud_terminator.teardown(self.cloudify_config_path)
+        self._bootstrap_context.before_teardown = \
+            openstack_infra_state(self.cloudify_config)
+
+        resources_to_teardown = openstack_infra_state_delta(
+            before=self._bootstrap_context.before_bootstrap,
+            after=self._bootstrap_context.before_teardown)
+
+        logger('Performing teardown')
+        remove_openstack_resources(self.cloudify_config,
+                                   resources_to_teardown)
 
     def _running_env_setup(self, management_ip):
         self.management_ip = management_ip
@@ -136,6 +157,34 @@ class TestEnvironment(object):
     @property
     def agents_security_group(self):
         return self._config_reader.agents_security_group
+
+    @property
+    def management_server_name(self):
+        return self._config_reader.management_server_name
+
+    @property
+    def management_server_floating_ip(self):
+        return self._config_reader.management_server_floating_ip
+
+    @property
+    def management_sub_network_name(self):
+        return self._config_reader.management_sub_network_name
+
+    @property
+    def management_router_name(self):
+        return self._config_reader.management_router_name
+
+    @property
+    def management_key_path(self):
+        return self._config_reader.management_key_path
+
+    @property
+    def management_keypair_name(self):
+        return self._config_reader.management_keypair_name
+
+    @property
+    def management_security_group(self):
+        return self._config_reader.management_security_group
 
 
 class TestCase(unittest.TestCase):
