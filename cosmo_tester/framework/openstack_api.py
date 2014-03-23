@@ -58,6 +58,7 @@ def remove_openstack_resources(cloudify_config, resources_to_remove):
             cloudify_config, resources_to_remove)
         if all([len(g) == 0 for g in resources_to_remove.values()]):
             break
+        return resources_to_remove
 
 
 def _remove_openstack_resources_impl(cloudify_config,
@@ -204,6 +205,7 @@ def _remove_keys(dct, keys):
     for key in keys:
         if key in dct:
             del dct[key]
+    return dct
 
 
 @contextmanager
