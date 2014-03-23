@@ -60,7 +60,10 @@ CLOUDIFY_TEST_CONFIG_PATH = 'CLOUDIFY_TEST_CONFIG_PATH'
 
 class CleanupContext(object):
 
-    def __init__(self, cloudify_config):
+    def __init__(self, cloudify_config, context_name):
+        self.logger = logging.getLogger('CleanupContext')
+        self.logger.setLevel(logging.DEBUG)
+        self.context_name = context_name
         self.cloudify_config = cloudify_config
         self.before_run = openstack_infra_state(cloudify_config)
 
@@ -68,11 +71,13 @@ class CleanupContext(object):
         before_cleanup = openstack_infra_state(self.cloudify_config)
         resources_to_teardown = openstack_infra_state_delta(
             before=self.before_run, after=before_cleanup)
-        logger.info('Performing cleanup: will try removing these resources: '
-                    '{0}'.format(resources_to_teardown))
+        self.logger.info('[{0}] Performing cleanup: will try removing these '
+                         'resources: {1}'
+                         .format(self.context_name, resources_to_teardown))
         leftovers = remove_openstack_resources(self.cloudify_config,
                                                resources_to_teardown)
-        logger.info('Leftover resources after cleanup: {0}'.format(leftovers))
+        self.logger.info('[{0}] Leftover resources after cleanup: {1}'
+                         .format(self.context_name, leftovers))
 
 
 # Singleton class
@@ -107,7 +112,8 @@ class TestEnvironment(object):
     def bootstrap_if_necessary(self):
         if self._management_running:
             return
-        self._global_cleanup_context = CleanupContext(self.cloudify_config)
+        self._global_cleanup_context = CleanupContext(self.cloudify_config,
+                                                      'testenv')
         cfy = CfyHelper()
         try:
             cfy.bootstrap(
@@ -204,7 +210,8 @@ class TestCase(unittest.TestCase):
         self.rest = self.env.rest_client
         self.test_id = uuid.uuid4()
         self.blueprint_yaml = None
-        self._test_cleanup_context = CleanupContext(self.env.cloudify_config)
+        self._test_cleanup_context = CleanupContext(self.env.cloudify_config,
+                                                    self._testMethodName)
 
     def tearDown(self):
         self._test_cleanup_context.cleanup()
