@@ -1,0 +1,57 @@
+plugins:
+
+    cloudify_plugin_existing_server:
+        derived_from: cloudify.plugins.manager_plugin
+        properties:
+            url: https://github.com/ilyash/cloudify-plugin-existing-server/archive/master.zip
+
+    cloudify_plugin_chef:
+        derived_from: cloudify.plugins.agent_plugin
+        properties:
+            url: https://github.com/Fewbytes/cloudify-plugin-chef/archive/master.zip
+            # folder: cloudify-plugin-chef
+
+imports:
+    - cloudify.openstack
+    - existing-server-type.yaml
+    - chef-type.yaml
+
+blueprint:
+    name: system-test-chef-server
+    nodes:
+
+        -
+            name: chef_server
+            type: cloudify.openstack.server
+            properties:
+                install_agent: true
+                worker_config:
+                    port: 22
+                    user: ubuntu
+                    key: ~/.ssh/cloudify-agents-kp-ilya.pem
+                management_network_name: cloudify-admin-network
+                server:
+                    name: ilya-chef-server
+                    image_name: Ubuntu Precise 12.04 LTS Server 64-bit 20121026 (b)
+                    flavor_name: standard.small  # 2G RAM, 2 CPUs
+                    key_name: cloudify-agents-kp-ilya
+                    security_groups: [cloudify-sg-agents]
+
+        -
+            name: chef_service
+            type: app_server_chef
+            properties:
+                chef_config:
+                    version: 11.10.4-1  # Chef Solo for installing Chef server
+                    cookbooks: cookbooks.tar.gz
+                    attributes:
+                        # https://github.com/opscode-cookbooks/chef-server
+                        chef-server:
+                            version: 11.0.11-1
+                    runlists:
+                        create: recipe[chef-server]
+            relationships:
+                -
+                    type: cloudify.relationships.contained_in
+                    target: chef_server
+

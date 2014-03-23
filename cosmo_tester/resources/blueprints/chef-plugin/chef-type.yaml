@@ -1,0 +1,41 @@
+# WARNING:
+# /etc/sudoers must not have "Default requiretty" for Chef plugin to work
+
+imports:
+    - 'cloudify.types'
+
+types:
+    middleware_server_chef:
+        derived_from: cloudify.types.middleware_server
+        properties:
+            - chef_config
+        interfaces:
+            cloudify.interfaces.lifecycle:
+                - create:    cloudify_plugin_chef.operations.operation
+                - configure: cloudify_plugin_chef.operations.operation
+                - start:     cloudify_plugin_chef.operations.operation
+                - stop:      cloudify_plugin_chef.operations.operation
+                - delete:    cloudify_plugin_chef.operations.operation
+
+    # Aliases for GUI, as requested
+    app_server_chef: {derived_from: middleware_server_chef}
+    db_server_chef:  {derived_from: middleware_server_chef}
+    web_server_chef: {derived_from: middleware_server_chef}
+
+relationships:
+    cloudify.chef.depends_on:
+        derived_from: cloudify.relationships.depends_on
+        source_interfaces:
+            cloudify.interfaces.relationship_lifecycle:
+                - preconfigure:  cloudify_plugin_chef.operations.operation
+                - postconfigure: cloudify_plugin_chef.operations.operation
+                - establish:     cloudify_plugin_chef.operations.operation
+                - unlink:        cloudify_plugin_chef.operations.operation
+    cloudify.chef.connected_to:
+        derived_from: cloudify.relationships.connected_to
+        source_interfaces:
+            cloudify.interfaces.relationship_lifecycle:
+                - preconfigure:  cloudify_plugin_chef.operations.operation
+                - postconfigure: cloudify_plugin_chef.operations.operation
+                - establish:     cloudify_plugin_chef.operations.operation
+                - unlink:        cloudify_plugin_chef.operations.operation
