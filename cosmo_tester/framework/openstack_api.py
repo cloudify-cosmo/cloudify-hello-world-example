@@ -15,6 +15,8 @@
 
 __author__ = 'dan'
 
+from contextlib import contextmanager
+
 import novaclient.v1_1.client as nvclient
 import neutronclient.v2_0.client as neclient
 
@@ -47,6 +49,19 @@ def openstack_infra_state(cloudify_config):
 
 
 def remove_openstack_resources(cloudify_config, resources_to_remove):
+    # basically sort of a workaround, but if we get the order wrong
+    # the first time, there is a chance things would better next time
+    # 3'rd time can't really hurt, can it?
+    # 3 is a charm
+    for _ in range(3):
+        resources_to_remove = _remove_openstack_resources_impl(
+            cloudify_config, resources_to_remove)
+        if all([len(g) == 0 for g in resources_to_remove.values()]):
+            break
+
+
+def _remove_openstack_resources_impl(cloudify_config,
+                                     resources_to_remove):
     nova, neutron = openstack_clients(cloudify_config)
     config_reader = CloudifyConfigReader(cloudify_config)
 
@@ -63,40 +78,61 @@ def remove_openstack_resources(cloudify_config, resources_to_remove):
     router_interface_port_id, router_interface_subnet_id = \
         _extract_router_interface_subnet_id(ports)
 
+    failed = {
+        'servers': {},
+        'routers': {},
+        'ports': {},
+        'subnets': {},
+        'networks': {},
+        'key_pairs': {},
+        'floatingips': {},
+        'security_groups': {}
+    }
+
     for server in servers:
         if server.id in resources_to_remove['servers']:
-            nova.servers.delete(server)
+            with _handled_exception(server.id, failed, 'servers'):
+                nova.servers.delete(server)
     for router in routers:
         if router['id'] in resources_to_remove['routers']:
-            # TODO works when there is only one specific router
-            neutron.remove_interface_router(router['id'], {
-                'subnet_id': router_interface_subnet_id
-            })
-            neutron.delete_router(router['id'])
+            with _handled_exception(router['id'], failed, 'routers'):
+                # TODO works when there is only one specific router
+                neutron.remove_interface_router(router['id'], {
+                    'subnet_id': router_interface_subnet_id
+                })
+                neutron.delete_router(router['id'])
     for port in ports:
         if port['id'] == router_interface_port_id:
             continue  # already removed above
         if port['id'] in resources_to_remove['ports']:
-            neutron.delete_port(port['id'])
+            with _handled_exception(port['id'], failed, 'ports'):
+                neutron.delete_port(port['id'])
     for subnet in subnets:
         if subnet['id'] in resources_to_remove['subnets']:
-            neutron.delete_subnet(subnet['id'])
+            with _handled_exception(subnet['id'], failed, 'subnets'):
+                neutron.delete_subnet(subnet['id'])
     for network in networks:
         if network['name'] == config_reader.external_network_name:
             continue
         if network['id'] in resources_to_remove['networks']:
-            neutron.delete_network(network['id'])
+            with _handled_exception(network['id'], failed, 'networks'):
+                neutron.delete_network(network['id'])
     for key_pair in keypairs:
         if key_pair.id in resources_to_remove['key_pairs']:
             nova.keypairs.delete(key_pair)
     for floatingip in floatingips:
         if floatingip['id'] in resources_to_remove['floatingips']:
-            neutron.delete_floatingip(floatingip['id'])
+            with _handled_exception(floatingip['id'], failed, 'floatingips'):
+                neutron.delete_floatingip(floatingip['id'])
     for security_group in security_groups:
         if security_group['name'] == 'default':
             continue
         if security_group['id'] in resources_to_remove['security_groups']:
-            neutron.delete_security_group(security_group['id'])
+            with _handled_exception(security_group['id'],
+                                    failed, 'security_groups'):
+                neutron.delete_security_group(security_group['id'])
+
+    return failed
 
 
 def openstack_infra_state_delta(before, after):
@@ -121,6 +157,7 @@ def _extract_router_interface_subnet_id(ports):
     for port in ports:
         if port['device_owner'] == 'network:router_interface':
             return port['id'], port['fixed_ips'][0]['subnet_id']
+    return None, None
 
 
 def _networks(neutron):
@@ -166,8 +203,15 @@ def _ports(neutron):
 def _remove_keys(dct, keys):
     for key in keys:
         if key in dct:
-            del key[dct]
+            del dct[key]
 
+
+@contextmanager
+def _handled_exception(resource_id, failed, resource_group):
+    try:
+        yield
+    except BaseException, ex:
+        failed[resource_group][resource_id] = ex
 
 if __name__ == '__main__':
     import os, path, yaml

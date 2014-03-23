@@ -58,11 +58,21 @@ CLOUDIFY_TEST_MANAGEMENT_IP = 'CLOUDIFY_TEST_MANAGEMENT_IP'
 CLOUDIFY_TEST_CONFIG_PATH = 'CLOUDIFY_TEST_CONFIG_PATH'
 
 
-class BootstrapContext(object):
+class CleanupContext(object):
 
     def __init__(self, cloudify_config):
-        self.before_bootstrap = openstack_infra_state(cloudify_config)
-        self.before_teardown = None
+        self.cloudify_config = cloudify_config
+        self.before_run = openstack_infra_state(cloudify_config)
+
+    def cleanup(self):
+        before_cleanup = openstack_infra_state(self.cloudify_config)
+        resources_to_teardown = openstack_infra_state_delta(
+            before=self.before_run, after=before_cleanup)
+        logger.info('Performing cleanup: will try removing these resources: '
+                    '{0}'.format(resources_to_teardown))
+        leftovers = remove_openstack_resources(self.cloudify_config,
+                                               resources_to_teardown)
+        logger.info('Leftover resources after cleanup: {0}'.format(leftovers))
 
 
 # Singleton class
@@ -70,7 +80,7 @@ class TestEnvironment(object):
     __metaclass__ = Singleton
 
     def __init__(self):
-        self._bootstrap_context = None
+        self._global_cleanup_context = None
         self._management_running = False
 
         self.rest_client = None
@@ -96,38 +106,25 @@ class TestEnvironment(object):
 
     def bootstrap_if_necessary(self):
         if self._management_running:
-            return self
-
-        self._bootstrap_context = BootstrapContext(self.cloudify_config)
+            return
+        self._global_cleanup_context = CleanupContext(self.cloudify_config)
         cfy = CfyHelper()
         try:
             cfy.bootstrap(
                 self.cloudify_config_path,
                 keep_up_on_failure=True,
                 verbose=True,
-                dev_mode=True,
-                alternate_bootstrap_method=False
+                dev_mode=False,
+                alternate_bootstrap_method=True
             )
             self._running_env_setup(cfy.get_management_ip())
         finally:
             cfy.close()
 
-        return self
-
     def teardown_if_necessary(self):
-        if self._bootstrap_context is None:
-            return self
-
-        self._bootstrap_context.before_teardown = \
-            openstack_infra_state(self.cloudify_config)
-
-        resources_to_teardown = openstack_infra_state_delta(
-            before=self._bootstrap_context.before_bootstrap,
-            after=self._bootstrap_context.before_teardown)
-
-        logger('Performing teardown')
-        remove_openstack_resources(self.cloudify_config,
-                                   resources_to_teardown)
+        if self._global_cleanup_context is None:
+            return
+        self._global_cleanup_context.cleanup()
 
     def _running_env_setup(self, management_ip):
         self.management_ip = management_ip
@@ -207,8 +204,10 @@ class TestCase(unittest.TestCase):
         self.rest = self.env.rest_client
         self.test_id = uuid.uuid4()
         self.blueprint_yaml = None
+        self._test_cleanup_context = CleanupContext(self.env.cloudify_config)
 
     def tearDown(self):
+        self._test_cleanup_context.cleanup()
         shutil.rmtree(self.workdir)
 
     def get_manager_state(self):
