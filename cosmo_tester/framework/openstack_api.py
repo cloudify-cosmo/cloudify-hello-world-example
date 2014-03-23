@@ -58,7 +58,7 @@ def remove_openstack_resources(cloudify_config, resources_to_remove):
             cloudify_config, resources_to_remove)
         if all([len(g) == 0 for g in resources_to_remove.values()]):
             break
-        return resources_to_remove
+    return resources_to_remove
 
 
 def _remove_openstack_resources_impl(cloudify_config,
@@ -77,7 +77,8 @@ def _remove_openstack_resources_impl(cloudify_config,
 
     # TODO handle when doesn't exist
     router_interface_port_id, router_interface_subnet_id = \
-        _extract_router_interface_subnet_id(ports)
+        _extract_router_interface_subnet_id(ports,
+                                            resources_to_remove['ports'])
 
     failed = {
         'servers': {},
@@ -154,9 +155,10 @@ def _client_creds(cloudify_config):
 
 
 # currently assumes only one - need to see
-def _extract_router_interface_subnet_id(ports):
+def _extract_router_interface_subnet_id(ports, relevant_ports):
     for port in ports:
-        if port['device_owner'] == 'network:router_interface':
+        if port['id'] in relevant_ports and \
+           port['device_owner'] == 'network:router_interface':
             return port['id'], port['fixed_ips'][0]['subnet_id']
     return None, None
 
