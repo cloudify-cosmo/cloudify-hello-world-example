@@ -88,21 +88,18 @@ class TestEnvironment(object):
     def __init__(self):
         self._global_cleanup_context = None
         self._management_running = False
-
         self.rest_client = None
         self.management_ip = None
 
         if not CLOUDIFY_TEST_CONFIG_PATH in os.environ:
             raise RuntimeError('a path to cloudify-config must be configured '
                                'in "CLOUDIFY_TEST_CONFIG_PATH" env variable')
-
         self.cloudify_config_path = path(os.environ[CLOUDIFY_TEST_CONFIG_PATH])
 
         if not self.cloudify_config_path.isfile():
             raise RuntimeError('cloud-config file configured in env variable'
                                ' {0} does not seem to exist'
                                .format(self.cloudify_config_path))
-
         self.cloudify_config = yaml.load(self.cloudify_config_path.text())
 
         if CLOUDIFY_TEST_MANAGEMENT_IP in os.environ:
