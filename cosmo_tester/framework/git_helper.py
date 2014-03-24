@@ -19,7 +19,7 @@ import sh
 from path import path
 import logging
 
-from cosmo_tester.framework.testenv import sh_bake
+from cosmo_tester.framework.util import sh_bake
 
 
 logger = logging.getLogger('git')
