@@ -215,8 +215,3 @@ def _handled_exception(resource_id, failed, resource_group):
         yield
     except BaseException, ex:
         failed[resource_group][resource_id] = ex
-
-if __name__ == '__main__':
-    import os, path, yaml
-    cloud_config = yaml.load(path.path(os.environ['CLOUDIFY_TEST_CONFIG_PATH']).text())
-    remove_openstack_resources(cloud_config, openstack_infra_state(cloud_config))
