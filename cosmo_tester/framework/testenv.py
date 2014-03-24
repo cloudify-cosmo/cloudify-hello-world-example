@@ -20,6 +20,7 @@ import logging
 import sys
 import shutil
 import tempfile
+import time
 import copy
 import uuid
 import os
@@ -53,6 +54,8 @@ root.addHandler(ch)
 logger = logging.getLogger("TESTENV")
 logger.setLevel(logging.DEBUG)
 
+logging.getLogger('neutronclient.client').setLevel(logging.INFO)
+logging.getLogger('novaclient.client').setLevel(logging.INFO)
 
 CLOUDIFY_TEST_MANAGEMENT_IP = 'CLOUDIFY_TEST_MANAGEMENT_IP'
 CLOUDIFY_TEST_CONFIG_PATH = 'CLOUDIFY_TEST_CONFIG_PATH'
@@ -208,7 +211,7 @@ class TestCase(unittest.TestCase):
         self.cfy = CfyHelper(cfy_workdir=self.workdir,
                              management_ip=self.env.management_ip)
         self.rest = self.env.rest_client
-        self.test_id = uuid.uuid4()
+        self.test_id = 'system-test-{0}'.format(time.strftime("%Y%m%d-%H%M"))
         self.blueprint_yaml = None
         self._test_cleanup_context = CleanupContext(self._testMethodName,
                                                     self.env.cloudify_config)
