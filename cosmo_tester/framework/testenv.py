@@ -85,7 +85,9 @@ class CleanupContext(object):
 class TestEnvironment(object):
     __metaclass__ = Singleton
 
+    # Singleton class
     def __init__(self):
+        self._initial_cwd = os.getcwd()
         self._global_cleanup_context = None
         self._management_running = False
         self.rest_client = None
@@ -106,6 +108,10 @@ class TestEnvironment(object):
             self._running_env_setup(os.environ[CLOUDIFY_TEST_MANAGEMENT_IP])
 
         self._config_reader = CloudifyConfigReader(self.cloudify_config)
+
+    def setup(self):
+        os.chdir(self._initial_cwd)
+        return self
 
     def bootstrap_if_necessary(self):
         if self._management_running:
@@ -198,7 +204,7 @@ class TestCase(unittest.TestCase):
         pass
 
     def setUp(self):
-        self.env = TestEnvironment()
+        self.env = TestEnvironment().setup()
         self.logger = logging.getLogger(self._testMethodName)
         self.logger.setLevel(logging.INFO)
         self.workdir = tempfile.mkdtemp(prefix='cosmo-test-')
