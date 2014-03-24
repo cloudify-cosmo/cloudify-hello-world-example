@@ -15,7 +15,9 @@
 
 __author__ = 'dan'
 
+import time
 from contextlib import contextmanager
+import copy
 
 import novaclient.v1_1.client as nvclient
 import neutronclient.v2_0.client as neclient
@@ -58,6 +60,8 @@ def remove_openstack_resources(cloudify_config, resources_to_remove):
             cloudify_config, resources_to_remove)
         if all([len(g) == 0 for g in resources_to_remove.values()]):
             break
+        # give openstack some time to update its data structures
+        time.sleep(3)
     return resources_to_remove
 
 
@@ -74,11 +78,6 @@ def _remove_openstack_resources_impl(cloudify_config,
     keypairs = nova.keypairs.list()
     floatingips = neutron.list_floatingips()['floatingips']
     security_groups = neutron.list_security_groups()['security_groups']
-
-    # TODO handle when doesn't exist
-    router_interface_port_id, router_interface_subnet_id = \
-        _extract_router_interface_subnet_id(ports,
-                                            resources_to_remove['ports'])
 
     failed = {
         'servers': {},
@@ -98,14 +97,12 @@ def _remove_openstack_resources_impl(cloudify_config,
     for router in routers:
         if router['id'] in resources_to_remove['routers']:
             with _handled_exception(router['id'], failed, 'routers'):
-                # TODO works when there is only one specific router
-                neutron.remove_interface_router(router['id'], {
-                    'subnet_id': router_interface_subnet_id
-                })
+                for p in neutron.list_ports(device_id=router['id'])['ports']:
+                    neutron.remove_interface_router(router['id'], {
+                        'port_id': p['id']
+                    })
                 neutron.delete_router(router['id'])
     for port in ports:
-        if port['id'] == router_interface_port_id:
-            continue  # already removed above
         if port['id'] in resources_to_remove['ports']:
             with _handled_exception(port['id'], failed, 'ports'):
                 neutron.delete_port(port['id'])
@@ -121,7 +118,8 @@ def _remove_openstack_resources_impl(cloudify_config,
                 neutron.delete_network(network['id'])
     for key_pair in keypairs:
         if key_pair.id in resources_to_remove['key_pairs']:
-            nova.keypairs.delete(key_pair)
+            with _handled_exception(key_pair.id, failed, 'key_pairs'):
+                nova.keypairs.delete(key_pair)
     for floatingip in floatingips:
         if floatingip['id'] in resources_to_remove['floatingips']:
             with _handled_exception(floatingip['id'], failed, 'floatingips'):
@@ -138,6 +136,7 @@ def _remove_openstack_resources_impl(cloudify_config,
 
 
 def openstack_infra_state_delta(before, after):
+    after = copy.deepcopy(after)
     return {
         prop: _remove_keys(after[prop], before[prop].keys())
         for prop in before.keys()
@@ -216,8 +215,3 @@ def _handled_exception(resource_id, failed, resource_group):
         yield
     except BaseException, ex:
         failed[resource_group][resource_id] = ex
-
-if __name__ == '__main__':
-    import os, path, yaml
-    cloud_config = yaml.load(path.path(os.environ['CLOUDIFY_TEST_CONFIG_PATH']).text())
-    remove_openstack_resources(cloud_config, openstack_infra_state(cloud_config))

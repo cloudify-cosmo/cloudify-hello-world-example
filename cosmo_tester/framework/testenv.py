@@ -88,30 +88,33 @@ class CleanupContext(object):
 class TestEnvironment(object):
     __metaclass__ = Singleton
 
+    # Singleton class
     def __init__(self):
+        self._initial_cwd = os.getcwd()
         self._global_cleanup_context = None
         self._management_running = False
-
         self.rest_client = None
         self.management_ip = None
 
         if not CLOUDIFY_TEST_CONFIG_PATH in os.environ:
             raise RuntimeError('a path to cloudify-config must be configured '
                                'in "CLOUDIFY_TEST_CONFIG_PATH" env variable')
-
         self.cloudify_config_path = path(os.environ[CLOUDIFY_TEST_CONFIG_PATH])
 
         if not self.cloudify_config_path.isfile():
             raise RuntimeError('cloud-config file configured in env variable'
                                ' {0} does not seem to exist'
                                .format(self.cloudify_config_path))
-
         self.cloudify_config = yaml.load(self.cloudify_config_path.text())
 
         if CLOUDIFY_TEST_MANAGEMENT_IP in os.environ:
             self._running_env_setup(os.environ[CLOUDIFY_TEST_MANAGEMENT_IP])
 
         self._config_reader = CloudifyConfigReader(self.cloudify_config)
+
+    def setup(self):
+        os.chdir(self._initial_cwd)
+        return self
 
     def bootstrap_if_necessary(self):
         if self._management_running:
@@ -204,7 +207,7 @@ class TestCase(unittest.TestCase):
         pass
 
     def setUp(self):
-        self.env = TestEnvironment()
+        self.env = TestEnvironment().setup()
         self.logger = logging.getLogger(self._testMethodName)
         self.logger.setLevel(logging.INFO)
         self.workdir = tempfile.mkdtemp(prefix='cosmo-test-')

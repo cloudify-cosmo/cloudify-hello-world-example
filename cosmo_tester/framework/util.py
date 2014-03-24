@@ -131,24 +131,23 @@ class CloudifyConfigReader(object):
 
     @property
     def agent_key_path(self):
-        return self.config['compute']['agent_servers']['agents_keypair']\
-                          ['auto_generated']['private_key_target_path']
+        return self.config['compute']['agent_servers']['agents_keypair'][
+            'auto_generated']['private_key_target_path']
 
     @property
     def management_key_path(self):
-        return self.config['compute']['management_server']\
-                          ['management_keypair']['auto_generated']\
-                          ['private_key_target_path']
+        return self.config['compute']['management_server'][
+            'management_keypair']['auto_generated']['private_key_target_path']
 
     @property
     def agent_keypair_name(self):
-        return self.config['compute']['agent_servers']['agents_keypair']\
-                          ['name']
+        return self.config['compute']['agent_servers']['agents_keypair'][
+            'name']
 
     @property
     def management_keypair_name(self):
-        return self.config['compute']['management_server']\
-                          ['management_keypair']['name']
+        return self.config['compute']['management_server'][
+            'management_keypair']['name']
 
     @property
     def external_network_name(self):
