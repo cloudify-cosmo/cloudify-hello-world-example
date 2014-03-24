@@ -50,7 +50,7 @@ class NeutronGaloreTest(TestCase):
 
     def modify_blueprint(self):
         with YamlPatcher(self.blueprint_yaml) as patch:
-            vm_path = 'blueprint.nodes.[0].properties'
+            vm_path = 'blueprint.nodes[0].properties'
             patch.set_value('{0}.management_network_name'.format(vm_path),
                             self.env.management_network_name)
             patch.set_value('{0}.worker_config.key'.format(vm_path),
@@ -63,11 +63,11 @@ class NeutronGaloreTest(TestCase):
                 'security_groups': self.security_groups,
             })
 
-            router_path = 'blueprint.nodes[3].properties.router'\
-                          '.external_gateway_info.network_name'
+            router_path = 'blueprint.nodes[3].properties.router.'\
+                          'external_gateway_info.network_name'
             patch.set_value(router_path, self.env.external_network_name)
 
-            ip_path = 'blueprint.nodes[7].properties.floatingip'\
+            ip_path = 'blueprint.nodes[7].properties.floatingip.'\
                       'floating_network_name'
             patch.set_value(ip_path, self.env.external_network_name)
 

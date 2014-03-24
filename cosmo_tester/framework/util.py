@@ -106,12 +106,28 @@ class Singleton(type):
 
 class CloudifyConfigReader(object):
 
-    def __init__(self, config_path):
-        self.config = yaml.load(config_path.text())
+    def __init__(self, cloudify_config):
+        self.config = cloudify_config
+
+    @property
+    def management_server_name(self):
+        return self.config['compute']['management_server']['instance']['name']
+
+    @property
+    def management_server_floating_ip(self):
+        return self.config['compute']['management_server']['floating_ip']
 
     @property
     def management_network_name(self):
         return self.config['networking']['int_network']['name']
+
+    @property
+    def management_sub_network_name(self):
+        return self.config['networking']['subnet']['name']
+
+    @property
+    def management_router_name(self):
+        return self.config['networking']['router']['name']
 
     @property
     def agent_key_path(self):
@@ -119,9 +135,20 @@ class CloudifyConfigReader(object):
                           ['auto_generated']['private_key_target_path']
 
     @property
+    def management_key_path(self):
+        return self.config['compute']['management_server']\
+                          ['management_keypair']['auto_generated']\
+                          ['private_key_target_path']
+
+    @property
     def agent_keypair_name(self):
         return self.config['compute']['agent_servers']['agents_keypair']\
                           ['name']
+
+    @property
+    def management_keypair_name(self):
+        return self.config['compute']['management_server']\
+                          ['management_keypair']['name']
 
     @property
     def external_network_name(self):
@@ -130,3 +157,7 @@ class CloudifyConfigReader(object):
     @property
     def agents_security_group(self):
         return self.config['networking']['agents_security_group']['name']
+
+    @property
+    def management_security_group(self):
+        return self.config['networking']['management_security_group']['name']
