@@ -20,6 +20,22 @@ blueprint:
     name: system-test-chef-server
     nodes:
 
+        # -
+        #     name: chef_server
+        #     type: existing_server
+        #     properties:
+        #         ip: 10.67.79.171
+        #         install_agent: true
+        #         worker_config:
+        #             port: 22
+        #             user: ubuntu
+        #             key: ~/.ssh/cloudify-agents-kp-ilya.pem
+        #     relationships:
+        #         -   type: cloudify.relationships.connected_to
+        #             target: ip
+        #     relationships:
+        #         -   type: cloudify.relationships.connected_to
+        #             target: chef_sg
         -
             name: chef_server
             type: cloudify.openstack.server
@@ -28,14 +44,42 @@ blueprint:
                 worker_config:
                     port: 22
                     user: ubuntu
-                    key: ~/.ssh/cloudify-agents-kp-ilya.pem
+                    key: REPLACED-BY-TEST
                 management_network_name: cloudify-admin-network
                 server:
-                    name: ilya-chef-server
+                    name: REPLACED-BY-TEST
                     image_name: Ubuntu Precise 12.04 LTS Server 64-bit 20121026 (b)
                     flavor_name: standard.small  # 2G RAM, 2 CPUs
-                    key_name: cloudify-agents-kp-ilya
-                    security_groups: [cloudify-sg-agents]
+                    key_name: REPLACED-BY-TEST
+                    security_groups: [chef_sg]  # MODIFIED-BY-TEST (adds agents security group to the list)
+                    # MODIFIED-BY-TEST -- {hostname} substitution
+                    userdata: |
+                        #!/bin/bash -ex
+                        grep -q "{hostname}" /etc/hosts || echo "127.0.0.1 {hostname}" >> /etc/hosts
+            relationships:
+                -   type: cloudify.openstack.server_connected_to_floating_ip
+                    target: ip
+                -   type: cloudify.relationships.connected_to
+                    target: chef_sg
+
+        -
+            name: ip
+            type: cloudify.openstack.floatingip
+            properties:
+                floatingip:
+                    floating_network_name: REPLACED-BY-TEST
+
+        -
+            name: chef_sg
+            type: cloudfiy.openstack.security_group
+            properties:
+                security_group:
+                    name: chef_sg
+                rules:
+                    -   remote_ip_prefix: 0.0.0.0/0
+                        port: 22
+                    -   remote_ip_prefix: 0.0.0.0/0
+                        port: 443
 
         -
             name: chef_service
