@@ -1,0 +1,278 @@
+$ nosetests -s chef_plugin_test:ChefPluginClientTest
+Using management server MGR_IP_SANITIZED
+17:34:16 [INFO] [test_chef_client] Fetching manager current state
+Uploading blueprint /tmp/cosmo-test-efhUgl/chef-plugin/chef-server-by-chef-solo.yaml to management server MGR_IP_SANITIZED
+Uploaded blueprint, blueprint's id is: system-test-20140325-1734-chef-server
+Creating new deployment from blueprint system-test-20140325-1734-chef-server at management server MGR_IP_SANITIZED
+Deployment created, deployment's id is: system-test-20140325-1734-chef-server
+Executing workflow 'install' on deployment 'system-test-20140325-1734-chef-server' at management server MGR_IP_SANITIZED [timeout=900 seconds]
+2014-03-25T15:34:47 CFY <system-test-20140325-1734-chef-server> Starting 'install' workflow execution
+2014-03-25T15:34:50 CFY <system-test-20140325-1734-chef-server> Installing management worker
+2014-03-25T15:34:50 CFY <system-test-20140325-1734-chef-server> Sending task 'worker_installer.tasks.install'
+2014-03-25T15:34:51 CFY <system-test-20140325-1734-chef-server> Task started 'worker_installer.tasks.install'
+2014-03-25T15:36:09 CFY <system-test-20140325-1734-chef-server> Task succeeded 'worker_installer.tasks.install'
+2014-03-25T15:36:12 CFY <system-test-20140325-1734-chef-server> Starting management worker
+2014-03-25T15:36:12 CFY <system-test-20140325-1734-chef-server> Sending task 'worker_installer.tasks.start'
+2014-03-25T15:36:12 CFY <system-test-20140325-1734-chef-server> Task started 'worker_installer.tasks.start'
+2014-03-25T15:36:17 CFY <system-test-20140325-1734-chef-server> Task succeeded 'worker_installer.tasks.start'
+2014-03-25T15:36:18 CFY <system-test-20140325-1734-chef-server> Installing management worker plugins
+2014-03-25T15:36:19 CFY <system-test-20140325-1734-chef-server> Installing management plugin nova_plugin
+2014-03-25T15:36:19 CFY <system-test-20140325-1734-chef-server> Sending task 'plugin_installer.tasks.install'
+2014-03-25T15:36:19 CFY <system-test-20140325-1734-chef-server> Task started 'plugin_installer.tasks.install'
+2014-03-25T15:36:53 CFY <system-test-20140325-1734-chef-server> Task succeeded 'plugin_installer.tasks.install'
+2014-03-25T15:37:07 CFY <system-test-20140325-1734-chef-server> [ip_793b9] Creating node
+2014-03-25T15:37:07 CFY <system-test-20140325-1734-chef-server> [chef_sg_c8aac] Creating node
+2014-03-25T15:37:09 CFY <system-test-20140325-1734-chef-server> [ip_793b9.create] Sending task 'neutron_plugin.floatingip.create'
+2014-03-25T15:37:09 CFY <system-test-20140325-1734-chef-server> [chef_sg_c8aac.create] Sending task 'neutron_plugin.security_group.create'
+2014-03-25T15:37:09 CFY <system-test-20140325-1734-chef-server> [ip_793b9.create] Task started 'neutron_plugin.floatingip.create'
+2014-03-25T15:37:09 CFY <system-test-20140325-1734-chef-server> [chef_sg_c8aac.create] Task started 'neutron_plugin.security_group.create'
+2014-03-25T15:37:10 CFY <system-test-20140325-1734-chef-server> [chef_sg_c8aac.create] Task succeeded 'neutron_plugin.security_group.create'
+2014-03-25T15:37:13 CFY <system-test-20140325-1734-chef-server> [chef_sg_c8aac] Configuring node
+2014-03-25T15:37:13 CFY <system-test-20140325-1734-chef-server> [ip_793b9.create] Task succeeded 'neutron_plugin.floatingip.create'
+2014-03-25T15:37:16 CFY <system-test-20140325-1734-chef-server> [ip_793b9] Configuring node
+2014-03-25T15:37:16 CFY <system-test-20140325-1734-chef-server> [chef_sg_c8aac] Starting node
+2014-03-25T15:37:18 CFY <system-test-20140325-1734-chef-server> [ip_793b9] Starting node
+2014-03-25T15:37:22 CFY <system-test-20140325-1734-chef-server> [chef_server_c50f8] Creating node
+2014-03-25T15:37:28 CFY <system-test-20140325-1734-chef-server> [chef_server_c50f8] Configuring node
+2014-03-25T15:37:35 CFY <system-test-20140325-1734-chef-server> [chef_server_c50f8] Starting node
+2014-03-25T15:37:36 CFY <system-test-20140325-1734-chef-server> [chef_server_c50f8.start] Sending task 'nova_plugin.server.start'
+2014-03-25T15:37:36 CFY <system-test-20140325-1734-chef-server> [chef_server_c50f8.start] Task started 'nova_plugin.server.start'
+2014-03-25T15:37:41 CFY <system-test-20140325-1734-chef-server> [chef_server_c50f8.start] Task succeeded 'nova_plugin.server.start'
+2014-03-25T15:37:42 CFY <system-test-20140325-1734-chef-server> [chef_server_c50f8.get_state] Sending task 'nova_plugin.server.get_state'
+2014-03-25T15:37:42 CFY <system-test-20140325-1734-chef-server> [chef_server_c50f8.get_state] Task started 'nova_plugin.server.get_state'
+2014-03-25T15:37:43 CFY <system-test-20140325-1734-chef-server> [chef_server_c50f8.get_state] Task succeeded 'nova_plugin.server.get_state' -> False
+2014-03-25T15:37:50 CFY <system-test-20140325-1734-chef-server> [chef_server_c50f8.get_state] Sending task 'nova_plugin.server.get_state'
+2014-03-25T15:37:50 CFY <system-test-20140325-1734-chef-server> [chef_server_c50f8.get_state] Task started 'nova_plugin.server.get_state'
+2014-03-25T15:37:51 CFY <system-test-20140325-1734-chef-server> [chef_server_c50f8.get_state] Task succeeded 'nova_plugin.server.get_state' -> False
+2014-03-25T15:37:58 CFY <system-test-20140325-1734-chef-server> [chef_server_c50f8.get_state] Sending task 'nova_plugin.server.get_state'
+2014-03-25T15:37:58 CFY <system-test-20140325-1734-chef-server> [chef_server_c50f8.get_state] Task started 'nova_plugin.server.get_state'
+2014-03-25T15:37:58 CFY <system-test-20140325-1734-chef-server> [chef_server_c50f8.get_state] Task succeeded 'nova_plugin.server.get_state' -> False
+2014-03-25T15:38:06 CFY <system-test-20140325-1734-chef-server> [chef_server_c50f8.get_state] Sending task 'nova_plugin.server.get_state'
+2014-03-25T15:38:06 CFY <system-test-20140325-1734-chef-server> [chef_server_c50f8.get_state] Task started 'nova_plugin.server.get_state'
+2014-03-25T15:38:06 CFY <system-test-20140325-1734-chef-server> [chef_server_c50f8.get_state] Task succeeded 'nova_plugin.server.get_state' -> True
+2014-03-25T15:38:07 CFY <system-test-20140325-1734-chef-server> [chef_server_c50f8] Installing worker
+2014-03-25T15:38:08 CFY <system-test-20140325-1734-chef-server> [chef_server_c50f8.install] Sending task 'worker_installer.tasks.install'
+2014-03-25T15:38:08 CFY <system-test-20140325-1734-chef-server> [chef_server_c50f8.install] Task started 'worker_installer.tasks.install'
+2014-03-25T15:41:41 CFY <system-test-20140325-1734-chef-server> [chef_server_c50f8.install] Task succeeded 'worker_installer.tasks.install'
+2014-03-25T15:41:43 CFY <system-test-20140325-1734-chef-server> [chef_server_c50f8.start] Sending task 'worker_installer.tasks.start'
+2014-03-25T15:41:43 CFY <system-test-20140325-1734-chef-server> [chef_server_c50f8.start] Task started 'worker_installer.tasks.start'
+2014-03-25T15:41:49 CFY <system-test-20140325-1734-chef-server> [chef_server_c50f8.start] Task succeeded 'worker_installer.tasks.start'
+2014-03-25T15:41:50 CFY <system-test-20140325-1734-chef-server> [chef_server_c50f8] Installing plugins
+2014-03-25T15:41:50 CFY <system-test-20140325-1734-chef-server> [chef_server_c50f8] Installing plugin cloudify_plugin_chef
+2014-03-25T15:41:52 CFY <system-test-20140325-1734-chef-server> [chef_server_c50f8.install] Sending task 'plugin_installer.tasks.install'
+2014-03-25T15:41:52 CFY <system-test-20140325-1734-chef-server> [chef_server_c50f8.install] Task started 'plugin_installer.tasks.install'
+2014-03-25T15:41:58 CFY <system-test-20140325-1734-chef-server> [chef_server_c50f8.install] Task succeeded 'plugin_installer.tasks.install'
+2014-03-25T15:42:11 CFY <system-test-20140325-1734-chef-server> [chef_service_5e76a] Creating node
+2014-03-25T15:42:11 CFY <system-test-20140325-1734-chef-server> [chef_server_c50f8.establish] Sending task 'nova_plugin.server.connect_floatingip'
+2014-03-25T15:42:11 CFY <system-test-20140325-1734-chef-server> [chef_server_c50f8.establish] Task started 'nova_plugin.server.connect_floatingip'
+2014-03-25T15:42:13 CFY <system-test-20140325-1734-chef-server> [chef_service_5e76a.create] Sending task 'cloudify_plugin_chef.operations.operation'
+2014-03-25T15:42:13 CFY <system-test-20140325-1734-chef-server> [chef_service_5e76a.create] Task started 'cloudify_plugin_chef.operations.operation'
+2014-03-25T15:42:13 CFY <system-test-20140325-1734-chef-server> [chef_server_c50f8.establish] Task succeeded 'nova_plugin.server.connect_floatingip'
+2014-03-25T15:47:52 CFY <system-test-20140325-1734-chef-server> [chef_service_5e76a.create] Task succeeded 'cloudify_plugin_chef.operations.operation'
+2014-03-25T15:47:58 CFY <system-test-20140325-1734-chef-server> [chef_service_5e76a] Configuring node
+2014-03-25T15:48:00 CFY <system-test-20140325-1734-chef-server> [chef_service_5e76a.configure] Sending task 'cloudify_plugin_chef.operations.operation'
+2014-03-25T15:48:00 CFY <system-test-20140325-1734-chef-server> [chef_service_5e76a.configure] Task started 'cloudify_plugin_chef.operations.operation'
+2014-03-25T15:48:00 CFY <system-test-20140325-1734-chef-server> [chef_service_5e76a.configure] Task succeeded 'cloudify_plugin_chef.operations.operation'
+2014-03-25T15:48:03 CFY <system-test-20140325-1734-chef-server> [chef_service_5e76a] Starting node
+2014-03-25T15:48:05 CFY <system-test-20140325-1734-chef-server> [chef_service_5e76a.start] Sending task 'cloudify_plugin_chef.operations.operation'
+2014-03-25T15:48:05 CFY <system-test-20140325-1734-chef-server> [chef_service_5e76a.start] Task started 'cloudify_plugin_chef.operations.operation'
+2014-03-25T15:48:05 CFY <system-test-20140325-1734-chef-server> [chef_service_5e76a.start] Task succeeded 'cloudify_plugin_chef.operations.operation'
+2014-03-25T15:48:07 CFY <system-test-20140325-1734-chef-server> 'install' workflow execution succeeded
+Finished executing workflow 'install' on deployment'system-test-20140325-1734-chef-server'
+* Run 'cfy events --include-logs --execution-id f492be18-043b-474e-a792-840a2b978d75' for retrieving the execution's events/logs
+17:48:10 [INFO] [test_chef_client] Fetching manager current state
+[15.126.215.215] sudo: cp -a /etc/chef-server/admin.pem ~ubuntu/ && chown ubuntu ~ubuntu/admin.pem
+17:49:20 [DEBUG] [paramiko.transport] starting thread (client mode): 0x251d910L
+17:49:20 [INFO] [paramiko.transport] Connected (version 2.0, client OpenSSH_5.9p1)
+17:49:20 [DEBUG] [paramiko.transport] kex algos:[u'ecdh-sha2-nistp256', u'ecdh-sha2-nistp384', u'ecdh-sha2-nistp521', u'diffie-hellman-group-exchange-sha256', u'diffie-hellman-group-exchange-sha1', u'diffie-hellman-group14-sha1', u'diffie-hellman-group1-sha1'] server key:[u'ssh-rsa', u'ssh-dss', u'ecdsa-sha2-nistp256'] client encrypt:[u'aes128-ctr', u'aes192-ctr', u'aes256-ctr', u'arcfour256', u'arcfour128', u'aes128-cbc', u'3des-cbc', u'blowfish-cbc', u'cast128-cbc', u'aes192-cbc', u'aes256-cbc', u'arcfour', u'rijndael-cbc@lysator.liu.se'] server encrypt:[u'aes128-ctr', u'aes192-ctr', u'aes256-ctr', u'arcfour256', u'arcfour128', u'aes128-cbc', u'3des-cbc', u'blowfish-cbc', u'cast128-cbc', u'aes192-cbc', u'aes256-cbc', u'arcfour', u'rijndael-cbc@lysator.liu.se'] client mac:[u'hmac-md5', u'hmac-sha1', u'umac-64@openssh.com', u'hmac-sha2-256', u'hmac-sha2-256-96', u'hmac-sha2-512', u'hmac-sha2-512-96', u'hmac-ripemd160', u'hmac-ripemd160@openssh.com', u'hmac-sha1-96', u'hmac-md5-96'] server mac:[u'hmac-md5', u'hmac-sha1', u'umac-64@openssh.com', u'hmac-sha2-256', u'hmac-sha2-256-96', u'hmac-sha2-512', u'hmac-sha2-512-96', u'hmac-ripemd160', u'hmac-ripemd160@openssh.com', u'hmac-sha1-96', u'hmac-md5-96'] client compress:[u'none', u'zlib@openssh.com'] server compress:[u'none', u'zlib@openssh.com'] client lang:[u''] server lang:[u''] kex follows?False
+17:49:20 [DEBUG] [paramiko.transport] Ciphers agreed: local=aes128-ctr, remote=aes128-ctr
+17:49:20 [DEBUG] [paramiko.transport] using kex diffie-hellman-group1-sha1; server key type ssh-rsa; cipher: local aes128-ctr, remote aes128-ctr; mac: local hmac-sha1, remote hmac-sha1; compression: local none, remote none
+17:49:20 [DEBUG] [paramiko.transport] Switch to new keys ...
+17:49:20 [DEBUG] [paramiko.transport] Adding ssh-rsa host key for 15.126.215.215: 79026488b18ed84a67a0dc615d1ddd91
+17:49:20 [DEBUG] [paramiko.transport] Trying key d7c665be55e698fc76203130cbf2e9c8 from /home/ilya/.enc/mount/work/fewbytes/gigaspaces/_auth/cloudify-agents-kp-ilya.pem
+17:49:21 [DEBUG] [paramiko.transport] userauth is OK
+17:49:21 [INFO] [paramiko.transport] Authentication (publickey) successful!
+17:49:21 [DEBUG] [paramiko.transport] [chan 1] Max packet in: 34816 bytes
+17:49:22 [DEBUG] [paramiko.transport] [chan 1] Max packet out: 32768 bytes
+17:49:22 [INFO] [paramiko.transport] Secsh channel 1 opened.
+17:49:22 [DEBUG] [paramiko.transport] [chan 1] Sesch channel 1 request ok
+17:49:22 [DEBUG] [paramiko.transport] [chan 1] Sesch channel 1 request ok
+17:49:22 [DEBUG] [paramiko.transport] [chan 1] EOF received (1)
+17:49:22 [DEBUG] [paramiko.transport] [chan 1] EOF sent (1)
+[15.126.215.215] run: mkdir -p ~/cookbooks/create-file
+17:49:22 [DEBUG] [paramiko.transport] [chan 2] Max packet in: 34816 bytes
+17:49:23 [DEBUG] [paramiko.transport] [chan 2] Max packet out: 32768 bytes
+17:49:23 [INFO] [paramiko.transport] Secsh channel 2 opened.
+17:49:23 [DEBUG] [paramiko.transport] [chan 2] Sesch channel 2 request ok
+17:49:23 [DEBUG] [paramiko.transport] [chan 2] Sesch channel 2 request ok
+17:49:23 [DEBUG] [paramiko.transport] [chan 2] EOF received (2)
+17:49:23 [DEBUG] [paramiko.transport] [chan 2] EOF sent (2)
+[15.126.215.215] run: wget -qO- https://github.com/ilyash/cookbook-create-file/archive/bd8218a6a9b3e33a165042241c50908ccb6145d1.tar.gz | tar xvzC ~/cookbooks/create-file --strip-components=1
+17:49:23 [DEBUG] [paramiko.transport] [chan 3] Max packet in: 34816 bytes
+17:49:24 [DEBUG] [paramiko.transport] [chan 3] Max packet out: 32768 bytes
+17:49:24 [INFO] [paramiko.transport] Secsh channel 3 opened.
+17:49:24 [DEBUG] [paramiko.transport] [chan 3] Sesch channel 3 request ok
+17:49:24 [DEBUG] [paramiko.transport] [chan 3] Sesch channel 3 request ok
+17:49:24 [DEBUG] [paramiko.transport] [chan 3] EOF received (3)
+[15.126.215.215] out: cookbook-create-file-bd8218a6a9b3e33a165042241c50908ccb6145d1/.gitignore
+17:49:24 [DEBUG] [paramiko.transport] [chan 3] EOF sent (3)
+[15.126.215.215] out: cookbook-create-file-bd8218a6a9b3e33a165042241c50908ccb6145d1/CHANGELOG.md
+[15.126.215.215] out: cookbook-create-file-bd8218a6a9b3e33a165042241c50908ccb6145d1/README.md
+[15.126.215.215] out: cookbook-create-file-bd8218a6a9b3e33a165042241c50908ccb6145d1/attributes/
+[15.126.215.215] out: cookbook-create-file-bd8218a6a9b3e33a165042241c50908ccb6145d1/attributes/default.rb
+[15.126.215.215] out: cookbook-create-file-bd8218a6a9b3e33a165042241c50908ccb6145d1/metadata.rb
+[15.126.215.215] out: cookbook-create-file-bd8218a6a9b3e33a165042241c50908ccb6145d1/recipes/
+[15.126.215.215] out: cookbook-create-file-bd8218a6a9b3e33a165042241c50908ccb6145d1/recipes/default.rb
+[15.126.215.215] out: cookbook-create-file-bd8218a6a9b3e33a165042241c50908ccb6145d1/recipes/from-data-bag.rb
+[15.126.215.215] out: 
+
+[15.126.215.215] run: knife cookbook upload -u admin -k ~/admin.pem --cookbook-path ~/cookbooks create-file
+17:49:24 [DEBUG] [paramiko.transport] [chan 4] Max packet in: 34816 bytes
+17:49:24 [DEBUG] [paramiko.transport] [chan 4] Max packet out: 32768 bytes
+17:49:24 [INFO] [paramiko.transport] Secsh channel 4 opened.
+17:49:24 [DEBUG] [paramiko.transport] [chan 4] Sesch channel 4 request ok
+17:49:25 [DEBUG] [paramiko.transport] [chan 4] Sesch channel 4 request ok
+[15.126.215.215] out: WARNING: No knife configuration file found
+[15.126.215.215] out: Uploading create-file  [0.1.0]
+[15.126.215.215] out: Uploaded 1 cookbook.
+[15.126.215.215] out: 17:49:32 [DEBUG] [paramiko.transport] [chan 4] EOF received (4)
+17:49:32 [DEBUG] [paramiko.transport] [chan 4] EOF sent (4)
+
+
+[15.126.215.215] run: knife cookbook list -u admin -k ~/admin.pem | grep -F create-file 
+17:49:32 [DEBUG] [paramiko.transport] [chan 5] Max packet in: 34816 bytes
+17:49:32 [DEBUG] [paramiko.transport] [chan 5] Max packet out: 32768 bytes
+17:49:32 [INFO] [paramiko.transport] Secsh channel 5 opened.
+17:49:32 [DEBUG] [paramiko.transport] [chan 5] Sesch channel 5 request ok
+17:49:32 [DEBUG] [paramiko.transport] [chan 5] Sesch channel 5 request ok
+[15.126.215.215] out: WARNING: No knife configuration file found
+[15.126.215.215] out: create-file   0.1.0
+[15.126.215.215] out: 17:49:35 [DEBUG] [paramiko.transport] [chan 5] EOF received (5)
+17:49:35 [DEBUG] [paramiko.transport] [chan 5] EOF sent (5)
+
+
+[15.126.215.215] sudo: cp -a /etc/chef-server/chef-validator.pem ~ubuntu/ && chown ubuntu ~ubuntu/chef-validator.pem
+17:49:35 [DEBUG] [paramiko.transport] [chan 6] Max packet in: 34816 bytes
+17:49:36 [DEBUG] [paramiko.transport] [chan 6] Max packet out: 32768 bytes
+17:49:36 [INFO] [paramiko.transport] Secsh channel 6 opened.
+17:49:36 [DEBUG] [paramiko.transport] [chan 6] Sesch channel 6 request ok
+17:49:36 [DEBUG] [paramiko.transport] [chan 6] Sesch channel 6 request ok
+17:49:36 [DEBUG] [paramiko.transport] [chan 6] EOF received (6)
+17:49:36 [DEBUG] [paramiko.transport] [chan 6] EOF sent (6)
+17:49:36 [DEBUG] [paramiko.transport] [chan 7] Max packet in: 34816 bytes
+17:49:36 [DEBUG] [paramiko.transport] [chan 7] Max packet out: 32768 bytes
+17:49:36 [INFO] [paramiko.transport] Secsh channel 7 opened.
+17:49:37 [DEBUG] [paramiko.transport] [chan 7] Sesch channel 7 request ok
+17:49:37 [INFO] [paramiko.transport.sftp] [chan 7] Opened sftp connection (server version 3)
+17:49:37 [DEBUG] [paramiko.transport.sftp] [chan 7] normalize('.')
+17:49:37 [DEBUG] [paramiko.transport.sftp] [chan 7] listdir('/home/ubuntu')
+17:49:38 [DEBUG] [paramiko.transport.sftp] [chan 7] lstat('/home/ubuntu/chef-validator.pem')
+[15.126.215.215] download: /tmp/cosmo-test-efhUgl/chef-plugin/chef-validator.pem <- /home/ubuntu/chef-validator.pem
+17:49:38 [DEBUG] [paramiko.transport.sftp] [chan 7] stat('/home/ubuntu/chef-validator.pem')
+17:49:38 [DEBUG] [paramiko.transport.sftp] [chan 7] open('/home/ubuntu/chef-validator.pem', 'rb')
+17:49:38 [DEBUG] [paramiko.transport.sftp] [chan 7] open('/home/ubuntu/chef-validator.pem', 'rb') -> 00000000
+17:49:38 [DEBUG] [paramiko.transport.sftp] [chan 7] stat('/home/ubuntu/chef-validator.pem')
+17:49:39 [DEBUG] [paramiko.transport.sftp] [chan 7] close(00000000)
+17:49:39 [INFO] [paramiko.transport.sftp] [chan 7] sftp session closed.
+17:49:39 [DEBUG] [paramiko.transport] [chan 7] EOF sent (7)
+17:49:39 [INFO] [test_chef_client] Fetching manager current state
+17:49:39 [DEBUG] [paramiko.transport] [chan 7] EOF received (7)
+Uploading blueprint /tmp/cosmo-test-efhUgl/chef-plugin/chef-client-test.yaml to management server MGR_IP_SANITIZED
+Uploaded blueprint, blueprint's id is: system-test-20140325-1734-chef-client-1395762579
+Creating new deployment from blueprint system-test-20140325-1734-chef-client-1395762579 at management server MGR_IP_SANITIZED
+Deployment created, deployment's id is: system-test-20140325-1734-chef-client-1395762579
+Executing workflow 'install' on deployment 'system-test-20140325-1734-chef-client-1395762579' at management server MGR_IP_SANITIZED [timeout=900 seconds]
+2014-03-25T15:50:10 CFY <system-test-20140325-1734-chef-client-1395762579> Starting 'install' workflow execution
+2014-03-25T15:50:13 CFY <system-test-20140325-1734-chef-client-1395762579> Installing management worker
+2014-03-25T15:50:13 CFY <system-test-20140325-1734-chef-client-1395762579> Sending task 'worker_installer.tasks.install'
+2014-03-25T15:50:13 CFY <system-test-20140325-1734-chef-client-1395762579> Task started 'worker_installer.tasks.install'
+2014-03-25T15:51:23 CFY <system-test-20140325-1734-chef-client-1395762579> Task succeeded 'worker_installer.tasks.install'
+2014-03-25T15:51:25 CFY <system-test-20140325-1734-chef-client-1395762579> Starting management worker
+2014-03-25T15:51:25 CFY <system-test-20140325-1734-chef-client-1395762579> Sending task 'worker_installer.tasks.start'
+2014-03-25T15:51:25 CFY <system-test-20140325-1734-chef-client-1395762579> Task started 'worker_installer.tasks.start'
+2014-03-25T15:51:31 CFY <system-test-20140325-1734-chef-client-1395762579> Task succeeded 'worker_installer.tasks.start'
+2014-03-25T15:51:32 CFY <system-test-20140325-1734-chef-client-1395762579> Installing management worker plugins
+2014-03-25T15:51:32 CFY <system-test-20140325-1734-chef-client-1395762579> Installing management plugin nova_plugin
+2014-03-25T15:51:32 CFY <system-test-20140325-1734-chef-client-1395762579> Sending task 'plugin_installer.tasks.install'
+2014-03-25T15:51:32 CFY <system-test-20140325-1734-chef-client-1395762579> Task started 'plugin_installer.tasks.install'
+2014-03-25T15:52:06 CFY <system-test-20140325-1734-chef-client-1395762579> Task succeeded 'plugin_installer.tasks.install'
+2014-03-25T15:52:20 CFY <system-test-20140325-1734-chef-client-1395762579> [ip_8657d] Creating node
+2014-03-25T15:52:21 CFY <system-test-20140325-1734-chef-client-1395762579> [ip_8657d.create] Sending task 'neutron_plugin.floatingip.create'
+2014-03-25T15:52:21 CFY <system-test-20140325-1734-chef-client-1395762579> [ip_8657d.create] Task started 'neutron_plugin.floatingip.create'
+2014-03-25T15:52:22 CFY <system-test-20140325-1734-chef-client-1395762579> [ip_8657d.create] Task succeeded 'neutron_plugin.floatingip.create'
+2014-03-25T15:52:23 CFY <system-test-20140325-1734-chef-client-1395762579> [ip_8657d] Configuring node
+2014-03-25T15:52:24 CFY <system-test-20140325-1734-chef-client-1395762579> [ip_8657d] Starting node
+2014-03-25T15:52:29 CFY <system-test-20140325-1734-chef-client-1395762579> [server_b1106] Creating node
+2014-03-25T15:52:32 CFY <system-test-20140325-1734-chef-client-1395762579> [server_b1106] Configuring node
+2014-03-25T15:52:36 CFY <system-test-20140325-1734-chef-client-1395762579> [server_b1106] Starting node
+2014-03-25T15:52:38 CFY <system-test-20140325-1734-chef-client-1395762579> [server_b1106.start] Sending task 'nova_plugin.server.start'
+2014-03-25T15:52:38 CFY <system-test-20140325-1734-chef-client-1395762579> [server_b1106.start] Task started 'nova_plugin.server.start'
+2014-03-25T15:52:42 CFY <system-test-20140325-1734-chef-client-1395762579> [server_b1106.start] Task succeeded 'nova_plugin.server.start'
+2014-03-25T15:52:43 CFY <system-test-20140325-1734-chef-client-1395762579> [server_b1106.get_state] Sending task 'nova_plugin.server.get_state'
+2014-03-25T15:52:43 CFY <system-test-20140325-1734-chef-client-1395762579> [server_b1106.get_state] Task started 'nova_plugin.server.get_state'
+2014-03-25T15:52:44 CFY <system-test-20140325-1734-chef-client-1395762579> [server_b1106.get_state] Task succeeded 'nova_plugin.server.get_state' -> False
+2014-03-25T15:52:50 CFY <system-test-20140325-1734-chef-client-1395762579> [server_b1106.get_state] Sending task 'nova_plugin.server.get_state'
+2014-03-25T15:52:50 CFY <system-test-20140325-1734-chef-client-1395762579> [server_b1106.get_state] Task started 'nova_plugin.server.get_state'
+2014-03-25T15:52:51 CFY <system-test-20140325-1734-chef-client-1395762579> [server_b1106.get_state] Task succeeded 'nova_plugin.server.get_state' -> False
+2014-03-25T15:52:59 CFY <system-test-20140325-1734-chef-client-1395762579> [server_b1106.get_state] Sending task 'nova_plugin.server.get_state'
+2014-03-25T15:52:59 CFY <system-test-20140325-1734-chef-client-1395762579> [server_b1106.get_state] Task started 'nova_plugin.server.get_state'
+2014-03-25T15:52:59 CFY <system-test-20140325-1734-chef-client-1395762579> [server_b1106.get_state] Task succeeded 'nova_plugin.server.get_state' -> True
+2014-03-25T15:53:00 CFY <system-test-20140325-1734-chef-client-1395762579> [server_b1106] Installing worker
+2014-03-25T15:53:01 CFY <system-test-20140325-1734-chef-client-1395762579> [server_b1106.install] Sending task 'worker_installer.tasks.install'
+2014-03-25T15:53:01 CFY <system-test-20140325-1734-chef-client-1395762579> [server_b1106.install] Task started 'worker_installer.tasks.install'
+2014-03-25T15:56:43 CFY <system-test-20140325-1734-chef-client-1395762579> [server_b1106.install] Task succeeded 'worker_installer.tasks.install'
+2014-03-25T15:56:47 CFY <system-test-20140325-1734-chef-client-1395762579> [server_b1106.start] Sending task 'worker_installer.tasks.start'
+2014-03-25T15:56:47 CFY <system-test-20140325-1734-chef-client-1395762579> [server_b1106.start] Task started 'worker_installer.tasks.start'
+2014-03-25T15:56:53 CFY <system-test-20140325-1734-chef-client-1395762579> [server_b1106.start] Task succeeded 'worker_installer.tasks.start'
+2014-03-25T15:56:53 CFY <system-test-20140325-1734-chef-client-1395762579> [server_b1106] Installing plugins
+2014-03-25T15:56:54 CFY <system-test-20140325-1734-chef-client-1395762579> [server_b1106] Installing plugin cloudify_plugin_chef
+2014-03-25T15:56:55 CFY <system-test-20140325-1734-chef-client-1395762579> [server_b1106.install] Sending task 'plugin_installer.tasks.install'
+2014-03-25T15:56:55 CFY <system-test-20140325-1734-chef-client-1395762579> [server_b1106.install] Task started 'plugin_installer.tasks.install'
+2014-03-25T15:57:02 CFY <system-test-20140325-1734-chef-client-1395762579> [server_b1106.install] Task succeeded 'plugin_installer.tasks.install'
+2014-03-25T15:57:15 CFY <system-test-20140325-1734-chef-client-1395762579> [server_b1106.establish] Sending task 'nova_plugin.server.connect_floatingip'
+2014-03-25T15:57:16 CFY <system-test-20140325-1734-chef-client-1395762579> [server_b1106.establish] Task started 'nova_plugin.server.connect_floatingip'
+2014-03-25T15:57:16 CFY <system-test-20140325-1734-chef-client-1395762579> [chef_node_one_96ae4] Creating node
+2014-03-25T15:57:17 CFY <system-test-20140325-1734-chef-client-1395762579> [chef_node_one_96ae4.create] Sending task 'cloudify_plugin_chef.operations.operation'
+2014-03-25T15:57:18 CFY <system-test-20140325-1734-chef-client-1395762579> [chef_node_one_96ae4.create] Task started 'cloudify_plugin_chef.operations.operation'
+2014-03-25T15:57:22 CFY <system-test-20140325-1734-chef-client-1395762579> [server_b1106.establish] Task succeeded 'nova_plugin.server.connect_floatingip'
+2014-03-25T15:57:48 CFY <system-test-20140325-1734-chef-client-1395762579> [chef_node_one_96ae4.create] Task succeeded 'cloudify_plugin_chef.operations.operation'
+2014-03-25T15:57:54 CFY <system-test-20140325-1734-chef-client-1395762579> [chef_node_one_96ae4] Configuring node
+2014-03-25T15:57:56 CFY <system-test-20140325-1734-chef-client-1395762579> [chef_node_one_96ae4.configure] Sending task 'cloudify_plugin_chef.operations.operation'
+2014-03-25T15:57:56 CFY <system-test-20140325-1734-chef-client-1395762579> [chef_node_one_96ae4.configure] Task started 'cloudify_plugin_chef.operations.operation'
+2014-03-25T15:57:56 CFY <system-test-20140325-1734-chef-client-1395762579> [chef_node_one_96ae4.configure] Task succeeded 'cloudify_plugin_chef.operations.operation'
+2014-03-25T15:57:59 CFY <system-test-20140325-1734-chef-client-1395762579> [chef_node_one_96ae4] Starting node
+2014-03-25T15:58:01 CFY <system-test-20140325-1734-chef-client-1395762579> [chef_node_one_96ae4.start] Sending task 'cloudify_plugin_chef.operations.operation'
+2014-03-25T15:58:01 CFY <system-test-20140325-1734-chef-client-1395762579> [chef_node_one_96ae4.start] Task started 'cloudify_plugin_chef.operations.operation'
+2014-03-25T15:58:01 CFY <system-test-20140325-1734-chef-client-1395762579> [chef_node_one_96ae4.start] Task succeeded 'cloudify_plugin_chef.operations.operation'
+2014-03-25T15:58:04 CFY <system-test-20140325-1734-chef-client-1395762579> 'install' workflow execution succeeded
+Finished executing workflow 'install' on deployment'system-test-20140325-1734-chef-client-1395762579'
+* Run 'cfy events --include-logs --execution-id fbceee1c-1420-425f-a4f3-ab8854f58758' for retrieving the execution's events/logs
+17:58:04 [INFO] [test_chef_client] Fetching manager current state
+[15.126.216.244] run: cat /tmp/blueprint.txt
+17:59:21 [DEBUG] [paramiko.transport] starting thread (client mode): 0x298cd90L
+17:59:21 [INFO] [paramiko.transport] Connected (version 2.0, client OpenSSH_5.9p1)
+17:59:21 [DEBUG] [paramiko.transport] kex algos:[u'ecdh-sha2-nistp256', u'ecdh-sha2-nistp384', u'ecdh-sha2-nistp521', u'diffie-hellman-group-exchange-sha256', u'diffie-hellman-group-exchange-sha1', u'diffie-hellman-group14-sha1', u'diffie-hellman-group1-sha1'] server key:[u'ssh-rsa', u'ssh-dss', u'ecdsa-sha2-nistp256'] client encrypt:[u'aes128-ctr', u'aes192-ctr', u'aes256-ctr', u'arcfour256', u'arcfour128', u'aes128-cbc', u'3des-cbc', u'blowfish-cbc', u'cast128-cbc', u'aes192-cbc', u'aes256-cbc', u'arcfour', u'rijndael-cbc@lysator.liu.se'] server encrypt:[u'aes128-ctr', u'aes192-ctr', u'aes256-ctr', u'arcfour256', u'arcfour128', u'aes128-cbc', u'3des-cbc', u'blowfish-cbc', u'cast128-cbc', u'aes192-cbc', u'aes256-cbc', u'arcfour', u'rijndael-cbc@lysator.liu.se'] client mac:[u'hmac-md5', u'hmac-sha1', u'umac-64@openssh.com', u'hmac-sha2-256', u'hmac-sha2-256-96', u'hmac-sha2-512', u'hmac-sha2-512-96', u'hmac-ripemd160', u'hmac-ripemd160@openssh.com', u'hmac-sha1-96', u'hmac-md5-96'] server mac:[u'hmac-md5', u'hmac-sha1', u'umac-64@openssh.com', u'hmac-sha2-256', u'hmac-sha2-256-96', u'hmac-sha2-512', u'hmac-sha2-512-96', u'hmac-ripemd160', u'hmac-ripemd160@openssh.com', u'hmac-sha1-96', u'hmac-md5-96'] client compress:[u'none', u'zlib@openssh.com'] server compress:[u'none', u'zlib@openssh.com'] client lang:[u''] server lang:[u''] kex follows?False
+17:59:21 [DEBUG] [paramiko.transport] Ciphers agreed: local=aes128-ctr, remote=aes128-ctr
+17:59:21 [DEBUG] [paramiko.transport] using kex diffie-hellman-group1-sha1; server key type ssh-rsa; cipher: local aes128-ctr, remote aes128-ctr; mac: local hmac-sha1, remote hmac-sha1; compression: local none, remote none
+17:59:21 [DEBUG] [paramiko.transport] Switch to new keys ...
+17:59:21 [DEBUG] [paramiko.transport] Adding ssh-rsa host key for 15.126.216.244: 79cba9410ec6a81e148ae5b06c268186
+17:59:21 [DEBUG] [paramiko.transport] Trying key d7c665be55e698fc76203130cbf2e9c8 from /home/ilya/.enc/mount/work/fewbytes/gigaspaces/_auth/cloudify-agents-kp-ilya.pem
+17:59:21 [DEBUG] [paramiko.transport] userauth is OK
+17:59:22 [INFO] [paramiko.transport] Authentication (publickey) successful!
+17:59:22 [DEBUG] [paramiko.transport] [chan 1] Max packet in: 34816 bytes
+17:59:23 [DEBUG] [paramiko.transport] [chan 1] Max packet out: 32768 bytes
+17:59:23 [INFO] [paramiko.transport] Secsh channel 1 opened.
+17:59:23 [DEBUG] [paramiko.transport] [chan 1] Sesch channel 1 request ok
+17:59:23 [DEBUG] [paramiko.transport] [chan 1] Sesch channel 1 request ok
+[15.126.216.244] out: Great success!17:59:23 [DEBUG] [paramiko.transport] [chan 1] EOF received (1)
+17:59:23 [DEBUG] [paramiko.transport] [chan 1] EOF sent (1)
+
+17:59:40 [INFO] [CleanupContext] [test_chef_client] Performing cleanup: will try removing these resources: {'subnets': {}, 'routers': {}, 'key_pairs': {}, 'ports': {u'ae4cdea2-f29b-47bc-884c-93d9d715d3ad': u'', u'60bc75d1-82a4-4426-86ca-b355adb0250e': u''}, 'servers': {u'f5c3cae8-0bbf-4f74-8114-6e65d3cb9cf4': u'system-test-20140325-1749-chef-server', u'305025ae-ab4b-46e1-864b-202cfda39113': u'system-test-20140325-1734-chef-server'}, 'networks': {}, 'security_groups': {u'9236ce0c-afa3-45ab-aed8-f7214d80e836': u'chef_sg'}, 'floatingips': {u'06c8cf8d-7d37-4ca7-ae3b-78551c8cca55': u'15.126.216.244', u'3ff933cb-ff4a-49f0-bc4c-6334cca3ad6e': u'15.126.215.215'}}
+17:59:55 [INFO] [CleanupContext] [test_chef_client] Leftover resources after cleanup: {'subnets': {}, 'security_groups': {}, 'routers': {}, 'floatingips': {}, 'networks': {}, 'ports': {}, 'key_pairs': {}, 'servers': {}}
+.
+----------------------------------------------------------------------
+Ran 1 test in 1550.783s
+
+OK
+17:59:55 [DEBUG] [paramiko.transport] EOF in transport thread
+

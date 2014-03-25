@@ -22,7 +22,6 @@ import shutil
 import tempfile
 import time
 import copy
-import uuid
 import os
 
 import yaml
@@ -272,18 +271,19 @@ class TestCase(unittest.TestCase):
             del after['nodes'][node_id]
         return after
 
-    def upload_deploy_and_execute_install(self):
+    def upload_deploy_and_execute_install(self, blueprint_id=None,
+                                          deployment_id=None):
         before_state = self.get_manager_state()
         self.cfy.upload_deploy_and_execute_install(
             str(self.blueprint_yaml),
-            blueprint_id=self.test_id,
-            deployment_id=self.test_id,
+            blueprint_id=blueprint_id or self.test_id,
+            deployment_id=deployment_id or self.test_id,
         )
         after_state = self.get_manager_state()
         return before_state, after_state
 
-    def execute_uninstall(self):
-        self.cfy.execute_uninstall(deployment_id=self.test_id)
+    def execute_uninstall(self, deployment_id):
+        self.cfy.execute_uninstall(deployment_id=deployment_id or self.test_id)
 
     def copy_blueprint(self, blueprint_dir_name):
         blueprint_path = path(self.workdir) / blueprint_dir_name
