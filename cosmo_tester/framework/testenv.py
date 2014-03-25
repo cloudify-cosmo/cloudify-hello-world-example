@@ -127,7 +127,7 @@ class TestEnvironment(object):
                 keep_up_on_failure=True,
                 verbose=True,
                 dev_mode=False,
-                alternate_bootstrap_method=True)
+                alternate_bootstrap_method=False)
             self._running_env_setup(cfy.get_management_ip())
         finally:
             cfy.close()
