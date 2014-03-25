@@ -1,0 +1,165 @@
+plugins:
+
+    cloudify_plugin_existing_server:
+        derived_from: cloudify.plugins.manager_plugin
+        properties:
+            url: https://github.com/ilyash/cloudify-plugin-existing-server/archive/master.zip
+
+    cloudify_plugin_chef:
+        derived_from: cloudify.plugins.agent_plugin
+        properties:
+            url: https://github.com/Fewbytes/cloudify-plugin-chef/archive/master.zip
+            # folder: cloudify-plugin-chef
+
+imports:
+    - cloudify.openstack
+    - existing-server-type.yaml
+    - chef-type.yaml
+
+blueprint:
+    name: system-test-chef-client
+    nodes:
+        # -
+        #     name: server
+        #     type: existing_server
+        #     properties:
+        #         ip: 10.67.79.222
+        #         install_agent: true
+        #         worker_config:
+        #             port: 22
+        #             user: ubuntu
+        #             key: ~/.ssh/cloudify-agents-kp-ilya.pem
+        -
+            name: server
+            type: cloudify.openstack.server
+            properties:
+                install_agent: true
+                worker_config:
+                    port: 22
+                    user: ubuntu
+                    key: REPLACED-BY-TEST
+                management_network_name: cloudify-admin-network
+                server:
+                    name: REPLACED-BY-TEST
+                    image_name: Ubuntu Precise 12.04 LTS Server 64-bit 20121026 (b)
+                    flavor_name: standard.small  # 2G RAM, 2 CPUs
+                    key_name: REPLACED-BY-TEST
+                    # chef_sg is created during setUp()
+                    security_groups: [chef_sg]  # MODIFIED-BY-TEST (adds agents security group to the list)
+            relationships:
+                -   type: cloudify.openstack.server_connected_to_floating_ip
+                    target: ip
+
+        -
+            name: ip
+            type: cloudify.openstack.floatingip
+            properties:
+                floatingip:
+                    floating_network_name: REPLACED-BY-TEST
+
+        -
+            name: chef_node_one
+            type: db_server_chef
+            properties:
+                chef_config:
+                    version: 11.10.4-1
+
+                    cookbooks: cookbooks.tar.gz
+
+                    environment: _default
+                    attributes:
+                        test_attr_1: test_val_1
+                        create_file:
+                            file_name: /tmp/blueprint.txt
+                            file_contents: 'Great success number #2 !'
+                    runlists:
+                        create:    recipe[create-file]
+            relationships:
+                -
+                    type: cloudify.relationships.contained_in
+                    target: server
+        -
+            name: chef_node_two
+            type: app_server_chef
+            properties:
+                chef_config:
+                    version: 11.10.4-1
+
+                    cookbooks: cookbooks.tar.gz
+
+                    environment: _default
+                    attributes:
+                        other_file_name: {related_chef_attribute: create_file.file_name}
+                        test_attr_2: test_val_2
+                        create_file:
+                            file_name: /tmp/blueprint2.txt
+                            file_contents: {related_chef_attribute: create_file.file_name}
+                    runlists:
+                        establish: recipe[create-file]
+            relationships:
+                -
+                    type: cloudify.chef.connected_to
+                    target: chef_node_one
+                -
+                    type: cloudify.relationships.contained_in
+                    target: server
+
+        -
+            # Concurrent installation with chef_node_one
+            name: chef_node_env_e1
+            type: app_server_chef
+            properties:
+                chef_config:
+                    version: 11.10.4-1
+                    cookbooks: cookbooks.tar.gz
+                    environments: environments.tar.gz
+                    environment: e1
+                    attributes:
+                        create_file:
+                            file_name: /tmp/chef_node_env.e1.txt
+                    runlists:
+                        create: recipe[create-file]
+            relationships:
+                -
+                    type: cloudify.relationships.contained_in
+                    target: server
+
+        -
+            # Concurrent installation with chef_node_one
+            name: chef_node_role_r1
+            type: app_server_chef
+            properties:
+                chef_config:
+                    version: 11.10.4-1
+                    cookbooks: cookbooks.tar.gz
+                    roles: roles.tar.gz
+                    runlists:
+                        create: role[r1]
+            relationships:
+                -
+                    type: cloudify.relationships.contained_in
+                    target: server
+
+        -
+            # Concurrent installation with chef_node_one
+            name: chef_node_data_bag_user
+            type: app_server_chef
+            properties:
+                chef_config:
+                    version: 11.10.4-1
+                    cookbooks: cookbooks.tar.gz
+                    roles:     roles.tar.gz
+                    data_bags: data_bags.tar.gz
+                    attributes:
+                        create_file:
+                            file_name: /tmp/chef_node_data_bag_user.db1.i1.txt
+                            data_bag_name: db1
+                            data_bag_item: i1
+                            data_bag_key: k1
+                    runlists:
+                        create: recipe[create-file::from-data-bag]
+            relationships:
+                -
+                    type: cloudify.relationships.contained_in
+                    target: server
+

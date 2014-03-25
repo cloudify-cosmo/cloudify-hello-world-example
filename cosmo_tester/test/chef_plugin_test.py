@@ -32,6 +32,7 @@ CHEF_SERVER_COOKBOOKS_TAR_GZS = (
 
 import fabric.api
 from path import path
+import sh
 import subprocess
 import sys
 import time
@@ -107,8 +108,9 @@ def update_blueprint(env, blueprint, hostname, userdata_vars=None):
             vm['properties']['server']['security_groups'].append(
                 env.agents_security_group)
             props = vm['properties']['server']
-            props['userdata'] = props['userdata'].format(
-                hostname=vm_hostname, **(userdata_vars or {}))
+            if 'userdata' in props:
+                props['userdata'] = props['userdata'].format(
+                    hostname=vm_hostname, **(userdata_vars or {}))
         users.append(vm['properties']['worker_config']['user'])
 
     fips = get_nodes_of_type(blueprint, 'cloudify.openstack.floatingip')
@@ -232,17 +234,27 @@ class ChefPluginSoloTest(TestCase):
 
         self.blueprint_dir = self.copy_blueprint('chef-plugin')
 
+        # Get resources
+        with self.blueprint_dir:
+            # Cookbooks
+            for name, url in CHEF_SERVER_COOKBOOKS_TAR_GZS:
+                sh.mkdir('-p', 'cookbooks/' + name)
+                sh.tar(sh.wget('-qO-', url), 'xvzC', 'cookbooks/' + name,
+                       '--strip-components=1')
+            for res in 'data_bags', 'environments', 'roles':
+                sh.tar('czf', res+'.tgz', res)
+
     def test_chef_solo(self):
-        raise RuntimeError('Solot test is not implemented yet')
         agent_key_file = get_agent_key_file(self.env)
         blueprint_dir = self.blueprint_dir
         self.blueprint_yaml = blueprint_dir / 'chef-solo-test.yaml'
         with YamlFile(self.blueprint_yaml) as blueprint:
             bp_info = update_blueprint(self.env, blueprint, 'chef-solo')
 
-
         id_ = self.test_id + '-chef-solo-' + str(int(time.time()))  # XXX
         before, after = self.upload_deploy_and_execute_install(id_, id_)
+
+        import ipdb; ipdb.set_trace()
 
         fip_node = find_node_state('ip', after['node_state'][id_])
         chef_solo_ip = fip_node['runtimeInfo']['floating_ip_address']
@@ -255,8 +267,5 @@ class ChefPluginSoloTest(TestCase):
             'host_string': chef_solo_ip,
         })
 
-        # import pdb; pdb.set_trace()
-
         out = fabric.api.run('cat /tmp/blueprint.txt')
         self.assertEquals(out, 'Great success!')
-
