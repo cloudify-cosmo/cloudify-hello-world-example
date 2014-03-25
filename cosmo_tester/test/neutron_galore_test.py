@@ -72,7 +72,30 @@ class NeutronGaloreTest(TestCase):
             patch.set_value(ip_path, self.env.external_network_name)
 
     def post_install_assertions(self, before_state, after_state):
-        pass
+        delta = self.get_manager_state_delta(before_state, after_state)
+        node_states = self.get_node_states(delta['node_state'])
+
+        print
+        print
 
     def post_uninstall_assertions(self):
         pass
+
+    def get_node_states(self, node_states):
+        return {
+            'server': self._node_state('nova_server', node_states),
+            'network': self._node_state('neutron_network', node_states),
+            'subnet': self._node_state('neutron_subnet', node_states),
+            'router': self._node_state('neutron_router', node_states),
+            'port': self._node_state('neutron_port', node_states),
+            'sg_src': self._node_state('security_group_src', node_states),
+            'sg_dst': self._node_state('security_group_dst', node_states),
+            'floatingip': self._node_state('floatingip', node_states)
+        }
+
+    def _node_state(self, starts_with, node_states):
+        node_states = node_states.values()[0].values()
+        state = [state for state in node_states
+                 if state['id'].startswith(starts_with)][0]
+        self.assertEqual(state['state'], 'started')
+        return state['runtimeInfo']

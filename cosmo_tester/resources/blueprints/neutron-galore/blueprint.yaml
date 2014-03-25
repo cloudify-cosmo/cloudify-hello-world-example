@@ -11,6 +11,8 @@ blueprint:
                    target: neutron_port
                -   type: cloudify.relationships.depends_on
                    target: security_group_dst
+               -   type: cloudify.openstack.server_connected_to_floating_ip
+                   target: floatingip
             properties:
                 install_agent: true
                 worker_config:
