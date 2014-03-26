@@ -17,10 +17,8 @@
 __author__ = 'dan'
 
 
-import shutil
-
 from cosmo_tester.framework.testenv import TestCase
-from cosmo_tester.framework.util import get_blueprint_path, YamlPatcher
+from cosmo_tester.framework.util import YamlPatcher
 from cosmo_tester.framework.openstack_api import openstack_clients
 
 
@@ -45,9 +43,6 @@ class NeutronGaloreTest(TestCase):
         self.execute_uninstall()
 
         self.post_uninstall_assertions()
-
-    def copy_python_webserver_blueprint(self, target):
-        shutil.copytree(get_blueprint_path('neutron-galore'), target)
 
     def modify_blueprint(self):
         with YamlPatcher(self.blueprint_yaml) as patch:
@@ -188,7 +183,7 @@ class NeutronGaloreTest(TestCase):
         sid = 'openstack_server_id'
         eid = 'external_id'
         sg = 'security_group'
-        i = 'floatingip'
+        i = 'floatingip'  # sorry, must fit short line :\
         return {
             'server': nova.servers.get(states['server'][sid]).to_dict(),
             'network': neutron.show_network(states['network'][eid])['network'],
@@ -209,7 +204,6 @@ class NeutronGaloreTest(TestCase):
 
     def assert_obj_list_contains_subset(self, obj_list, subset):
         for obj in obj_list:
-            if set(subset.keys()) <= set(obj.keys()) and \
-               all([obj[key] == value for key, value in subset.items()]):
+            if all([obj.get(key) == value for key, value in subset.items()]):
                     return
         self.fail('Could not find {0} in {1}'.format(subset, obj_list))
