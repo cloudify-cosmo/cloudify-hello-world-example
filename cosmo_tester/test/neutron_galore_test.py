@@ -21,6 +21,7 @@ import shutil
 
 from cosmo_tester.framework.testenv import TestCase
 from cosmo_tester.framework.util import get_blueprint_path, YamlPatcher
+from cosmo_tester.framework.openstack_api import openstack_clients
 
 
 class NeutronGaloreTest(TestCase):
@@ -74,6 +75,8 @@ class NeutronGaloreTest(TestCase):
     def post_install_assertions(self, before_state, after_state):
         delta = self.get_manager_state_delta(before_state, after_state)
         node_states = self.get_node_states(delta['node_state'])
+        openstack = self.get_openstack_components(node_states)
+
 
         print
         print
@@ -91,6 +94,21 @@ class NeutronGaloreTest(TestCase):
             'sg_src': self._node_state('security_group_src', node_states),
             'sg_dst': self._node_state('security_group_dst', node_states),
             'floatingip': self._node_state('floatingip', node_states)
+        }
+
+    def get_openstack_components(self, states):
+        nova, neutron = openstack_clients(self.env.cloudify_config)
+        sid = 'openstack_server_id'
+        eid = 'external_id'
+        return {
+            'server': nova.servers.get(states['server'][sid]),
+            'network': neutron.show_network(states['network'][eid]),
+            'subnet': neutron.show_subnet(states['subnet'][eid]),
+            'router': neutron.show_router(states['router'][eid]),
+            'port': neutron.show_port(states['port'][eid]),
+            'sg_src': neutron.show_security_group(states['sg_src'][eid]),
+            'sg_dst': neutron.show_security_group(states['sg_dst'][eid]),
+            'floatingip': neutron.show_floatingip(states['floatingip'][eid])
         }
 
     def _node_state(self, starts_with, node_states):

@@ -153,15 +153,6 @@ def _client_creds(cloudify_config):
     }
 
 
-# currently assumes only one - need to see
-def _extract_router_interface_subnet_id(ports, relevant_ports):
-    for port in ports:
-        if port['id'] in relevant_ports and \
-           port['device_owner'] == 'network:router_interface':
-            return port['id'], port['fixed_ips'][0]['subnet_id']
-    return None, None
-
-
 def _networks(neutron):
     return [(n['id'], n['name'])
             for n in neutron.list_networks()['networks']]
