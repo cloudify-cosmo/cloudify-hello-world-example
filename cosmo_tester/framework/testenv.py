@@ -58,6 +58,7 @@ logging.getLogger('novaclient.client').setLevel(logging.INFO)
 
 CLOUDIFY_TEST_MANAGEMENT_IP = 'CLOUDIFY_TEST_MANAGEMENT_IP'
 CLOUDIFY_TEST_CONFIG_PATH = 'CLOUDIFY_TEST_CONFIG_PATH'
+CLOUDIFY_TEST_NO_CLEANUP = 'CLOUDIFY_TEST_NO_CLEANUP'
 
 
 class CleanupContext(object):
@@ -74,9 +75,15 @@ class CleanupContext(object):
         before_cleanup = openstack_infra_state(self.cloudify_config)
         resources_to_teardown = openstack_infra_state_delta(
             before=self.before_run, after=before_cleanup)
-        self.logger.info('[{0}] Performing cleanup: will try removing these '
-                         'resources: {1}'
+        if os.environ.get(CLOUDIFY_TEST_NO_CLEANUP):
+            self.logger.warn('[{0}] SKIPPING cleanup: of the resources: {1}'
+                             .format(self.context_name, resources_to_teardown))
+            return
+
+        self.logger.info('[{0}] Performing cleanup: will try removing '
+                         'these resources: {1}'
                          .format(self.context_name, resources_to_teardown))
+
         leftovers = remove_openstack_resources(self.cloudify_config,
                                                resources_to_teardown)
         self.logger.info('[{0}] Leftover resources after cleanup: {1}'

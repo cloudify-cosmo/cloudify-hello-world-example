@@ -157,8 +157,8 @@ blueprint:
                             data_bag_name: db1
                             data_bag_item: i1
                             data_bag_key: k1
-                    runlists:
-                        create: recipe[create-file::from-data-bag]
+                    runlists: []
+                    runlist: recipe[create-file::from-data-bag]
             relationships:
                 -
                     type: cloudify.relationships.contained_in

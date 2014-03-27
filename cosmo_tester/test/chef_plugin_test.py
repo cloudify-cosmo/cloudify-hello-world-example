@@ -241,8 +241,8 @@ class ChefPluginSoloTest(TestCase):
                 sh.mkdir('-p', 'cookbooks/' + name)
                 sh.tar(sh.wget('-qO-', url), 'xvzC', 'cookbooks/' + name,
                        '--strip-components=1')
-            for res in 'data_bags', 'environments', 'roles':
-                sh.tar('czf', res+'.tgz', res)
+            for res in 'cookbooks', 'data_bags', 'environments', 'roles':
+                sh.tar('czf', res+'.tar.gz', res)
 
     def test_chef_solo(self):
         agent_key_file = get_agent_key_file(self.env)
@@ -254,7 +254,7 @@ class ChefPluginSoloTest(TestCase):
         id_ = self.test_id + '-chef-solo-' + str(int(time.time()))  # XXX
         before, after = self.upload_deploy_and_execute_install(id_, id_)
 
-        import ipdb; ipdb.set_trace()
+        # import ipdb; ipdb.set_trace()
 
         fip_node = find_node_state('ip', after['node_state'][id_])
         chef_solo_ip = fip_node['runtimeInfo']['floating_ip_address']
@@ -267,5 +267,15 @@ class ChefPluginSoloTest(TestCase):
             'host_string': chef_solo_ip,
         })
 
-        out = fabric.api.run('cat /tmp/blueprint.txt')
-        self.assertEquals(out, 'Great success!')
+        expected_files_contents = (
+            ('/tmp/blueprint.txt', 'Great success number #2 !'),
+            ('/tmp/blueprint2.txt', '/tmp/blueprint.txt'),
+            ('/tmp/chef_node_env.e1.txt', 'env:e1'),
+            ('/tmp/chef_node_data_bag_user.db1.i1.txt', 'db1-i1-k1'),
+        )
+
+        for file_name, expected_content in expected_files_contents:
+            actual_content = fabric.api.run('cat ' + file_name)
+            msg = "File '{0}' should have content '{1}' but has '{2}'".format(
+                file_name, expected_content, actual_content)
+            self.assertEquals(actual_content, expected_content, msg)
