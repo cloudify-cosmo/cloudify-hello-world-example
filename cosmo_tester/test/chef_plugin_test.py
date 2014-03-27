@@ -29,6 +29,9 @@ CHEF_SERVER_COOKBOOKS_TAR_GZS = (
     ),
 )
 
+IMAGE_NAME = 'Ubuntu Precise 12.04 LTS Server 64-bit 20121026 (b)'
+FLAVOR_NAME = 'standard.small'
+
 
 import fabric.api
 from path import path
@@ -102,8 +105,11 @@ def update_blueprint(env, blueprint, hostname, userdata_vars=None):
         # vm['properties']['server'] does not exist when using existing one
         if 'server' in vm['properties']:
             vm['properties']['server'].update({
-                'name': vm_hostname,
+                'flavor_name': FLAVOR_NAME,
+                'image_name': IMAGE_NAME,
                 'key_name': env.agent_keypair_name,
+                'management_network_name': env.management_network_name,
+                'name': vm_hostname,
             })
             vm['properties']['server']['security_groups'].append(
                 env.agents_security_group)
@@ -127,21 +133,6 @@ class ChefPluginClientTest(TestCase):
 
         super(ChefPluginClientTest, self).setUp(*args, **kwargs)
         agent_key_file = get_agent_key_file(self.env)
-
-        ### # XXX - continue with existing setup
-        ### self.test_id = 'system-test-20140325-1303'
-        ### self.blueprint_dir = path('/tmp/cosmo-test-PtHEwB/chef-plugin')
-        ### self.chef_server_hostname = 'system-test-20140325-1303-chef-server'
-        ### self.chef_server_ip = '15.126.198.93'
-        ### fabric_env = fabric.api.env
-        ### fabric_env.update({
-        ###     'timeout': 30,
-        ###     'user': 'ubuntu',
-        ###     'key_filename': str(agent_key_file),
-        ###     'host_string': self.chef_server_ip,
-        ### })
-        ### return
-        ### # XXX
 
         blueprint_dir = self.copy_blueprint('chef-plugin')
         self.blueprint_yaml = blueprint_dir / 'chef-server-by-chef-solo.yaml'

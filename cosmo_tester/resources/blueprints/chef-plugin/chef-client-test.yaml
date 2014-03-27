@@ -1,10 +1,5 @@
 plugins:
 
-    cloudify_plugin_existing_server:
-        derived_from: cloudify.plugins.manager_plugin
-        properties:
-            url: https://github.com/ilyash/cloudify-plugin-existing-server/archive/master.zip
-
     cloudify_plugin_chef:
         derived_from: cloudify.plugins.agent_plugin
         properties:
@@ -13,22 +8,11 @@ plugins:
 
 imports:
     - cloudify.openstack
-    - existing-server-type.yaml
     - chef-type.yaml
 
 blueprint:
     name: system-test-chef-client
     nodes:
-        # -
-        #     name: existing_server
-        #     type: existing_server
-        #     properties:
-        #         ip: 10.67.79.222
-        #         install_agent: true
-        #         worker_config:
-        #             port: 22
-        #             user: ubuntu
-        #             key: ~/.ssh/cloudify-agents-kp-ilya.pem
         -
             name: server
             type: cloudify.openstack.server
@@ -38,11 +22,11 @@ blueprint:
                     port: 22
                     user: ubuntu
                     key: REPLACED-BY-TEST
-                management_network_name: cloudify-admin-network
+                management_network_name: REPLACED-BY-TEST
                 server:
                     name: REPLACED-BY-TEST
-                    image_name: Ubuntu Precise 12.04 LTS Server 64-bit 20121026 (b)
-                    flavor_name: standard.small  # 2G RAM, 2 CPUs
+                    image_name: REPLACED-BY-TEST
+                    flavor_name: REPLACED-BY-TEST
                     key_name: REPLACED-BY-TEST
                     # chef_sg is created during setUp()
                     security_groups: [chef_sg]  # MODIFIED-BY-TEST (adds agents security group to the list)
