@@ -108,9 +108,10 @@ def update_blueprint(env, blueprint, hostname, userdata_vars=None):
                 'flavor_name': FLAVOR_NAME,
                 'image_name': IMAGE_NAME,
                 'key_name': env.agent_keypair_name,
-                'management_network_name': env.management_network_name,
                 'name': vm_hostname,
             })
+            vm['properties']['management_network_name'] = (
+                env.management_network_name)
             vm['properties']['server']['security_groups'].append(
                 env.agents_security_group)
             props = vm['properties']['server']
