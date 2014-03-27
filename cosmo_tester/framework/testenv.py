@@ -69,9 +69,7 @@ class CleanupContext(object):
         self.before_run = openstack_infra_state(cloudify_config)
 
     def cleanup(self):
-        before_cleanup = openstack_infra_state(self.cloudify_config)
-        resources_to_teardown = openstack_infra_state_delta(
-            before=self.before_run, after=before_cleanup)
+        resources_to_teardown = self.get_resources_to_teardown()
         self.logger.info('[{0}] Performing cleanup: will try removing these '
                          'resources: {1}'
                          .format(self.context_name, resources_to_teardown))
@@ -79,6 +77,11 @@ class CleanupContext(object):
                                                resources_to_teardown)
         self.logger.info('[{0}] Leftover resources after cleanup: {1}'
                          .format(self.context_name, leftovers))
+
+    def get_resources_to_teardown(self):
+        current_state = openstack_infra_state(self.cloudify_config)
+        return openstack_infra_state_delta(before=self.before_run,
+                                           after=current_state)
 
 
 # Singleton class
@@ -93,7 +96,7 @@ class TestEnvironment(object):
         self.rest_client = None
         self.management_ip = None
 
-        if not CLOUDIFY_TEST_CONFIG_PATH in os.environ:
+        if CLOUDIFY_TEST_CONFIG_PATH not in os.environ:
             raise RuntimeError('a path to cloudify-config must be configured '
                                'in "CLOUDIFY_TEST_CONFIG_PATH" env variable')
         self.cloudify_config_path = path(os.environ[CLOUDIFY_TEST_CONFIG_PATH])

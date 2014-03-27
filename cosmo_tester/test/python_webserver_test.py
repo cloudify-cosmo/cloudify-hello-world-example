@@ -170,5 +170,5 @@ class PythonWebServerTest(TestCase):
                          .format(img_url))
 
     def post_uninstall_assertions(self):
-        #TODO
+        # TODO
         pass

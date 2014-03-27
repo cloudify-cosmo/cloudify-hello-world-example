@@ -72,22 +72,31 @@ class NeutronGaloreTest(TestCase):
         node_states = self.get_node_states(delta['node_state'])
         openstack = self.get_openstack_components(node_states)
 
-        self.assertEqual(openstack['server']['addresses']
-                                  ['dank-cloudify-admin-network']
-                                  [0]['OS-EXT-IPS:type'], 'fixed')
-        self.assertEqual(openstack['server']['addresses']
-                         ['dank-cloudify-admin-network']
-                         [1]['OS-EXT-IPS:type'], 'fixed')
         floatingip_address = openstack['server']['addresses'][
-            'dank-cloudify-admin-network'][0]['addr']
-        self.assertEqual(openstack['server']['addresses']
-                         ['neutron_network_test']
-                         [0]['OS-EXT-IPS:type'], 'fixed')
-        self.assertEqual(openstack['server']['addresses']
-                         ['neutron_network_test']
-                         [0]['version'], 4)
+            'dank-cloudify-admin-network'][1]['addr']
         port_assigned_addr = openstack['server']['addresses'][
             'neutron_network_test'][0]['addr']
+        port_security_group_id = openstack['port']['security_groups'][0]
+        port_fixed_ip = openstack['port']['fixed_ips'][0]['ip_address']
+        port_network_id = openstack['port']['network_id']
+        port_subnet_id = openstack['port']['fixed_ips'][0]['subnet_id']
+        router_network_id = openstack['router']['external_gateway_info'][
+            'network_id']
+        sg_src_id = openstack['sg_src']['id']
+        network_subnet_id = openstack['network']['subnets'][0]
+
+        self.assertEqual(openstack['server']['addresses']
+                         ['dank-cloudify-admin-network'][0]
+                         ['OS-EXT-IPS:type'], 'fixed')
+        self.assertEqual(openstack['server']['addresses']
+                         ['dank-cloudify-admin-network'][1]
+                         ['OS-EXT-IPS:type'], 'floating')
+        self.assertEqual(openstack['server']['addresses']
+                         ['neutron_network_test'][0]
+                         ['OS-EXT-IPS:type'], 'fixed')
+        self.assertEqual(openstack['server']['addresses']
+                         ['neutron_network_test'][0]
+                         ['version'], 4)
         self.assertTrue(port_assigned_addr.startswith('10.10.10.'))
         self.assert_obj_list_contains_subset(
             openstack['server']['security_groups'],
@@ -100,23 +109,16 @@ class NeutronGaloreTest(TestCase):
             {'name': 'neutron_test_security_group_src'})
         self.assertEqual(openstack['server']['name'], 'novaservertest')
         self.assertEqual(openstack['port']['name'], 'neutron_test_port')
-        port_security_group_id = openstack['port']['security_groups'][0]
-        port_fixed_ip = openstack['port']['fixed_ips'][0]['ip_address']
         self.assertEqual(port_fixed_ip, port_assigned_addr)
-        port_network_id = openstack['port']['network_id']
-        port_subnet_id = openstack['port']['fixed_ips'][0]['subnet_id']
         self.assertEqual(openstack['floatingip']['floating_ip_address'],
                          floatingip_address)
+        self.assertEqual(openstack['floatingip']['floating_network_id'],
+                         router_network_id)
         self.assertEqual(openstack['router']['name'], 'neutron_router_test')
-        router_network_id = openstack['router']['external_gateway_info'][
-            'network_id']
         self.assertEqual(openstack['sg_src']['name'],
                          'neutron_test_security_group_src')
-        sg_src_id = openstack['sg_src']['id']
         self.assertEqual(port_security_group_id, sg_src_id)
         self.assertEqual(openstack['network']['name'], 'neutron_network_test')
-        network_subnet_id = openstack['network']['subnets'][0]
-        self.assertEqual(router_network_id, openstack['network']['id'])
         self.assertEqual(port_network_id, openstack['network']['id'])
         self.assertEqual(openstack['subnet']['name'], 'neutron_subnet_test')
         self.assertEqual(openstack['subnet']['cidr'], '10.10.10.0/24')
@@ -152,7 +154,7 @@ class NeutronGaloreTest(TestCase):
         self.assertEqual(node_states['floatingip']['floating_ip_address'],
                          floatingip_address)
         self.assertEqual(openstack['server']['addresses']
-                                  ['dank-cloudify-admin-network'][0]['addr'],
+                         ['dank-cloudify-admin-network'][0]['addr'],
                          node_states['server']['networks']
                          ['dank-cloudify-admin-network'][0])
         self.assertEqual(openstack['server']['addresses']
@@ -162,9 +164,13 @@ class NeutronGaloreTest(TestCase):
         self.assertEqual(node_states['server']['ip'],
                          openstack['server']['addresses']
                          ['dank-cloudify-admin-network'][0]['addr'])
+        self.assert_router_connected_to_subnet(openstack['router']['id'],
+                                               openstack['router_ports'],
+                                               openstack['subnet']['id'])
 
     def post_uninstall_assertions(self):
-        pass
+        leftovers = self._test_cleanup_context.get_resources_to_teardown()
+        self.assertTrue(all([len(g) == 0 for g in leftovers.values()]))
 
     def get_node_states(self, node_states):
         return {
@@ -184,15 +190,17 @@ class NeutronGaloreTest(TestCase):
         eid = 'external_id'
         sg = 'security_group'
         i = 'floatingip'  # sorry, must fit short line :\
+        rid = states['router'][eid]
         return {
             'server': nova.servers.get(states['server'][sid]).to_dict(),
             'network': neutron.show_network(states['network'][eid])['network'],
             'subnet': neutron.show_subnet(states['subnet'][eid])['subnet'],
-            'router': neutron.show_router(states['router'][eid])['router'],
+            'router': neutron.show_router(rid)['router'],
             'port': neutron.show_port(states['port'][eid])['port'],
             'sg_src': neutron.show_security_group(states['sg_src'][eid])[sg],
             'sg_dst': neutron.show_security_group(states['sg_dst'][eid])[sg],
-            'floatingip': neutron.show_floatingip(states['floatingip'][eid])[i]
+            'floatingip': neutron.show_floatingip(states[i][eid])[i],
+            'router_ports': neutron.list_ports(device_id=rid)['ports']
         }
 
     def _node_state(self, starts_with, node_states):
@@ -207,3 +215,12 @@ class NeutronGaloreTest(TestCase):
             if all([obj.get(key) == value for key, value in subset.items()]):
                     return
         self.fail('Could not find {0} in {1}'.format(subset, obj_list))
+
+    def assert_router_connected_to_subnet(self, router_id,
+                                          router_ports, subnet_id):
+        for port in router_ports:
+            for fixed_ip in port.get('fixed_ips', []):
+                if fixed_ip.get('subnet_id') == subnet_id:
+                    return
+        self.fail('router {0} is not connected to subnet {1}'
+                  .format(router_id, subnet_id))
