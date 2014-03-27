@@ -44,11 +44,12 @@ blueprint:
                     image_name: Ubuntu Precise 12.04 LTS Server 64-bit 20121026 (b)
                     flavor_name: standard.small  # 2G RAM, 2 CPUs
                     key_name: REPLACED-BY-TEST
-                    # chef_sg is created during setUp()
                     security_groups: [chef_sg]  # MODIFIED-BY-TEST (adds agents security group to the list)
             relationships:
                 -   type: cloudify.openstack.server_connected_to_floating_ip
                     target: ip
+                -   type: cloudify.relationships.connected_to
+                    target: chef_sg
 
         -
             name: ip
@@ -163,3 +164,14 @@ blueprint:
                     type: cloudify.relationships.contained_in
                     target: server
 
+        -
+            name: chef_sg
+            type: cloudfiy.openstack.security_group
+            properties:
+                security_group:
+                    name: chef_sg
+                rules:
+                    -   remote_ip_prefix: 0.0.0.0/0
+                        port: 22
+                    -   remote_ip_prefix: 0.0.0.0/0
+                        port: 443
