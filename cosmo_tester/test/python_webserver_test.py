@@ -27,7 +27,7 @@ class PythonWebServerTest(TestCase):
 
     flavor_name = 'm1.small'
     host_name = 'danktestvm'
-    image_name = 'Ubuntu 12.04 64bit'
+    image_name = 'Ubuntu-NP'
     security_groups = ['webserver_security_group']
 
     def test_python_webserver(self):
@@ -170,5 +170,5 @@ class PythonWebServerTest(TestCase):
                          .format(img_url))
 
     def post_uninstall_assertions(self):
-        #TODO
+        # TODO
         pass
