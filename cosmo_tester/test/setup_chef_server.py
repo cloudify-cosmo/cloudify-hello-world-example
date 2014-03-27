@@ -38,18 +38,3 @@ def setup(local_dir, cookbooks):
 
     userize_file("/etc/chef-server/chef-validator.pem")
     operations.get('~/chef-validator.pem', str(local_dir))
-
-if __name__ == '__main__':
-    # XXX: not tested - start
-    host, user, key_filename, local_dir, cookbooks = sys.argv[1:]
-    local_dir = path(local_dir)
-    # Cookbooks: name1:url1,name2:url2
-    cookbooks = [v.split(':', 1) for v in cookbooks.split(',')]
-    env.update({
-        'timeout': 30,
-        'user': user,
-        'key_filename': key_filename,
-        'host_string': host,
-    })
-    setup(local_dir, cookbooks)
-    # XXX: not tested - end
