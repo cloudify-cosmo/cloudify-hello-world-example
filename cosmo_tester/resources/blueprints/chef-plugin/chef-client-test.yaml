@@ -1,20 +1,11 @@
-plugins:
-
-    cloudify_plugin_chef:
-        derived_from: cloudify.plugins.agent_plugin
-        properties:
-            url: https://github.com/Fewbytes/cloudify-plugin-chef/archive/master.zip
-            # folder: cloudify-plugin-chef
-
 imports:
     - cloudify.openstack
-    - chef-type.yaml
+    - cloudify.chef
 
 blueprint:
     name: system-test-chef-client
     nodes:
-        -
-            name: server
+        -   name: server
             type: cloudify.openstack.server
             properties:
                 install_agent: true
@@ -36,17 +27,13 @@ blueprint:
             relationships:
                 -   type: cloudify.openstack.server_connected_to_floating_ip
                     target: ip
-
-        -
-            name: ip
+        -   name: ip
             type: cloudify.openstack.floatingip
             properties:
                 floatingip:
                     floating_network_name: REPLACED-BY-TEST
-
-        -
-            name: chef_node_one
-            type: db_server_chef
+        -   name: chef_node_one
+            type: cloudify.types.chef.db_server
             properties:
                 chef_config:
                     version: 11.10.4-1
@@ -66,6 +53,5 @@ blueprint:
                     runlists:
                         create:    recipe[create-file]
             relationships:
-                -
-                    type: cloudify.relationships.contained_in
+                -   type: cloudify.relationships.contained_in
                     target: server

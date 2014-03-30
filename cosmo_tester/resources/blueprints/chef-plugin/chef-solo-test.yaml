@@ -1,20 +1,11 @@
-plugins:
-
-    cloudify_plugin_chef:
-        derived_from: cloudify.plugins.agent_plugin
-        properties:
-            url: https://github.com/Fewbytes/cloudify-plugin-chef/archive/master.zip
-            # folder: cloudify-plugin-chef
-
 imports:
     - cloudify.openstack
-    - chef-type.yaml
+    - cloudify.chef
 
 blueprint:
     name: system-test-chef-client
     nodes:
-        -
-            name: server
+        -   name: server
             type: cloudify.openstack.server
             properties:
                 install_agent: true
@@ -34,17 +25,13 @@ blueprint:
                     target: ip
                 -   type: cloudify.relationships.connected_to
                     target: chef_sg
-
-        -
-            name: ip
+        -   name: ip
             type: cloudify.openstack.floatingip
             properties:
                 floatingip:
                     floating_network_name: REPLACED-BY-TEST
-
-        -
-            name: chef_node_one
-            type: db_server_chef
+        -   name: chef_node_one
+            type: cloudify.types.chef.db_server
             properties:
                 chef_config:
                     version: 11.10.4-1
@@ -60,12 +47,10 @@ blueprint:
                     runlists:
                         create:    recipe[create-file]
             relationships:
-                -
-                    type: cloudify.relationships.contained_in
+                -   type: cloudify.relationships.contained_in
                     target: server
-        -
-            name: chef_node_two
-            type: app_server_chef
+        -   name: chef_node_two
+            type: cloudify.types.chef.app_server
             properties:
                 chef_config:
                     version: 11.10.4-1
@@ -82,17 +67,13 @@ blueprint:
                     runlists:
                         establish: recipe[create-file]
             relationships:
-                -
-                    type: cloudify.chef.connected_to
+                -   type: cloudify.chef.connected_to
                     target: chef_node_one
-                -
-                    type: cloudify.relationships.contained_in
+                -   type: cloudify.relationships.contained_in
                     target: server
-
-        -
-            # Concurrent installation with chef_node_one
+        -   # Concurrent installation with chef_node_one
             name: chef_node_env_e1
-            type: app_server_chef
+            type: cloudify.types.chef.app_server
             properties:
                 chef_config:
                     version: 11.10.4-1
@@ -105,14 +86,11 @@ blueprint:
                     runlists:
                         create: recipe[create-file]
             relationships:
-                -
-                    type: cloudify.relationships.contained_in
+                -   type: cloudify.relationships.contained_in
                     target: server
-
-        -
-            # Concurrent installation with chef_node_one
+        -   # Concurrent installation with chef_node_one
             name: chef_node_role_r1
-            type: app_server_chef
+            type: cloudify.types.chef.app_server
             properties:
                 chef_config:
                     version: 11.10.4-1
@@ -121,14 +99,11 @@ blueprint:
                     runlists:
                         create: role[r1]
             relationships:
-                -
-                    type: cloudify.relationships.contained_in
+                -   type: cloudify.relationships.contained_in
                     target: server
-
-        -
-            # Concurrent installation with chef_node_one
+        -   # Concurrent installation with chef_node_one
             name: chef_node_data_bag_user
-            type: app_server_chef
+            type: cloudify.types.chef.app_server
             properties:
                 chef_config:
                     version: 11.10.4-1
@@ -144,12 +119,9 @@ blueprint:
                     runlists: []
                     runlist: recipe[create-file::from-data-bag]
             relationships:
-                -
-                    type: cloudify.relationships.contained_in
+                -   type: cloudify.relationships.contained_in
                     target: server
-
-        -
-            name: chef_sg
+        -   name: chef_sg
             type: cloudfiy.openstack.security_group
             properties:
                 security_group:
