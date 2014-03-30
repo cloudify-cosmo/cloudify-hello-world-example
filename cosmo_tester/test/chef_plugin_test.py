@@ -17,13 +17,14 @@
 
 __author__ = 'ilyash'
 
+import subprocess
+import sys
+import time
+
 from fabric import operations
 import fabric.api
 from path import path
 import sh
-import subprocess
-import sys
-import time
 
 from cosmo_tester.framework.testenv import TestCase
 from cosmo_tester.framework.util import YamlPatcher
@@ -48,22 +49,22 @@ IMAGE_NAME = 'Ubuntu-NP'
 FLAVOR_NAME = 'm1.small'
 
 
-def use_cookbook(cookbook_name, cookbook_url):
+def _use_cookbook(cookbook_name, cookbook_url):
     """ Downloads cookbook from given url and uploads it to the Chef server """
     fabric.api.run('mkdir -p ~/cookbooks/{0}'.format(cookbook_name))
     # Next line was inspired by (sorry, flake8)
     # https://github.com/opscode-cookbooks/chef-server/blame/
     # c588a4c401d3fac14f70d3285fe49eb4dccd9759/README.md#L158
-    fabric.api.run('wget -qO- {0} | tar xvzC ~/cookbooks/'
-                   '{1} --strip-components=1'.format(cookbook_url,
-                                                     cookbook_name))
-    fabric.api.run('knife cookbook upload ' + KNIFE_PARAMS +
-                   ' --cookbook-path ~/cookbooks ' + cookbook_name)
-    fabric.api.run('knife cookbook list ' + KNIFE_PARAMS + ' | grep -F '
-                   + cookbook_name + ' ')
+    fabric.api.run('wget -qO- {0} | tar xvzC ~/cookbooks/{1}'
+                   ' --strip-components=1'.format(cookbook_url,
+                                                  cookbook_name))
+    fabric.api.run('knife cookbook upload {0} --cookbook-path ~/cookbooks {1}'
+                   .format(KNIFE_PARAMS, cookbook_name))
+    fabric.api.run('knife cookbook list {0} | grep -F {1} '
+                   .format(KNIFE_PARAMS, cookbook_name))
 
 
-def userize_file(original_path):
+def _userize_file(original_path):
     """ Places the file under user's home directory and make it
         permissions-wise accessible """
     fabric.api.sudo("cp -a {path} ~{user}/ && chown {user} ~{user}/{basename}"
@@ -73,11 +74,11 @@ def userize_file(original_path):
 
 
 def setup_chef_server(local_dir, cookbooks):
-    userize_file("/etc/chef-server/admin.pem")
+    _userize_file("/etc/chef-server/admin.pem")
     for cb in cookbooks:
-        use_cookbook(*cb)
+        _use_cookbook(*cb)
 
-    userize_file("/etc/chef-server/chef-validator.pem")
+    _userize_file("/etc/chef-server/chef-validator.pem")
     operations.get('~/chef-validator.pem', str(local_dir))
 
 
