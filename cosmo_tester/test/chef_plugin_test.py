@@ -56,11 +56,10 @@ def _use_cookbook(cookbook_name, cookbook_url):
     # https://github.com/opscode-cookbooks/chef-server/blame/
     # c588a4c401d3fac14f70d3285fe49eb4dccd9759/README.md#L158
     fabric.api.run('wget -qO- {0} | tar xvzC ~/cookbooks/{1}'
-                   ' --strip-components=1'.format(cookbook_url,
-                                                  cookbook_name))
+                   ' --strip-components=1'.format(cookbook_url, cookbook_name))
     fabric.api.run('knife cookbook upload {0} --cookbook-path ~/cookbooks {1}'
                    .format(KNIFE_PARAMS, cookbook_name))
-    fabric.api.run('knife cookbook list {0} | grep -F {1} '
+    fabric.api.run('knife cookbook list {0} | grep -F {1}'
                    .format(KNIFE_PARAMS, cookbook_name))
 
 
@@ -109,12 +108,9 @@ def update_blueprint(env, blueprint, hostname, userdata_vars=None):
         time.strftime("%Y%m%d-%H%M"), hostname)
     agent_key_file = get_agent_key_file(env)
     vms = get_nodes_of_type(blueprint, 'cloudify.openstack.server')
-    vms += get_nodes_of_type(blueprint, 'existing_server')
     if len(vms) > 1:
-        hostnames = [
-            '{0}-{1:2}'.format(hostname_base, i)
-            for i in range(0, len(vms))
-        ]
+        hostnames = ['{0}-{1:2}'.format(hostname_base, i)
+                     for i in range(0, len(vms))]
     else:
         hostnames = [hostname_base]
 
