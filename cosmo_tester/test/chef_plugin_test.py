@@ -29,8 +29,8 @@ CHEF_SERVER_COOKBOOKS_TAR_GZS = (
     ),
 )
 
-IMAGE_NAME = 'Ubuntu Precise 12.04 LTS Server 64-bit 20121026 (b)'
-FLAVOR_NAME = 'standard.small'
+IMAGE_NAME = 'Ubuntu-NP'
+FLAVOR_NAME = 'm1.small'
 
 
 import fabric.api
@@ -39,26 +39,11 @@ import sh
 import subprocess
 import sys
 import time
-import UserDict
-import yaml
 
 from cosmo_tester.framework.testenv import TestCase
+from cosmo_tester.framework.util import YamlPatcher
 
 from cosmo_tester.test import setup_chef_server
-
-
-class YamlFile(UserDict.UserDict):
-
-    def __init__(self, path):
-        self.path = path
-
-    def __enter__(self):
-        self.data = yaml.load(open(self.path, 'r'))
-        return self
-
-    def __exit__(self, ex_type, ex_val, ex_bt):
-        if not ex_type:
-            yaml.dump(self.data, open(self.path, 'w'))
 
 
 def find_node_state(node_name, nodes_state):
@@ -70,7 +55,8 @@ def find_node_state(node_name, nodes_state):
 
 
 def get_nodes_of_type(blueprint, type_):
-    return [n for n in blueprint['blueprint']['nodes'] if n['type'] == type_]
+    return [n for n in blueprint.obj['blueprint']['nodes']
+            if n['type'] == type_]
 
 
 def get_agent_key_file(env):
@@ -138,7 +124,7 @@ class ChefPluginClientTest(TestCase):
         blueprint_dir = self.copy_blueprint('chef-plugin')
         self.blueprint_yaml = blueprint_dir / 'chef-server-by-chef-solo.yaml'
 
-        with YamlFile(self.blueprint_yaml) as blueprint:
+        with YamlPatcher(self.blueprint_yaml) as blueprint:
             bp_info = update_blueprint(self.env, blueprint, 'chef-server')
 
         self.chef_server_hostname = bp_info['hostnames'][0]
@@ -185,7 +171,7 @@ class ChefPluginClientTest(TestCase):
     def test_chef_client(self):
         blueprint_dir = self.blueprint_dir
         self.blueprint_yaml = blueprint_dir / 'chef-client-test.yaml'
-        with YamlFile(self.blueprint_yaml) as blueprint:
+        with YamlPatcher(self.blueprint_yaml) as blueprint:
             update_blueprint(self.env, blueprint, 'chef-server', {
                 'chef_server_ip': self.chef_server_ip,
                 'chef_server_hostname': self.chef_server_hostname,
@@ -198,9 +184,7 @@ class ChefPluginClientTest(TestCase):
             chef_config['validation_key'] = (
                 path(blueprint_dir) / 'chef-validator.pem').text()
 
-        # import pdb; pdb.set_trace()
-
-        id_ = self.test_id + '-chef-client-' + str(int(time.time()))  # XXX
+        id_ = self.test_id + '-chef-client-' + str(int(time.time()))
         before, after = self.upload_deploy_and_execute_install(id_, id_)
 
         fip_node = find_node_state('ip', after['node_state'][id_])
@@ -240,13 +224,11 @@ class ChefPluginSoloTest(TestCase):
         agent_key_file = get_agent_key_file(self.env)
         blueprint_dir = self.blueprint_dir
         self.blueprint_yaml = blueprint_dir / 'chef-solo-test.yaml'
-        with YamlFile(self.blueprint_yaml) as blueprint:
+        with YamlPatcher(self.blueprint_yaml) as blueprint:
             bp_info = update_blueprint(self.env, blueprint, 'chef-solo')
 
-        id_ = self.test_id + '-chef-solo-' + str(int(time.time()))  # XXX
+        id_ = self.test_id + '-chef-solo-' + str(int(time.time()))
         before, after = self.upload_deploy_and_execute_install(id_, id_)
-
-        # import ipdb; ipdb.set_trace()
 
         fip_node = find_node_state('ip', after['node_state'][id_])
         chef_solo_ip = fip_node['runtimeInfo']['floating_ip_address']

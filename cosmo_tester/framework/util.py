@@ -53,7 +53,8 @@ class YamlPatcher(object):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.yaml_path.write_text(yaml.dump(self.obj))
+        if not exc_type:
+            self.yaml_path.write_text(yaml.dump(self.obj))
 
     def merge_obj(self, obj_prop_path, merged_props):
         obj = self._get_object_by_path(obj_prop_path)
