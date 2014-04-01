@@ -18,8 +18,8 @@ __author__ = 'dank'
 from setuptools import setup
 
 setup(
-    name='cosmo-tester',
-    version='0.3',
+    name='cloudify-system-tests',
+    version='3.0',
     author='dank',
     author_email='dank@gigaspaces.com',
     packages=['cosmo_tester'],
