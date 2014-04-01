@@ -20,8 +20,8 @@ import logging
 import sys
 import shutil
 import tempfile
+import time
 import copy
-import uuid
 import os
 
 import yaml
@@ -53,9 +53,12 @@ root.addHandler(ch)
 logger = logging.getLogger("TESTENV")
 logger.setLevel(logging.DEBUG)
 
+logging.getLogger('neutronclient.client').setLevel(logging.INFO)
+logging.getLogger('novaclient.client').setLevel(logging.INFO)
 
 CLOUDIFY_TEST_MANAGEMENT_IP = 'CLOUDIFY_TEST_MANAGEMENT_IP'
 CLOUDIFY_TEST_CONFIG_PATH = 'CLOUDIFY_TEST_CONFIG_PATH'
+CLOUDIFY_TEST_NO_CLEANUP = 'CLOUDIFY_TEST_NO_CLEANUP'
 
 
 class CleanupContext(object):
@@ -70,9 +73,14 @@ class CleanupContext(object):
 
     def cleanup(self):
         resources_to_teardown = self.get_resources_to_teardown()
+        if os.environ.get(CLOUDIFY_TEST_NO_CLEANUP):
+            self.logger.warn('[{0}] SKIPPING cleanup: of the resources: {1}'
+                             .format(self.context_name, resources_to_teardown))
+            return
         self.logger.info('[{0}] Performing cleanup: will try removing these '
                          'resources: {1}'
                          .format(self.context_name, resources_to_teardown))
+
         leftovers = remove_openstack_resources(self.cloudify_config,
                                                resources_to_teardown)
         self.logger.info('[{0}] Leftover resources after cleanup: {1}'
@@ -214,7 +222,7 @@ class TestCase(unittest.TestCase):
         self.cfy = CfyHelper(cfy_workdir=self.workdir,
                              management_ip=self.env.management_ip)
         self.rest = self.env.rest_client
-        self.test_id = uuid.uuid4()
+        self.test_id = 'system-test-{0}'.format(time.strftime("%Y%m%d-%H%M"))
         self.blueprint_yaml = None
         self._test_cleanup_context = CleanupContext(self._testMethodName,
                                                     self.env.cloudify_config)
@@ -272,18 +280,19 @@ class TestCase(unittest.TestCase):
             del after['nodes'][node_id]
         return after
 
-    def upload_deploy_and_execute_install(self):
+    def upload_deploy_and_execute_install(self, blueprint_id=None,
+                                          deployment_id=None):
         before_state = self.get_manager_state()
         self.cfy.upload_deploy_and_execute_install(
             str(self.blueprint_yaml),
-            blueprint_id=self.test_id,
-            deployment_id=self.test_id,
+            blueprint_id=blueprint_id or self.test_id,
+            deployment_id=deployment_id or self.test_id,
         )
         after_state = self.get_manager_state()
         return before_state, after_state
 
-    def execute_uninstall(self):
-        self.cfy.execute_uninstall(deployment_id=self.test_id)
+    def execute_uninstall(self, deployment_id=None):
+        self.cfy.execute_uninstall(deployment_id=deployment_id or self.test_id)
 
     def copy_blueprint(self, blueprint_dir_name):
         blueprint_path = path(self.workdir) / blueprint_dir_name

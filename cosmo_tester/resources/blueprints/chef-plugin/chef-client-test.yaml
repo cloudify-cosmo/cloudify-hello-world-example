@@ -1,0 +1,57 @@
+imports:
+    - cloudify.openstack
+    - cloudify.chef
+
+blueprint:
+    name: system-test-chef-client
+    nodes:
+        -   name: server
+            type: cloudify.openstack.server
+            properties:
+                install_agent: true
+                worker_config:
+                    port: 22
+                    user: ubuntu
+                    key: REPLACED-BY-TEST
+                management_network_name: REPLACED-BY-TEST
+                server:
+                    name: REPLACED-BY-TEST
+                    image_name: REPLACED-BY-TEST
+                    flavor_name: REPLACED-BY-TEST
+                    key_name: REPLACED-BY-TEST
+                    # chef_sg is created during setUp()
+                    security_groups: [chef_sg]  # MODIFIED-BY-TEST (adds agents security group to the list)
+                    userdata: |
+                        #!/bin/bash -ex
+                        grep -q "{chef_server_hostname}" /etc/hosts || echo "{chef_server_ip} {chef_server_hostname}" >> /etc/hosts
+            relationships:
+                -   type: cloudify.openstack.server_connected_to_floating_ip
+                    target: ip
+        -   name: ip
+            type: cloudify.openstack.floatingip
+            properties:
+                floatingip:
+                    floating_network_name: REPLACED-BY-TEST
+        -   name: chef_node_one
+            type: cloudify.types.chef.db_server
+            properties:
+                chef_config:
+                    version: 11.10.4-1
+
+                    chef_server_url: REPLACED-BY-TEST
+                    validation_client_name: REPLACED-BY-TEST
+                    validation_key: REPLACED-BY-TEST
+                    node_name_prefix: chef-node-
+                    node_name_suffix: .ilya.example.com
+
+                    environment: _default
+                    attributes:
+                        test_attr_1: test_val_1
+                        create_file:
+                            file_name: /tmp/blueprint.txt
+                            file_contents: Great success!
+                    runlists:
+                        create:    recipe[create-file]
+            relationships:
+                -   type: cloudify.relationships.contained_in
+                    target: server
