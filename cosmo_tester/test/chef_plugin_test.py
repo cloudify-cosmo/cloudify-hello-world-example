@@ -20,6 +20,7 @@ __author__ = 'ilyash'
 import subprocess
 import sys
 import time
+import os
 
 from fabric import operations
 import fabric.api
@@ -95,11 +96,10 @@ def get_nodes_of_type(blueprint, type_):
 
 
 def get_agent_key_file(env):
-    with env.cloudify_config_path.dirname():
-        agent_key_file = path(env.agent_key_path).abspath()
-        if not agent_key_file.exists():
-            raise RuntimeError("Agent key file {0} does not exist".format(
-                agent_key_file))
+    agent_key_file = path(os.path.expanduser(env.agent_key_path)).abspath()
+    if not agent_key_file.exists():
+        raise RuntimeError("Agent key file {0} does not exist".format(
+            agent_key_file))
     return agent_key_file
 
 
@@ -208,7 +208,8 @@ class ChefPluginClientTest(TestCase):
                 'chef_server_ip': self.chef_server_ip,
                 'chef_server_hostname': self.chef_server_hostname,
             })
-            chef_node = get_nodes_of_type(blueprint, 'db_server_chef')[0]
+            chef_node = get_nodes_of_type(blueprint,
+                                          'cloudify.types.chef.db_server')[0]
             chef_config = chef_node['properties']['chef_config']
             chef_config['chef_server_url'] = 'https://{0}:443'.format(
                 self.chef_server_ip)
