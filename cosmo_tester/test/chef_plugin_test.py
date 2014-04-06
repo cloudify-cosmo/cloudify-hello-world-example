@@ -29,19 +29,11 @@ import sh
 
 from cosmo_tester.framework.testenv import TestCase
 from cosmo_tester.framework.util import YamlPatcher
-
+from cosmo_tester.framework.util import get_blueprint_path
 
 CHEF_SERVER_COOKBOOK_ZIP_URL = (
     'https://github.com/opscode-cookbooks/chef-server/archive/'
     'c588a4c401d3fac14f70d3285fe49eb4dccd9759.zip'
-)
-
-CHEF_SERVER_COOKBOOKS_TAR_GZS = (
-    (
-        'create-file',
-        'https://github.com/ilyash/cookbook-create-file/archive/'
-        'bd8218a6a9b3e33a165042241c50908ccb6145d1.tar.gz'
-    ),
 )
 
 KNIFE_PARAMS = '-u admin -k ~/admin.pem'
@@ -49,15 +41,17 @@ KNIFE_PARAMS = '-u admin -k ~/admin.pem'
 IMAGE_NAME = 'Ubuntu 12.04'
 FLAVOR_NAME = 'm1.small'
 
+FILE_SERVER_PORT = 53229
 
-def _use_cookbook(cookbook_name, cookbook_url):
+
+def _use_cookbook(cookbook_name,
+                  cookbook_local_tar_path):
     """ Downloads cookbook from given url and uploads it to the Chef server """
     fabric.api.run('mkdir -p ~/cookbooks/{0}'.format(cookbook_name))
-    # Next line was inspired by (sorry, flake8)
-    # https://github.com/opscode-cookbooks/chef-server/blame/
-    # c588a4c401d3fac14f70d3285fe49eb4dccd9759/README.md#L158
-    fabric.api.run('wget -qO- {0} | tar xvzC ~/cookbooks/{1}'
-                   ' --strip-components=1'.format(cookbook_url, cookbook_name))
+    fabric.api.put(local_path=cookbook_local_tar_path,
+                   remote_path='/tmp/{0}.tar.gz'.format(cookbook_name))
+    fabric.api.run('tar /tmp/{0}.tar.gz xvzC ~/cookbooks/{0}'
+                   ' --strip-components=1'.format(cookbook_name))
     fabric.api.run('knife cookbook upload {0} --cookbook-path ~/cookbooks {1}'
                    .format(KNIFE_PARAMS, cookbook_name))
     fabric.api.run('knife cookbook list {0} | grep -F {1}'
@@ -198,7 +192,13 @@ class ChefPluginClientTest(TestCase):
             'host_string': self.chef_server_ip,
         })
 
-        setup_chef_server(blueprint_dir, CHEF_SERVER_COOKBOOKS_TAR_GZS)
+        cookbook_local_path = os.path.abspath(
+            os.path.join(get_blueprint_path('chef-plugin'),
+                         'cookbook-create-file-tar.gz'))
+        setup_chef_server(blueprint_dir, [[
+            'create-file',
+            cookbook_local_path,
+        ]])
         self.blueprint_dir = blueprint_dir
 
     def tearDown(self, *args, **kwargs):
@@ -252,11 +252,6 @@ class ChefPluginSoloTest(TestCase):
 
         # Get resources
         with self.blueprint_dir:
-            # Cookbooks
-            for name, url in CHEF_SERVER_COOKBOOKS_TAR_GZS:
-                sh.mkdir('-p', 'cookbooks/' + name)
-                sh.tar(sh.wget('-qO-', url), 'xvzC', 'cookbooks/' + name,
-                       '--strip-components=1')
             for res in 'cookbooks', 'data_bags', 'environments', 'roles':
                 sh.tar('czf', res+'.tar.gz', res)
 
