@@ -46,7 +46,7 @@ CHEF_SERVER_COOKBOOKS_TAR_GZS = (
 
 KNIFE_PARAMS = '-u admin -k ~/admin.pem'
 
-IMAGE_NAME = 'Ubuntu-NP'
+IMAGE_NAME = 'Ubuntu 12.04'
 FLAVOR_NAME = 'm1.small'
 
 
@@ -183,7 +183,8 @@ class ChefPluginClientTest(TestCase):
         with blueprint_dir:
             run(['tar', 'czf', 'cookbooks.tar.gz', 'cookbooks'])
 
-        id_ = self.test_id + '-chef-server'
+        self.chef_server_id = self.test_id + '-chef-server'
+        id_ = self.chef_server_id
         before, after = self.upload_deploy_and_execute_install(id_, id_)
 
         fip_node = find_node_state('ip', after['node_state'][id_])
@@ -199,6 +200,10 @@ class ChefPluginClientTest(TestCase):
 
         setup_chef_server(blueprint_dir, CHEF_SERVER_COOKBOOKS_TAR_GZS)
         self.blueprint_dir = blueprint_dir
+
+    def tearDown(self, *args, **kwargs):
+        self.execute_uninstall(self.chef_server_id)
+        super(ChefPluginClientTest, self).tearDown(*args, **kwargs)
 
     def test_chef_client(self):
         blueprint_dir = self.blueprint_dir
@@ -233,6 +238,8 @@ class ChefPluginClientTest(TestCase):
 
         out = fabric.api.run('cat /tmp/blueprint.txt')
         self.assertEquals(out, 'Great success!')
+
+        self.execute_uninstall(id_)
 
 
 class ChefPluginSoloTest(TestCase):
@@ -286,3 +293,5 @@ class ChefPluginSoloTest(TestCase):
             msg = "File '{0}' should have content '{1}' but has '{2}'".format(
                 file_name, expected_content, actual_content)
             self.assertEquals(actual_content, expected_content, msg)
+
+        self.execute_uninstall(id_)
