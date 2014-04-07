@@ -1,0 +1,11 @@
+{
+  "name": "e1",
+  "chef_type": "environment",
+  "json_class": "Chef::Environment",
+  "default_attributes": {
+    "create_file": {
+      "file_contents": "env:e1"
+    }
+  }
+}
+
