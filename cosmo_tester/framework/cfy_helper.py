@@ -28,6 +28,9 @@ from cosmo_tester.framework.util import sh_bake
 cfy = sh_bake(sh.cfy)
 
 
+DEFAULT_EXECUTE_TIMEOUT = 1800
+
+
 class CfyHelper(object):
 
     def __init__(self,
@@ -58,12 +61,13 @@ class CfyHelper(object):
                 alternate_bootstrap_method=alternate_bootstrap_method,
                 verbosity=verbose).wait()
 
-    def upload_deploy_and_execute_install(self,
-                                          blueprint_path,
-                                          blueprint_id,
-                                          deployment_id,
-                                          verbose=False,
-                                          execute_timeout=1800):
+    def upload_deploy_and_execute_install(
+            self,
+            blueprint_path,
+            blueprint_id,
+            deployment_id,
+            verbose=False,
+            execute_timeout=DEFAULT_EXECUTE_TIMEOUT):
         with self.workdir:
             cfy.blueprints.upload(
                 blueprint_path,
@@ -81,7 +85,7 @@ class CfyHelper(object):
     def execute_install(self,
                         deployment_id,
                         verbose=False,
-                        execute_timeout=1800):
+                        execute_timeout=DEFAULT_EXECUTE_TIMEOUT):
         self._execute_workflow(
             'install',
             deployment_id=deployment_id,
@@ -91,7 +95,7 @@ class CfyHelper(object):
     def execute_uninstall(self,
                           deployment_id,
                           verbose=False,
-                          execute_timeout=1800):
+                          execute_timeout=DEFAULT_EXECUTE_TIMEOUT):
         self._execute_workflow(
             'uninstall',
             deployment_id=deployment_id,
@@ -115,7 +119,7 @@ class CfyHelper(object):
                           workflow,
                           deployment_id,
                           verbose=False,
-                          execute_timeout=1800):
+                          execute_timeout=DEFAULT_EXECUTE_TIMEOUT):
         with self.workdir:
             cfy.deployments.execute(
                 workflow,

@@ -38,7 +38,7 @@ CHEF_SERVER_COOKBOOK_ZIP_URL = (
 
 KNIFE_PARAMS = '-u admin -k ~/admin.pem'
 
-IMAGE_NAME = 'Ubuntu 12.04'
+IMAGE_NAME = 'Ubuntu-NP'
 FLAVOR_NAME = 'm1.small'
 
 FILE_SERVER_PORT = 53229
@@ -50,8 +50,8 @@ def _use_cookbook(cookbook_name,
     fabric.api.run('mkdir -p ~/cookbooks/{0}'.format(cookbook_name))
     fabric.api.put(local_path=cookbook_local_tar_path,
                    remote_path='/tmp/{0}.tar.gz'.format(cookbook_name))
-    fabric.api.run('tar /tmp/{0}.tar.gz xvzC ~/cookbooks/{0}'
-                   ' --strip-components=1'.format(cookbook_name))
+    fabric.api.run('tar -xzvf /tmp/{0}.tar.gz --strip-components=1'
+                   ' -C ~/cookbooks/{0}'.format(cookbook_name))
     fabric.api.run('knife cookbook upload {0} --cookbook-path ~/cookbooks {1}'
                    .format(KNIFE_PARAMS, cookbook_name))
     fabric.api.run('knife cookbook list {0} | grep -F {1}'
@@ -156,7 +156,6 @@ class ChefPluginClientTest(TestCase):
         self.chef_server_hostname = bp_info['hostnames'][0]
 
         cookbooks_dir = blueprint_dir / 'cookbooks'
-        cookbooks_dir.mkdir()
 
         def run(*args, **kwargs):
             return subprocess.check_output(*args, stderr=sys.stderr, **kwargs)
@@ -194,7 +193,7 @@ class ChefPluginClientTest(TestCase):
 
         cookbook_local_path = os.path.abspath(
             os.path.join(get_blueprint_path('chef-plugin'),
-                         'cookbook-create-file-tar.gz'))
+                         'cookbook-create-file.tar.gz'))
         setup_chef_server(blueprint_dir, [[
             'create-file',
             cookbook_local_path,
