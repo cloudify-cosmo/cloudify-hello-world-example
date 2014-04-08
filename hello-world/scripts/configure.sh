@@ -1,4 +1,6 @@
-#!/bin/bash -e
+#!/bin/bash
+
+set -e
 
 . ${CLOUDIFY_LOGGING}
 . ${CLOUDIFY_FILE_SERVER}
@@ -9,15 +11,15 @@ if [ -d ${PYTHON_FILE_SERVER_ROOT} ]; then
 	echo "Removing file server root folder ${PYTHON_FILE_SERVER_ROOT}"
 	rm -rf ${PYTHON_FILE_SERVER_ROOT}
 fi
-info "Creating HTTP server root directory at ${PYTHON_FILE_SERVER_ROOT}"
+cfy_info "Creating HTTP server root directory at ${PYTHON_FILE_SERVER_ROOT}"
 mkdir -p ${PYTHON_FILE_SERVER_ROOT}
 
 echo "Changing directory to ${PYTHON_FILE_SERVER_ROOT}"
 cd ${PYTHON_FILE_SERVER_ROOT}
-info "Downloading index to web server"
-download_resource ${index_path} -O ${PYTHON_FILE_SERVER_ROOT}/index.html
-info "Downloading image to web server" -O ${PYTHON_FILE_SERVER_ROOT}/cloudify-logo.png
-download_resource ${image_path}
+cfy_info "Downloading index to web server"
+cfy_download_resource ${index_path} -O ${PYTHON_FILE_SERVER_ROOT}/index.html
+cfy_info "Downloading image to web server" -O ${PYTHON_FILE_SERVER_ROOT}/cloudify-logo.png
+cfy_download_resource ${image_path}
 
 # Add dynamic data
 

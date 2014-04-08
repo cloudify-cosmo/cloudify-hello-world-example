@@ -50,14 +50,14 @@ blueprint:
                 worker_config:
                     user: ubuntu
                     port: 22                    
-                    key: ~/.ssh/cloudify-agents-kp.pem
-                management_network_name: cloudify-eli-network
+                    key: ~/.ssh/cloudify-hp-agents-kp.pem
+                management_network_name: cloudify-admin-network
                 server:
-                    name: elip-bash-web-server
+                    name: bash-web-server
                     image: 8c096c29-a666-4b82-99c4-c77dc70cfb40
                     flavor: 102
-                    key_name: cloudify-agents-kp
-                    security_groups: ['default', 'allPorts']
+                    key_name: cloudify-eli-agents-kp
+                    security_groups: ['cloudify-sg-agents', 'webserver_security_group']
             relationships:
                 -   type: cloudify.openstack.server_connected_to_floating_ip
                     target: virtual_ip
