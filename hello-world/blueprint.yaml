@@ -29,9 +29,13 @@ blueprint:
         -   name: virtual_ip
             type: cloudify.openstack.floatingip
             properties:
-                floatingip:
-                    # replace this if your installation of openstack uses a different external network
-                    floating_network_name: Ext-Net
+
+                ####################################################################################
+                # Uncomment bellow and fill the properties according to your openstack environment.#
+                ####################################################################################
+
+                # floatingip:
+                    # floating_network_name: Ext-Net
 
         -   name: security_group
             type: cloudfiy.openstack.security_group
@@ -52,15 +56,17 @@ blueprint:
                     user: ubuntu
                     key: ~/.ssh/cloudify-agents-kp.pem
                 management_network_name: cloudify-admin-network
-                server:
-                    name: bash-web-server
 
-                    # replace this if your installation of openstack uses different image id's and flavors
-                    image: 8c096c29-a666-4b82-99c4-c77dc70cfb40
-                    flavor: 102
+                ####################################################################################
+                # Uncomment bellow and fill the properties according to your openstack environment.#
+                ####################################################################################
 
-                    key_name: cloudify-agents-kp
-                    security_groups: ['cloudify-sg-agents', 'webserver_security_group']
+                # server:
+                    # name: bash-web-server
+                    # image: [Enter-Image-Id]
+                    # flavor: [Enter-Flavor-Id]
+                    # key_name: cloudify-agents-kp
+                    # security_groups: ['cloudify-sg-agents', 'webserver_security_group']
             relationships:
                 -   type: cloudify.openstack.server_connected_to_floating_ip
                     target: virtual_ip
