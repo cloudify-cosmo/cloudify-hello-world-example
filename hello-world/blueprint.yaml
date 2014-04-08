@@ -35,7 +35,7 @@ blueprint:
                 ####################################################################################
 
                 # floatingip:
-                    # floating_network_name: Ext-Net
+                    # floating_network_name: [Enter-External-Network-Name]
 
         -   name: security_group
             type: cloudfiy.openstack.security_group
