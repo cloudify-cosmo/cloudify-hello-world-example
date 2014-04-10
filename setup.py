@@ -17,6 +17,19 @@ __author__ = 'dank'
 
 from setuptools import setup
 
+CLI_VERSION = '3.0'
+CLI_BRANCH = 'develop'
+CLI = \
+    "https://github.com/cloudify-cosmo/cloudify-cli/tarball/{0}" \
+    .format(CLI_BRANCH)
+
+OPENSTACK_PROVIDER_VERSION = '3.0'
+OPENSTACK_PROVIDER_BRANCH = 'develop'
+OPENSTACK_PROVIDER = \
+    "https://github.com/cloudify-cosmo/cloudify-openstack-provider/tarball/{0}" \
+    .format(OPENSTACK_PROVIDER_BRANCH)
+
+
 setup(
     name='cloudify-system-tests',
     version='3.0',
@@ -35,6 +48,13 @@ setup(
         'requests==2.2.1',
         'sh==1.09',
         'path.py==5.1',
-        'nose'
+        'nose',
+        'cloudify-cli',
+        'cloudify-openstack-provider'
     ],
+    dependency_links=["{0}#egg=cloudify-cli-{1}"
+                      .format(CLI, CLI_VERSION),
+                      "{0}#egg=cloudify-openstack-provider-{1}"
+                      .format(OPENSTACK_PROVIDER, OPENSTACK_PROVIDER_VERSION)]
+
 )
