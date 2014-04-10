@@ -18,8 +18,8 @@ class HelloWorldBashTest(TestCase):
     CLOUDIFY_EXAMPLES_URL = "https://github.com/cloudify-cosmo/cloudify-examples.git"
 
     host_name = 'bash-web-server'
-    flavor = 102
-    image = '8c096c29-a666-4b82-99c4-c77dc70cfb40'
+    flavor_name = 'm1.small'
+    image_name = 'Ubuntu-NP'
     security_groups = ['webserver_security_group']
     virtual_ip_node_id = 'virtual_ip'
     server_node_id = 'vm'
@@ -115,8 +115,8 @@ class HelloWorldBashTest(TestCase):
                             self.env.agent_key_path)
             patch.merge_obj('{0}.server'.format(vm_properties_path), {
                 'name': self.host_name,
-                'image': self.image,
-                'flavor': self.flavor,
+                'image_name': self.image_name,
+                'flavor_name': self.flavor_name,
                 'key_name': self.env.agent_keypair_name,
                 'security_groups': self.security_groups,
             })
