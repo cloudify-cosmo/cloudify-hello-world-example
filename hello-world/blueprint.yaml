@@ -63,8 +63,8 @@ blueprint:
 
                 # server:
                     # name: bash-web-server
-                    # image: [Enter-Image-Id]
-                    # flavor: [Enter-Flavor-Id]
+                    # image_name: [Enter-Image-Name]
+                    # flavor_name: [Enter-Flavor-Name]
                     # key_name: cloudify-agents-kp
                     # security_groups: ['cloudify-sg-agents', 'webserver_security_group']
             relationships:
