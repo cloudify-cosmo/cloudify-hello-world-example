@@ -41,6 +41,10 @@ def get_blueprint_path(blueprint_name):
     return os.path.join(resources_dir, 'blueprints', blueprint_name)
 
 
+def get_yaml_as_dict(yaml_path):
+    return yaml.load(path(yaml_path).text())
+
+
 class YamlPatcher(object):
 
     pattern = re.compile("(.+)\[(\d+)\]")
