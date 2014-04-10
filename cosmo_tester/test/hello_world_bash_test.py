@@ -1,10 +1,14 @@
+from neutronclient.common.exceptions import NeutronException
+from novaclient.exceptions import NotFound
+
 from cosmo_tester.framework.util import YamlPatcher
+
 
 __author__ = 'elip'
 
-from shutil import rmtree
 from cosmo_tester.framework.testenv import TestCase
 from cosmo_tester.framework.util import get_yaml_as_dict
+from cosmo_tester.framework.openstack_api import openstack_clients
 
 import requests
 
@@ -17,15 +21,16 @@ class HelloWorldBashTest(TestCase):
     flavor = 102
     image = '8c096c29-a666-4b82-99c4-c77dc70cfb40'
     security_groups = ['webserver_security_group']
-    virtual_ip_node_id = 'test_hello_world_bash_virtual_ip'
+    virtual_ip_node_id = 'virtual_ip'
+    server_node_id = 'vm'
+    security_group_node_id = 'security_group'
 
     repo_dir = None
 
-    @classmethod
-    def setUpClass(cls):
-
+    def setUp(self):
+        super(HelloWorldBashTest, self).setUp()
         from cosmo_tester.framework.git_helper import clone
-        cls.repo_dir = clone(cls.CLOUDIFY_EXAMPLES_URL)
+        self.repo_dir = clone(self.CLOUDIFY_EXAMPLES_URL, self.workdir)
 
     def test_hello_world_bash(self):
 
@@ -42,25 +47,64 @@ class HelloWorldBashTest(TestCase):
         # Upload --> Create Deployment --> Execute Install
         before, after = self.upload_deploy_and_execute_install()
 
-        manager_state = self.get_manager_state_delta(before, after)
-        nodes_state_per_deployment = manager_state['node_state'].values()
+        manager_state_delta = self.get_manager_state_delta(before, after)
+        nodes_state = manager_state_delta['node_state'].values()[0]
 
-        public_ip = None
-        for nodes_state in nodes_state_per_deployment:
-            for key, value in nodes_state.items():
-                if key.startswith(self.virtual_ip_node_id):
-                    public_ip = value['runtimeInfo']['floating_ip_address']
-                    break
-            if public_ip:
-                break
+        server_node = None
+        security_group_node = None
+        floatingip_node = None
+        for key, value in nodes_state.items():
+            if key.startswith(self.virtual_ip_node_id):
+                floatingip_node = value
+            if key.startswith(self.security_group_node_id):
+                security_group_node = value
+            if key.startswith(self.server_node_id):
+                server_node = value
 
         webserver_port = blueprint['blueprint']['nodes'][3]['properties']['port']
-        web_server_page_response = requests.get('http://{0}:{1}'
-                                                .format(public_ip, webserver_port))
+        web_server_page_response = \
+            requests.get('http://{0}:{1}'.format(
+                floatingip_node['runtimeInfo']['floating_ip_address'],
+                webserver_port))
 
         self.assertEqual(200, web_server_page_response.status_code)
 
+        nova, neutron = openstack_clients(self.env.cloudify_config)
+
+        self.logger.info("Retrieving agent server : {0}"
+            .format(nova.servers.get(server_node['runtimeInfo']['openstack_server_id'])))
+        self.logger.info("Retrieving agent floating ip : {0}"
+            .format(neutron.show_floatingip(floatingip_node['runtimeInfo']['external_id'])))
+        self.logger.info("Retrieving agent security group : {0}"
+            .format(neutron.show_security_group(security_group_node['runtimeInfo']['external_id'])))
+
         self.execute_uninstall()
+
+        # No components should exist after uninstall
+
+        try:
+            server = nova.servers.get(server_node['runtimeInfo']['openstack_server_id'])
+            self.fail("Expected agent machine to be terminated. but found : {0}"
+                .format(server))
+        except NotFound as e:
+            self.logger.info(e)
+            pass
+
+        try:
+            floatingip = neutron.show_floatingip(floatingip_node['runtimeInfo']['external_id'])
+            self.fail("Expected agent floating ip to be terminated. but found : {0}"
+                .format(floatingip))
+        except NeutronException as e:
+            self.logger.info(e)
+            pass
+
+        try:
+            security_group = neutron.show_security_group(security_group_node['runtimeInfo']['external_id'])
+            self.fail("Expected webserver security group ip to be terminated. but found : {0}"
+                .format(security_group))
+        except NeutronException as e:
+            self.logger.info(e)
+            pass
 
     def modify_yaml(self, yaml_file):
         with YamlPatcher(yaml_file) as patch:
@@ -84,25 +128,3 @@ class HelloWorldBashTest(TestCase):
                     }
                 }
             })
-            virtual_ip_path = 'blueprint.nodes[0]'
-            patch.set_value('{0}.name'.format(virtual_ip_path),
-                            self.virtual_ip_node_id)
-            vm_relationship_path = 'blueprint.nodes[2].relationships[0]'
-            patch.set_value('{0}.target'.format(vm_relationship_path),
-                            self.virtual_ip_node_id)
-
-    def upload_deploy_and_execute_install(self, blueprint_id=None,
-                                          deployment_id=None):
-        before_state = self.get_manager_state()
-        self.cfy.upload_deploy_and_execute_install(
-            str(self.blueprint_yaml),
-            blueprint_id=blueprint_id or self.test_id,
-            deployment_id=deployment_id or self.test_id,
-        )
-        after_state = self.get_manager_state()
-        return before_state, after_state
-
-    @classmethod
-    def tearDownClass(cls):
-        if not cls.repo_dir:
-            rmtree(cls.repo_dir)

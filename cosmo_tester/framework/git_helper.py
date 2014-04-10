@@ -41,12 +41,11 @@ def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
     return ''.join(random.choice(chars) for x in range(size))
 
 
-def clone(url, target=None, branch='develop'):
+def clone(url, basedir, branch='develop'):
 
     repo_name = url.split('.git')[0].split('/')[-1]
 
-    if not target:
-        target = path(os.path.join(create_temp_folder(), repo_name))
+    target = path(os.path.join(basedir, 'git', repo_name))
 
     logger.info("Cloning {0} to {1}".format(url, target))
     git.clone(url, str(target)).wait()
