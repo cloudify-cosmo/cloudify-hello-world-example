@@ -38,13 +38,13 @@ blueprint:
                     # floating_network_name: [Enter-External-Network-Name]
 
         -   name: security_group
-            type: cloudfiy.openstack.security_group
+            type: cloudify.openstack.security_group
             properties:
                 security_group:
                     name: webserver_security_group
                 rules:
                     -   remote_ip_prefix: 0.0.0.0/0
-                        port: 8080            
+                        port: 8080
 
         -   name: vm
             type: cloudify.openstack.server
@@ -71,7 +71,7 @@ blueprint:
                 -   type: cloudify.openstack.server_connected_to_floating_ip
                     target: virtual_ip
                 -   type: cloudify.relationships.connected_to
-                    target: security_group                    
+                    target: security_group
 
 
         -   name: http_web_server
@@ -80,7 +80,7 @@ blueprint:
                 port: 8080
                 image_path: images/cloudify-logo.png
                 index_path: index.html
-                scripts:            
+                scripts:
                     configure: scripts/configure.sh
                     start: scripts/start.sh
                     stop: scripts/stop.sh
