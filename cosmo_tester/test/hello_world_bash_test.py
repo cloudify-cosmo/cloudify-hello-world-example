@@ -15,7 +15,8 @@ import requests
 
 class HelloWorldBashTest(TestCase):
 
-    CLOUDIFY_EXAMPLES_URL = "https://github.com/cloudify-cosmo/cloudify-examples.git"
+    CLOUDIFY_EXAMPLES_URL = "https://github.com/cloudify-cosmo/" \
+                            "cloudify-examples.git"
 
     host_name = 'bash-web-server'
     flavor_name = 'm1.small'
@@ -34,7 +35,8 @@ class HelloWorldBashTest(TestCase):
 
     def test_hello_world_bash(self):
 
-        # Add agents security group from the cloudify-config file used to bootstrap
+        # Add agents security group from the cloudify-config file
+        # used to bootstrap
         self.security_groups.append(self.env.agents_security_group)
 
         self.blueprint_path = self.repo_dir / 'hello-world'
@@ -61,7 +63,8 @@ class HelloWorldBashTest(TestCase):
             if key.startswith(self.server_node_id):
                 server_node = value
 
-        webserver_port = blueprint['blueprint']['nodes'][3]['properties']['port']
+        webserver_port = blueprint['blueprint']['nodes'][3]['properties'][
+            'port']
         web_server_page_response = \
             requests.get('http://{0}:{1}'.format(
                 floatingip_node['runtimeInfo']['floating_ip_address'],
@@ -72,36 +75,43 @@ class HelloWorldBashTest(TestCase):
         nova, neutron = openstack_clients(self.env.cloudify_config)
 
         self.logger.info("Retrieving agent server : {0}"
-            .format(nova.servers.get(server_node['runtimeInfo']['openstack_server_id'])))
+                         .format(nova.servers.get(server_node['runtimeInfo'][
+                             'openstack_server_id'])))
         self.logger.info("Retrieving agent floating ip : {0}"
-            .format(neutron.show_floatingip(floatingip_node['runtimeInfo']['external_id'])))
+                         .format(neutron.show_floatingip(floatingip_node[
+                             'runtimeInfo']['external_id'])))
         self.logger.info("Retrieving agent security group : {0}"
-            .format(neutron.show_security_group(security_group_node['runtimeInfo']['external_id'])))
+                         .format(neutron.show_security_group(
+                             security_group_node['runtimeInfo'][
+                                 'external_id'])))
 
         self.execute_uninstall()
 
         # No components should exist after uninstall
 
         try:
-            server = nova.servers.get(server_node['runtimeInfo']['openstack_server_id'])
-            self.fail("Expected agent machine to be terminated. but found : {0}"
-                .format(server))
+            server = nova.servers.get(server_node['runtimeInfo'][
+                'openstack_server_id'])
+            self.fail("Expected agent machine to be terminated. but found : "
+                      "{0}".format(server))
         except NotFound as e:
             self.logger.info(e)
             pass
 
         try:
-            floatingip = neutron.show_floatingip(floatingip_node['runtimeInfo']['external_id'])
-            self.fail("Expected agent floating ip to be terminated. but found : {0}"
-                .format(floatingip))
+            floatingip = neutron.show_floatingip(floatingip_node[
+                'runtimeInfo']['external_id'])
+            self.fail("Expected agent floating ip to be terminated. "
+                      "but found : {0}".format(floatingip))
         except NeutronException as e:
             self.logger.info(e)
             pass
 
         try:
-            security_group = neutron.show_security_group(security_group_node['runtimeInfo']['external_id'])
-            self.fail("Expected webserver security group ip to be terminated. but found : {0}"
-                .format(security_group))
+            security_group = neutron.show_security_group(security_group_node[
+                'runtimeInfo']['external_id'])
+            self.fail("Expected webserver security group ip to be terminated. "
+                      "but found : {0}".format(security_group))
         except NeutronException as e:
             self.logger.info(e)
             pass
@@ -109,8 +119,9 @@ class HelloWorldBashTest(TestCase):
     def modify_yaml(self, yaml_file):
         with YamlPatcher(yaml_file) as patch:
             vm_properties_path = 'blueprint.nodes[2].properties'
-            patch.set_value('{0}.management_network_name'.format(vm_properties_path),
-                            self.env.management_network_name)
+            patch.set_value('{0}.management_network_name'.format(
+                vm_properties_path),
+                self.env.management_network_name)
             patch.set_value('{0}.worker_config.key'.format(vm_properties_path),
                             self.env.agent_key_path)
             patch.merge_obj('{0}.server'.format(vm_properties_path), {
