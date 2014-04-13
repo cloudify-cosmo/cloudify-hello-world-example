@@ -53,12 +53,12 @@ blueprint:
                 -   type: cloudify.openstack.port_connected_to_security_group
                     target: security_group_src
         -   name: security_group_src
-            type: cloudfiy.openstack.security_group
+            type: cloudify.openstack.security_group
             properties:
                 security_group:
                     name: neutron_test_security_group_src
         -   name: security_group_dst
-            type: cloudfiy.openstack.security_group
+            type: cloudify.openstack.security_group
             properties:
                 security_group:
                     name: neutron_test_security_group_dst
