@@ -47,3 +47,5 @@ nosetests.xml
 /target
 *.pem
 /transaction.log
+
+*COMMIT_MSG
