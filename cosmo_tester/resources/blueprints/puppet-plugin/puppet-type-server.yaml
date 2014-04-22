@@ -1,0 +1,15 @@
+imports:
+    - 'cloudify.types'
+
+types:
+    middleware_server_puppet:
+        derived_from: cloudify.types.middleware_server
+        properties:
+            - puppet_config
+        interfaces:
+            # All operations mapped to same entry point in Puppet plugin
+            # The "operation" function decides what to run according
+            # to the operation being performed. The operation is taken
+            # from the passed context (CloudifyContext.operation)
+            cloudify.interfaces.lifecycle:
+                - create:    puppet_plugin.install.operation

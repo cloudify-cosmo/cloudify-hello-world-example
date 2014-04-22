@@ -1,0 +1,119 @@
+# WARNING:
+# This file is work in progress!!!
+#
+# WARNING:
+# /etc/sudoers must not have "Default requiretty" for Puppet plugin to work
+#
+# WARNING:
+# It is not recommended to use different Puppet versions on same server and we
+# do not test such configuration. Example:
+#
+#     nodes:
+#         -
+#             name: server
+#             ...
+#         -
+#             name: puppet_node_1
+#             type: app_server_puppet
+#             properties:
+#                 puppet_config:
+#                     version: A  # *** Different versions ***
+#                     ...
+#             relationships:
+#                 -
+#                     type: cloudify.relationships.contained_in
+#                     target: server  # *** Same server ***
+#         -
+#             name: puppet_node_2
+#             type: app_server_puppet
+#             properties:
+#                 puppet_config:
+#                     version: B  # *** Different versions ***
+#                     ...
+#             relationships:
+#                 -
+#                     type: cloudify.relationships.contained_in
+#                     target: server  # *** Same server ***
+#
+#
+# WARNING:
+# Puppet uninstall is not supported at this time.
+
+imports:
+    - 'cloudify.types'
+
+types:
+    middleware_server_puppet:
+        derived_from: cloudify.types.middleware_server
+        properties:
+            # All Puppet related configuration goes inside
+            # the "puppet_config" property.
+            - puppet_config
+
+                # - server: (required)
+                #
+                # Host name of the Puppet server
+                #
+                # - environment: (required)
+                #
+                # Environment name
+                # See: http://docs.puppetlabs.com/guides/environment.html
+                #
+                # - version: (optional. default: latest)
+                #
+                # `version` is the Puppet version to install
+                #
+                # - node_name_prefix (optional. default: empty string)
+                # - node_name_suffix (optional. default: empty string)
+                #
+                # Puppet node name is constructed as follows:
+                # `node_name_prefix` + node_id + `node_name_suffix`
+                # 
+                # - facts: (optional)
+                #
+                # Hash with facts to add to facter. Must not contain
+                # `cloudify` nor `cloudify_*` keys as these are
+                # generated automatically.
+                #
+                # - repos: (optional)
+                #       deb:
+                #           VER_NAME: url://for-package-that-installs-repo.deb
+                # 
+                # Custom packages that are used for adding Puppet repository.
+
+        interfaces:
+            # All operations mapped to same entry point in Puppet plugin
+            # The "operation" function decides what to run according
+            # to the operation being performed. The operation is taken
+            # from the passed context (CloudifyContext.operation)
+            cloudify.interfaces.lifecycle:
+                - create:    puppet_plugin.operations.operation
+                - configure: puppet_plugin.operations.operation
+                - start:     puppet_plugin.operations.operation
+                - stop:      puppet_plugin.operations.operation
+                - delete:    puppet_plugin.operations.operation
+
+    # Aliases for GUI, as requested
+    app_server_puppet: {derived_from: middleware_server_puppet}
+    db_server_puppet:  {derived_from: middleware_server_puppet}
+    web_server_puppet: {derived_from: middleware_server_puppet}
+
+relationships:
+    cloudify.puppet.depends_on:
+        derived_from: cloudify.relationships.depends_on
+        source_interfaces:
+            # The comment under types.interfaces applies here too
+            cloudify.interfaces.relationship_lifecycle:
+                - preconfigure:  puppet_plugin.operations.operation
+                - postconfigure: puppet_plugin.operations.operation
+                - establish:     puppet_plugin.operations.operation
+                - unlink:        puppet_plugin.operations.operation
+    cloudify.puppet.connected_to:
+        derived_from: cloudify.relationships.connected_to
+        source_interfaces:
+            # The comment under types.interfaces applies here too
+            cloudify.interfaces.relationship_lifecycle:
+                - preconfigure:  puppet_plugin.operations.operation
+                - postconfigure: puppet_plugin.operations.operation
+                - establish:     puppet_plugin.operations.operation
+                - unlink:        puppet_plugin.operations.operation
