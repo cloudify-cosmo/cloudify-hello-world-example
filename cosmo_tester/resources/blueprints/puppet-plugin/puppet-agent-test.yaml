@@ -1,10 +1,5 @@
 plugins:
 
-    cloudify_plugin_existing_server:
-        derived_from: cloudify.plugins.manager_plugin
-        properties:
-            url: https://github.com/ilyash/cloudify-plugin-existing-server/archive/master.zip
-
     puppet_plugin:
         derived_from: cloudify.plugins.agent_plugin
         properties:
@@ -13,22 +8,11 @@ plugins:
 
 imports:
     - cloudify.openstack
-    - existing-server-type.yaml
     - puppet-type.yaml
 
 blueprint:
     name: puppet-agent-system-test
     nodes:
-        # -
-        #     name: existing_server
-        #     type: existing_server
-        #     properties:
-        #         ip: 10.67.79.222
-        #         install_agent: true
-        #         worker_config:
-        #             port: 22
-        #             user: ubuntu
-        #             key: ~/.ssh/cloudify-agents-kp-ilya.pem
         -
             name: server-for-puppet-agent
             type: cloudify.openstack.server
