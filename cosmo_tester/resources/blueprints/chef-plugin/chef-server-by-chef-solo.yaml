@@ -35,7 +35,7 @@ blueprint:
                 floatingip:
                     floating_network_name: REPLACED-BY-TEST
         -   name: chef_sg
-            type: cloudfiy.openstack.security_group
+            type: cloudify.openstack.security_group
             properties:
                 security_group:
                     name: chef_sg
