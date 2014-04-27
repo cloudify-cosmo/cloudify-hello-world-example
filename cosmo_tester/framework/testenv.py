@@ -236,10 +236,19 @@ class TestCase(unittest.TestCase):
         self.blueprint_yaml = None
         self._test_cleanup_context = CleanupContext(self._testMethodName,
                                                     self.env.cloudify_config)
+        # register cleanup
+        self.addCleanup(self._cleanup)
 
-    def tearDown(self):
+    def _cleanup(self):
         self._test_cleanup_context.cleanup()
         shutil.rmtree(self.workdir)
+
+    def tearDown(self):
+        # note that the cleanup function is registered in setUp
+        # because it is called regardless of whether setUp succeeded or failed
+        # unlike tearDown which is not called when setUp fails (which might
+        # happen when tests override setUp)
+        pass
 
     def get_manager_state(self):
         self.logger.info('Fetching manager current state')
