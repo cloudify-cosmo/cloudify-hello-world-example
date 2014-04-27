@@ -24,9 +24,7 @@ from cosmo_tester.framework.openstack_api import openstack_clients
 
 class NeutronGaloreTest(TestCase):
 
-    flavor_name = 'm1.small'
     host_name = 'novaservertest'
-    image_name = 'Ubuntu-NP'
     security_groups = ['neutron_test_security_group_dst']
 
     def test_neutron_galore(self):
@@ -53,8 +51,8 @@ class NeutronGaloreTest(TestCase):
                             self.env.agent_key_path)
             patch.merge_obj('{0}.server'.format(vm_path), {
                 'name': self.host_name,
-                'image_name': self.image_name,
-                'flavor_name': self.flavor_name,
+                'image_name': self.env.ubuntu_image_name,
+                'flavor_name': self.env.flavor_name,
                 'key_name': self.env.agent_keypair_name,
                 'security_groups': self.security_groups,
             })

@@ -36,6 +36,8 @@ from cosmo_tester.framework.util import (get_blueprint_path,
 from cosmo_tester.framework.openstack_api import (openstack_infra_state,
                                                   openstack_infra_state_delta,
                                                   remove_openstack_resources)
+from cosmo_tester.framework import (openstack_ubuntu_image_name,
+                                    openstack_flavor_name)
 
 root = logging.getLogger()
 ch = logging.StreamHandler(sys.stdout)
@@ -202,6 +204,14 @@ class TestEnvironment(object):
     @property
     def management_security_group(self):
         return self._config_reader.management_security_group
+
+    @property
+    def ubuntu_image_name(self):
+        return openstack_ubuntu_image_name
+
+    @property
+    def flavor_name(self):
+        return openstack_flavor_name
 
 
 class TestCase(unittest.TestCase):

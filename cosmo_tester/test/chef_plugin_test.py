@@ -38,11 +38,6 @@ CHEF_SERVER_COOKBOOK_ZIP_URL = (
 
 KNIFE_PARAMS = '-u admin -k ~/admin.pem'
 
-IMAGE_NAME = 'Ubuntu-NP'
-FLAVOR_NAME = 'm1.small'
-
-FILE_SERVER_PORT = 53229
-
 
 def _use_cookbook(cookbook_name,
                   cookbook_local_tar_path):
@@ -117,8 +112,8 @@ def update_blueprint(env, blueprint, hostname, userdata_vars=None):
         # vm['properties']['server'] does not exist when using existing one
         if 'server' in vm['properties']:
             vm['properties']['server'].update({
-                'flavor_name': FLAVOR_NAME,
-                'image_name': IMAGE_NAME,
+                'flavor_name': env.flavor_name,
+                'image_name': env.ubuntu_image_name,
                 'key_name': env.agent_keypair_name,
                 'name': vm_hostname,
             })
