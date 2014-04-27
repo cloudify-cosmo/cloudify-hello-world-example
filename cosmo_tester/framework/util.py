@@ -140,6 +140,11 @@ class CloudifyConfigReader(object):
             'auto_generated']['private_key_target_path']
 
     @property
+    def managment_user_name(self):
+        return self.config['compute']['management_server'][
+            'user_on_management']
+
+    @property
     def management_key_path(self):
         return self.config['compute']['management_server'][
             'management_keypair']['auto_generated']['private_key_target_path']
