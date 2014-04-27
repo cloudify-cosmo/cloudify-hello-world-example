@@ -1,0 +1,100 @@
+#######
+# Types and implementation details.
+#
+# Virtual machine is started using Cloudify's built-in OpenStack plugin.
+# Puppet is installed using the Cloudify's Puppet plugin.
+# Apache is installed by Puppet.
+
+# cloudify.types contains Cloudify's built-in types, relationships, workflows etc...
+# cloudify.openstack contains Cloudify's built-in openstack types and plugins definitions.
+
+plugins:
+
+    puppet_plugin:
+        derived_from: cloudify.plugins.agent_plugin
+        properties:
+            url: https://github.com/Fewbytes/cloudify-plugin-puppet/archive/master.zip
+            # folder: cloudify-plugin-puppet
+
+imports:
+    - cloudify.openstack
+
+types:
+
+    cloudify.types.puppet.web_server:
+        derived_from: cloudify.types.web_server
+        properties:
+            # All Puppet related configuration goes inside
+            # the "puppet_config" property.
+            - puppet_config
+        interfaces:
+            cloudify.interfaces.lifecycle:
+                # Specifically "start" operation. Otherwise tags must be
+                # provided.
+                - start: puppet_plugin.operations.operation
+
+# The blueprint contains two nodes, a vm and a web server hosted in it.
+blueprint:
+    name: hello_world_puppet
+    nodes:
+        -   name: ip
+            type: cloudify.openstack.floatingip
+            properties:
+
+                ####################################################################################
+                # Uncomment bellow and fill the properties according to your openstack environment.#
+                ####################################################################################
+
+                # floatingip:
+                #     floating_network_name: [Enter-External-Network-Name]
+
+        -   name: security_group
+            type: cloudify.openstack.security_group
+            properties:
+                security_group:
+                    name: webserver_security_group
+                rules:
+                    -   remote_ip_prefix: 0.0.0.0/0
+                        port: 8080
+
+        -   name: vm
+            type: cloudify.openstack.server
+            instances:
+                deploy: 1
+            properties:
+                install_agent: true
+                worker_config:
+                    user: ubuntu
+                    key: ~/.ssh/cloudify-agents-kp-ilya.pem
+                management_network_name: cloudify-admin-network
+
+                ####################################################################################
+                # Uncomment bellow and fill the properties according to your openstack environment.#
+                ####################################################################################
+
+                # server:
+                    # name: bash-web-server
+                    # image_name: [Enter-Image-Name]
+                    # flavor_name: [Enter-Flavor-Name]
+                    # key_name: cloudify-agents-kp
+                    # security_groups: ['cloudify-sg-agents', 'webserver_security_group']
+                    # userdata: |
+                    #     #!/bin/bash -ex
+                    #     grep -q puppet /etc/hosts || echo "IP_OF_YOUR_PUPPET_MASTER puppet" >> /etc/hosts
+            relationships:
+                -   type: cloudify.openstack.server_connected_to_floating_ip
+                    target: ip
+                -   type: cloudify.relationships.connected_to
+                    target: security_group
+
+
+        -   name: apache_web_server
+            type: cloudify.types.puppet.web_server
+            properties:
+                port: 8080
+                puppet_config:
+                    server: puppet
+                    environment: helloworld
+            relationships:
+                -   type: cloudify.relationships.contained_in
+                    target: vm
