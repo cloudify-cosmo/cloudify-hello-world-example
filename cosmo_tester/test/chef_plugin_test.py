@@ -20,6 +20,7 @@ __author__ = 'ilyash'
 import subprocess
 import time
 import os
+from zipfile import ZipFile
 
 from fabric import operations
 import fabric.api
@@ -159,7 +160,7 @@ class ChefPluginClientTest(TestCase):
                 'wget', '-q', '-O', 'chef-server.zip',
                 CHEF_SERVER_COOKBOOK_ZIP_URL,
                 ])
-            run(['unzip', 'chef-server.zip'])
+            ZipFile('chef-server.zip').extractall()
             chef_cookbook_dir = cookbooks_dir.glob('chef-server-*')[0]
             run(['mv', chef_cookbook_dir, 'chef-server'])
             # Next line because Chef cookbooks are required
