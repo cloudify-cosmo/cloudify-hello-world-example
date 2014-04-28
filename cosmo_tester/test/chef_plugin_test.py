@@ -153,7 +153,7 @@ class ChefPluginClientTest(TestCase):
         cookbooks_dir = blueprint_dir / 'cookbooks'
 
         def run(*args, **kwargs):
-            return subprocess.check_output(*args, stderr=sys.stderr, **kwargs)
+            return subprocess.check_output(*args, **kwargs)
 
         with cookbooks_dir:
             run([
