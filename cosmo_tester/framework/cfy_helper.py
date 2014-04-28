@@ -49,8 +49,7 @@ class CfyHelper(object):
                   cloud_config_path,
                   keep_up_on_failure=False,
                   verbose=False,
-                  dev_mode=False,
-                  alternate_bootstrap_method=False):
+                  dev_mode=False):
         with self.workdir:
             cfy.init.openstack(
                 verbosity=verbose).wait()
@@ -58,7 +57,6 @@ class CfyHelper(object):
                 config_file=cloud_config_path,
                 keep_up_on_failure=keep_up_on_failure,
                 dev_mode=dev_mode,
-                alternate_bootstrap_method=alternate_bootstrap_method,
                 verbosity=verbose).wait()
 
     def upload_deploy_and_execute_install(

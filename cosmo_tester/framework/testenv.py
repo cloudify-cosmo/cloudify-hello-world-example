@@ -137,8 +137,7 @@ class TestEnvironment(object):
                 self.cloudify_config_path,
                 keep_up_on_failure=True,
                 verbose=True,
-                dev_mode=False,
-                alternate_bootstrap_method=False)
+                dev_mode=True)
             self._running_env_setup(cfy.get_management_ip())
         finally:
             cfy.close()
