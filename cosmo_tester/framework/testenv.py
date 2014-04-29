@@ -148,13 +148,11 @@ class TestEnvironment(object):
 
     def _running_env_setup(self, management_ip):
         self.management_ip = management_ip
-        #self.rest_client = CosmoManagerRestClient(self.management_ip)
-        #TODO: fix this, so it won't yell when there's no "running" at /status
-        #but you get valid json as response
-        #response = self.rest_client.status()
-        # if not response.status == 'running':
-        #     raise RuntimeError('Manager at {0} is not running.'
-        #                        .format(self.management_ip))
+        self.rest_client = CosmoManagerRestClient(self.management_ip)
+        response = self.rest_client.status()
+        if not response.status == 'running':
+            raise RuntimeError('Manager at {0} is not running.'
+                               .format(self.management_ip))
         self._management_running = True
 
     @property
