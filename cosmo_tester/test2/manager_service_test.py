@@ -14,8 +14,8 @@
 #    * limitations under the License.
 
 from cosmo_tester.framework.testenv import TestCase
-import json
-from urllib2 import urlopen
+from cosmo_manager_rest_client.cosmo_manager_rest_client import (
+    CosmoManagerRestClient)
 from fabric.api import env, reboot
 
 
@@ -29,20 +29,19 @@ class RebootManagerTest(TestCase):
         reboot()
 
     def _get_undefined_services(self):
-        return [key for key, val in self.status.iteritems() if val is None]
+        return [each.display_name for each in self.status if each.name is None]
 
     def _get_stopped_services(self):
-        return [key for key, val in self.status.iteritems()
-                if val and not val['instances']]
+        return [each.display_name for each in self.status
+                if each and not each.instances]
 
     def _get_status(self):
-        out = urlopen("http://{0}:8100/status".format(self.env.management_ip))
-        return json.load(out)
+        rest = CosmoManagerRestClient(self.env.management_ip)
+        return rest.list_services()
 
     def setUp(self, *args, **kwargs):
         super(RebootManagerTest, self).setUp(*args, **kwargs)
-        out = urlopen("http://{0}:8100/status".format(self.env.management_ip))
-        self.status = json.load(out)
+        self.status = self._get_status()
 
     def test_00_pre_reboot(self):
         undefined = self._get_undefined_services()
