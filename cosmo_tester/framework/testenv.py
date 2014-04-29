@@ -145,7 +145,16 @@ class TestEnvironment(object):
     def teardown_if_necessary(self):
         if self._global_cleanup_context is None:
             return
-        self._global_cleanup_context.cleanup()
+        self.setup()
+        cfy = CfyHelper()
+        try:
+            cfy.use(self.management_ip)
+            cfy.teardown(
+                self.cloudify_config_path,
+                verbose=True)
+        finally:
+            cfy.close()
+            self._global_cleanup_context.cleanup()
 
     def _running_env_setup(self, management_ip):
         self.management_ip = management_ip

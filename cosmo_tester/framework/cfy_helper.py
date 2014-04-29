@@ -59,6 +59,19 @@ class CfyHelper(object):
                 dev_mode=dev_mode,
                 verbosity=verbose).wait()
 
+    def teardown(self,
+                 cloud_config_path,
+                 ignore_deployments=True,
+                 ignore_validation=False,
+                 verbose=False):
+        with self.workdir:
+            cfy.teardown(
+                config_file=cloud_config_path,
+                ignore_deployments=ignore_deployments,
+                ignore_validation=ignore_validation,
+                force=True,
+                verbosity=verbose).wait()
+
     def upload_deploy_and_execute_install(
             self,
             blueprint_path,
