@@ -65,7 +65,7 @@ blueprint:
                 install_agent: true
                 worker_config:
                     user: ubuntu
-                    key: ~/.ssh/cloudify-agents-kp-ilya.pem
+                    key: ~/.ssh/cloudify-agents-kp.pem
                 management_network_name: cloudify-admin-network
 
                 ####################################################################################
