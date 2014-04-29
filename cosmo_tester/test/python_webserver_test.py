@@ -25,9 +25,7 @@ from cosmo_tester.framework.util import YamlPatcher
 
 class PythonWebServerTest(TestCase):
 
-    flavor_name = 'm1.small'
     host_name = 'danktestvm'
-    image_name = 'Ubuntu-NP'
     security_groups = ['webserver_security_group']
 
     def test_python_webserver(self):
@@ -55,8 +53,8 @@ class PythonWebServerTest(TestCase):
                             self.env.agent_key_path)
             patch.merge_obj('{0}.server'.format(vm_path), {
                 'name': self.host_name,
-                'image_name': self.image_name,
-                'flavor_name': self.flavor_name,
+                'image_name': self.env.ubuntu_image_name,
+                'flavor_name': self.env.flavor_name,
                 'key_name': self.env.agent_keypair_name,
                 'security_groups': self.security_groups,
             })

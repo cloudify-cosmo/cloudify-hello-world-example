@@ -36,6 +36,8 @@ from cosmo_tester.framework.util import (get_blueprint_path,
 from cosmo_tester.framework.openstack_api import (openstack_infra_state,
                                                   openstack_infra_state_delta,
                                                   remove_openstack_resources)
+from cosmo_tester.framework import (openstack_ubuntu_image_name,
+                                    openstack_flavor_name)
 
 root = logging.getLogger()
 ch = logging.StreamHandler(sys.stdout)
@@ -135,8 +137,7 @@ class TestEnvironment(object):
                 self.cloudify_config_path,
                 keep_up_on_failure=True,
                 verbose=True,
-                dev_mode=False,
-                alternate_bootstrap_method=False)
+                dev_mode=True)
             self._running_env_setup(cfy.get_management_ip())
         finally:
             cfy.close()
@@ -144,7 +145,16 @@ class TestEnvironment(object):
     def teardown_if_necessary(self):
         if self._global_cleanup_context is None:
             return
-        self._global_cleanup_context.cleanup()
+        self.setup()
+        cfy = CfyHelper()
+        try:
+            cfy.use(self.management_ip)
+            cfy.teardown(
+                self.cloudify_config_path,
+                verbose=True)
+        finally:
+            cfy.close()
+            self._global_cleanup_context.cleanup()
 
     def _running_env_setup(self, management_ip):
         self.management_ip = management_ip
@@ -203,6 +213,14 @@ class TestEnvironment(object):
     def management_security_group(self):
         return self._config_reader.management_security_group
 
+    @property
+    def ubuntu_image_name(self):
+        return openstack_ubuntu_image_name
+
+    @property
+    def flavor_name(self):
+        return openstack_flavor_name
+
 
 class TestCase(unittest.TestCase):
 
@@ -226,10 +244,19 @@ class TestCase(unittest.TestCase):
         self.blueprint_yaml = None
         self._test_cleanup_context = CleanupContext(self._testMethodName,
                                                     self.env.cloudify_config)
+        # register cleanup
+        self.addCleanup(self._cleanup)
 
-    def tearDown(self):
+    def _cleanup(self):
         self._test_cleanup_context.cleanup()
         shutil.rmtree(self.workdir)
+
+    def tearDown(self):
+        # note that the cleanup function is registered in setUp
+        # because it is called regardless of whether setUp succeeded or failed
+        # unlike tearDown which is not called when setUp fails (which might
+        # happen when tests override setUp)
+        pass
 
     def get_manager_state(self):
         self.logger.info('Fetching manager current state')
