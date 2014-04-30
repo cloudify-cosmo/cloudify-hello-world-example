@@ -18,9 +18,9 @@
 __author__ = 'ilyash'
 
 import subprocess
-import sys
 import time
 import os
+from zipfile import ZipFile
 
 from fabric import operations
 import fabric.api
@@ -37,11 +37,6 @@ CHEF_SERVER_COOKBOOK_ZIP_URL = (
 )
 
 KNIFE_PARAMS = '-u admin -k ~/admin.pem'
-
-IMAGE_NAME = 'Ubuntu-NP'
-FLAVOR_NAME = 'm1.small'
-
-FILE_SERVER_PORT = 53229
 
 
 def _use_cookbook(cookbook_name,
@@ -117,8 +112,8 @@ def update_blueprint(env, blueprint, hostname, userdata_vars=None):
         # vm['properties']['server'] does not exist when using existing one
         if 'server' in vm['properties']:
             vm['properties']['server'].update({
-                'flavor_name': FLAVOR_NAME,
-                'image_name': IMAGE_NAME,
+                'flavor_name': env.flavor_name,
+                'image_name': env.ubuntu_image_name,
                 'key_name': env.agent_keypair_name,
                 'name': vm_hostname,
             })
@@ -158,14 +153,14 @@ class ChefPluginClientTest(TestCase):
         cookbooks_dir = blueprint_dir / 'cookbooks'
 
         def run(*args, **kwargs):
-            return subprocess.check_output(*args, stderr=sys.stderr, **kwargs)
+            return subprocess.check_output(*args, **kwargs)
 
         with cookbooks_dir:
             run([
                 'wget', '-q', '-O', 'chef-server.zip',
                 CHEF_SERVER_COOKBOOK_ZIP_URL,
                 ])
-            run(['unzip', 'chef-server.zip'])
+            ZipFile('chef-server.zip').extractall()
             chef_cookbook_dir = cookbooks_dir.glob('chef-server-*')[0]
             run(['mv', chef_cookbook_dir, 'chef-server'])
             # Next line because Chef cookbooks are required

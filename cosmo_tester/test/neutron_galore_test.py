@@ -24,9 +24,7 @@ from cosmo_tester.framework.openstack_api import openstack_clients
 
 class NeutronGaloreTest(TestCase):
 
-    flavor_name = 'm1.small'
     host_name = 'novaservertest'
-    image_name = 'Ubuntu-NP'
     security_groups = ['neutron_test_security_group_dst']
 
     def test_neutron_galore(self):
@@ -53,8 +51,8 @@ class NeutronGaloreTest(TestCase):
                             self.env.agent_key_path)
             patch.merge_obj('{0}.server'.format(vm_path), {
                 'name': self.host_name,
-                'image_name': self.image_name,
-                'flavor_name': self.flavor_name,
+                'image_name': self.env.ubuntu_image_name,
+                'flavor_name': self.env.flavor_name,
                 'key_name': self.env.agent_keypair_name,
                 'security_groups': self.security_groups,
             })
@@ -73,7 +71,7 @@ class NeutronGaloreTest(TestCase):
         openstack = self.get_openstack_components(node_states)
 
         floatingip_address = openstack['server']['addresses'][
-            'dank-cloudify-admin-network'][1]['addr']
+            self.env.management_network_name][1]['addr']
         port_assigned_addr = openstack['server']['addresses'][
             'neutron_network_test'][0]['addr']
         port_security_group_id = openstack['port']['security_groups'][0]
@@ -86,10 +84,10 @@ class NeutronGaloreTest(TestCase):
         network_subnet_id = openstack['network']['subnets'][0]
 
         self.assertEqual(openstack['server']['addresses']
-                         ['dank-cloudify-admin-network'][0]
+                         [self.env.management_network_name][0]
                          ['OS-EXT-IPS:type'], 'fixed')
         self.assertEqual(openstack['server']['addresses']
-                         ['dank-cloudify-admin-network'][1]
+                         [self.env.management_network_name][1]
                          ['OS-EXT-IPS:type'], 'floating')
         self.assertEqual(openstack['server']['addresses']
                          ['neutron_network_test'][0]
@@ -103,7 +101,7 @@ class NeutronGaloreTest(TestCase):
             {'name': 'neutron_test_security_group_dst'})
         self.assert_obj_list_contains_subset(
             openstack['server']['security_groups'],
-            {'name': 'dank-cloudify-sg-agents'})
+            {'name': self.env.agents_security_group})
         self.assert_obj_list_contains_subset(
             openstack['server']['security_groups'],
             {'name': 'neutron_test_security_group_src'})
@@ -154,16 +152,16 @@ class NeutronGaloreTest(TestCase):
         self.assertEqual(node_states['floatingip']['floating_ip_address'],
                          floatingip_address)
         self.assertEqual(openstack['server']['addresses']
-                         ['dank-cloudify-admin-network'][0]['addr'],
+                         [self.env.management_network_name][0]['addr'],
                          node_states['server']['networks']
-                         ['dank-cloudify-admin-network'][0])
+                         [self.env.management_network_name][0])
         self.assertEqual(openstack['server']['addresses']
                          ['neutron_network_test'][0]['addr'],
                          node_states['server']['networks']
                          ['neutron_network_test'][0])
         self.assertEqual(node_states['server']['ip'],
                          openstack['server']['addresses']
-                         ['dank-cloudify-admin-network'][0]['addr'])
+                         [self.env.management_network_name][0]['addr'])
         self.assert_router_connected_to_subnet(openstack['router']['id'],
                                                openstack['router_ports'],
                                                openstack['subnet']['id'])
