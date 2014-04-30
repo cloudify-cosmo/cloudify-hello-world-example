@@ -57,12 +57,14 @@ class RebootManagerTest(TestCase):
             post_reboot_status = self._get_status()
 
             self.assertEqual(len(pre_reboot_status), len(post_reboot_status),
-                             'number of jobs before reboot isn\'t equal to after')
+                             "number of jobs before reboot isn\'t equal to \
+                              number of jobs after reboot")
 
             zipped = zip(pre_reboot_status, post_reboot_status)
             for pre, post in zipped:
                 self.assertEqual(pre.name, post.name,
-                                 'pre and post reboot status is not equal: {0} \n {1}'.format(pre.name, post.name))
+                                 'pre and post reboot status is not equal: {0} \
+                                  \n {1}'.format(pre.name, post.name))
 
     def test_02_post_reboot(self):
         undefined = self._get_undefined_services()
