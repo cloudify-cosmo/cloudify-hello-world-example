@@ -35,20 +35,21 @@ class RebootManagerTest(TestCase):
 
     def setUp(self, *args, **kwargs):
         super(RebootManagerTest, self).setUp(*args, **kwargs)
-        self.status = self.rest_client.list_services()()
+        self.status = self.env.rest_client.list_services()
+        print self.status
 
     def test_00_pre_reboot(self):
         undefined = self._get_undefined_services()
-        self.assertEqual(undefined, [], 'undefined services: {0}'
-                         .format(','.join(undefined)))
+        self.assertEqual(undefined, [], 'undefined services: {0}'.format(
+                                        ','.join(undefined)))
         stopped = self._get_stopped_services()
-        self.assertEqual(stopped, [], 'stopped services: {0}'
-                         .format(','.join(stopped)))
+        self.assertEqual(stopped, [], 'stopped services: {0}'.format(
+                                      ','.join(stopped)))
 
     def test_01_during_reboot(self):
             pre_reboot_status = self.status
             self._reboot_server()
-            post_reboot_status = self.rest_client.list_services()
+            post_reboot_status = self.env.rest_client.list_services()
 
             self.assertEqual(len(pre_reboot_status), len(post_reboot_status),
                              "number of jobs before reboot isn\'t equal to \
@@ -62,8 +63,8 @@ class RebootManagerTest(TestCase):
 
     def test_02_post_reboot(self):
         undefined = self._get_undefined_services()
-        self.assertEqual(undefined, [], 'undefined services: {0}'
-                         .format(','.join(undefined)))
+        self.assertEqual(undefined, [], 'undefined services: {0}'.format(
+                                        ','.join(undefined)))
         stopped = self._get_stopped_services()
-        self.assertEqual(stopped, [], 'stopped services: {0}'
-                         .format(','.join(stopped)))
+        self.assertEqual(stopped, [], 'stopped services: {0}'.format(
+                                      ','.join(stopped)))
