@@ -17,14 +17,14 @@ __author__ = 'dank'
 
 from setuptools import setup
 
-CLI_VERSION = '3.0'
-CLI_BRANCH = 'develop'
+CLI_VERSION = '3.0b1'
+CLI_BRANCH = '3.0b1'
 CLI = \
     "https://github.com/cloudify-cosmo/cloudify-cli/tarball/{0}" \
     .format(CLI_BRANCH)
 
-OPENSTACK_PROVIDER_VERSION = '1.0'
-OPENSTACK_PROVIDER_BRANCH = 'develop'
+OPENSTACK_PROVIDER_VERSION = '1.0b1'
+OPENSTACK_PROVIDER_BRANCH = '1.0b1'
 OPENSTACK_PROVIDER = \
     "https://github.com/cloudify-cosmo/cloudify-openstack-provider/tarball/{0}" \
     .format(OPENSTACK_PROVIDER_BRANCH)
@@ -32,7 +32,7 @@ OPENSTACK_PROVIDER = \
 
 setup(
     name='cloudify-system-tests',
-    version='3.0',
+    version='3.0b1',
     author='dank',
     author_email='dank@gigaspaces.com',
     packages=['cosmo_tester'],
