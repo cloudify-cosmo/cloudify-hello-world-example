@@ -110,12 +110,14 @@ class CfyHelper(object):
     def execute_uninstall(self,
                           deployment_id,
                           verbose=False,
+                          include_logs=True,
                           execute_timeout=DEFAULT_EXECUTE_TIMEOUT):
         self._execute_workflow(
             'uninstall',
             deployment_id=deployment_id,
             execute_timeout=execute_timeout,
-            verbose=verbose)
+            verbose=verbose,
+            include_logs=include_logs)
 
     def use(self, management_ip):
         with self.workdir:
