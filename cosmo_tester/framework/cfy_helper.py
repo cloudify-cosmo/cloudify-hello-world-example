@@ -78,6 +78,7 @@ class CfyHelper(object):
             blueprint_id,
             deployment_id,
             verbose=False,
+            include_logs=True,
             execute_timeout=DEFAULT_EXECUTE_TIMEOUT):
         with self.workdir:
             cfy.blueprints.upload(
@@ -91,17 +92,20 @@ class CfyHelper(object):
             self.execute_install(
                 deployment_id=deployment_id,
                 execute_timeout=execute_timeout,
-                verbose=verbose)
+                verbose=verbose,
+                include_logs=include_logs)
 
     def execute_install(self,
                         deployment_id,
                         verbose=False,
+                        include_logs=True,
                         execute_timeout=DEFAULT_EXECUTE_TIMEOUT):
         self._execute_workflow(
             'install',
             deployment_id=deployment_id,
             execute_timeout=execute_timeout,
-            verbose=verbose)
+            verbose=verbose,
+            include_logs=include_logs)
 
     def execute_uninstall(self,
                           deployment_id,
@@ -130,10 +134,12 @@ class CfyHelper(object):
                           workflow,
                           deployment_id,
                           verbose=False,
+                          include_logs=False,
                           execute_timeout=DEFAULT_EXECUTE_TIMEOUT):
         with self.workdir:
             cfy.deployments.execute(
                 workflow,
                 deployment_id=deployment_id,
                 timeout=execute_timeout,
-                verbosity=verbose).wait()
+                verbosity=verbose,
+                include_logs=include_logs).wait()
