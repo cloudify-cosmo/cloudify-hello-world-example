@@ -136,7 +136,7 @@ class CfyHelper(object):
                           workflow,
                           deployment_id,
                           verbose=False,
-                          include_logs=False,
+                          include_logs=True,
                           execute_timeout=DEFAULT_EXECUTE_TIMEOUT):
         with self.workdir:
             cfy.deployments.execute(
