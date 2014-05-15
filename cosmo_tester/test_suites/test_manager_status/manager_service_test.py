@@ -36,7 +36,6 @@ class RebootManagerTest(TestCase):
     def setUp(self, *args, **kwargs):
         super(RebootManagerTest, self).setUp(*args, **kwargs)
         self.status = self.env.rest_client.list_services()
-        print self.status
 
     def test_00_pre_reboot(self):
         undefined = self._get_undefined_services()
