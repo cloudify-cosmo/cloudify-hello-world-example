@@ -30,7 +30,8 @@ from path import path
 from cosmo_tester.framework.testenv import TestCase
 from cosmo_tester.framework.util import YamlPatcher
 
-IMAGE_NAME = 'Ubuntu Precise 12.04 LTS Server 64-bit 20121026 (b)'
+# IMAGE_NAME = 'Ubuntu Server 14.04 LTS (amd64 20140416.1) - Partner Image'
+IMAGE_NAME = 'Ubuntu Server 12.04.4 LTS (amd64 20140408) - Partner Image'
 FLAVOR_NAME = 'standard.small'
 
 PUPPET_MASTER_VERSION = '3.5.1-1puppetlabs1'
@@ -148,7 +149,7 @@ class PuppetPluginAgentTest(TestCase):
         self.blueprint_yaml = blueprint_dir / 'puppet-server-by-puppet.yaml'
 
         with YamlPatcher(self.blueprint_yaml) as blueprint:
-            bp_info = update_blueprint(self.env, blueprint, 'puppet-server')
+            bp_info = update_blueprint(self.env, blueprint, 'puppet-master')
 
         self.puppet_server_hostname = bp_info['hostnames'][0]
 
@@ -183,7 +184,7 @@ class PuppetPluginAgentTest(TestCase):
         blueprint_dir = self.blueprint_dir
         self.blueprint_yaml = blueprint_dir / 'puppet-agent-test.yaml'
         with YamlPatcher(self.blueprint_yaml) as blueprint:
-            bp_info = update_blueprint(self.env, blueprint, 'puppet-server', {
+            bp_info = update_blueprint(self.env, blueprint, 'puppet-agent', {
                 'puppet_server_ip': self.puppet_server_ip,
             })
 
@@ -212,3 +213,46 @@ class PuppetPluginAgentTest(TestCase):
         self.assertEquals(out, id_)
 
         self.execute_uninstall(id_)
+
+class PuppetPluginStandaloneTest(TestCase):
+
+    def setUp(self, *args, **kwargs):
+
+        super(PuppetPluginStandaloneTest, self).setUp(*args, **kwargs)
+
+        blueprint_dir = self.copy_blueprint('puppet-plugin')
+        self.blueprint_dir = blueprint_dir
+
+    def test_puppet_standalone(self):
+        blueprint_dir = self.blueprint_dir
+        self.blueprint_yaml = blueprint_dir / 'puppet-standalone-test.yaml'
+        with YamlPatcher(self.blueprint_yaml) as blueprint:
+            bp_info = update_blueprint(self.env, blueprint, 'puppet-standalone')
+
+        id_ = self.test_id + '-puppet-standalone-' + str(int(time.time()))
+        before, after = self.upload_deploy_and_execute_install(id_, id_)
+
+        import pdb; pdb.set_trace()
+
+        fip_node = find_node_state('ip', after['node_state'][id_])
+        puppet_standalone_ip = fip_node['runtimeInfo']['floating_ip_address']
+
+        fabric_env = fabric.api.env
+        fabric_env.update({
+            'timeout': 30,
+            'user': bp_info['users'][0],
+            'key_filename': get_agent_key_file(self.env),
+            'host_string': puppet_standalone_ip,
+        })
+
+        # import pdb; pdb.set_trace()
+
+        # f = '/tmp/cloudify_operation_create'
+
+        # out = fabric.api.run('[ -f {0} ]; echo $?'.format(f))
+        # self.assertEquals(out, '0')
+
+        # out = fabric.api.run('cat {0}'.format(f))
+        # self.assertEquals(out, id_)
+
+        # self.execute_uninstall(id_)
