@@ -28,7 +28,6 @@ class NeutronGaloreTest(TestCase):
     security_groups = ['neutron_test_security_group_dst']
 
     def test_neutron_galore(self):
-        self.security_groups.append(self.env.agents_security_group)
 
         blueprint_path = self.copy_blueprint('neutron-galore')
         self.blueprint_yaml = blueprint_path / 'blueprint.yaml'
@@ -45,25 +44,14 @@ class NeutronGaloreTest(TestCase):
     def modify_blueprint(self):
         with YamlPatcher(self.blueprint_yaml) as patch:
             vm_path = 'blueprint.nodes[0].properties'
-            patch.set_value('{0}.management_network_name'.format(vm_path),
-                            self.env.management_network_name)
             patch.set_value('{0}.worker_config.key'.format(vm_path),
                             self.env.agent_key_path)
             patch.merge_obj('{0}.server'.format(vm_path), {
                 'name': self.host_name,
                 'image_name': self.env.ubuntu_image_name,
                 'flavor_name': self.env.flavor_name,
-                'key_name': self.env.agent_keypair_name,
                 'security_groups': self.security_groups,
             })
-
-            router_path = 'blueprint.nodes[3].properties.router.'\
-                          'external_gateway_info.network_name'
-            patch.set_value(router_path, self.env.external_network_name)
-
-            ip_path = 'blueprint.nodes[7].properties.floatingip.'\
-                      'floating_network_name'
-            patch.set_value(ip_path, self.env.external_network_name)
 
     def post_install_assertions(self, before_state, after_state):
         delta = self.get_manager_state_delta(before_state, after_state)
