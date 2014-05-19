@@ -33,10 +33,6 @@ class HelloWorldBashTest(TestCase):
 
     def test_hello_world_bash(self):
 
-        # Add agents security group from the cloudify-config file
-        # used to bootstrap
-        self.security_groups.append(self.env.agents_security_group)
-
         self.blueprint_path = self.repo_dir / 'hello-world'
         self.blueprint_yaml = self.blueprint_path / 'blueprint.yaml'
 
@@ -117,23 +113,11 @@ class HelloWorldBashTest(TestCase):
     def modify_yaml(self, yaml_file):
         with YamlPatcher(yaml_file) as patch:
             vm_properties_path = 'blueprint.nodes[2].properties'
-            patch.set_value('{0}.management_network_name'.format(
-                vm_properties_path),
-                self.env.management_network_name)
             patch.set_value('{0}.worker_config.key'.format(vm_properties_path),
                             self.env.agent_key_path)
             patch.merge_obj('{0}.server'.format(vm_properties_path), {
                 'name': self.host_name,
                 'image_name': self.env.ubuntu_image_name,
                 'flavor_name': self.env.flavor_name,
-                'key_name': self.env.agent_keypair_name,
                 'security_groups': self.security_groups,
-            })
-            floating_ip_path = 'blueprint.nodes[0]'
-            patch.merge_obj('{0}'.format(floating_ip_path), {
-                'properties':                             {
-                    'floatingip': {
-                        'floating_network_name': self.env.external_network_name
-                    }
-                }
             })
