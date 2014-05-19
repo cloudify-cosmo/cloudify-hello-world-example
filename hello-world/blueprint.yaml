@@ -28,14 +28,6 @@ blueprint:
     nodes:
         -   name: virtual_ip
             type: cloudify.openstack.floatingip
-            properties:
-
-                ####################################################################################
-                # Uncomment bellow and fill the properties according to your openstack environment.#
-                ####################################################################################
-
-                # floatingip:
-                    # floating_network_name: [Enter-External-Network-Name]
 
         -   name: security_group
             type: cloudify.openstack.security_group
@@ -55,7 +47,6 @@ blueprint:
                 worker_config:
                     user: ubuntu
                     key: ~/.ssh/cloudify-agents-kp.pem
-                management_network_name: cloudify-admin-network
 
                 ####################################################################################
                 # Uncomment bellow and fill the properties according to your openstack environment.#
@@ -66,7 +57,7 @@ blueprint:
                     # image_name: [Enter-Image-Name]
                     # flavor_name: [Enter-Flavor-Name]
                     # key_name: cloudify-agents-kp
-                    # security_groups: ['cloudify-sg-agents', 'webserver_security_group']
+                    # security_groups: ['webserver_security_group']
             relationships:
                 -   type: cloudify.openstack.server_connected_to_floating_ip
                     target: virtual_ip
