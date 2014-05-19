@@ -280,10 +280,10 @@ class TestCase(unittest.TestCase):
                 get_state=True)
             node_state[deployment_id] = {}
             for node in deployment_nodes[deployment_id].nodes:
-                node_state[deployment_id][node.id] = self.rest.get_node_state(
-                    node.id,
-                    get_state=True,
-                    get_runtime_properties=True)
+                node_state[deployment_id][node.id] =\
+                    self.rest.get_node_instance(
+                        node.id,
+                        get_state_and_runtime_properties=True)
 
         return {
             'blueprints': blueprints,
