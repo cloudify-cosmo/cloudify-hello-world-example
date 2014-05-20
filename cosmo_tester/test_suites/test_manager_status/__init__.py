@@ -13,9 +13,13 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
-__author__ = 'nirb'
 
-openstack_ubuntu_image_name = \
-    'Ubuntu Server 12.04.4 LTS (amd64 20140408) - Partner Image'
+from cosmo_tester.framework.testenv import TestEnvironment
 
-openstack_flavor_name = 'standard.small'
+
+def setUp():
+    TestEnvironment().bootstrap_if_necessary()
+
+
+def tearDown():
+    TestEnvironment().teardown_if_necessary()

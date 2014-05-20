@@ -49,8 +49,7 @@ class CfyHelper(object):
                   cloud_config_path,
                   keep_up_on_failure=False,
                   verbose=False,
-                  dev_mode=False,
-                  alternate_bootstrap_method=False):
+                  dev_mode=False):
         with self.workdir:
             cfy.init.openstack(
                 verbosity=verbose).wait()
@@ -58,7 +57,19 @@ class CfyHelper(object):
                 config_file=cloud_config_path,
                 keep_up_on_failure=keep_up_on_failure,
                 dev_mode=dev_mode,
-                alternate_bootstrap_method=alternate_bootstrap_method,
+                verbosity=verbose).wait()
+
+    def teardown(self,
+                 cloud_config_path,
+                 ignore_deployments=True,
+                 ignore_validation=False,
+                 verbose=False):
+        with self.workdir:
+            cfy.teardown(
+                config_file=cloud_config_path,
+                ignore_deployments=ignore_deployments,
+                ignore_validation=ignore_validation,
+                force=True,
                 verbosity=verbose).wait()
 
     def upload_deploy_and_execute_install(
@@ -67,6 +78,7 @@ class CfyHelper(object):
             blueprint_id,
             deployment_id,
             verbose=False,
+            include_logs=True,
             execute_timeout=DEFAULT_EXECUTE_TIMEOUT):
         with self.workdir:
             cfy.blueprints.upload(
@@ -80,27 +92,32 @@ class CfyHelper(object):
             self.execute_install(
                 deployment_id=deployment_id,
                 execute_timeout=execute_timeout,
-                verbose=verbose)
+                verbose=verbose,
+                include_logs=include_logs)
 
     def execute_install(self,
                         deployment_id,
                         verbose=False,
+                        include_logs=True,
                         execute_timeout=DEFAULT_EXECUTE_TIMEOUT):
         self._execute_workflow(
             'install',
             deployment_id=deployment_id,
             execute_timeout=execute_timeout,
-            verbose=verbose)
+            verbose=verbose,
+            include_logs=include_logs)
 
     def execute_uninstall(self,
                           deployment_id,
                           verbose=False,
+                          include_logs=True,
                           execute_timeout=DEFAULT_EXECUTE_TIMEOUT):
         self._execute_workflow(
             'uninstall',
             deployment_id=deployment_id,
             execute_timeout=execute_timeout,
-            verbose=verbose)
+            verbose=verbose,
+            include_logs=include_logs)
 
     def use(self, management_ip):
         with self.workdir:
@@ -119,10 +136,12 @@ class CfyHelper(object):
                           workflow,
                           deployment_id,
                           verbose=False,
+                          include_logs=True,
                           execute_timeout=DEFAULT_EXECUTE_TIMEOUT):
         with self.workdir:
             cfy.deployments.execute(
                 workflow,
                 deployment_id=deployment_id,
                 timeout=execute_timeout,
-                verbosity=verbose).wait()
+                verbosity=verbose,
+                include_logs=include_logs).wait()
