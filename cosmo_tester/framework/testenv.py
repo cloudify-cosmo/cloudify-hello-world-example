@@ -202,6 +202,10 @@ class TestEnvironment(object):
         return self._config_reader.management_router_name
 
     @property
+    def managment_user_name(self):
+        return self._config_reader.managment_user_name
+
+    @property
     def management_key_path(self):
         return self._config_reader.management_key_path
 
