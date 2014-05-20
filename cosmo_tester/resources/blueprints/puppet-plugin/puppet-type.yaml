@@ -3,7 +3,7 @@
 #
 # WARNING:
 # /etc/sudoers must not have "Default requiretty" for Puppet plugin to work
-#
+
 
 imports:
     - 'cloudify.types'
@@ -16,32 +16,40 @@ types:
             # the "puppet_config" property.
             - puppet_config
 
-                # - server: (required)
+                # server (required)
+                # ------
                 #
                 # Host name of the Puppet server
                 #
-                # - environment: (required)
+                # environment: (required)
+                # -----------
                 #
                 # Environment name
                 # See: http://docs.puppetlabs.com/guides/environment.html
                 #
-                # - version: (optional. default: latest)
+                # version: (optional. default: latest)
+                # -------
                 #
                 # `version` is the Puppet version to install
                 #
-                # - node_name_prefix (optional. default: empty string)
-                # - node_name_suffix (optional. default: empty string)
+                # node_name_prefix: (optional. default: empty string)
+                # ----------------
+                #
+                # node_name_suffix: (optional. default: empty string)
+                # ----------------
                 #
                 # Puppet node name is constructed as follows:
                 # `node_name_prefix` + node_id + `node_name_suffix`
                 #
-                # - facts: (optional)
+                # facts: (optional)
+                # -----
                 #
-                # Hash with facts to add to facter. Must not contain
+                # Map with facts to add to facter. Must not contain
                 # `cloudify` nor `cloudify_*` keys as these are
                 # generated automatically.
                 #
-                # - repos: (optional)
+                # repos: (optional)
+                # -----
                 #       deb:
                 #           VER_NAME: url://for-package-that-installs-repo.deb
                 #
@@ -59,10 +67,41 @@ types:
                 - stop:      puppet_plugin.operations.operation
                 - delete:    puppet_plugin.operations.operation
 
-    # Aliases for GUI, as requested
-    app_server_puppet: {derived_from: middleware_server_puppet}
-    db_server_puppet:  {derived_from: middleware_server_puppet}
-    web_server_puppet: {derived_from: middleware_server_puppet}
+    app_server_puppet:
+        derived_from: cloudify.types.app_server
+        properties:
+            - puppet_config
+        interfaces:
+            cloudify.interfaces.lifecycle:
+                - create:    puppet_plugin.operations.operation
+                - configure: puppet_plugin.operations.operation
+                - start:     puppet_plugin.operations.operation
+                - stop:      puppet_plugin.operations.operation
+                - delete:    puppet_plugin.operations.operation
+
+    db_server_puppet:
+        derived_from: cloudify.types.db_server
+        properties:
+            - puppet_config
+        interfaces:
+            cloudify.interfaces.lifecycle:
+                - create:    puppet_plugin.operations.operation
+                - configure: puppet_plugin.operations.operation
+                - start:     puppet_plugin.operations.operation
+                - stop:      puppet_plugin.operations.operation
+                - delete:    puppet_plugin.operations.operation
+
+    web_server_puppet:
+        derived_from: cloudify.types.web_server
+        properties:
+            - puppet_config
+        interfaces:
+            cloudify.interfaces.lifecycle:
+                - create:    puppet_plugin.operations.operation
+                - configure: puppet_plugin.operations.operation
+                - start:     puppet_plugin.operations.operation
+                - stop:      puppet_plugin.operations.operation
+                - delete:    puppet_plugin.operations.operation
 
 relationships:
     cloudify.puppet.depends_on:

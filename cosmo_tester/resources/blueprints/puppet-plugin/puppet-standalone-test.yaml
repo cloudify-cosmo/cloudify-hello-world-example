@@ -57,7 +57,7 @@ blueprint:
                     target: puppet_sg
         -
             name: puppet_node_one
-            type: db_server_puppet
+            type: web_server_puppet
             properties:
                 port: 8080
                 puppet_config:
@@ -100,3 +100,5 @@ blueprint:
                 rules:
                     -   remote_ip_prefix: 0.0.0.0/0
                         port: 22
+                    -   remote_ip_prefix: 0.0.0.0/0
+                        port: 8080

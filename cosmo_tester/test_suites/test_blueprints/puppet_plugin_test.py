@@ -17,6 +17,7 @@
 
 __author__ = 'ilyash'
 
+import requests
 import subprocess
 import sys
 import time
@@ -214,6 +215,7 @@ class PuppetPluginAgentTest(TestCase):
 
         self.execute_uninstall(id_)
 
+
 class PuppetPluginStandaloneTest(TestCase):
 
     def setUp(self, *args, **kwargs):
@@ -227,32 +229,14 @@ class PuppetPluginStandaloneTest(TestCase):
         blueprint_dir = self.blueprint_dir
         self.blueprint_yaml = blueprint_dir / 'puppet-standalone-test.yaml'
         with YamlPatcher(self.blueprint_yaml) as blueprint:
-            bp_info = update_blueprint(self.env, blueprint, 'puppet-standalone')
+            update_blueprint(self.env, blueprint, 'puppet-standalone')
 
         id_ = self.test_id + '-puppet-standalone-' + str(int(time.time()))
         before, after = self.upload_deploy_and_execute_install(id_, id_)
 
-        import pdb; pdb.set_trace()
-
         fip_node = find_node_state('ip', after['node_state'][id_])
         puppet_standalone_ip = fip_node['runtimeInfo']['floating_ip_address']
 
-        fabric_env = fabric.api.env
-        fabric_env.update({
-            'timeout': 30,
-            'user': bp_info['users'][0],
-            'key_filename': get_agent_key_file(self.env),
-            'host_string': puppet_standalone_ip,
-        })
-
-        # import pdb; pdb.set_trace()
-
-        # f = '/tmp/cloudify_operation_create'
-
-        # out = fabric.api.run('[ -f {0} ]; echo $?'.format(f))
-        # self.assertEquals(out, '0')
-
-        # out = fabric.api.run('cat {0}'.format(f))
-        # self.assertEquals(out, id_)
-
-        # self.execute_uninstall(id_)
+        page = requests.get('http://{0}:8080'.format(puppet_standalone_ip))
+        self.assertIn('Cloudify Hello World', page.text,
+                      'Expected text not found in response')
