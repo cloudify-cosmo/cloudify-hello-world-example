@@ -23,7 +23,7 @@ CLI = \
     "https://github.com/cloudify-cosmo/cloudify-cli/tarball/{0}" \
     .format(CLI_BRANCH)
 
-OPENSTACK_PROVIDER_VERSION = '3.0'
+OPENSTACK_PROVIDER_VERSION = '1.0'
 OPENSTACK_PROVIDER_BRANCH = 'develop'
 OPENSTACK_PROVIDER = \
     "https://github.com/cloudify-cosmo/cloudify-openstack-provider/tarball/{0}" \

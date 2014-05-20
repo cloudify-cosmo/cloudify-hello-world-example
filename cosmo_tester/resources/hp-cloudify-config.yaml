@@ -53,5 +53,3 @@ compute:
             auto_generated:
                 private_key_target_path: ~/.ssh/cloudify-agents-kp.pem
 
-cloudify:
-   cloudify_branch: develop

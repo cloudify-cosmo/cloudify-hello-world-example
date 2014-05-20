@@ -114,23 +114,13 @@ def update_blueprint(env, blueprint, hostname, userdata_vars=None):
             vm['properties']['server'].update({
                 'flavor_name': env.flavor_name,
                 'image_name': env.ubuntu_image_name,
-                'key_name': env.agent_keypair_name,
                 'name': vm_hostname,
             })
-            vm['properties']['management_network_name'] = (
-                env.management_network_name)
-            vm['properties']['server']['security_groups'].append(
-                env.agents_security_group)
             props = vm['properties']['server']
             if 'userdata' in props:
                 props['userdata'] = props['userdata'].format(
                     hostname=vm_hostname, **(userdata_vars or {}))
         users.append(vm['properties']['worker_config']['user'])
-
-    fips = get_nodes_of_type(blueprint, 'cloudify.openstack.floatingip')
-    for fip in fips:
-            fip_fip = fip['properties']['floatingip']
-            fip_fip['floating_network_name'] = env.external_network_name
 
     return {'hostnames': hostnames, 'users': users}
 
