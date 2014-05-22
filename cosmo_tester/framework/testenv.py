@@ -62,6 +62,22 @@ CLOUDIFY_TEST_MANAGEMENT_IP = 'CLOUDIFY_TEST_MANAGEMENT_IP'
 CLOUDIFY_TEST_CONFIG_PATH = 'CLOUDIFY_TEST_CONFIG_PATH'
 CLOUDIFY_TEST_NO_CLEANUP = 'CLOUDIFY_TEST_NO_CLEANUP'
 
+test_environment = None
+
+
+def bootstrap():
+    global test_environment
+    if not test_environment:
+        test_environment = TestEnvironment()
+        test_environment.bootstrap()
+
+
+def teardown():
+    global test_environment
+    if test_environment:
+        test_environment.teardown()
+        test_environment = None
+
 
 class CleanupContext(object):
 
@@ -96,7 +112,6 @@ class CleanupContext(object):
 
 # Singleton class
 class TestEnvironment(object):
-    __metaclass__ = Singleton
 
     # Singleton class
     def __init__(self):
@@ -122,11 +137,14 @@ class TestEnvironment(object):
 
         self._config_reader = CloudifyConfigReader(self.cloudify_config)
 
+        global test_environment
+        test_environment = self
+
     def setup(self):
         os.chdir(self._initial_cwd)
         return self
 
-    def bootstrap_if_necessary(self):
+    def bootstrap(self):
         if self._management_running:
             return
         self._global_cleanup_context = CleanupContext('testenv',
@@ -142,7 +160,7 @@ class TestEnvironment(object):
         finally:
             cfy.close()
 
-    def teardown_if_necessary(self):
+    def teardown(self):
         if self._global_cleanup_context is None:
             return
         self.setup()
@@ -237,7 +255,8 @@ class TestCase(unittest.TestCase):
         pass
 
     def setUp(self):
-        self.env = TestEnvironment().setup()
+        global test_environment
+        self.env = test_environment.setup()
         self.logger = logging.getLogger(self._testMethodName)
         self.logger.setLevel(logging.INFO)
         self.workdir = tempfile.mkdtemp(prefix='cosmo-test-')

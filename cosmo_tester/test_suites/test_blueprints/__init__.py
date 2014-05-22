@@ -15,12 +15,12 @@
 
 __author__ = 'dank'
 
-from cosmo_tester.framework.testenv import TestEnvironment
+from cosmo_tester.framework.testenv import bootstrap, teardown
 
 
 def setUp():
-    TestEnvironment().bootstrap_if_necessary()
+    bootstrap()
 
 
 def tearDown():
-    TestEnvironment().teardown_if_necessary()
+    teardown()
