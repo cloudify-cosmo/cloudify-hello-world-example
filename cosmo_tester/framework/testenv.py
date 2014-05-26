@@ -31,7 +31,6 @@ from cosmo_manager_rest_client.cosmo_manager_rest_client import (
 
 from cosmo_tester.framework.cfy_helper import CfyHelper
 from cosmo_tester.framework.util import (get_blueprint_path,
-                                         Singleton,
                                          CloudifyConfigReader)
 from cosmo_tester.framework.openstack_api import (openstack_infra_state,
                                                   openstack_infra_state_delta,
