@@ -60,9 +60,3 @@ class DownloadBlueprintTest(TestCase):
         with tarfile.open(self.downloaded_archive_path) as tar:
             for item in tar:
                 tar.extract(item, self.download_path)
-
-
-
-
-
-
