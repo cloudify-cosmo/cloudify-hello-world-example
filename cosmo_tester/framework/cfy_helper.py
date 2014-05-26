@@ -119,6 +119,15 @@ class CfyHelper(object):
             verbose=verbose,
             include_logs=include_logs)
 
+    def upload_blueprint(self, blueprint_id, blueprint_path):
+        with self.workdir:
+            cfy.blueprints.upload(blueprint_path,
+                                  blueprint_id=blueprint_id).wait()
+
+    def download_blueprint(self, blueprint_id):
+        with self.workdir:
+            cfy.blueprints.download(blueprint_id=blueprint_id).wait()
+
     def use(self, management_ip):
         with self.workdir:
             cfy.use(management_ip).wait()
