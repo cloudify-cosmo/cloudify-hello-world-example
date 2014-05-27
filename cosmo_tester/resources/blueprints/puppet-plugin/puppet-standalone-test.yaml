@@ -69,7 +69,11 @@ blueprint:
                         - puppetlabs-concat
                         - puppetlabs-stdlib
                         - puppetlabs-vcsrepo
+                    # download: -- added by all download tests
+                    # manifest: -- added by download tests (url)
+                    # "execute" section is removed by download tests (url)
                     execute:
+                        # "configure" section is removed by download tests (resource)
                         configure: |
                             package{'git':}
                             ->

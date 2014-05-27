@@ -20,6 +20,7 @@ __author__ = 'ilyash'
 import requests
 import subprocess
 import sys
+import tempfile
 import time
 import os
 from os.path import dirname
@@ -36,6 +37,11 @@ IMAGE_NAME = 'Ubuntu Server 12.04.4 LTS (amd64 20140408) - Partner Image'
 FLAVOR_NAME = 'standard.small'
 
 PUPPET_MASTER_VERSION = '3.5.1-1puppetlabs1'
+
+MANIFESTS_URL = ('https://github.com/Fewbytes/cosmo-tester-puppet-downloadable'
+                 '/archive/master.tar.gz')
+
+MANIFESTS_FILE_NAME = 'manifests.tar.gz'
 
 
 def find_node_state(node_name, nodes_state):
@@ -218,20 +224,7 @@ class PuppetPluginAgentTest(TestCase):
 
 class PuppetPluginStandaloneTest(TestCase):
 
-    def setUp(self, *args, **kwargs):
-
-        super(PuppetPluginStandaloneTest, self).setUp(*args, **kwargs)
-
-        blueprint_dir = self.copy_blueprint('puppet-plugin')
-        self.blueprint_dir = blueprint_dir
-
-    def test_puppet_standalone(self):
-        blueprint_dir = self.blueprint_dir
-        self.blueprint_yaml = blueprint_dir / 'puppet-standalone-test.yaml'
-        with YamlPatcher(self.blueprint_yaml) as blueprint:
-            update_blueprint(self.env, blueprint, 'puppet-standalone')
-
-        id_ = self.test_id + '-puppet-standalone-' + str(int(time.time()))
+    def execute_and_check(self, id_):
         before, after = self.upload_deploy_and_execute_install(id_, id_)
 
         fip_node = find_node_state('ip', after['node_state'][id_])
@@ -240,3 +233,77 @@ class PuppetPluginStandaloneTest(TestCase):
         page = requests.get('http://{0}:8080'.format(puppet_standalone_ip))
         self.assertIn('Cloudify Hello World', page.text,
                       'Expected text not found in response')
+
+    def test_puppet_standalone_without_download(self):
+        id_ = "{0}-puppet-standalone-{1}-{2}".format(self.test_id,
+                                                     'nodl',
+                                                     str(int(time.time())))
+        blueprint_dir = self.copy_blueprint('puppet-plugin')
+
+        self.blueprint_yaml = blueprint_dir / 'puppet-standalone-test.yaml'
+        with YamlPatcher(self.blueprint_yaml) as blueprint:
+            update_blueprint(self.env, blueprint, 'puppet-standalone-nodl')
+        self.execute_and_check(id_)
+
+    def _test_puppet_standalone_with_download(self, manifests_are_from_url):
+        """ Tests standalone Puppet.
+        manifests_are_from_url True ->
+            puppet_config:
+                download: http://....
+                execute: -- removed
+                manifest: site.pp
+        manifests_are_from_url False ->
+                download: /....
+                execute:
+                    configure: -- removed
+        """
+
+
+        mode = ['resource', 'url'][manifests_are_from_url]
+        id_ = "{0}-puppet-standalone-{1}-{2}".format(self.test_id,
+                                                     mode,
+                                                     str(int(time.time())))
+        _url = ('http://' +
+                self.env.management_ip +
+                '/resources/blueprints/' +
+                id_ +
+                '/' +
+                MANIFESTS_FILE_NAME)
+
+        download_from = ['/' + MANIFESTS_FILE_NAME, _url][
+            manifests_are_from_url]
+
+        def call(cmd):
+            print("Executing: {0}".format(' '.join(cmd)))
+            subprocess.check_call(cmd, stdout=sys.stdout, stderr=sys.stderr)
+
+        blueprint_dir = self.copy_blueprint('puppet-plugin')
+
+        # Download manifests
+        file_name = os.path.join(tempfile.gettempdir(),
+                                 self.test_id + '.manifests.tar.gz')
+        temp_dir = tempfile.mkdtemp('.manifests', self.test_id + '.')
+        call(['wget', '-O', file_name, MANIFESTS_URL])
+        call(['tar', '-vxzf', file_name, '-C', temp_dir,
+              '--xform', 's/^[^\/]\+\///'])
+        call(['tar', '-vczf', os.path.join(blueprint_dir, MANIFESTS_FILE_NAME),
+              '-C', temp_dir, '.'])
+
+        self.blueprint_yaml = blueprint_dir / 'puppet-standalone-test.yaml'
+        with YamlPatcher(self.blueprint_yaml) as blueprint:
+            update_blueprint(self.env, blueprint, 'puppet-standalone-' + mode)
+            conf = blueprint.obj['blueprint']['nodes'][1]['properties'][
+                'puppet_config']
+            conf['download'] = download_from
+            if manifests_are_from_url:
+                del conf['execute']
+                conf['manifest'] = {'start': 'manifests/site.pp'}
+            else:
+                del conf['execute']['configure']
+        self.execute_and_check(id_)
+
+    def test_puppet_standalone_with_resource(self):
+        self._test_puppet_standalone_with_download(False)
+
+    def test_puppet_standalone_with_url(self):
+        self._test_puppet_standalone_with_download(True)
