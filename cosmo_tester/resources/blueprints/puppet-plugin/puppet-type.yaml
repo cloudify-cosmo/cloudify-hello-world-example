@@ -9,7 +9,7 @@ imports:
     - 'cloudify.types'
 
 types:
-    middleware_server_puppet:
+    cloudify.types.puppet.middleware_server:
         derived_from: cloudify.types.middleware_server
         properties:
             # All Puppet related configuration goes inside
@@ -21,25 +21,30 @@ types:
                 #
                 # Host name of the Puppet server
                 #
+                #
                 # environment: (required)
                 # -----------
                 #
                 # Environment name
                 # See: http://docs.puppetlabs.com/guides/environment.html
                 #
+                #
                 # version: (optional. default: latest)
                 # -------
                 #
                 # `version` is the Puppet version to install
                 #
+                #
                 # node_name_prefix: (optional. default: empty string)
                 # ----------------
+                #
                 #
                 # node_name_suffix: (optional. default: empty string)
                 # ----------------
                 #
                 # Puppet node name is constructed as follows:
                 # `node_name_prefix` + node_id + `node_name_suffix`
+                #
                 #
                 # facts: (optional)
                 # -----
@@ -48,12 +53,107 @@ types:
                 # `cloudify` nor `cloudify_*` keys as these are
                 # generated automatically.
                 #
+                #
                 # repos: (optional)
                 # -----
                 #       deb:
                 #           VER_NAME: url://for-package-that-installs-repo.deb
                 #
                 # Custom packages that are used for adding Puppet repository.
+                #
+                #
+                # modules: (optional)
+                # -------
+                # List of Puppet modules to install before executing any
+                # Puppet DSL (passed using "manifest" or "execute")
+                #
+                # Example:
+                # ===8<===
+                #     modules:
+                #         - puppetlabs-apache
+                #         - puppetlabs-concat
+                #         - puppetlabs-stdlib
+                #         - puppetlabs-vcsrepo
+                # ===8<===
+                #
+                #
+                # download: (optional)
+                # --------
+                #
+                # Link to a .tar.gz to download for using as manifests.
+                # It is downloaded before any Puppet code runs.
+                # The file should typically contain "manifests" and
+                # "modules" directories. Can be used in conjunction with
+                # "execute" or "manifest" properties.
+                #
+                # The value of the "download" property can be either
+                # URL or a path to a .tar.gz file inside the blueprint.
+                #
+                # Example A: (url)
+                # ===8<===
+                #     download: http://puppet-statics.example.com/manifests.tar.gz
+                # ===8<===
+                #
+                # Example B: (resource in blueprint)
+                # ===8<===
+                #     download: /puppet-resources/manifests.tar.gz
+                # ===8<===
+                #
+                #
+                # execute: (either "execute" or "manifest" must be present)
+                # -------
+                # hash of per operation Puppet DSL to run.
+                #
+                # Example:
+                # ===8<===
+                #     execute:
+                #         configure: |
+                #             package{'git':}
+                #             ->
+                #             vcsrepo{$cloudify_local_repo:
+                #               ensure => present,
+                #               provider => git,
+                #               source   => 'https://github.com/Fewbytes/cosmo-tester-puppet-downloadable.git',
+                #             }
+                #         start: |
+                #             class{'cloudify_hello_world':
+                #             }
+                # ===8<===
+                #
+                #
+                # manifest: (either "execute" or "manifest" must be present)
+                # --------
+                # hash of per operation Puppet manifest to run.
+                #
+                # Example:
+                # ===8<===
+                #       manifest:
+                #           start: manifests/site.pp
+                # ===8<===
+                #
+                # tags: (optional)
+                # ----
+                # List of tags to use while running Puppet (standalone or agent)
+                # Used for all operations.
+                #
+                # operations_tags: (optional)
+                # ---------------
+                # hash of lists of per operation tags to use
+                # while running Puppet (standalone or agent)
+                #
+                # Example:
+                # ===8<===
+                #       operations_tags:
+                #           start: ['my_start']
+                # ===8<===
+                #
+                # add_operation_tag: (boolean, optional, default false)
+                # -----------------
+                #
+                # In addition to any other tags, passes cloudify_operation_X
+                # tag, where X is the operation name (such as "configure" or
+                # "start" for example).
+                #
 
         interfaces:
             # All operations mapped to same entry point in Puppet plugin
@@ -67,7 +167,7 @@ types:
                 - stop:      puppet_plugin.operations.operation
                 - delete:    puppet_plugin.operations.operation
 
-    app_server_puppet:
+    cloudify.types.puppet.app_server:
         derived_from: cloudify.types.app_server
         properties:
             - puppet_config
@@ -79,7 +179,7 @@ types:
                 - stop:      puppet_plugin.operations.operation
                 - delete:    puppet_plugin.operations.operation
 
-    db_server_puppet:
+    cloudify.types.puppet.db_server:
         derived_from: cloudify.types.db_server
         properties:
             - puppet_config
@@ -91,8 +191,33 @@ types:
                 - stop:      puppet_plugin.operations.operation
                 - delete:    puppet_plugin.operations.operation
 
-    web_server_puppet:
+    cloudify.types.puppet.web_server:
         derived_from: cloudify.types.web_server
+        properties:
+            - puppet_config
+        interfaces:
+            cloudify.interfaces.lifecycle:
+                - create:    puppet_plugin.operations.operation
+                - configure: puppet_plugin.operations.operation
+                - start:     puppet_plugin.operations.operation
+                - stop:      puppet_plugin.operations.operation
+                - delete:    puppet_plugin.operations.operation
+
+
+    cloudify.types.puppet.message_bus_server:
+        derived_from: cloudify.types.message_bus_server
+        properties:
+            - puppet_config
+        interfaces:
+            cloudify.interfaces.lifecycle:
+                - create:    puppet_plugin.operations.operation
+                - configure: puppet_plugin.operations.operation
+                - start:     puppet_plugin.operations.operation
+                - stop:      puppet_plugin.operations.operation
+                - delete:    puppet_plugin.operations.operation
+
+    cloudify.types.puppet.app_module:
+        derived_from: cloudify.types.app_module
         properties:
             - puppet_config
         interfaces:
