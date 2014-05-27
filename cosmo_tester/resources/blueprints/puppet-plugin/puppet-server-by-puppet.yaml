@@ -3,7 +3,7 @@ plugins:
     puppet_plugin:
         derived_from: cloudify.plugins.agent_plugin
         properties:
-            url: https://github.com/Fewbytes/cloudify-plugin-puppet/archive/master.zip
+            url: https://github.com/Fewbytes/cloudify-puppet-plugin/archive/feature/CFY-596-standalone-puppet.zip
 
 imports:
     - cloudify.openstack

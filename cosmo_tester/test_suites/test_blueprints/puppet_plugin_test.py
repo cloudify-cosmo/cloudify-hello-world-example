@@ -120,7 +120,7 @@ def setup_puppet_server(local_dir):
         fabric.api.sudo(cmd)
     remote_path = '/etc/puppet'
     local_path = (
-        path(dirname(os.path.dirname(os.path.realpath(__file__)))) /
+        path(dirname(dirname(dirname(os.path.realpath(__file__))))) /
         'resources' /
         'puppet' + remote_path)
     fabric.api.put(local_path=local_path,
@@ -257,7 +257,6 @@ class PuppetPluginStandaloneTest(TestCase):
                 execute:
                     configure: -- removed
         """
-
 
         mode = ['resource', 'url'][manifests_are_from_url]
         id_ = "{0}-puppet-standalone-{1}-{2}".format(self.test_id,
