@@ -7,7 +7,6 @@ plugins:
 
 imports:
     - cloudify.openstack
-    # LATER # - cloudify.puppet
     - puppet-type-server.yaml
 
 blueprint:

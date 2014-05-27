@@ -2,7 +2,7 @@ imports:
     - 'cloudify.types'
 
 types:
-    middleware_server_puppet:
+    cloudify.types.puppet.middleware_server:
         derived_from: cloudify.types.middleware_server
         properties:
             - puppet_config
