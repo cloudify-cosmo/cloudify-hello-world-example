@@ -38,7 +38,7 @@ blueprint:
                     target: ip
         -
             name: puppet_node_one
-            type: db_server_puppet
+            type: cloudify.types.puppet.db_server
             properties:
                 puppet_config:
                     add_operation_tag: True,

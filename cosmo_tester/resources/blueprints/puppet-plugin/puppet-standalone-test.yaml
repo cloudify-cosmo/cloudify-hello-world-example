@@ -57,7 +57,7 @@ blueprint:
                     target: puppet_sg
         -
             name: puppet_node_one
-            type: web_server_puppet
+            type: cloudify.types.puppet.web_server
             properties:
                 port: 8080
                 puppet_config:
