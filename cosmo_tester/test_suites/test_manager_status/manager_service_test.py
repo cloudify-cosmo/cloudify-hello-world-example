@@ -43,8 +43,8 @@ class RebootManagerTest(TestCase):
         self.assertEqual(undefined, ['Webserver'],
                          'undefined services: {0}'.format(','.join(undefined)))
         stopped = self._get_stopped_services()
-        self.assertEqual(stopped, ['Webserver'], 'stopped services: {0}'.format(
-                                      ','.join(stopped)))
+        self.assertEqual(stopped, ['Webserver'], 'stopped services: {0}'
+                         .format(','.join(stopped)))
 
     def test_01_during_reboot(self):
             pre_reboot_status = self.status
@@ -67,5 +67,5 @@ class RebootManagerTest(TestCase):
         self.assertEqual(undefined, ['Webserver'],
                          'undefined services: {0}'.format(','.join(undefined)))
         stopped = self._get_stopped_services()
-        self.assertEqual(stopped, ['Webserver'], 'stopped services: {0}'.format(
-                                      ','.join(stopped)))
+        self.assertEqual(stopped, ['Webserver'], 'stopped services: {0}'
+                         .format(','.join(stopped)))
