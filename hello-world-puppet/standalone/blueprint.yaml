@@ -22,12 +22,10 @@ blueprint:
                     port: 22
                     user: ubuntu
                     key: ~/.ssh/cloudify-agents-kp.pem
-                management_network_name: cloudify-admin-network
                 server:
                     # name: puppet-web-server
                     # image_name: [Enter-Image-Name]
                     # flavor_name: [Enter-Flavor-Name]
-                    # key_name: cloudify-agents-kp
                     # security_groups: ['cloudify-sg-agents', 'puppet_sg']
             relationships:
                 -   type: cloudify.openstack.server_connected_to_floating_ip
@@ -36,7 +34,7 @@ blueprint:
                     target: puppet_sg
         -
             name: puppet_node_one
-            type: web_server_puppet
+            type: cloudify.types.puppet.web_server
             properties:
                 port: 8080
                 puppet_config:
@@ -63,18 +61,29 @@ blueprint:
             relationships:
                 -
                     type: cloudify.relationships.contained_in
-                    # target: existing_server
                     target: server-for-puppet-standalone
+        ### Alternative ### ### You can put your manifests in a .tar.gz in
+        ### Alternative ### ### the blueprint folder.
+        ### Alternative ### -
+        ### Alternative ###     name: puppet_node_two
+        ### Alternative ###     type: cloudify.types.puppet.app_server
+        ### Alternative ###     properties:
+        ### Alternative ###         port: 8080
+        ### Alternative ###         puppet_config:
+        ### Alternative ###             environment: e1
+        ### Alternative ###             node_name_prefix: pfx-
+        ### Alternative ###             node_name_suffix: .puppet.example.com
+        ### Alternative ###             download: /manifests.tar.gz
+        ### Alternative ###             manifest:
+        ### Alternative ###                 start: manifests/site.pp
+
+        ### Alternative ###     relationships:
+        ### Alternative ###         -
+        ### Alternative ###             type: cloudify.relationships.contained_in
+        ### Alternative ###             target: server-for-puppet-standalone
 
         -   name: ip
             type: cloudify.openstack.floatingip
-            properties:
-                ####################################################################################
-                # Uncomment bellow and fill the properties according to your openstack environment.#
-                ####################################################################################
-                # floatingip:
-                #     floating_network_name: [Enter-External-Network-Name]
-                ####################################################################################
         -   name: puppet_sg
             type: cloudify.openstack.security_group
             properties:
