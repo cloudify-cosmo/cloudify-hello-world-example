@@ -13,7 +13,7 @@ plugins:
     puppet_plugin:
         derived_from: cloudify.plugins.agent_plugin
         properties:
-            url: https://github.com/Fewbytes/cloudify-plugin-puppet/archive/master.zip
+            url: https://github.com/Fewbytes/cloudify-puppet-plugin/archive/feature/CFY-596-standalone-puppet.zip
             # folder: cloudify-plugin-puppet
 
 imports:
@@ -39,15 +39,6 @@ blueprint:
     nodes:
         -   name: ip
             type: cloudify.openstack.floatingip
-            properties:
-
-                ####################################################################################
-                # Uncomment bellow and fill the properties according to your openstack environment.#
-                ####################################################################################
-
-                # floatingip:
-                #     floating_network_name: [Enter-External-Network-Name]
-
         -   name: security_group
             type: cloudify.openstack.security_group
             properties:
@@ -65,9 +56,7 @@ blueprint:
                 install_agent: true
                 worker_config:
                     user: ubuntu
-                    key: ~/.ssh/cloudify-agents-kp.pem
-                management_network_name: cloudify-admin-network
-
+                    key: ~/.ssh/cloudify-agents-kp-ilya.pem
                 ####################################################################################
                 # Uncomment bellow and fill the properties according to your openstack environment.#
                 ####################################################################################
