@@ -64,6 +64,12 @@ CLOUDIFY_TEST_NO_CLEANUP = 'CLOUDIFY_TEST_NO_CLEANUP'
 test_environment = None
 
 
+def initialize_without_bootstrap():
+    global test_environment
+    if not test_environment:
+        test_environment = TestEnvironment()
+
+
 def bootstrap():
     global test_environment
     if not test_environment:
@@ -125,7 +131,7 @@ class TestEnvironment(object):
                                'in "CLOUDIFY_TEST_CONFIG_PATH" env variable')
         self.cloudify_config_path = path(os.environ[CLOUDIFY_TEST_CONFIG_PATH])
 
-        if not self.cloudify_config_path.isfile():
+        if not self.cloudify_config_path.exists():
             raise RuntimeError('cloud-config file configured in env variable'
                                ' {0} does not seem to exist'
                                .format(self.cloudify_config_path))
