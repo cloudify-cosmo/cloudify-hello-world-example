@@ -64,6 +64,12 @@ CLOUDIFY_TEST_NO_CLEANUP = 'CLOUDIFY_TEST_NO_CLEANUP'
 test_environment = None
 
 
+def initialize_without_bootstrap():
+    global test_environment
+    if not test_environment:
+        test_environment = TestEnvironment()
+
+
 def bootstrap():
     global test_environment
     if not test_environment:
