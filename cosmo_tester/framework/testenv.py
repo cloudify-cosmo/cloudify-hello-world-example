@@ -131,7 +131,7 @@ class TestEnvironment(object):
                                'in "CLOUDIFY_TEST_CONFIG_PATH" env variable')
         self.cloudify_config_path = path(os.environ[CLOUDIFY_TEST_CONFIG_PATH])
 
-        if not self.cloudify_config_path.exists():
+        if not self.cloudify_config_path.isfile():
             raise RuntimeError('cloud-config file configured in env variable'
                                ' {0} does not seem to exist'
                                .format(self.cloudify_config_path))
