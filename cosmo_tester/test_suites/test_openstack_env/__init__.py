@@ -16,7 +16,8 @@
 
 __author__ = 'barakme'
 
-from cosmo_tester.framework.testenv import initialize_without_bootstrap
+from cosmo_tester.framework.testenv import (initialize_without_bootstrap,
+                                            clear_test_environment)
 
 
 def setUp():
@@ -24,4 +25,4 @@ def setUp():
 
 
 def tearDown():
-    print "in teardown"
+    clear_test_environment()

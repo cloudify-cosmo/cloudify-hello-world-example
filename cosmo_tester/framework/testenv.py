@@ -70,6 +70,11 @@ def initialize_without_bootstrap():
         test_environment = TestEnvironment()
 
 
+def clear_test_environment():
+    global test_environment
+    test_environment = None
+
+
 def bootstrap():
     global test_environment
     if not test_environment:
@@ -81,7 +86,7 @@ def teardown():
     global test_environment
     if test_environment:
         test_environment.teardown()
-        test_environment = None
+        clear_test_environment()
 
 
 class CleanupContext(object):
@@ -336,14 +341,19 @@ class TestCase(unittest.TestCase):
         return after
 
     def upload_deploy_and_execute_install(self, blueprint_id=None,
-                                          deployment_id=None):
-        before_state = self.get_manager_state()
+                                          deployment_id=None,
+                                          fetch_state=True):
+        before_state = None
+        after_state = None
+        if fetch_state:
+            before_state = self.get_manager_state()
         self.cfy.upload_deploy_and_execute_install(
             str(self.blueprint_yaml),
             blueprint_id=blueprint_id or self.test_id,
             deployment_id=deployment_id or self.test_id,
         )
-        after_state = self.get_manager_state()
+        if fetch_state:
+            after_state = self.get_manager_state()
         return before_state, after_state
 
     def execute_uninstall(self, deployment_id=None):

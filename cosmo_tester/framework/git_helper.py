@@ -12,16 +12,14 @@
 #    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
-import os
-import random
-import string
-import tempfile
 
 __author__ = 'dank'
 
+import os
+import logging
+
 import sh
 from path import path
-import logging
 
 from cosmo_tester.framework.util import sh_bake
 
@@ -29,16 +27,6 @@ from cosmo_tester.framework.util import sh_bake
 logger = logging.getLogger('git_helper')
 logger.setLevel(logging.INFO)
 git = sh_bake(sh.git)
-
-
-def create_temp_folder():
-    path_join = os.path.join(tempfile.gettempdir(), id_generator(5))
-    os.makedirs(path_join)
-    return path_join
-
-
-def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
-    return ''.join(random.choice(chars) for x in range(size))
 
 
 def clone(url, basedir, branch='develop'):

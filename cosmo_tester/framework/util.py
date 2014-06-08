@@ -31,11 +31,6 @@ def sh_bake(command):
                         _err=lambda line: sys.stderr.write(line))
 
 
-def get_resource_path(resource_name):
-    resources_dir = os.path.dirname(resources.__file__)
-    return os.path.join(resources_dir, resource_name)
-
-
 def get_blueprint_path(blueprint_name):
     resources_dir = os.path.dirname(resources.__file__)
     return os.path.join(resources_dir, 'blueprints', blueprint_name)
@@ -94,19 +89,9 @@ class YamlPatcher(object):
         prop_name = split[-1]
         return parent_obj, prop_name
 
-    def _raise_illegal(self, prop_path):
+    @staticmethod
+    def _raise_illegal(prop_path):
         raise RuntimeError('illegal path: {0}'.format(prop_path))
-
-
-class Singleton(type):
-
-    _instances = {}
-
-    def __call__(cls, *args, **kwargs):
-        if cls not in cls._instances:
-            cls._instances[cls] = \
-                super(Singleton, cls).__call__(*args, **kwargs)
-        return cls._instances[cls]
 
 
 class CloudifyConfigReader(object):
