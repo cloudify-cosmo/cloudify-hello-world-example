@@ -44,8 +44,6 @@ class NeutronGaloreTest(TestCase):
     def modify_blueprint(self):
         with YamlPatcher(self.blueprint_yaml) as patch:
             vm_path = 'blueprint.nodes[0].properties'
-            patch.set_value('{0}.worker_config.key'.format(vm_path),
-                            self.env.agent_key_path)
             patch.merge_obj('{0}.server'.format(vm_path), {
                 'name': self.host_name,
                 'image_name': self.env.ubuntu_image_name,

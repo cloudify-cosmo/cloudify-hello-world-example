@@ -46,8 +46,6 @@ class PythonWebServerTest(TestCase):
     def modify_blueprint(self):
         with YamlPatcher(self.webserver_yaml) as patch:
             vm_path = 'type_implementations.vm_openstack_host_impl.properties'
-            patch.set_value('{0}.worker_config.key'.format(vm_path),
-                            self.env.agent_key_path)
             patch.merge_obj('{0}.server'.format(vm_path), {
                 'name': self.host_name,
                 'image_name': self.env.ubuntu_image_name,

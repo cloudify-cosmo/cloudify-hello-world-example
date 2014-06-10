@@ -95,7 +95,6 @@ def get_agent_key_file(env):
 def update_blueprint(env, blueprint, hostname, userdata_vars=None):
     hostname_base = 'system-test-{0}-{1}'.format(
         time.strftime("%Y%m%d-%H%M"), hostname)
-    agent_key_file = get_agent_key_file(env)
     vms = get_nodes_of_type(blueprint, 'cloudify.openstack.server')
     if len(vms) > 1:
         hostnames = ['{0}-{1:2}'.format(hostname_base, i)
@@ -106,9 +105,6 @@ def update_blueprint(env, blueprint, hostname, userdata_vars=None):
     users = []
     for vm_idx, vm in enumerate(vms):
         vm_hostname = hostnames[vm_idx]
-        vm['properties']['worker_config']['key'] = (
-            '~/.ssh/' + str(agent_key_file.basename()))
-
         # vm['properties']['server'] does not exist when using existing one
         if 'server' in vm['properties']:
             vm['properties']['server'].update({
