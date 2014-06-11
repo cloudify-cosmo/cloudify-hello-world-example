@@ -1,0 +1,108 @@
+plugins:
+
+    puppet_plugin:
+        derived_from: cloudify.plugins.agent_plugin
+        properties:
+            url: https://github.com/Fewbytes/cloudify-puppet-plugin/archive/feature/CFY-596-standalone-puppet.zip
+            # folder: cloudify-plugin-puppet
+
+    cloudify_plugin_existing_server:
+        derived_from: cloudify.plugins.manager_plugin
+        properties:
+            url: https://github.com/ilyash/cloudify-plugin-existing-server/archive/master.zip
+
+types:
+    existing_server:
+        derived_from: cloudify.types.host
+        properties:
+            - ip
+        interfaces:
+            cloudify.interfaces.lifecycle:
+                - configure: cloudify_plugin_existing_server.server.configure
+                - start: cloudify_plugin_existing_server.server.start
+                - stop: cloudify_plugin_existing_server.server.stop
+            cloudify.interfaces.host:
+                - get_state: cloudify_plugin_existing_server.server.get_state
+
+imports:
+    - cloudify.openstack
+    - puppet-type.yaml
+
+blueprint:
+    name: puppet-standalone-system-test
+    nodes:
+        -
+            name: server-for-puppet-standalone
+            ### type: existing_server
+            ### properties:
+            ###     ip: 15.126.210.188
+            type: cloudify.openstack.server
+            properties:
+                install_agent: true
+                worker_config:
+                    port: 22
+                    user: ubuntu
+                    key: REPLACED-BY-TEST
+                management_network_name: REPLACED-BY-TEST
+                server:
+                    name: REPLACED-BY-TEST
+                    image_name: REPLACED-BY-TEST
+                    flavor_name: REPLACED-BY-TEST
+                    key_name: REPLACED-BY-TEST
+                    security_groups: [puppet_sg]  # MODIFIED-BY-TEST (adds agents security group to the list)
+            relationships:
+                -   type: cloudify.openstack.server_connected_to_floating_ip
+                    target: ip
+                -   type: cloudify.relationships.connected_to
+                    target: puppet_sg
+        -
+            name: puppet_node_one
+            type: cloudify.types.puppet.web_server
+            properties:
+                port: 8080
+                puppet_config:
+                    environment: e1
+                    node_name_prefix: pfx-
+                    node_name_suffix: .puppet.example.com
+                    modules:
+                        - puppetlabs-apache
+                        - puppetlabs-concat
+                        - puppetlabs-stdlib
+                        - puppetlabs-vcsrepo
+                    # download: -- added by all download tests
+                    # manifest: -- added by download tests (url)
+                    # "execute" section is removed by download tests (url)
+                    execute:
+                        # "configure" section is removed by download tests (resource)
+                        configure: |
+                            package{'git':}
+                            ->
+                            vcsrepo{$cloudify_local_repo:
+                              ensure => present,
+                              provider => git,
+                              source   => 'https://github.com/Fewbytes/cosmo-tester-puppet-downloadable.git',
+                            }
+                        start: |
+                            class{'cloudify_hello_world':
+                            }
+            relationships:
+                -
+                    type: cloudify.relationships.contained_in
+                    # target: existing_server
+                    target: server-for-puppet-standalone
+
+        -   name: ip
+            type: cloudify.openstack.floatingip
+            properties:
+                floatingip:
+                    floating_network_name: REPLACED-BY-TEST
+        -   name: puppet_sg
+            type: cloudify.openstack.security_group
+            properties:
+                security_group:
+                    name: puppet_sg
+                rules:
+                    -   remote_ip_prefix: 0.0.0.0/0
+                        port: 22
+                    -   remote_ip_prefix: 0.0.0.0/0
+                        port: 8080
