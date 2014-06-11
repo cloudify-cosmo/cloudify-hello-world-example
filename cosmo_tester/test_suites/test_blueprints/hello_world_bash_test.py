@@ -81,15 +81,16 @@ class HelloWorldBashTest(TestCase):
 
         nova, neutron = openstack_clients(self.env.cloudify_config)
 
+        props_key = 'runtime_properties'
         self.logger.info("Retrieving agent server : {0}"
-                         .format(nova.servers.get(server_node['runtimeInfo'][
+                         .format(nova.servers.get(server_node[props_key][
                              'openstack_server_id'])))
         self.logger.info("Retrieving agent floating ip : {0}"
                          .format(neutron.show_floatingip(floatingip_node[
-                             'runtimeInfo']['external_id'])))
+                             props_key]['external_id'])))
         self.logger.info("Retrieving agent security group : {0}"
                          .format(neutron.show_security_group(
-                             security_group_node['runtimeInfo'][
+                             security_group_node[props_key][
                                  'external_id'])))
 
         self.execute_uninstall()
@@ -97,7 +98,7 @@ class HelloWorldBashTest(TestCase):
         # No components should exist after uninstall
 
         try:
-            server = nova.servers.get(server_node['runtimeInfo'][
+            server = nova.servers.get(server_node[props_key][
                 'openstack_server_id'])
             self.fail("Expected agent machine to be terminated. but found : "
                       "{0}".format(server))
@@ -107,7 +108,7 @@ class HelloWorldBashTest(TestCase):
 
         try:
             floatingip = neutron.show_floatingip(floatingip_node[
-                'runtimeInfo']['external_id'])
+                props_key]['external_id'])
             self.fail("Expected agent floating ip to be terminated. "
                       "but found : {0}".format(floatingip))
         except NeutronException as e:
@@ -116,7 +117,7 @@ class HelloWorldBashTest(TestCase):
 
         try:
             security_group = neutron.show_security_group(security_group_node[
-                'runtimeInfo']['external_id'])
+                props_key]['external_id'])
             self.fail("Expected webserver security group ip to be terminated. "
                       "but found : {0}".format(security_group))
         except NeutronException as e:

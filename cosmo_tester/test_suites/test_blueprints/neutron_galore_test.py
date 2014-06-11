@@ -194,7 +194,7 @@ class NeutronGaloreTest(TestCase):
         state = [state for state in node_states
                  if state['id'].startswith(starts_with)][0]
         self.assertEqual(state['state'], 'started')
-        return state['runtimeInfo']
+        return state['runtime_properties']
 
     def assert_obj_list_contains_subset(self, obj_list, subset):
         for obj in obj_list:
