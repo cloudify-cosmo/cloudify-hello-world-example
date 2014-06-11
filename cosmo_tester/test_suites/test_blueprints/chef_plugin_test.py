@@ -162,7 +162,8 @@ class ChefPluginClientTest(TestCase):
         before, after = self.upload_deploy_and_execute_install(id_, id_)
 
         fip_node = find_node_state('ip', after['node_state'][id_])
-        self.chef_server_ip = fip_node['runtimeInfo']['floating_ip_address']
+        self.chef_server_ip = fip_node['runtime_properties'][
+            'floating_ip_address']
 
         fabric_env = fabric.api.env
         fabric_env.update({
@@ -206,7 +207,7 @@ class ChefPluginClientTest(TestCase):
         before, after = self.upload_deploy_and_execute_install(id_, id_)
 
         fip_node = find_node_state('ip', after['node_state'][id_])
-        chef_client_ip = fip_node['runtimeInfo']['floating_ip_address']
+        chef_client_ip = fip_node['runtime_properties']['floating_ip_address']
 
         fabric_env = fabric.api.env
         fabric_env.update({
@@ -246,7 +247,7 @@ class ChefPluginSoloTest(TestCase):
         before, after = self.upload_deploy_and_execute_install(id_, id_)
 
         fip_node = find_node_state('ip', after['node_state'][id_])
-        chef_solo_ip = fip_node['runtimeInfo']['floating_ip_address']
+        chef_solo_ip = fip_node['runtime_properties']['floating_ip_address']
 
         fabric_env = fabric.api.env
         fabric_env.update({

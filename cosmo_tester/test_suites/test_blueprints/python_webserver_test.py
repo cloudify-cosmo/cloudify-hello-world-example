@@ -114,17 +114,17 @@ class PythonWebServerTest(TestCase):
         webserver_node_id = None
         for key, value in nodes_state.items():
             if key.startswith('vm'):
-                self.assertTrue('ip' in value['runtimeInfo'],
+                self.assertTrue('ip' in value['runtime_properties'],
                                 'Missing ip in runtimeInfo: {0}'
                                 .format(nodes_state))
-                self.assertTrue('networks' in value['runtimeInfo'],
+                self.assertTrue('networks' in value['runtime_properties'],
                                 'Missing networks in runtimeInfo: {0}'
                                 .format(nodes_state))
                 self.assertEqual(value['state'], 'started',
                                  'vm node should be started: {0}'
                                  .format(nodes_state))
             elif key.startswith('virtual_ip'):
-                public_ip = value['runtimeInfo']['floating_ip_address']
+                public_ip = value['runtime_properties']['floating_ip_address']
             elif key.startswith('http_web_server'):
                 webserver_node_id = key
 

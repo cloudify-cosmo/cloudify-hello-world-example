@@ -28,6 +28,7 @@ import yaml
 from path import path
 from cosmo_manager_rest_client.cosmo_manager_rest_client import (
     CosmoManagerRestClient)
+from cloudify_rest_client import CloudifyClient
 
 from cosmo_tester.framework.cfy_helper import CfyHelper
 from cosmo_tester.framework.util import (get_blueprint_path,
@@ -129,6 +130,7 @@ class TestEnvironment(object):
         self._global_cleanup_context = None
         self._management_running = False
         self.rest_client = None
+        self.new_rest_client = None
         self.management_ip = None
 
         if CLOUDIFY_TEST_CONFIG_PATH not in os.environ:
@@ -187,6 +189,7 @@ class TestEnvironment(object):
     def _running_env_setup(self, management_ip):
         self.management_ip = management_ip
         self.rest_client = CosmoManagerRestClient(self.management_ip)
+        self.new_rest_client = CloudifyClient(self.management_ip)
         response = self.rest_client.status()
         if not response.status == 'running':
             raise RuntimeError('Manager at {0} is not running.'
@@ -273,6 +276,7 @@ class TestCase(unittest.TestCase):
         self.cfy = CfyHelper(cfy_workdir=self.workdir,
                              management_ip=self.env.management_ip)
         self.rest = self.env.rest_client
+        self.client = self.env.new_rest_client
         self.test_id = 'system-test-{0}'.format(time.strftime("%Y%m%d-%H%M"))
         self.blueprint_yaml = None
         self._test_cleanup_context = CleanupContext(self._testMethodName,
@@ -301,22 +305,18 @@ class TestCase(unittest.TestCase):
             deployments[deployment.id] = deployment
         nodes = {}
         for deployment_id in deployments.keys():
-            for node in self.rest.list_deployment_nodes(deployment_id).nodes:
+            for node in self.client.node_instances.list(deployment_id):
                 nodes[node.id] = node
         workflows = {}
         deployment_nodes = {}
         node_state = {}
         for deployment_id in deployments.keys():
             workflows[deployment_id] = self.rest.list_workflows(deployment_id)
-            deployment_nodes[deployment_id] = self.rest.list_deployment_nodes(
-                deployment_id,
-                get_state=True)
+            deployment_nodes[deployment_id] = self.client.node_instances.list(
+                deployment_id)
             node_state[deployment_id] = {}
-            for node in deployment_nodes[deployment_id].nodes:
-                node_state[deployment_id][node.id] =\
-                    self.rest.get_node_instance(
-                        node.id,
-                        get_state_and_runtime_properties=True)
+            for node in deployment_nodes[deployment_id]:
+                node_state[deployment_id][node.id] = node
 
         return {
             'blueprints': blueprints,
