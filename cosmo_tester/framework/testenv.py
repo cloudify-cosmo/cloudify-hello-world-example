@@ -71,7 +71,7 @@ def initialize_without_bootstrap():
         test_environment = TestEnvironment()
 
 
-def clear_test_environment():
+def clear_environment():
     global test_environment
     test_environment = None
 
@@ -87,7 +87,7 @@ def teardown():
     global test_environment
     if test_environment:
         test_environment.teardown()
-        clear_test_environment()
+        clear_environment()
 
 
 class CleanupContext(object):
