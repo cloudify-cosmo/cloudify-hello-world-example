@@ -117,10 +117,10 @@ class PythonWebServerTest(TestCase):
         for key, value in nodes_state.items():
             if key.startswith('vm'):
                 self.assertTrue('ip' in value['runtime_properties'],
-                                'Missing ip in runtimeInfo: {0}'
+                                'Missing ip in runtime_properties: {0}'
                                 .format(nodes_state))
                 self.assertTrue('networks' in value['runtime_properties'],
-                                'Missing networks in runtimeInfo: {0}'
+                                'Missing networks in runtime_properties: {0}'
                                 .format(nodes_state))
                 self.assertEqual(value['state'], 'started',
                                  'vm node should be started: {0}'
