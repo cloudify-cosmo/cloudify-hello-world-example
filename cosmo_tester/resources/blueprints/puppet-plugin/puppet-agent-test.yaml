@@ -1,11 +1,3 @@
-plugins:
-
-    puppet_plugin:
-        derived_from: cloudify.plugins.agent_plugin
-        properties:
-            url: https://github.com/Fewbytes/cloudify-puppet-plugin/archive/develop.zip
-            # folder: cloudify-plugin-puppet
-
 imports:
     - cloudify.openstack
     - puppet-type.yaml
