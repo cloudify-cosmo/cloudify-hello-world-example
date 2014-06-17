@@ -64,8 +64,7 @@ class PythonWebServerTest(TestCase):
                          'blueprint: {0}'.format(delta))
 
         blueprint_from_list = delta['blueprints'].values()[0]
-        blueprint_by_id = self.rest._blueprints_api\
-            .getById(blueprint_from_list.id)
+        blueprint_by_id = self.client.blueprints.get(blueprint_from_list.id)
         # field is expected not to return from getById call,
         # so before comparing need to disable this field
         blueprint_from_list.source = 'None'
@@ -76,25 +75,26 @@ class PythonWebServerTest(TestCase):
                          'deployment: {0}'.format(delta))
 
         deployment_from_list = delta['deployments'].values()[0]
-        deployment_by_id = self.rest._deployments_api\
-            .getById(deployment_from_list.id)
+
+        deployment_by_id = self.client.deployments.get(deployment_from_list.id)
         # plan is good enough because it contains generated ids
         self.assertEqual(deployment_from_list.plan,
                          deployment_by_id.plan)
 
-        executions = self.rest._deployments_api\
-            .listExecutions(deployment_by_id.id)
+        executions = self.client.deployments.list_executions(
+            deployment_by_id.id)
+
         self.assertEqual(len(executions), 1,
                          'execution: {0}'.format(executions))
 
         execution_from_list = executions[0]
-        execution_by_id = self.rest._executions_api\
-            .getById(execution_from_list.id)
+        execution_by_id = self.client.executions.get(execution_from_list.id)
+
         self.assertEqual(execution_from_list.id, execution_by_id.id)
-        self.assertEqual(execution_from_list.workflowId,
-                         execution_by_id.workflowId)
-        self.assertEqual(execution_from_list.blueprintId,
-                         execution_by_id.blueprintId)
+        self.assertEqual(execution_from_list.workflow_id,
+                         execution_by_id.workflow_id)
+        self.assertEqual(execution_from_list['blueprint_id'],
+                         execution_by_id['blueprint_id'])
 
         self.assertEqual(len(delta['deployment_nodes']), 1,
                          'deployment_nodes: {0}'.format(delta))
@@ -130,6 +130,15 @@ class PythonWebServerTest(TestCase):
             elif key.startswith('http_web_server'):
                 webserver_node_id = key
 
+<<<<<<< Updated upstream
+=======
+        events, total_events = self.client.events.get(execution_by_id.id)
+
+        self.assertGreater(len(events), 0,
+                           'Expected at least 1 event for execution id: {0}'
+                           .format(execution_by_id.id))
+
+>>>>>>> Stashed changes
         web_server_page_response = requests.get('http://{0}:8080'
                                                 .format(public_ip))
         self.assertTrue(webserver_node_id in web_server_page_response.text,
