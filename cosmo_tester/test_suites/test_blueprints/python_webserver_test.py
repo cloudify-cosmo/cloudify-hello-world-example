@@ -116,25 +116,19 @@ class PythonWebServerTest(TestCase):
         webserver_node_id = None
         for key, value in nodes_state.items():
             if key.startswith('vm'):
-                self.assertTrue('ip' in value['runtimeInfo'],
-                                'Missing ip in runtimeInfo: {0}'
+                self.assertTrue('ip' in value['runtime_properties'],
+                                'Missing ip in runtime_properties: {0}'
                                 .format(nodes_state))
-                self.assertTrue('networks' in value['runtimeInfo'],
-                                'Missing networks in runtimeInfo: {0}'
+                self.assertTrue('networks' in value['runtime_properties'],
+                                'Missing networks in runtime_properties: {0}'
                                 .format(nodes_state))
                 self.assertEqual(value['state'], 'started',
                                  'vm node should be started: {0}'
                                  .format(nodes_state))
             elif key.startswith('virtual_ip'):
-                public_ip = value['runtimeInfo']['floating_ip_address']
+                public_ip = value['runtime_properties']['floating_ip_address']
             elif key.startswith('http_web_server'):
                 webserver_node_id = key
-
-        events, total_events = self.rest\
-            .get_execution_events(execution_by_id.id)
-        self.assertGreater(len(events), 0,
-                           'Expected at least 1 event for execution id: {0}'
-                           .format(execution_by_id.id))
 
         web_server_page_response = requests.get('http://{0}:8080'
                                                 .format(public_ip))
