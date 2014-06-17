@@ -1,41 +1,12 @@
-plugins:
-
-    puppet_plugin:
-        derived_from: cloudify.plugins.agent_plugin
-        properties:
-            url: https://github.com/Fewbytes/cloudify-puppet-plugin/archive/feature/CFY-596-standalone-puppet.zip
-            # folder: cloudify-plugin-puppet
-
-    cloudify_plugin_existing_server:
-        derived_from: cloudify.plugins.manager_plugin
-        properties:
-            url: https://github.com/ilyash/cloudify-plugin-existing-server/archive/master.zip
-
-types:
-    existing_server:
-        derived_from: cloudify.types.host
-        properties:
-            - ip
-        interfaces:
-            cloudify.interfaces.lifecycle:
-                - configure: cloudify_plugin_existing_server.server.configure
-                - start: cloudify_plugin_existing_server.server.start
-                - stop: cloudify_plugin_existing_server.server.stop
-            cloudify.interfaces.host:
-                - get_state: cloudify_plugin_existing_server.server.get_state
-
 imports:
     - cloudify.openstack
-    - puppet-type.yaml
+    - cloudify.puppet
 
 blueprint:
     name: puppet-standalone-system-test
     nodes:
         -
-            name: server-for-puppet-standalone
-            ### type: existing_server
-            ### properties:
-            ###     ip: 15.126.210.188
+            name: puppet-standalone-vm
             type: cloudify.openstack.server
             properties:
                 install_agent: true
@@ -88,8 +59,7 @@ blueprint:
             relationships:
                 -
                     type: cloudify.relationships.contained_in
-                    # target: existing_server
-                    target: server-for-puppet-standalone
+                    target: puppet-standalone-vm
 
         -   name: ip
             type: cloudify.openstack.floatingip
