@@ -130,15 +130,12 @@ class PythonWebServerTest(TestCase):
             elif key.startswith('http_web_server'):
                 webserver_node_id = key
 
-<<<<<<< Updated upstream
-=======
         events, total_events = self.client.events.get(execution_by_id.id)
 
         self.assertGreater(len(events), 0,
                            'Expected at least 1 event for execution id: {0}'
                            .format(execution_by_id.id))
 
->>>>>>> Stashed changes
         web_server_page_response = requests.get('http://{0}:8080'
                                                 .format(public_ip))
         self.assertTrue(webserver_node_id in web_server_page_response.text,
