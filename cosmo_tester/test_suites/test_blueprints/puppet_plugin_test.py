@@ -23,7 +23,7 @@ import sys
 import tempfile
 import time
 import os
-from os.path import dirname
+from os.path import dirname, expanduser
 
 import fabric.api
 import fabric.context_managers
@@ -32,8 +32,7 @@ from path import path
 from cosmo_tester.framework.testenv import TestCase
 from cosmo_tester.framework.util import YamlPatcher
 
-# IMAGE_NAME = 'Ubuntu Server 14.04 LTS (amd64 20140416.1) - Partner Image'
-IMAGE_NAME = 'Ubuntu Server 12.04.4 LTS (amd64 20140408) - Partner Image'
+IMAGE_NAME = 'Ubuntu Server 12.04 LTS (amd64 20140606) - Partner Image'
 FLAVOR_NAME = 'standard.small'
 
 PUPPET_MASTER_VERSION = '3.5.1-1puppetlabs1'
@@ -59,14 +58,10 @@ def get_nodes_of_type(blueprint, type_):
 
 def get_agent_key_file(env):
     with env.cloudify_config_path.dirname():
-        agent_key_file = path(env.agent_key_path).abspath()
+        agent_key_file = path(expanduser(env.agent_key_path)).abspath()
         if not agent_key_file.exists():
             raise RuntimeError("Agent key file {0} does not exist".format(
                 agent_key_file))
-    # agent_key_file = path(os.path.expanduser(env.agent_key_path)).abspath()
-    # if not agent_key_file.exists():
-    #     raise RuntimeError("Agent key file {0} does not exist".format(
-    #         agent_key_file))
     return agent_key_file
 
 
@@ -160,9 +155,6 @@ class PuppetPluginAgentTest(TestCase):
 
         self.puppet_server_hostname = bp_info['hostnames'][0]
 
-        def run(*args, **kwargs):
-            return subprocess.check_output(*args, stderr=sys.stderr, **kwargs)
-
         self.puppet_server_id = self.test_id + '-puppet-master'
         id_ = self.puppet_server_id
         before, after = self.upload_deploy_and_execute_install(id_, id_)
@@ -179,8 +171,6 @@ class PuppetPluginAgentTest(TestCase):
         })
 
         setup_puppet_server(blueprint_dir)
-
-        # raise RuntimeError('Remove this line later')
 
     def tearDown(self, *args, **kwargs):
         if self.puppet_server_id:

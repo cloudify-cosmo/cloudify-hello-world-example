@@ -1,13 +1,6 @@
-plugins:
-
-    puppet_plugin:
-        derived_from: cloudify.plugins.agent_plugin
-        properties:
-            url: https://github.com/Fewbytes/cloudify-puppet-plugin/archive/feature/CFY-596-standalone-puppet.zip
-
 imports:
     - cloudify.openstack
-    - puppet-type-server.yaml
+    - cloudify.puppet
 
 blueprint:
     name: system-test-puppet-master
