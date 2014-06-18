@@ -55,7 +55,7 @@ blueprint:
         -   name: host
             type: host
             instances:
-                deploy: 25
+                deploy: 100
             properties:
                 install_agent: false
         -   name: middle
@@ -68,7 +68,9 @@ blueprint:
         -   name: middle2
             type: middle
             instances:
-                deploy: 25
+                deploy: 100
             relationships:
                 -   type: connected_to
                     target: middle
+                    properties:
+                        connection_type: all_to_one
