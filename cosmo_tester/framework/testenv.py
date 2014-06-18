@@ -360,3 +360,15 @@ class TestCase(unittest.TestCase):
         shutil.copytree(get_blueprint_path(blueprint_dir_name),
                         str(blueprint_path))
         return blueprint_path
+
+    def wait_for_execution(self, execution, timeout):
+        end = time.time() + timeout
+        while time.time() < end:
+            status = self.client.executions.get(execution.id).status
+            if status == 'failed':
+                raise AssertionError('Execution "{}" failed'.format(
+                    execution.id))
+            if status == 'terminated':
+                return
+            time.sleep(1)
+        raise AssertionError('Execution "{}" timed out'.format(execution.id))
