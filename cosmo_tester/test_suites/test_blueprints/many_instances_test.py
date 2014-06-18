@@ -16,6 +16,9 @@
 
 __author__ = 'dan'
 
+
+import time
+
 from cosmo_tester.framework.testenv import TestCase
 
 
@@ -34,10 +37,13 @@ class ManyInstancesTest(TestCase):
 
         install_workers = self.client.deployments.list_executions(
             deployment_id=self.test_id)[0]
-        self.logger('Waiting for install workers workflow to terminate')
+        self.logger.info('Waiting for install workers workflow to terminate')
         self.wait_for_execution(install_workers, timeout=120)
 
         execution = self.client.deployments.execute(deployment_id=self.test_id,
                                                     workflow_id='install')
-        self.logger('Waiting for install workflow to terminate')
+        self.logger.info('Waiting for install workflow to terminate')
+        start = time.time()
         self.wait_for_execution(execution, timeout=600)
+        self.logger.info('All done! execution took {} seconds'
+                         .format(time.time() - start))

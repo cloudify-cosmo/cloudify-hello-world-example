@@ -187,7 +187,7 @@ class TestEnvironment(object):
         self.management_ip = management_ip
         self.rest_client = CloudifyClient(self.management_ip)
         response = self.rest_client.manager.get_status()
-        if not response.status == 'running':
+        if not response['status'] == 'running':
             raise RuntimeError('Manager at {0} is not running.'
                                .format(self.management_ip))
         self._management_running = True
