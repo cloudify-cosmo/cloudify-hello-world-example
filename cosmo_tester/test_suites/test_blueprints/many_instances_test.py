@@ -24,5 +24,20 @@ class ManyInstancesTest(TestCase):
     def test_many_instances(self):
         blueprint_path = self.copy_blueprint('many-instances')
         self.blueprint_yaml = blueprint_path / 'blueprint.yaml'
-        self.upload_deploy_and_execute_install(fetch_state=False)
-        self.execute_uninstall()
+
+        self.cfy.upload_blueprint(
+            blueprint_id=self.test_id,
+            blueprint_path=self.blueprint_yaml)
+        self.cfy.create_deployment(
+            blueprint_id=self.test_id,
+            deployment_id=self.test_id)
+
+        install_workers = self.client.deployments.list_executions(
+            deployment_id=self.test_id)[0]
+        self.logger('Waiting for install workers workflow to terminate')
+        self.wait_for_execution(install_workers, timeout=120)
+
+        execution = self.client.deployments.execute(deployment_id=self.test_id,
+                                                    workflow_id='install')
+        self.logger('Waiting for install workflow to terminate')
+        self.wait_for_execution(execution, timeout=600)
