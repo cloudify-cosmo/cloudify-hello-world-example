@@ -26,8 +26,6 @@ import os
 
 import yaml
 from path import path
-from cosmo_manager_rest_client.cosmo_manager_rest_client import (
-    CosmoManagerRestClient)
 from cloudify_rest_client import CloudifyClient
 
 from cosmo_tester.framework.cfy_helper import CfyHelper
@@ -71,7 +69,7 @@ def initialize_without_bootstrap():
         test_environment = TestEnvironment()
 
 
-def clear_test_environment():
+def clear_environment():
     global test_environment
     test_environment = None
 
@@ -87,7 +85,7 @@ def teardown():
     global test_environment
     if test_environment:
         test_environment.teardown()
-        clear_test_environment()
+        clear_environment()
 
 
 class CleanupContext(object):
@@ -130,7 +128,6 @@ class TestEnvironment(object):
         self._global_cleanup_context = None
         self._management_running = False
         self.rest_client = None
-        self.new_rest_client = None
         self.management_ip = None
 
         if CLOUDIFY_TEST_CONFIG_PATH not in os.environ:
@@ -188,9 +185,8 @@ class TestEnvironment(object):
 
     def _running_env_setup(self, management_ip):
         self.management_ip = management_ip
-        self.rest_client = CosmoManagerRestClient(self.management_ip)
-        self.new_rest_client = CloudifyClient(self.management_ip)
-        response = self.rest_client.status()
+        self.rest_client = CloudifyClient(self.management_ip)
+        response = self.rest_client.manager.get_status()
         if not response.status == 'running':
             raise RuntimeError('Manager at {0} is not running.'
                                .format(self.management_ip))
@@ -275,8 +271,7 @@ class TestCase(unittest.TestCase):
         self.workdir = tempfile.mkdtemp(prefix='cosmo-test-')
         self.cfy = CfyHelper(cfy_workdir=self.workdir,
                              management_ip=self.env.management_ip)
-        self.rest = self.env.rest_client
-        self.client = self.env.new_rest_client
+        self.client = self.env.rest_client
         self.test_id = 'system-test-{0}'.format(time.strftime("%Y%m%d-%H%M"))
         self.blueprint_yaml = None
         self._test_cleanup_context = CleanupContext(self._testMethodName,
@@ -298,10 +293,10 @@ class TestCase(unittest.TestCase):
     def get_manager_state(self):
         self.logger.info('Fetching manager current state')
         blueprints = {}
-        for blueprint in self.rest.list_blueprints():
+        for blueprint in self.client.blueprints.list():
             blueprints[blueprint.id] = blueprint
         deployments = {}
-        for deployment in self.rest.list_deployments():
+        for deployment in self.client.deployments.list():
             deployments[deployment.id] = deployment
         nodes = {}
         for deployment_id in deployments.keys():
@@ -311,7 +306,8 @@ class TestCase(unittest.TestCase):
         deployment_nodes = {}
         node_state = {}
         for deployment_id in deployments.keys():
-            workflows[deployment_id] = self.rest.list_workflows(deployment_id)
+            workflows[deployment_id] = self.client.deployments.list_workflows(
+                deployment_id)
             deployment_nodes[deployment_id] = self.client.node_instances.list(
                 deployment_id)
             node_state[deployment_id] = {}

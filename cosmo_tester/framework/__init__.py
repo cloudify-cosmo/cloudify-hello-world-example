@@ -16,6 +16,6 @@
 __author__ = 'nirb'
 
 openstack_ubuntu_image_name = \
-    'Ubuntu Server 12.04.4 LTS (amd64 20140408) - Partner Image'
+    'Ubuntu Server 12.04 LTS (amd64 20140606) - Partner Image'
 
 openstack_flavor_name = 'standard.small'

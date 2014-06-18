@@ -70,18 +70,18 @@ class HelloWorldBashTest(TestCase):
             if key.startswith(self.server_node_id):
                 server_node = value
 
+        props_key = 'runtime_properties'
         webserver_port = blueprint['blueprint']['nodes'][3]['properties'][
             'port']
         web_server_page_response = \
             requests.get('http://{0}:{1}'.format(
-                floatingip_node['runtimeInfo']['floating_ip_address'],
+                floatingip_node[props_key]['floating_ip_address'],
                 webserver_port))
 
         self.assertEqual(200, web_server_page_response.status_code)
 
         nova, neutron = openstack_clients(self.env.cloudify_config)
 
-        props_key = 'runtime_properties'
         self.logger.info("Retrieving agent server : {0}"
                          .format(nova.servers.get(server_node[props_key][
                              'openstack_server_id'])))
