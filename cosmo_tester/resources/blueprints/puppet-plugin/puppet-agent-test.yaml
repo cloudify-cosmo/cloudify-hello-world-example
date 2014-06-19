@@ -1,12 +1,11 @@
 imports:
     - cloudify.openstack
-    - puppet-type.yaml
+    - cloudify.puppet
 
 blueprint:
-    name: puppet-agent-system-test
+    name: system-test-puppet-db
     nodes:
-        -
-            name: server-for-puppet-agent
+        -   name: db-vm
             type: cloudify.openstack.server
             properties:
                 install_agent: true
@@ -24,8 +23,7 @@ blueprint:
             relationships:
                 -   type: cloudify.openstack.server_connected_to_floating_ip
                     target: ip
-        -
-            name: puppet_node_one
+        -   name: puppet_db
             type: cloudify.types.puppet.db_server
             properties:
                 puppet_config:
@@ -38,10 +36,8 @@ blueprint:
                     node_name_prefix: pfx-
                     node_name_suffix: .puppet.example.com
             relationships:
-                -
-                    type: cloudify.relationships.contained_in
-                    # target: existing_server
-                    target: server-for-puppet-agent
+                -   type: cloudify.relationships.contained_in
+                    target: db-vm
 
         -   name: ip
             type: cloudify.openstack.floatingip

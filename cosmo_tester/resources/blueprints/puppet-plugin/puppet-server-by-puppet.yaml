@@ -2,10 +2,20 @@ imports:
     - cloudify.openstack
     - cloudify.puppet
 
+
+types:
+    cloudify.types.puppet.puppet_master_service:
+        derived_from: cloudify.types.middleware_server
+        properties:
+            - puppet_config
+        interfaces:
+            cloudify.interfaces.lifecycle:
+                - create: puppet_plugin.install.operation
+
 blueprint:
     name: system-test-puppet-master
     nodes:
-        -   name: puppet_server
+        -   name: puppet_master_vm
             type: cloudify.openstack.server
             properties:
                 install_agent: true
@@ -40,13 +50,13 @@ blueprint:
                         port: 22
                     -   remote_ip_prefix: 0.0.0.0/0
                         port: 8140
-        -   name: puppet_service
-            type: cloudify.types.puppet.middleware_server
+        -   name: system_tests_puppet_master_service
+            type: cloudify.types.puppet.puppet_master_service
             properties:
                 puppet_config:
                     server: puppet
                     environment: cloudify0system0test
             relationships:
                 -   type: cloudify.relationships.contained_in
-                    target: puppet_server
+                    target: puppet_master_vm
 
