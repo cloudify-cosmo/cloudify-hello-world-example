@@ -65,7 +65,6 @@ class PythonWebServerTest(TestCase):
         blueprint_by_id = self.client.blueprints.get(blueprint_from_list.id)
         # field is expected not to return from getById call,
         # so before comparing need to disable this field
-        blueprint_from_list.source = 'None'
         self.assertEqual(yaml.dump(blueprint_from_list),
                          yaml.dump(blueprint_by_id))
 

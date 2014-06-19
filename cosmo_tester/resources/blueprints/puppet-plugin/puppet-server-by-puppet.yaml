@@ -9,10 +9,6 @@ blueprint:
             type: cloudify.openstack.server
             properties:
                 install_agent: true
-                worker_config:
-                    port: 22
-                    user: ubuntu
-                    key: REPLACED-BY-TEST
                 management_network_name: REPLACED-BY-TEST
                 server:
                     name: REPLACED-BY-TEST
