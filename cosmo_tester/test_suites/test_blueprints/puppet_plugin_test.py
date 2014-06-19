@@ -129,7 +129,6 @@ def setup_puppet_server(local_dir):
     fabric.api.sudo('service puppetmaster start')
 
 
-# @unittest.skip(reason='Failing until Ilya fixes it')
 class PuppetPluginAgentTest(TestCase):
 
     def setUp(self, *args, **kwargs):
