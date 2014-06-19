@@ -28,7 +28,7 @@ from cosmo_tester.framework.util import sh_bake
 cfy = sh_bake(sh.cfy)
 
 
-DEFAULT_EXECUTE_TIMEOUT = 1800 * 48
+DEFAULT_EXECUTE_TIMEOUT = 1800
 
 
 class CfyHelper(object):
