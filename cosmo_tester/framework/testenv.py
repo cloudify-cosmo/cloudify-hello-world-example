@@ -187,7 +187,7 @@ class TestEnvironment(object):
         self.management_ip = management_ip
         self.rest_client = CloudifyClient(self.management_ip)
         response = self.rest_client.manager.get_status()
-        if not response.status == 'running':
+        if not response['status'] == 'running':
             raise RuntimeError('Manager at {0} is not running.'
                                .format(self.management_ip))
         self._management_running = True
@@ -360,3 +360,15 @@ class TestCase(unittest.TestCase):
         shutil.copytree(get_blueprint_path(blueprint_dir_name),
                         str(blueprint_path))
         return blueprint_path
+
+    def wait_for_execution(self, execution, timeout):
+        end = time.time() + timeout
+        while time.time() < end:
+            status = self.client.executions.get(execution.id).status
+            if status == 'failed':
+                raise AssertionError('Execution "{}" failed'.format(
+                    execution.id))
+            if status == 'terminated':
+                return
+            time.sleep(1)
+        raise AssertionError('Execution "{}" timed out'.format(execution.id))
