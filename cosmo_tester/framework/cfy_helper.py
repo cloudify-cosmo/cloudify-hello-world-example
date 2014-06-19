@@ -81,19 +81,29 @@ class CfyHelper(object):
             include_logs=True,
             execute_timeout=DEFAULT_EXECUTE_TIMEOUT):
         with self.workdir:
-            cfy.blueprints.upload(
-                blueprint_path,
+            self.upload_blueprint(
+                blueprint_path=blueprint_path,
                 blueprint_id=blueprint_id,
-                verbosity=verbose).wait()
-            cfy.deployments.create(
+                verbose=verbose)
+            self.create_deployment(
                 blueprint_id=blueprint_id,
                 deployment_id=deployment_id,
-                verbosity=verbose).wait()
+                verbose=verbose)
             self.execute_install(
                 deployment_id=deployment_id,
                 execute_timeout=execute_timeout,
                 verbose=verbose,
                 include_logs=include_logs)
+
+    def create_deployment(self,
+                          blueprint_id,
+                          deployment_id,
+                          verbose=False):
+        with self.workdir:
+            cfy.deployments.create(
+                blueprint_id=blueprint_id,
+                deployment_id=deployment_id,
+                verbosity=verbose).wait()
 
     def execute_install(self,
                         deployment_id,
@@ -119,10 +129,15 @@ class CfyHelper(object):
             verbose=verbose,
             include_logs=include_logs)
 
-    def upload_blueprint(self, blueprint_id, blueprint_path):
+    def upload_blueprint(self,
+                         blueprint_id,
+                         blueprint_path,
+                         verbose=False):
         with self.workdir:
-            cfy.blueprints.upload(blueprint_path,
-                                  blueprint_id=blueprint_id).wait()
+            cfy.blueprints.upload(
+                blueprint_path,
+                blueprint_id=blueprint_id,
+                verbosity=verbose).wait()
 
     def download_blueprint(self, blueprint_id):
         with self.workdir:

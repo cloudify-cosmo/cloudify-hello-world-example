@@ -127,8 +127,6 @@ class HelloWorldBashTest(TestCase):
     def modify_yaml(self, yaml_file):
         with YamlPatcher(yaml_file) as patch:
             vm_properties_path = 'blueprint.nodes[2].properties'
-            patch.set_value('{0}.worker_config.key'.format(vm_properties_path),
-                            self.env.agent_key_path)
             patch.merge_obj('{0}.server'.format(vm_properties_path), {
                 'name': self.host_name,
                 'image_name': self.env.ubuntu_image_name,

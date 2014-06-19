@@ -27,7 +27,8 @@ class RebootManagerTest(TestCase):
         reboot()
 
     def _get_undefined_services(self):
-        return [each.display_name for each in self.status if each.name is None]
+        return [each['display_name']
+                for each in self.status if each['name'] is None]
 
     def _get_stopped_services(self):
         return [each.display_name for each in self.status
@@ -35,7 +36,7 @@ class RebootManagerTest(TestCase):
 
     def setUp(self, *args, **kwargs):
         super(RebootManagerTest, self).setUp(*args, **kwargs)
-        self.status = self.env.rest_client.status().services
+        self.status = self.client.manager.get_status()['services']
 
     def test_00_pre_reboot(self):
         undefined = self._get_undefined_services()
@@ -49,7 +50,7 @@ class RebootManagerTest(TestCase):
     def test_01_during_reboot(self):
             pre_reboot_status = self.status
             self._reboot_server()
-            post_reboot_status = self.env.rest_client.status().services
+            post_reboot_status = self.client.manager.get_status()['services']
 
             self.assertEqual(len(pre_reboot_status), len(post_reboot_status),
                              "number of jobs before reboot isn\'t equal to \
