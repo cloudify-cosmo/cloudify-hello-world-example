@@ -14,11 +14,9 @@
 #    * limitations under the License.
 
 """ Assumes fabric environment already set up """
-import unittest
 
 __author__ = 'ilyash'
 
-import requests
 import subprocess
 import sys
 import tempfile
@@ -26,12 +24,14 @@ import time
 import os
 from os.path import dirname, expanduser
 
+import requests
 import fabric.api
 import fabric.context_managers
 from path import path
 
 from cosmo_tester.framework.testenv import TestCase
 from cosmo_tester.framework.util import YamlPatcher
+
 
 IMAGE_NAME = 'Ubuntu Server 12.04 LTS (amd64 20140606) - Partner Image'
 FLAVOR_NAME = 'standard.small'
@@ -129,7 +129,6 @@ def setup_puppet_server(local_dir):
     fabric.api.sudo('service puppetmaster start')
 
 
-@unittest.skip(reason='Failing until Ilya fixes it')
 class PuppetPluginAgentTest(TestCase):
 
     def setUp(self, *args, **kwargs):
