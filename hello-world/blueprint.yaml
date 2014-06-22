@@ -44,9 +44,6 @@ blueprint:
                 deploy: 1
             properties:
                 install_agent: true
-                worker_config:
-                    user: ubuntu
-                    key: ~/.ssh/cloudify-agents-kp.pem
 
                 ####################################################################################
                 # Uncomment bellow and fill the properties according to your openstack environment.#
