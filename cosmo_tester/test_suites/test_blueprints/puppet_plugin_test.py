@@ -264,7 +264,19 @@ class PuppetPluginStandaloneTest(TestCase):
 
         def call(cmd):
             print("Executing: {0}".format(' '.join(cmd)))
-            subprocess.check_call(cmd, stdout=sys.stdout, stderr=sys.stderr)
+            # subprocess.check_call(cmd, stdout=sys.stdout, stderr=sys.stderr)
+            # Trying without piping since this caused the following problem:
+            # Traceback (most recent call last):
+            # File "/usr/lib/python2.7/subprocess.py", line 506, in check_call
+            # retcode = call(*popenargs, **kwargs)
+            # File "/usr/lib/python2.7/subprocess.py", line 493, in call
+            # return Popen(*popenargs, **kwargs).wait()
+            # File "/usr/lib/python2.7/subprocess.py", line 672, in __init__
+            # errread, errwrite) = self._get_handles(stdin, stdout, stderr)
+            # File "/usr/lib/python2.7/subprocess.py", line 1053, in _get_handles  # noqa
+            # c2pwrite = stdout.fileno()
+            # AttributeError: 'Tee' object has no attribute 'fileno'
+            subprocess.check_call(cmd)
 
         blueprint_dir = self.copy_blueprint('puppet-plugin')
 
