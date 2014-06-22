@@ -18,7 +18,6 @@
 __author__ = 'ilyash'
 
 import subprocess
-import sys
 import tempfile
 import time
 import os
