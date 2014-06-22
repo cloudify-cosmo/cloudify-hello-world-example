@@ -58,7 +58,7 @@ class RebootManagerTest(TestCase):
 
             zipped = zip(pre_reboot_status, post_reboot_status)
             for pre, post in zipped:
-                self.assertEqual(pre['name'], post['name'],
+                self.assertEqual(pre.get('name'), post.get('name'),
                                  'pre and post reboot status is not equal: {0}'
                                  '\n {1}'.format(pre['name'], post['name']))
 
