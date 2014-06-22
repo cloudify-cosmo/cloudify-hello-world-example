@@ -66,9 +66,6 @@ class PythonWebServerTest(TestCase):
         deployment_from_list = delta['deployments'].values()[0]
 
         deployment_by_id = self.client.deployments.get(deployment_from_list.id)
-        # plan is good enough because it contains generated ids
-        self.assertEqual(deployment_from_list.plan,
-                         deployment_by_id.plan)
 
         executions = self.client.deployments.list_executions(
             deployment_by_id.id)
