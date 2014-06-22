@@ -116,7 +116,7 @@ def update_blueprint(env, blueprint, hostname, userdata_vars=None):
             if 'userdata' in props:
                 props['userdata'] = props['userdata'].format(
                     hostname=vm_hostname, **(userdata_vars or {}))
-        users.append(vm['properties']['worker_config']['user'])
+        users.append('ubuntu')
 
     return {'hostnames': hostnames, 'users': users}
 

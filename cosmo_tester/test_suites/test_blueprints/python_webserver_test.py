@@ -61,13 +61,6 @@ class PythonWebServerTest(TestCase):
         self.assertEqual(len(delta['blueprints']), 1,
                          'blueprint: {0}'.format(delta))
 
-        blueprint_from_list = delta['blueprints'].values()[0]
-        blueprint_by_id = self.client.blueprints.get(blueprint_from_list.id)
-        # field is expected not to return from getById call,
-        # so before comparing need to disable this field
-        self.assertEqual(yaml.dump(blueprint_from_list),
-                         yaml.dump(blueprint_by_id))
-
         self.assertEqual(len(delta['deployments']), 1,
                          'deployment: {0}'.format(delta))
 

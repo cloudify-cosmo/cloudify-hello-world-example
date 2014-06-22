@@ -28,11 +28,11 @@ class RebootManagerTest(TestCase):
 
     def _get_undefined_services(self):
         return [each['display_name']
-                for each in self.status if each['name'] is None]
+                for each in self.status if 'name' not in each]
 
     def _get_stopped_services(self):
-        return [each.display_name for each in self.status
-                if each and not each.instances]
+        return [each['display_name'] for each in self.status
+                if each and 'instances' not in each]
 
     def setUp(self, *args, **kwargs):
         super(RebootManagerTest, self).setUp(*args, **kwargs)
