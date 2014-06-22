@@ -17,7 +17,6 @@
 __author__ = 'dan'
 
 import requests
-import yaml
 
 from cosmo_tester.framework.testenv import TestCase
 from cosmo_tester.framework.util import YamlPatcher
