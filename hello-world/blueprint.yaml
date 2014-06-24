@@ -43,8 +43,6 @@ blueprint:
             instances:
                 deploy: 1
             properties:
-                install_agent: true
-
                 ####################################################################################
                 # Uncomment bellow and fill the properties according to your openstack environment.#
                 ####################################################################################
