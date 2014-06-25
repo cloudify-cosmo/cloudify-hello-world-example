@@ -40,11 +40,10 @@ class RebootManagerTest(TestCase):
 
     def test_00_pre_reboot(self):
         undefined = self._get_undefined_services()
-        # Webserver is currently ignored until it will be added as upstart
-        self.assertEqual(undefined, ['Webserver'],
+        self.assertEqual(undefined, [],
                          'undefined services: {0}'.format(','.join(undefined)))
         stopped = self._get_stopped_services()
-        self.assertEqual(stopped, ['Webserver'], 'stopped services: {0}'
+        self.assertEqual(stopped, [], 'stopped services: {0}'
                          .format(','.join(stopped)))
 
     def test_01_during_reboot(self):
@@ -65,9 +64,8 @@ class RebootManagerTest(TestCase):
 
     def test_02_post_reboot(self):
         undefined = self._get_undefined_services()
-        # Webserver is currently ignored until it will be added as upstart
-        self.assertEqual(undefined, ['Webserver'],
+        self.assertEqual(undefined, [],
                          'undefined services: {0}'.format(','.join(undefined)))
         stopped = self._get_stopped_services()
-        self.assertEqual(stopped, ['Webserver'], 'stopped services: {0}'
+        self.assertEqual(stopped, [], 'stopped services: {0}'
                          .format(','.join(stopped)))
