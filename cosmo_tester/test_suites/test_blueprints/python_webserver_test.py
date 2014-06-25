@@ -93,9 +93,6 @@ class PythonWebServerTest(TestCase):
         self.assertEqual(len(delta['nodes']), 4,
                          'nodes: {0}'.format(delta))
 
-        self.assertEqual(len(delta['workflows']), 1,
-                         'workflows: {0}'.format(delta))
-
         nodes_state = delta['node_state'].values()[0]
         self.assertEqual(len(nodes_state), 4,
                          'nodes_state: {0}'.format(nodes_state))
