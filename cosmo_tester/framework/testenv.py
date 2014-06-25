@@ -302,12 +302,9 @@ class TestCase(unittest.TestCase):
         for deployment_id in deployments.keys():
             for node in self.client.node_instances.list(deployment_id):
                 nodes[node.id] = node
-        workflows = {}
         deployment_nodes = {}
         node_state = {}
         for deployment_id in deployments.keys():
-            workflows[deployment_id] = self.client.deployments.list_workflows(
-                deployment_id)
             deployment_nodes[deployment_id] = self.client.node_instances.list(
                 deployment_id)
             node_state[deployment_id] = {}
@@ -317,7 +314,6 @@ class TestCase(unittest.TestCase):
         return {
             'blueprints': blueprints,
             'deployments': deployments,
-            'workflows': workflows,
             'nodes': nodes,
             'node_state': node_state,
             'deployment_nodes': deployment_nodes
@@ -329,7 +325,6 @@ class TestCase(unittest.TestCase):
             del after['blueprints'][blueprint_id]
         for deployment_id in before['deployments'].keys():
             del after['deployments'][deployment_id]
-            del after['workflows'][deployment_id]
             del after['deployment_nodes'][deployment_id]
             del after['node_state'][deployment_id]
         for node_id in before['nodes'].keys():
