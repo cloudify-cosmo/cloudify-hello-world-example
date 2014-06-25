@@ -43,11 +43,10 @@ blueprint:
             instances:
                 deploy: 1
             properties:
+                server:
                 ####################################################################################
                 # Uncomment bellow and fill the properties according to your openstack environment.#
                 ####################################################################################
-
-                # server:
                     # name: bash-web-server
                     # image_name: [Enter-Image-Name]
                     # flavor_name: [Enter-Flavor-Name]
