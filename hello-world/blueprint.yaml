@@ -42,16 +42,16 @@ blueprint:
             type: cloudify.openstack.server
             instances:
                 deploy: 1
-            properties:
-                server:
-                ####################################################################################
-                # Uncomment bellow and fill the properties according to your openstack environment.#
-                ####################################################################################
-                    # name: bash-web-server
-                    # image_name: [Enter-Image-Name]
-                    # flavor_name: [Enter-Flavor-Name]
-                    # key_name: cloudify-agents-kp
-                    # security_groups: ['webserver_security_group']
+            ####################################################################################
+            # Uncomment bellow and fill the properties according to your openstack environment.#
+            ####################################################################################
+            #properties:
+            #    server:
+            #        name: bash-web-server
+            #        image_name: [Enter-Image-Name]
+            #        flavor_name: [Enter-Flavor-Name]
+            #        key_name: cloudify-agents-kp
+            #        security_groups: ['webserver_security_group']
             relationships:
                 -   type: cloudify.openstack.server_connected_to_floating_ip
                     target: virtual_ip
