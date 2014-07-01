@@ -100,7 +100,8 @@ class HelloWorldBashTest(TestCase):
         return floatingip_node, security_group_node, server_node
 
     @staticmethod
-    def modify_yaml(env, yaml_file, host_name, security_groups):
+    def modify_yaml(env, yaml_file, host_name, security_groups,
+                    security_group_name=None):
         with YamlPatcher(yaml_file) as patch:
             vm_properties_path = 'blueprint.nodes[2].properties'
             patch.merge_obj('{0}.server'.format(vm_properties_path), {
@@ -109,3 +110,6 @@ class HelloWorldBashTest(TestCase):
                 'flavor_name': env.flavor_name,
                 'security_groups': security_groups,
             })
+            sg_name_path = 'blueprint.nodes[1].properties.security_group.name'
+            if security_group_name is not None:
+                patch.set_value(sg_name_path, security_group_name)
