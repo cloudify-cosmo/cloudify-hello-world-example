@@ -73,6 +73,7 @@ class HelloWorldBashTest(TestCase):
 
     @staticmethod
     def verify_webserver_running(blueprint_yaml, floatingip_node):
+        # this method is also used by two_deployments_test
         blueprint = get_yaml_as_dict(blueprint_yaml)
         webserver_props = blueprint['blueprint']['nodes'][3]['properties']
         server_port = webserver_props['port']
@@ -85,6 +86,7 @@ class HelloWorldBashTest(TestCase):
 
     @staticmethod
     def get_instances(client, deployment_id):
+        # this method is also used by two_deployments_test
         server_node = None
         security_group_node = None
         floatingip_node = None
@@ -102,6 +104,7 @@ class HelloWorldBashTest(TestCase):
     @staticmethod
     def modify_yaml(env, yaml_file, host_name, security_groups,
                     security_group_name=None):
+        # this method is also used by two_deployments_test
         with YamlPatcher(yaml_file) as patch:
             vm_properties_path = 'blueprint.nodes[2].properties'
             patch.merge_obj('{0}.server'.format(vm_properties_path), {
