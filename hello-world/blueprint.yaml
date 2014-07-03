@@ -10,8 +10,10 @@
 # cloudify.openstack contains Cloudify's built-in openstack types and plugins definitions.
 
 imports:
-    - https://raw.githubusercontent.com/cloudify-cosmo/cloudify-bash-plugin/develop/plugin.yaml
-    - https://raw.githubusercontent.com/cloudify-cosmo/cloudify-openstack-plugin/develop/plugin.yaml
+    #- https://raw.githubusercontent.com/cloudify-cosmo/cloudify-bash-plugin/develop/plugin.yaml
+    #- https://raw.githubusercontent.com/cloudify-cosmo/cloudify-openstack-plugin/develop/plugin.yaml
+    - cloudify.bash
+    - cloudify.openstack
 
 types:
 
