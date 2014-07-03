@@ -15,7 +15,7 @@ blueprint:
                    target: floatingip
             properties:
                 install_agent: true
-                worker_config:
+                cloudify_agent:
                     user: ubuntu
                     port: 22
         -   name: neutron_network
