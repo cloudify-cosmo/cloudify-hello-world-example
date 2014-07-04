@@ -17,8 +17,10 @@ __author__ = 'elip'
 
 
 import requests
+
 from neutronclient.common.exceptions import NeutronException
 from novaclient.exceptions import NotFound
+from retrying import retry
 
 from cosmo_tester.framework.util import YamlPatcher
 from cosmo_tester.framework.testenv import TestCase
@@ -72,6 +74,7 @@ class HelloWorldBashTest(TestCase):
                           floating_ip_id)
 
     @staticmethod
+    @retry(stop_max_attempt_number=5, wait_fixed=3000)
     def verify_webserver_running(blueprint_yaml, floatingip_node):
         # this method is also used by two_deployments_test
         blueprint = get_yaml_as_dict(blueprint_yaml)
