@@ -23,6 +23,7 @@ import tempfile
 import time
 import copy
 import os
+import random
 
 import yaml
 from path import path
@@ -30,7 +31,7 @@ from cloudify_rest_client import CloudifyClient
 
 from cosmo_tester.framework.cfy_helper import CfyHelper
 from cosmo_tester.framework.util import (get_blueprint_path,
-                                         CloudifyConfigReader)
+                                         CloudifyConfigReader, YamlPatcher)
 from cosmo_tester.framework.openstack_api import (openstack_infra_state,
                                                   openstack_infra_state_delta,
                                                   remove_openstack_resources)
@@ -134,20 +135,32 @@ class TestEnvironment(object):
             raise RuntimeError('a path to cloudify-config must be configured '
                                'in "CLOUDIFY_TEST_CONFIG_PATH" env variable')
         self.cloudify_config_path = path(os.environ[CLOUDIFY_TEST_CONFIG_PATH])
+        self._workdir = tempfile.mkdtemp(prefix='cloudify-testenv-')
 
         if not self.cloudify_config_path.isfile():
             raise RuntimeError('cloud-config file configured in env variable'
                                ' {0} does not seem to exist'
                                .format(self.cloudify_config_path))
-        self.cloudify_config = yaml.load(self.cloudify_config_path.text())
 
         if CLOUDIFY_TEST_MANAGEMENT_IP in os.environ:
             self._running_env_setup(os.environ[CLOUDIFY_TEST_MANAGEMENT_IP])
+        else:
+            self._generate_unique_config()
 
+        self.cloudify_config = yaml.load(self.cloudify_config_path.text())
         self._config_reader = CloudifyConfigReader(self.cloudify_config)
 
         global test_environment
         test_environment = self
+
+    def _generate_unique_config(self):
+        unique_config_path = os.path.join(self._workdir, 'config.yaml')
+        shutil.copy(self.cloudify_config_path, unique_config_path)
+        self.cloudify_config_path = path(unique_config_path)
+        suffix = '-%06x' % random.randrange(16 ** 6)
+        with YamlPatcher(self.cloudify_config_path) as patch:
+            patch.append_value('compute.management_server.instance.name',
+                               suffix)
 
     def setup(self):
         os.chdir(self._initial_cwd)
@@ -156,9 +169,11 @@ class TestEnvironment(object):
     def bootstrap(self):
         if self._management_running:
             return
+
         self._global_cleanup_context = CleanupContext('testenv',
                                                       self.cloudify_config)
         cfy = CfyHelper()
+
         try:
             cfy.bootstrap(
                 self.cloudify_config_path,
@@ -182,6 +197,8 @@ class TestEnvironment(object):
         finally:
             cfy.close()
             self._global_cleanup_context.cleanup()
+            if os.path.exists(self._workdir):
+                shutil.rmtree(self._workdir)
 
     def _running_env_setup(self, management_ip):
         self.management_ip = management_ip

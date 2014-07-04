@@ -64,6 +64,10 @@ class YamlPatcher(object):
         obj, prop_name = self._get_parent_obj_prop_name_by_path(prop_path)
         obj[prop_name] = new_value
 
+    def append_value(self, prop_path, value):
+        obj, prop_name = self._get_parent_obj_prop_name_by_path(prop_path)
+        obj[prop_name] = obj[prop_name] + value
+
     def _get_object_by_path(self, prop_path):
         current = self.obj
         for prop_segment in prop_path.split('.'):
