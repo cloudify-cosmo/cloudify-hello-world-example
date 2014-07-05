@@ -1,6 +1,6 @@
 imports:
-    - cloudify.openstack
-    - cloudify.chef
+    - https://raw.githubusercontent.com/cloudify-cosmo/cloudify-openstack-plugin/develop/plugin.yaml
+    - https://raw.githubusercontent.com/cloudify-cosmo/cloudify-chef-plugin/develop/plugin.yaml
 
 blueprint:
     name: system-test-chef-server

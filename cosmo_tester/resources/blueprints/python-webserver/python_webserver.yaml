@@ -1,5 +1,5 @@
 imports:
-    - cloudify.openstack
+    - https://raw.githubusercontent.com/cloudify-cosmo/cloudify-openstack-plugin/develop/plugin.yaml
 
 plugins:
     python_webserver_installer:
