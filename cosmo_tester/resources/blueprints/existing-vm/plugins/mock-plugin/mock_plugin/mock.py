@@ -21,5 +21,5 @@ from cloudify.decorators import operation
 
 
 @operation
-def get_state(**_):
-    return True
+def create(ctx, **_):
+    ctx.runtime_properties['working'] = True
