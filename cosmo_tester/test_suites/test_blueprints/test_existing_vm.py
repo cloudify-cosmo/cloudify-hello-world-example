@@ -106,3 +106,7 @@ class ExistingVMTest(TestCase):
             srv = nova_client.servers.get(srv)
         if srv.status != 'ACTIVE':
             raise RuntimeError('Failed starting server')
+        for network, network_ips in srv.networks.items():
+            if network == self.env.management_network_name:
+                return str(network_ips[0])
+        raise RuntimeError('Failed finding new server ip')

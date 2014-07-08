@@ -30,7 +30,7 @@ blueprint:
         -   name: host
             type: host
             properties:
-                ip: PROVIDER_BY_TEST
+                ip: PROVIDED_BY_TEST
                 cloudify_agent:
                     key: PROVIDED_BY_TEST
         -   name: middle
