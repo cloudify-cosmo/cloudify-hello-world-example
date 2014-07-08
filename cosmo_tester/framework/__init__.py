@@ -19,3 +19,7 @@ openstack_ubuntu_image_name = \
     'Ubuntu Server 12.04 LTS (amd64 20140606) - Partner Image'
 
 openstack_flavor_name = 'standard.small'
+
+openstack_ubuntu_image_id = '75d47d10-fef8-473b-9dd1-fe2f7649cb41'
+
+openstack_small_flavor_id = 101

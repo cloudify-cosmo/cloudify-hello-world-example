@@ -1,0 +1,40 @@
+imports:
+    #- https://raw.githubusercontent.com/cloudify-cosmo/cloudify-manager/develop/resources/rest-service/cloudify/types/types.yaml
+    - types.yaml
+
+plugins:
+    mock_plugin:
+        derived_from: cloudify.plugins.manager_plugin
+        properties:
+            folder: mock-plugin
+    mock_plugin2:
+        derived_from: cloudify.plugins.agent_plugin
+        properties:
+            folder: mock-plugin2
+
+types:
+    host:
+        derived_from: cloudify.types.host
+        interfaces:
+            cloudify.interfaces.host:
+                - get_state: mock_plugin.mock.get_state
+    middle:
+            derived_from: cloudify.types.middleware_server
+            interfaces:
+                cloudify.interfaces.lifecycle:
+                    - create: mock_plugin2.mock.create
+
+blueprint:
+    name: existing_vm
+    nodes:
+        -   name: host
+            type: host
+            properties:
+                ip: PROVIDER_BY_TEST
+                cloudify_agent:
+                    key: PROVIDED_BY_TEST
+        -   name: middle
+            type: middle
+            relationships:
+                -   type: cloudify.relationships.contained_in
+                    target: host
