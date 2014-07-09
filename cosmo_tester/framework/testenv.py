@@ -36,7 +36,9 @@ from cosmo_tester.framework.openstack_api import (openstack_infra_state,
                                                   openstack_infra_state_delta,
                                                   remove_openstack_resources)
 from cosmo_tester.framework import (openstack_ubuntu_image_name,
-                                    openstack_flavor_name)
+                                    openstack_flavor_name,
+                                    openstack_ubuntu_image_id,
+                                    openstack_small_flavor_id)
 
 root = logging.getLogger()
 ch = logging.StreamHandler(sys.stdout)
@@ -262,12 +264,24 @@ class TestEnvironment(object):
         return self._config_reader.management_security_group
 
     @property
+    def cloudify_agent_user(self):
+        return self._config_reader.cloudify_agent_user
+
+    @property
     def ubuntu_image_name(self):
         return openstack_ubuntu_image_name
 
     @property
     def flavor_name(self):
         return openstack_flavor_name
+
+    @property
+    def ubuntu_image_id(self):
+        return openstack_ubuntu_image_id
+
+    @property
+    def small_flavor_id(self):
+        return openstack_small_flavor_id
 
 
 class TestCase(unittest.TestCase):

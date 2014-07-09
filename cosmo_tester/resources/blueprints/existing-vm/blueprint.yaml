@@ -1,0 +1,26 @@
+imports:
+    - http://www.getcloudify.org/spec/cloudify/3.0/types.yaml
+
+plugins:
+    mock_plugin:
+        derived_from: cloudify.plugins.agent_plugin
+        properties:
+            folder: mock-plugin
+
+blueprint:
+    name: existing_vm
+    nodes:
+        -   name: host
+            type: cloudify.types.host
+            properties:
+                ip: PROVIDED_BY_TEST
+                cloudify_agent:
+                    key: PROVIDED_BY_TEST
+        -   name: middle
+            type: cloudify.types.middleware_server
+            relationships:
+                -   type: cloudify.relationships.contained_in
+                    target: host
+            interfaces:
+                cloudify.interfaces.lifecycle:
+                    - create: mock_plugin.mock.create

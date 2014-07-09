@@ -126,7 +126,7 @@ class CloudifyConfigReader(object):
     @property
     def agent_key_path(self):
         return self.config['compute']['agent_servers']['agents_keypair'][
-            'auto_generated']['private_key_target_path']
+            'private_key_path']
 
     @property
     def managment_user_name(self):
@@ -136,7 +136,7 @@ class CloudifyConfigReader(object):
     @property
     def management_key_path(self):
         return self.config['compute']['management_server'][
-            'management_keypair']['auto_generated']['private_key_target_path']
+            'management_keypair']['private_key_path']
 
     @property
     def agent_keypair_name(self):
@@ -159,3 +159,7 @@ class CloudifyConfigReader(object):
     @property
     def management_security_group(self):
         return self.config['networking']['management_security_group']['name']
+
+    @property
+    def cloudify_agent_user(self):
+        return self.config['cloudify']['agents']['config']['user']
