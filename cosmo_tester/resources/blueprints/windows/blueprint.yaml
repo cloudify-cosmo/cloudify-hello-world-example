@@ -1,34 +1,13 @@
 imports:
-    - cloudify.openstack
+    - https://raw.githubusercontent.com/cloudify-cosmo/cloudify-openstack-plugin/develop/plugin.yaml
 
 plugins:
-    windows_agent_installer:
-        derived_from: cloudify.plugins.manager_plugin
-        properties:
-            folder: windows-agent-installer
-    windows_plugin_installer:
-        derived_from: cloudify.plugins.manager_plugin
-        properties:
-            folder: windows-plugin-installer
     python_script_executor:
         derived_from: cloudify.plugins.agent_plugin
         properties:
             url: https://github.com/cloudify-cosmo/cloudify-python-plugin/archive/1.0-m4.zip
 
 types:
-    cloudify.windows.openstack.server:
-        derived_from: cloudify.openstack.server
-        interfaces:
-            cloudify.interfaces.worker_installer:
-                - install: windows_agent_installer.tasks.install
-                - start: windows_agent_installer.tasks.start
-                - restart: windows_agent_installer.tasks.restart
-                - stop: windows_agent_installer.tasks.stop
-                - uninstall: windows_agent_installer.tasks.uninstall
-            cloudify.interfaces.plugin_installer:
-                - install: windows_plugin_installer.tasks.install				
-        properties:
-            - cloudify_agent
     cloudify.types.python.app_module:
         derived_from: cloudify.types.app_module
         interfaces:
@@ -36,21 +15,21 @@ types:
                 - start: python_script_executor.tasks.run
         properties:
             - scripts
-			
+
 blueprint:
     name: windows-test
     nodes:
-        -   name: windows_vm
-            type: cloudify.windows.openstack.server
+        -   name: vm
+            type: cloudify.openstack.windows_server
             properties:
                 server:
                     name: windows-agent-vm
                     image_name: windows-agent-machine
                     flavor: 102
-                    security_groups: [windows-default]
                 cloudify_agent:
                     user: Administrator
                     password : 1408Rokk
+
         -   name: app
             type: cloudify.types.python.app_module
             properties:
@@ -58,5 +37,4 @@ blueprint:
                     start: scripts/hello.py
             relationships:
                 -   type: cloudify.relationships.contained_in
-                    target: windows_vm
-					
+                    target: vm
