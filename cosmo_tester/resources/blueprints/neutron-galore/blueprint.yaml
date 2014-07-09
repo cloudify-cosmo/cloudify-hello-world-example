@@ -1,5 +1,5 @@
 imports:
-    - https://raw.githubusercontent.com/cloudify-cosmo/cloudify-openstack-plugin/develop/plugin.yaml
+    - http://www.getcloudify.org/spec/openstack-plugin/1.0/plugin.yaml
 
 blueprint:
     name: neutron-galore

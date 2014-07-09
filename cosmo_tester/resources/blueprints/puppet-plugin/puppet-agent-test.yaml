@@ -1,6 +1,6 @@
 imports:
-    - https://raw.githubusercontent.com/cloudify-cosmo/cloudify-openstack-plugin/develop/plugin.yaml
-    - https://raw.githubusercontent.com/cloudify-cosmo/cloudify-puppet-plugin/develop/plugin.yaml
+    - http://www.getcloudify.org/spec/openstack-plugin/1.0/plugin.yaml
+    - http://www.getcloudify.org/spec/puppet-plugin/1.0/plugin.yaml
 
 blueprint:
     name: system-test-puppet-db
