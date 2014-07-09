@@ -162,4 +162,4 @@ class CloudifyConfigReader(object):
 
     @property
     def cloudify_agent_user(self):
-        return self.config['cloudify']['cloudify_agent']['user']
+        return self.config['cloudify']['agents']['config']['user']
