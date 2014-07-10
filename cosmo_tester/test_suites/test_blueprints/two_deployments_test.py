@@ -21,13 +21,13 @@ import Queue
 
 from cosmo_tester.framework.testenv import TestCase
 from cosmo_tester.framework.git_helper import clone
-from hello_world_bash_test import HelloWorldBashTest as Bash
+import hello_world_bash_test as bash
 
 
 class TwoDeploymentsTest(TestCase):
 
     def test_two_deployments(self):
-        repo_dir = clone(Bash.CLOUDIFY_EXAMPLES_URL, self.workdir)
+        repo_dir = clone(bash.CLOUDIFY_EXAMPLES_URL, self.workdir)
         self.blueprint_path = repo_dir / 'hello-world'
         self.blueprint_yaml = self.blueprint_path / 'blueprint.yaml'
 
@@ -49,7 +49,7 @@ class TwoDeploymentsTest(TestCase):
             blueprint_yaml = self.blueprint_path / file_name
             blueprint_yaml.write_text(self.blueprint_yaml.text())
             sg = 'sg{}'.format(index)
-            Bash.modify_yaml(env=self.env,
+            bash.modify_yaml(env=self.env,
                              yaml_file=blueprint_yaml,
                              host_name='host{}'.format(index),
                              security_groups=[sg],
@@ -60,11 +60,11 @@ class TwoDeploymentsTest(TestCase):
                 blueprint_id=blueprint_id,
                 deployment_id=deployment_id)
 
-            floatingip_node, _, _ = Bash.get_instances(
+            floatingip_node, _, _ = bash.get_instances(
                 client=self.client,
                 deployment_id=deployment_id)
 
-            Bash.verify_webserver_running(blueprint_yaml=blueprint_yaml,
+            bash.verify_webserver_running(blueprint_yaml=blueprint_yaml,
                                           floatingip_node=floatingip_node)
 
             self.cfy.execute_uninstall(deployment_id=deployment_id)
