@@ -1,5 +1,5 @@
 imports:
-    - https://raw.githubusercontent.com/cloudify-cosmo/cloudify-manager/develop/resources/rest-service/cloudify/types/types.yaml
+    - http://www.getcloudify.org/spec/cloudify/3.0/types.yaml
 
 plugins:
     mock_plugin:
