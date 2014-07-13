@@ -20,7 +20,7 @@ __author__ = 'elip'
 from cosmo_tester.framework.testenv import TestCase
 
 
-class HelloWorldBashTest(TestCase):
+class WindowsAgentTest(TestCase):
 
     def test_windows(self):
 
