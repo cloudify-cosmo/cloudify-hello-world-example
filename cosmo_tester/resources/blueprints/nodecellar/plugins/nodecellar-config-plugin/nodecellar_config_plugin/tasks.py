@@ -18,18 +18,20 @@ from subprocess import call
 
 @operation
 def get_mongo_host_and_port(ctx, **kwargs):
-    
+
     """
-    Gets the mongo ip address and port and stores them in a file to be sourced by the 
-    nodecellar startup script 
+    Gets the mongo ip address and port and stores them in a file to be
+    sourced by the nodecellar startup script
     """
-    
+
     mongo_ip_address = ctx.related.runtime_properties['ip_address']
     mongo_port = ctx.related.runtime_properties['port']
-    
-    ctx.logger.info("Mongo IP address is {} and port is {}".format(mongo_ip_address, mongo_port))
 
-    env_file_path = ctx.properties.get("env_file_path", "/tmp/mongo_host_and_port.sh")
+    ctx.logger.info("Mongo IP address is {} and port is {}".format(
+        mongo_ip_address, mongo_port))
+
+    env_file_path = ctx.properties.get("env_file_path",
+                                       "/tmp/mongo_host_and_port.sh")
     ctx.logger.info("Writing file {}".format(env_file_path))
 
     with open(env_file_path, 'w') as env_file:
@@ -37,4 +39,3 @@ def get_mongo_host_and_port(ctx, **kwargs):
         env_file.write("export MONGO_HOST={}\n".format(mongo_ip_address))
 
     call(["chmod", "+x", env_file_path])
-
