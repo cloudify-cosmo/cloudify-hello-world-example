@@ -13,13 +13,19 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
-__author__ = 'nirb'
+""" Assumes fabric environment already set up """
 
-openstack_ubuntu_image_name = \
-    'Ubuntu Server 12.04 LTS (amd64 20140606) - Partner Image'
+__author__ = 'elip'
 
-openstack_flavor_name = 'standard.small'
+from cosmo_tester.framework.testenv import TestCase
 
-openstack_ubuntu_image_id = '75d47d10-fef8-473b-9dd1-fe2f7649cb41'
 
-openstack_small_flavor_id = 101
+class WindowsAgentTest(TestCase):
+
+    def test_windows(self):
+
+        blueprint_path = self.copy_blueprint('windows')
+        self.blueprint_yaml = blueprint_path / 'blueprint.yaml'
+
+        self.upload_deploy_and_execute_install()
+        self.execute_uninstall()

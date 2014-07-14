@@ -32,11 +32,11 @@ from cosmo_tester.framework.testenv import TestCase
 from cosmo_tester.framework.util import YamlPatcher
 
 
-IMAGE_NAME = 'Ubuntu Server 12.04 LTS (amd64 20140606) - Partner Image'
-FLAVOR_NAME = 'standard.small'
-
 PUPPET_MASTER_VERSION = '3.5.1-1puppetlabs1'
 
+# TODO: whoever did a review for this, should not have accepted this reference
+# to some external FewBytes repo.
+# see the chef test and do something similar
 MANIFESTS_URL = ('https://github.com/Fewbytes/cosmo-tester-puppet-downloadable'
                  '/archive/master.tar.gz')
 
@@ -82,8 +82,8 @@ def update_blueprint(env, blueprint, hostname, userdata_vars=None):
         # vm['properties']['server'] does not exist when using existing one
         if 'server' in vm['properties']:
             vm['properties']['server'].update({
-                'flavor_name': FLAVOR_NAME,
-                'image_name': IMAGE_NAME,
+                'flavor_name': env.flavor_name,
+                'image_name': env.ubuntu_image_name,
                 'key_name': env.agent_keypair_name,
                 'name': vm_hostname,
             })
