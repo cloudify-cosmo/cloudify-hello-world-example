@@ -31,10 +31,9 @@ class NodecellarAppTest(TestCase):
 
     def test_nodecellar(self):
 
-        blueprint_path = self.copy_blueprint('nodecellar')
         self.repo_dir = clone(NODECELLAR_URL, self.workdir)
         self.blueprint_path = self.repo_dir / 'hello-world'
-        self.blueprint_yaml = blueprint_path / 'blueprint.yaml'
+        self.blueprint_yaml = self.blueprint_path / 'blueprint.yaml'
         self.modify_blueprint()
 
         before, after = self.upload_deploy_and_execute_install()
