@@ -46,6 +46,8 @@ blueprint:
             # Uncomment bellow and fill the properties according to your openstack environment.#
             ####################################################################################
             #properties:
+            #    cloudify_agent:
+            #        user: [Enter-User-Name]
             #    server:
             #        name: bash-web-server
             #        image_name: [Enter-Image-Name]
