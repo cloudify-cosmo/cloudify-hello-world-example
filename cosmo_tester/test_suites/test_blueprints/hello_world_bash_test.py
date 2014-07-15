@@ -35,13 +35,21 @@ CLOUDIFY_EXAMPLES_URL = "https://github.com/cloudify-cosmo/" \
 
 class HelloWorldBashTest(TestCase):
 
-    def test_hello_world_bash(self):
+    def test_hello_world_on_ubuntu(self):
+        self._run(self.env.ubuntu_image_name, self.env.cloudify_agent_user)
+
+    def test_hello_world_on_centos(self):
+        self._run(self.env.centos_image_name, self.env.centos_image_user)
+
+    def _run(self, image_name, user):
         self.repo_dir = clone(CLOUDIFY_EXAMPLES_URL, self.workdir)
         self.blueprint_path = self.repo_dir / 'hello-world'
         self.blueprint_yaml = self.blueprint_path / 'blueprint.yaml'
         modify_yaml(env=self.env,
                     yaml_file=self.blueprint_yaml,
                     host_name='bash-web-server',
+                    image_name=image_name,
+                    user=user,
                     security_groups=['webserver_security_group'])
 
         self.upload_deploy_and_execute_install(fetch_state=False)
@@ -107,13 +115,18 @@ def get_instances(client, deployment_id):
 
 
 def modify_yaml(env, yaml_file, host_name, security_groups,
+                image_name=None,
+                user=None,
                 security_group_name=None):
     # this method is also used by two_deployments_test
     with YamlPatcher(yaml_file) as patch:
         vm_properties_path = 'blueprint.nodes[2].properties'
+        patch.merge_obj('{0}.cloudify_agent'.format(vm_properties_path), {
+            'user': user,
+        })
         patch.merge_obj('{0}.server'.format(vm_properties_path), {
             'name': host_name,
-            'image_name': env.ubuntu_image_name,
+            'image_name': image_name,
             'flavor_name': env.flavor_name,
             'security_groups': security_groups,
         })
