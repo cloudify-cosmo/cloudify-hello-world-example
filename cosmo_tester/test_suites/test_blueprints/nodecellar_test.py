@@ -21,6 +21,10 @@ import json
 
 from cosmo_tester.framework.testenv import TestCase
 from cosmo_tester.framework.util import YamlPatcher
+from cosmo_tester.framework.git_helper import clone
+
+NODECELLAR_URL = "https://github.com/cloudify-cosmo/" \
+                 "cloudify-nodecellar-openstack.git"
 
 
 class NodecellarAppTest(TestCase):
@@ -28,6 +32,8 @@ class NodecellarAppTest(TestCase):
     def test_nodecellar(self):
 
         blueprint_path = self.copy_blueprint('nodecellar')
+        self.repo_dir = clone(NODECELLAR_URL, self.workdir)
+        self.blueprint_path = self.repo_dir / 'hello-world'
         self.blueprint_yaml = blueprint_path / 'blueprint.yaml'
         self.modify_blueprint()
 
