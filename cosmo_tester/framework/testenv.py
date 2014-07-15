@@ -36,6 +36,8 @@ from cosmo_tester.framework.openstack_api import (openstack_infra_state,
                                                   openstack_infra_state_delta,
                                                   remove_openstack_resources)
 from cosmo_tester.framework import (openstack_ubuntu_image_name,
+                                    openstack_centos_image_name,
+                                    openstack_centos_image_user,
                                     openstack_flavor_name,
                                     openstack_ubuntu_image_id,
                                     openstack_small_flavor_id)
@@ -270,6 +272,14 @@ class TestEnvironment(object):
     @property
     def ubuntu_image_name(self):
         return openstack_ubuntu_image_name
+
+    @property
+    def centos_image_name(self):
+        return openstack_centos_image_name
+
+    @property
+    def centos_image_user(self):
+        return openstack_centos_image_user
 
     @property
     def flavor_name(self):
