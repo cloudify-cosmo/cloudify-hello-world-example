@@ -23,7 +23,7 @@ from cosmo_tester.framework.testenv import TestCase
 from cosmo_tester.framework.util import YamlPatcher
 
 
-class PythonWebServerTest(TestCase):
+class NodecellarAppTest(TestCase):
 
     def test_nodecellar(self):
 
