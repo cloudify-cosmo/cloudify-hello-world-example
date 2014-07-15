@@ -27,6 +27,9 @@ blueprint:
                     image_name: windows-agent-machine
                     flavor: 102
                 cloudify_agent:
+                    service:
+                        successful_consecutive_status_queries_count: 2
+                        start_timeout: 60
                     user: Administrator
                     password : 1408Rokk
 
