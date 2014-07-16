@@ -1,20 +1,16 @@
 #######
-# Types and implementation details.
+# Cloudify Hello World blueprint.
 #
-# Virtual machine is started using Cloudify's built-in OpenStack plugin.
-# Python simple HTTP server is started using Cloudify's Python web server plugin
-# which can be found here: https://github.com/CloudifySource/cosmo-plugin-python-webserver
+# The blueprint describes an OpenStack vm created using Cloudify's OpenStack plugin
+# and simple web server started using Cloudify's bash plugin.
+# In addition, an OpenStack floating ip and security group are created and associated with the created vm.
 #
-
-# cloudify.types contains Cloudify's built-in types, relationships, workflows etc...
-# cloudify.openstack contains Cloudify's built-in openstack types and plugins definitions.
 
 imports:
     - http://www.getcloudify.org/spec/openstack-plugin/1.0/plugin.yaml
     - http://www.getcloudify.org/spec/bash-plugin/1.0/plugin.yaml
 
 types:
-
     # A web server configured with bash scripts
     cloudify.types.bash.web_server_with_index_and_image:
         derived_from: cloudify.types.bash.web_server
