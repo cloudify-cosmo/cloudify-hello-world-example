@@ -18,17 +18,22 @@ __author__ = 'ran'
 
 import requests
 import json
+from requests.exceptions import ConnectionError
 
 from cosmo_tester.framework.testenv import TestCase
 from cosmo_tester.framework.util import YamlPatcher
+from cosmo_tester.framework.git_helper import clone
+
+NODECELLAR_URL = "https://github.com/cloudify-cosmo/" \
+                 "cloudify-nodecellar-openstack.git"
 
 
 class NodecellarAppTest(TestCase):
 
     def test_nodecellar(self):
 
-        blueprint_path = self.copy_blueprint('nodecellar')
-        self.blueprint_yaml = blueprint_path / 'blueprint.yaml'
+        self.repo_dir = clone(NODECELLAR_URL, self.workdir)
+        self.blueprint_yaml = self.repo_dir / 'blueprint.yaml'
         self.modify_blueprint()
 
         before, after = self.upload_deploy_and_execute_install()
@@ -61,6 +66,7 @@ class NodecellarAppTest(TestCase):
         deployment_from_list = delta['deployments'].values()[0]
 
         deployment_by_id = self.client.deployments.get(deployment_from_list.id)
+        self.deployment_id = deployment_from_list.id
 
         executions = self.client.deployments.list_executions(
             deployment_by_id.id)
@@ -91,7 +97,7 @@ class NodecellarAppTest(TestCase):
         self.assertEqual(len(nodes_state), 7,
                          'nodes_state: {0}'.format(nodes_state))
 
-        public_ip = None
+        self.public_ip = None
         for key, value in nodes_state.items():
             if '_vm' in key:
                 self.assertTrue('ip' in value['runtime_properties'],
@@ -104,7 +110,12 @@ class NodecellarAppTest(TestCase):
                                  'vm node should be started: {0}'
                                  .format(nodes_state))
             elif key.startswith('floatingip'):
-                public_ip = value['runtime_properties']['floating_ip_address']
+                self.public_ip = value['runtime_properties'][
+                    'floating_ip_address']
+
+        self.assertIsNotNone(self.public_ip,
+                             'Could not find the "floatingip" node for '
+                             'retrieving the public IP')
 
         events, total_events = self.client.events.get(execution_by_id.id)
 
@@ -113,7 +124,7 @@ class NodecellarAppTest(TestCase):
                            .format(execution_by_id.id))
 
         nodejs_server_page_response = requests.get('http://{0}:8080'
-                                                   .format(public_ip))
+                                                   .format(self.public_ip))
         self.assertEqual(200, nodejs_server_page_response.status_code,
                          'Failed to get home page of nodecellar app')
         page_title = 'Node Cellar'
@@ -122,7 +133,7 @@ class NodecellarAppTest(TestCase):
                         .format(page_title, nodejs_server_page_response))
 
         wines_page_response = requests.get('http://{0}:8080/wines'.format(
-            public_ip))
+            self.public_ip))
         self.assertEqual(200, wines_page_response.status_code,
                          'Failed to get the wines page on nodecellar app ('
                          'probably means a problem with the connection to '
@@ -143,5 +154,14 @@ class NodecellarAppTest(TestCase):
                       .format(wines_page_response.text))
 
     def post_uninstall_assertions(self):
-        # TODO
-        pass
+        nodes_instances = self.client.node_instances.list(self.deployment_id)
+        print nodes_instances
+        self.assertFalse(any(node_ins for node_ins in nodes_instances if
+                             node_ins.state != 'deleted'))
+        try:
+            requests.get('http://{0}:8080'.format(self.public_ip))
+            self.fail('Expected a no route to host error to be raised when '
+                      'trying to retrieve the web page after uninstall, '
+                      'but no error was raised.')
+        except ConnectionError:
+            pass
