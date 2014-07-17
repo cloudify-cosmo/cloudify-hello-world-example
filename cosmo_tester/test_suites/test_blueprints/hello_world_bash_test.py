@@ -85,7 +85,9 @@ class HelloWorldBashTest(TestCase):
 
 @retry(stop_max_attempt_number=5, wait_fixed=3000)
 def verify_webserver_running(blueprint_yaml, floatingip_node):
-    # this method is also used by two_deployments_test
+    """
+    This method is also used by two_deployments_test!
+    """
     blueprint = get_yaml_as_dict(blueprint_yaml)
     webserver_props = blueprint['blueprint']['nodes'][3]['properties']
     server_port = webserver_props['port']
@@ -98,7 +100,9 @@ def verify_webserver_running(blueprint_yaml, floatingip_node):
 
 
 def get_instances(client, deployment_id):
-    # this method is also used by two_deployments_test
+    """
+    This method is also used by two_deployments_test!
+    """
     server_node = None
     security_group_node = None
     floatingip_node = None
@@ -118,7 +122,13 @@ def modify_yaml(env, yaml_file, host_name, security_groups,
                 image_name=None,
                 user=None,
                 security_group_name=None):
-    # this method is also used by two_deployments_test
+    """
+    This method is also used by two_deployments_test!
+    """
+    if image_name is None:
+        image_name = env.ubuntu_image_name
+    if user is None:
+        user = env.cloudify_agent_user
     with YamlPatcher(yaml_file) as patch:
         vm_properties_path = 'blueprint.nodes[2].properties'
         patch.merge_obj('{0}.cloudify_agent'.format(vm_properties_path), {
