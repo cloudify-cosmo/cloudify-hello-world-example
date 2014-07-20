@@ -95,7 +95,6 @@ def get_agent_key_file(env):
 def update_blueprint(env, blueprint, hostname, userdata_vars=None):
     hostname_base = 'system-test-{0}-{1}'.format(
         time.strftime("%Y%m%d-%H%M"), hostname)
-    agent_key_file = get_agent_key_file(env)
     vms = get_nodes_of_type(blueprint, 'cloudify.openstack.server')
     if len(vms) > 1:
         hostnames = ['{0}-{1:2}'.format(hostname_base, i)
@@ -106,31 +105,18 @@ def update_blueprint(env, blueprint, hostname, userdata_vars=None):
     users = []
     for vm_idx, vm in enumerate(vms):
         vm_hostname = hostnames[vm_idx]
-        vm['properties']['worker_config']['key'] = (
-            '~/.ssh/' + str(agent_key_file.basename()))
-
         # vm['properties']['server'] does not exist when using existing one
         if 'server' in vm['properties']:
             vm['properties']['server'].update({
                 'flavor_name': env.flavor_name,
                 'image_name': env.ubuntu_image_name,
-                'key_name': env.agent_keypair_name,
                 'name': vm_hostname,
             })
-            vm['properties']['management_network_name'] = (
-                env.management_network_name)
-            vm['properties']['server']['security_groups'].append(
-                env.agents_security_group)
             props = vm['properties']['server']
             if 'userdata' in props:
                 props['userdata'] = props['userdata'].format(
                     hostname=vm_hostname, **(userdata_vars or {}))
-        users.append(vm['properties']['worker_config']['user'])
-
-    fips = get_nodes_of_type(blueprint, 'cloudify.openstack.floatingip')
-    for fip in fips:
-            fip_fip = fip['properties']['floatingip']
-            fip_fip['floating_network_name'] = env.external_network_name
+        users.append('ubuntu')
 
     return {'hostnames': hostnames, 'users': users}
 
@@ -176,7 +162,8 @@ class ChefPluginClientTest(TestCase):
         before, after = self.upload_deploy_and_execute_install(id_, id_)
 
         fip_node = find_node_state('ip', after['node_state'][id_])
-        self.chef_server_ip = fip_node['runtimeInfo']['floating_ip_address']
+        self.chef_server_ip = fip_node['runtime_properties'][
+            'floating_ip_address']
 
         fabric_env = fabric.api.env
         fabric_env.update({
@@ -220,7 +207,7 @@ class ChefPluginClientTest(TestCase):
         before, after = self.upload_deploy_and_execute_install(id_, id_)
 
         fip_node = find_node_state('ip', after['node_state'][id_])
-        chef_client_ip = fip_node['runtimeInfo']['floating_ip_address']
+        chef_client_ip = fip_node['runtime_properties']['floating_ip_address']
 
         fabric_env = fabric.api.env
         fabric_env.update({
@@ -260,7 +247,7 @@ class ChefPluginSoloTest(TestCase):
         before, after = self.upload_deploy_and_execute_install(id_, id_)
 
         fip_node = find_node_state('ip', after['node_state'][id_])
-        chef_solo_ip = fip_node['runtimeInfo']['floating_ip_address']
+        chef_solo_ip = fip_node['runtime_properties']['floating_ip_address']
 
         fabric_env = fabric.api.env
         fabric_env.update({

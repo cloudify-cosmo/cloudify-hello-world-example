@@ -44,12 +44,10 @@ compute:
         management_keypair:
             use_existing: false
             name: cloudify-management-kp
-            auto_generated:
-                private_key_target_path: ~/.ssh/cloudify-management-kp.pem
+            private_key_path: ~/.ssh/cloudify-management-kp.pem
     agent_servers:
         agents_keypair:
             use_existing: false
             name: cloudify-agents-kp
-            auto_generated:
-                private_key_target_path: ~/.ssh/cloudify-agents-kp.pem
+            private_key_path: ~/.ssh/cloudify-agents-kp.pem
 

@@ -1,6 +1,6 @@
 imports:
-    - cloudify.openstack
-    - cloudify.chef
+    - http://www.getcloudify.org/spec/openstack-plugin/1.0/plugin.yaml
+    - http://www.getcloudify.org/spec/chef-plugin/1.0/plugin.yaml
 
 blueprint:
     name: system-test-chef-client
@@ -9,16 +9,10 @@ blueprint:
             type: cloudify.openstack.server
             properties:
                 install_agent: true
-                worker_config:
-                    port: 22
-                    user: ubuntu
-                    key: REPLACED-BY-TEST
-                management_network_name: REPLACED-BY-TEST
                 server:
                     name: REPLACED-BY-TEST
                     image_name: REPLACED-BY-TEST
                     flavor_name: REPLACED-BY-TEST
-                    key_name: REPLACED-BY-TEST
                     security_groups: [chef_sg]  # MODIFIED-BY-TEST (adds agents security group to the list)
             relationships:
                 -   type: cloudify.openstack.server_connected_to_floating_ip
@@ -27,9 +21,6 @@ blueprint:
                     target: chef_sg
         -   name: ip
             type: cloudify.openstack.floatingip
-            properties:
-                floatingip:
-                    floating_network_name: REPLACED-BY-TEST
         -   name: chef_node_one
             type: cloudify.types.chef.db_server
             properties:

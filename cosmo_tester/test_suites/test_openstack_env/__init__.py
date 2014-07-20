@@ -13,31 +13,16 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
-__author__ = 'dank'
 
-import os
-import logging
+__author__ = 'barakme'
 
-import sh
-from path import path
-
-from cosmo_tester.framework.util import sh_bake
+from cosmo_tester.framework.testenv import (initialize_without_bootstrap,
+                                            clear_environment)
 
 
-logger = logging.getLogger('git_helper')
-logger.setLevel(logging.INFO)
-git = sh_bake(sh.git)
+def setUp():
+    initialize_without_bootstrap()
 
 
-def clone(url, basedir, branch='develop'):
-
-    repo_name = url.split('.git')[0].split('/')[-1]
-
-    target = path(os.path.join(basedir, 'git', repo_name))
-
-    logger.info("Cloning {0} to {1}".format(url, target))
-    git.clone(url, str(target)).wait()
-    with target:
-        logger.info("Checking out to {0} branch".format(branch))
-        git.checkout(branch).wait()
-    return target.abspath()
+def tearDown():
+    clear_environment()

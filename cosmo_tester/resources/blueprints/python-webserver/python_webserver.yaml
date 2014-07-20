@@ -1,5 +1,5 @@
 imports:
-    - cloudify.openstack
+    - http://www.getcloudify.org/spec/openstack-plugin/1.0/plugin.yaml
 
 plugins:
     python_webserver_installer:
@@ -28,7 +28,7 @@ type_implementations:
         node_ref: vm
         properties:
             install_agent: true
-            worker_config:
+            cloudify_agent:
                 user: ubuntu
                 port: 22
 

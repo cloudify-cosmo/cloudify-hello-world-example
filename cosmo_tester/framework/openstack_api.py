@@ -22,6 +22,8 @@ import copy
 import novaclient.v1_1.client as nvclient
 import neutronclient.v2_0.client as neclient
 
+from retrying import retry
+
 
 from cosmo_tester.framework.util import CloudifyConfigReader
 
@@ -36,7 +38,12 @@ def openstack_clients(cloudify_config):
                         auth_url=creds['auth_url'])
 
 
+@retry(stop_max_attempt_number=5, wait_fixed=20000)
 def openstack_infra_state(cloudify_config):
+    """
+    @retry decorator is used because this error sometimes occur:
+    ConnectionFailed: Connection to neutron failed: Maximum attempts reached
+    """
     nova, neutron = openstack_clients(cloudify_config)
     return {
         'networks': dict(_networks(neutron)),

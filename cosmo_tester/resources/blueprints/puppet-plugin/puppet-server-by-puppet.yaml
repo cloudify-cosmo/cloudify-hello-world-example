@@ -1,19 +1,30 @@
 imports:
     - http://www.getcloudify.org/spec/openstack-plugin/1.0/plugin.yaml
-    - http://www.getcloudify.org/spec/chef-plugin/1.0/plugin.yaml
+    - http://www.getcloudify.org/spec/puppet-plugin/1.0/plugin.yaml
+
+types:
+    cloudify.types.puppet.puppet_master_service:
+        derived_from: cloudify.types.middleware_server
+        properties:
+            - puppet_config
+        interfaces:
+            cloudify.interfaces.lifecycle:
+                - create: puppet_plugin.install.operation
 
 blueprint:
-    name: system-test-chef-server
+    name: system-test-puppet-master
     nodes:
-        -   name: chef_server
+        -   name: puppet_master_vm
             type: cloudify.openstack.server
             properties:
                 install_agent: true
+                management_network_name: REPLACED-BY-TEST
                 server:
                     name: REPLACED-BY-TEST
                     image_name: REPLACED-BY-TEST
                     flavor_name: REPLACED-BY-TEST
-                    security_groups: [chef_sg]  # MODIFIED-BY-TEST (adds agents security group to the list)
+                    key_name: REPLACED-BY-TEST
+                    security_groups: [puppet_sg]  # MODIFIED-BY-TEST (adds agents security group to the list)
                     # MODIFIED-BY-TEST -- {hostname} substitution
                     userdata: |
                         #!/bin/bash -ex
@@ -22,31 +33,29 @@ blueprint:
                 -   type: cloudify.openstack.server_connected_to_floating_ip
                     target: ip
                 -   type: cloudify.relationships.connected_to
-                    target: chef_sg
+                    target: puppet_sg
         -   name: ip
             type: cloudify.openstack.floatingip
-        -   name: chef_sg
+            properties:
+                floatingip:
+                    floating_network_name: REPLACED-BY-TEST
+        -   name: puppet_sg
             type: cloudify.openstack.security_group
             properties:
                 security_group:
-                    name: chef_sg
+                    name: puppet_sg
                 rules:
                     -   remote_ip_prefix: 0.0.0.0/0
                         port: 22
                     -   remote_ip_prefix: 0.0.0.0/0
-                        port: 443
-        -   name: chef_service
-            type: cloudify.types.chef.app_server
+                        port: 8140
+        -   name: system_tests_puppet_master_service
+            type: cloudify.types.puppet.puppet_master_service
             properties:
-                chef_config:
-                    version: 11.10.4-1  # Chef Solo for installing Chef server
-                    cookbooks: cookbooks.tar.gz
-                    attributes:
-                        # https://github.com/opscode-cookbooks/chef-server
-                        chef-server:
-                            version: 11.0.11-1
-                    runlists:
-                        create: recipe[chef-server]
+                puppet_config:
+                    server: puppet
+                    environment: cloudify0system0test
             relationships:
                 -   type: cloudify.relationships.contained_in
-                    target: chef_server
+                    target: puppet_master_vm
+

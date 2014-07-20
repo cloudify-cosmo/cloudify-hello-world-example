@@ -31,11 +31,6 @@ def sh_bake(command):
                         _err=lambda line: sys.stderr.write(line))
 
 
-def get_resource_path(resource_name):
-    resources_dir = os.path.dirname(resources.__file__)
-    return os.path.join(resources_dir, resource_name)
-
-
 def get_blueprint_path(blueprint_name):
     resources_dir = os.path.dirname(resources.__file__)
     return os.path.join(resources_dir, 'blueprints', blueprint_name)
@@ -69,6 +64,10 @@ class YamlPatcher(object):
         obj, prop_name = self._get_parent_obj_prop_name_by_path(prop_path)
         obj[prop_name] = new_value
 
+    def append_value(self, prop_path, value):
+        obj, prop_name = self._get_parent_obj_prop_name_by_path(prop_path)
+        obj[prop_name] = obj[prop_name] + value
+
     def _get_object_by_path(self, prop_path):
         current = self.obj
         for prop_segment in prop_path.split('.'):
@@ -94,19 +93,9 @@ class YamlPatcher(object):
         prop_name = split[-1]
         return parent_obj, prop_name
 
-    def _raise_illegal(self, prop_path):
+    @staticmethod
+    def _raise_illegal(prop_path):
         raise RuntimeError('illegal path: {0}'.format(prop_path))
-
-
-class Singleton(type):
-
-    _instances = {}
-
-    def __call__(cls, *args, **kwargs):
-        if cls not in cls._instances:
-            cls._instances[cls] = \
-                super(Singleton, cls).__call__(*args, **kwargs)
-        return cls._instances[cls]
 
 
 class CloudifyConfigReader(object):
@@ -137,12 +126,17 @@ class CloudifyConfigReader(object):
     @property
     def agent_key_path(self):
         return self.config['compute']['agent_servers']['agents_keypair'][
-            'auto_generated']['private_key_target_path']
+            'private_key_path']
+
+    @property
+    def managment_user_name(self):
+        return self.config['compute']['management_server'][
+            'user_on_management']
 
     @property
     def management_key_path(self):
         return self.config['compute']['management_server'][
-            'management_keypair']['auto_generated']['private_key_target_path']
+            'management_keypair']['private_key_path']
 
     @property
     def agent_keypair_name(self):
@@ -165,3 +159,7 @@ class CloudifyConfigReader(object):
     @property
     def management_security_group(self):
         return self.config['networking']['management_security_group']['name']
+
+    @property
+    def cloudify_agent_user(self):
+        return self.config['cloudify']['agents']['config']['user']

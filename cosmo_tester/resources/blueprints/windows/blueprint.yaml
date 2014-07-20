@@ -1,0 +1,43 @@
+imports:
+    - http://www.getcloudify.org/spec/openstack-plugin/1.0/plugin.yaml
+
+plugins:
+    python_script_executor:
+        derived_from: cloudify.plugins.agent_plugin
+        properties:
+            url: https://github.com/cloudify-cosmo/cloudify-python-plugin/archive/develop.zip
+
+types:
+    cloudify.types.python.app_module:
+        derived_from: cloudify.types.app_module
+        interfaces:
+            cloudify.interfaces.lifecycle:
+                - start: python_script_executor.tasks.run
+        properties:
+            - scripts
+
+blueprint:
+    name: windows-test
+    nodes:
+        -   name: vm
+            type: cloudify.openstack.windows_server
+            properties:
+                server:
+                    name: windows-agent-vm
+                    image_name: windows-agent-machine
+                    flavor: 102
+                cloudify_agent:
+                    service:
+                        successful_consecutive_status_queries_count: 2
+                        start_timeout: 60
+                    user: Administrator
+                    password : 1408Rokk
+
+        -   name: app
+            type: cloudify.types.python.app_module
+            properties:
+                scripts:
+                    start: scripts/hello.py
+            relationships:
+                -   type: cloudify.relationships.contained_in
+                    target: vm

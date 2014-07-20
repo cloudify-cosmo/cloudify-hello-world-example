@@ -13,31 +13,19 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
-__author__ = 'dank'
+""" Assumes fabric environment already set up """
 
-import os
-import logging
+__author__ = 'elip'
 
-import sh
-from path import path
-
-from cosmo_tester.framework.util import sh_bake
+from cosmo_tester.framework.testenv import TestCase
 
 
-logger = logging.getLogger('git_helper')
-logger.setLevel(logging.INFO)
-git = sh_bake(sh.git)
+class WindowsAgentTest(TestCase):
 
+    def test_windows(self):
 
-def clone(url, basedir, branch='develop'):
+        blueprint_path = self.copy_blueprint('windows')
+        self.blueprint_yaml = blueprint_path / 'blueprint.yaml'
 
-    repo_name = url.split('.git')[0].split('/')[-1]
-
-    target = path(os.path.join(basedir, 'git', repo_name))
-
-    logger.info("Cloning {0} to {1}".format(url, target))
-    git.clone(url, str(target)).wait()
-    with target:
-        logger.info("Checking out to {0} branch".format(branch))
-        git.checkout(branch).wait()
-    return target.abspath()
+        self.upload_deploy_and_execute_install()
+        self.execute_uninstall()

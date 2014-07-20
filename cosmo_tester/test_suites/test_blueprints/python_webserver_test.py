@@ -17,7 +17,6 @@
 __author__ = 'dan'
 
 import requests
-import yaml
 
 from cosmo_tester.framework.testenv import TestCase
 from cosmo_tester.framework.util import YamlPatcher
@@ -29,7 +28,6 @@ class PythonWebServerTest(TestCase):
     security_groups = ['webserver_security_group']
 
     def test_python_webserver(self):
-        self.security_groups.append(self.env.agents_security_group)
 
         blueprint_path = self.copy_blueprint('python-webserver')
         self.blueprint_yaml = blueprint_path / 'blueprint.yaml'
@@ -47,21 +45,12 @@ class PythonWebServerTest(TestCase):
     def modify_blueprint(self):
         with YamlPatcher(self.webserver_yaml) as patch:
             vm_path = 'type_implementations.vm_openstack_host_impl.properties'
-            patch.set_value('{0}.management_network_name'.format(vm_path),
-                            self.env.management_network_name)
-            patch.set_value('{0}.worker_config.key'.format(vm_path),
-                            self.env.agent_key_path)
             patch.merge_obj('{0}.server'.format(vm_path), {
                 'name': self.host_name,
                 'image_name': self.env.ubuntu_image_name,
                 'flavor_name': self.env.flavor_name,
-                'key_name': self.env.agent_keypair_name,
                 'security_groups': self.security_groups,
             })
-            ip_path = 'type_implementations.virtual_ip_impl.properties'
-            patch.set_value(
-                '{0}.floatingip.floating_network_name'.format(ip_path),
-                self.env.external_network_name)
 
     def post_install_assertions(self, before_state, after_state):
         delta = self.get_manager_state_delta(before_state, after_state)
@@ -71,38 +60,29 @@ class PythonWebServerTest(TestCase):
         self.assertEqual(len(delta['blueprints']), 1,
                          'blueprint: {0}'.format(delta))
 
-        blueprint_from_list = delta['blueprints'].values()[0]
-        blueprint_by_id = self.rest._blueprints_api\
-            .getById(blueprint_from_list.id)
-        # field is expected not to return from getById call,
-        # so before comparing need to disable this field
-        blueprint_from_list.source = 'None'
-        self.assertEqual(yaml.dump(blueprint_from_list),
-                         yaml.dump(blueprint_by_id))
-
         self.assertEqual(len(delta['deployments']), 1,
                          'deployment: {0}'.format(delta))
 
         deployment_from_list = delta['deployments'].values()[0]
-        deployment_by_id = self.rest._deployments_api\
-            .getById(deployment_from_list.id)
-        # plan is good enough because it contains generated ids
-        self.assertEqual(deployment_from_list.plan,
-                         deployment_by_id.plan)
 
-        executions = self.rest._deployments_api\
-            .listExecutions(deployment_by_id.id)
-        self.assertEqual(len(executions), 1,
-                         'execution: {0}'.format(executions))
+        deployment_by_id = self.client.deployments.get(deployment_from_list.id)
+
+        executions = self.client.deployments.list_executions(
+            deployment_by_id.id)
+
+        self.assertEqual(len(executions),
+                         2,
+                         'There should be 2 executions but are: {0}'.format(
+                             executions))
 
         execution_from_list = executions[0]
-        execution_by_id = self.rest._executions_api\
-            .getById(execution_from_list.id)
+        execution_by_id = self.client.executions.get(execution_from_list.id)
+
         self.assertEqual(execution_from_list.id, execution_by_id.id)
-        self.assertEqual(execution_from_list.workflowId,
-                         execution_by_id.workflowId)
-        self.assertEqual(execution_from_list.blueprintId,
-                         execution_by_id.blueprintId)
+        self.assertEqual(execution_from_list.workflow_id,
+                         execution_by_id.workflow_id)
+        self.assertEqual(execution_from_list['blueprint_id'],
+                         execution_by_id['blueprint_id'])
 
         self.assertEqual(len(delta['deployment_nodes']), 1,
                          'deployment_nodes: {0}'.format(delta))
@@ -113,9 +93,6 @@ class PythonWebServerTest(TestCase):
         self.assertEqual(len(delta['nodes']), 4,
                          'nodes: {0}'.format(delta))
 
-        self.assertEqual(len(delta['workflows']), 1,
-                         'workflows: {0}'.format(delta))
-
         nodes_state = delta['node_state'].values()[0]
         self.assertEqual(len(nodes_state), 4,
                          'nodes_state: {0}'.format(nodes_state))
@@ -124,22 +101,22 @@ class PythonWebServerTest(TestCase):
         webserver_node_id = None
         for key, value in nodes_state.items():
             if key.startswith('vm'):
-                self.assertTrue('ip' in value['runtimeInfo'],
-                                'Missing ip in runtimeInfo: {0}'
+                self.assertTrue('ip' in value['runtime_properties'],
+                                'Missing ip in runtime_properties: {0}'
                                 .format(nodes_state))
-                self.assertTrue('networks' in value['runtimeInfo'],
-                                'Missing networks in runtimeInfo: {0}'
+                self.assertTrue('networks' in value['runtime_properties'],
+                                'Missing networks in runtime_properties: {0}'
                                 .format(nodes_state))
                 self.assertEqual(value['state'], 'started',
                                  'vm node should be started: {0}'
                                  .format(nodes_state))
             elif key.startswith('virtual_ip'):
-                public_ip = value['runtimeInfo']['floating_ip_address']
+                public_ip = value['runtime_properties']['floating_ip_address']
             elif key.startswith('http_web_server'):
                 webserver_node_id = key
 
-        events, total_events = self.rest\
-            .get_execution_events(execution_by_id.id)
+        events, total_events = self.client.events.get(execution_by_id.id)
+
         self.assertGreater(len(events), 0,
                            'Expected at least 1 event for execution id: {0}'
                            .format(execution_by_id.id))
