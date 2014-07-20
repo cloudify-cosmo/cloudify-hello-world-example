@@ -45,15 +45,17 @@ def openstack_infra_state(cloudify_config):
     ConnectionFailed: Connection to neutron failed: Maximum attempts reached
     """
     nova, neutron = openstack_clients(cloudify_config)
+    config_reader = CloudifyConfigReader(cloudify_config)
+    prefix = config_reader.resource_prefix
     return {
-        'networks': dict(_networks(neutron)),
-        'subnets': dict(_subnets(neutron)),
-        'routers': dict(_routers(neutron)),
-        'security_groups': dict(_security_groups(neutron)),
-        'servers': dict(_servers(nova)),
-        'key_pairs': dict(_key_pairs(nova)),
-        'floatingips': dict(_floatingips(neutron)),
-        'ports': dict(_ports(neutron))
+        'networks': dict(_networks(neutron, prefix)),
+        'subnets': dict(_subnets(neutron, prefix)),
+        'routers': dict(_routers(neutron, prefix)),
+        'security_groups': dict(_security_groups(neutron, prefix)),
+        'servers': dict(_servers(nova, prefix)),
+        'key_pairs': dict(_key_pairs(nova, prefix)),
+        'floatingips': dict(_floatingips(neutron, prefix)),
+        'ports': dict(_ports(neutron, prefix))
     }
 
 
@@ -76,6 +78,7 @@ def _remove_openstack_resources_impl(cloudify_config,
                                      resources_to_remove):
     nova, neutron = openstack_clients(cloudify_config)
     config_reader = CloudifyConfigReader(cloudify_config)
+    prefix = config_reader.resource_prefix
 
     servers = nova.servers.list()
     ports = neutron.list_ports()['ports']
@@ -160,44 +163,56 @@ def _client_creds(cloudify_config):
     }
 
 
-def _networks(neutron):
+def _networks(neutron, prefix):
     return [(n['id'], n['name'])
-            for n in neutron.list_networks()['networks']]
+            for n in neutron.list_networks()['networks']
+            if _check_prefix(n['name'], prefix)]
 
 
-def _subnets(neutron):
+def _subnets(neutron, prefix):
     return [(n['id'], n['name'])
-            for n in neutron.list_subnets()['subnets']]
+            for n in neutron.list_subnets()['subnets']
+            if _check_prefix(n['name'], prefix)]
 
 
-def _routers(neutron):
+def _routers(neutron, prefix):
     return [(n['id'], n['name'])
-            for n in neutron.list_routers()['routers']]
+            for n in neutron.list_routers()['routers']
+            if _check_prefix(n['name'], prefix)]
 
 
-def _security_groups(neutron):
+def _security_groups(neutron, prefix):
     return [(n['id'], n['name'])
-            for n in neutron.list_security_groups()['security_groups']]
+            for n in neutron.list_security_groups()['security_groups']
+            if _check_prefix(n['name'], prefix)]
 
 
-def _servers(nova):
+def _servers(nova, prefix):
     return [(s.id, s.human_id)
-            for s in nova.servers.list()]
+            for s in nova.servers.list()
+            if _check_prefix(s.human_id, prefix)]
 
 
-def _key_pairs(nova):
+def _key_pairs(nova, prefix):
     return [(kp.id, kp.name)
-            for kp in nova.keypairs.list()]
+            for kp in nova.keypairs.list()
+            if _check_prefix(kp.name, prefix)]
 
 
-def _floatingips(neutron):
-    return [(ip['id'], ip['floating_ip_address'])
-            for ip in neutron.list_floatingips()['floatingips']]
+def _floatingips(neutron, prefix):
+    # return [(ip['id'], ip['floating_ip_address'])
+    #         for ip in neutron.list_floatingips()['floatingips']]
+    return []
 
 
-def _ports(neutron):
+def _ports(neutron, prefix):
     return [(p['id'], p['name'])
-            for p in neutron.list_ports()['ports']]
+            for p in neutron.list_ports()['ports']
+            if _check_prefix(p['name'], prefix)]
+
+
+def _check_prefix(name, prefix):
+    return name.startswith(prefix)
 
 
 def _remove_keys(dct, keys):

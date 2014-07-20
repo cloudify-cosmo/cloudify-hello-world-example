@@ -22,7 +22,7 @@ import fabric.api
 import fabric.context_managers
 from path import path
 
-from cosmo_tester.framework.util import YamlPatcher
+from cosmo_tester.framework.util import YamlPatcher, get_actual_keypath
 from cosmo_tester.framework.testenv import TestCase
 from cosmo_tester.framework.openstack_api import openstack_clients
 
@@ -33,9 +33,17 @@ class ExistingVMTest(TestCase):
         blueprint_path = self.copy_blueprint('existing-vm')
         self.blueprint_yaml = blueprint_path / 'blueprint.yaml'
 
-        server_name = 'testexistingvm'
-        remote_key_path = '/tmp/test-existing-vm.pem'
-        key_name = 'test_existing_vm_key'
+        # prefixing resources is required here because we manage
+        # this resources manually and not using the openstack plugin
+        # which does all this work for us.
+        # 1. it is needed to work properly
+        # 2. it is needed for the cleanup process to work properly
+        prefix = self.env.resource_prefix
+        server_name = '{}testexistingvm'.format(prefix)
+        remote_key_path = '/tmp/{}test-existing-vm.pem'.format(prefix)
+        key_name = '{}test_existing_vm_key'.format(prefix)
+        agents_security_group = '{}{}'.format(prefix,
+                                              self.env.agents_security_group)
 
         nova_client, _ = openstack_clients(self.env.cloudify_config)
         self.create_keypair_and_copy_to_manager(
@@ -46,7 +54,7 @@ class ExistingVMTest(TestCase):
             name=server_name,
             nova_client=nova_client,
             key_name=key_name,
-            security_groups=[self.env.agents_security_group])
+            security_groups=[agents_security_group])
 
         self.modify_yaml(ip=private_server_ip,
                          remote_key_path=remote_key_path)
@@ -75,11 +83,12 @@ class ExistingVMTest(TestCase):
         key_file.write_text(keypair.private_key)
         key_file.chmod(0600)
 
-        management_key_path = os.path.expanduser(self.env.management_key_path)
+        management_key_path = get_actual_keypath(self.env,
+                                                 self.env.management_key_path)
         fabric.api.env.update({
             'timeout': 30,
             'user': self.env.cloudify_agent_user,
-            'key_filename': path(management_key_path).abspath(),
+            'key_filename': management_key_path,
             'host_string': self.env.management_ip,
         })
         fabric.api.put(local_path=key_file,

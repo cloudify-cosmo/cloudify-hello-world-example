@@ -270,6 +270,10 @@ class TestEnvironment(object):
         return self._config_reader.cloudify_agent_user
 
     @property
+    def resource_prefix(self):
+        return self._config_reader.resource_prefix
+
+    @property
     def ubuntu_image_name(self):
         return openstack_ubuntu_image_name
 
