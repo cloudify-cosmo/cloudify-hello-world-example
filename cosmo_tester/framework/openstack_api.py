@@ -78,7 +78,6 @@ def _remove_openstack_resources_impl(cloudify_config,
                                      resources_to_remove):
     nova, neutron = openstack_clients(cloudify_config)
     config_reader = CloudifyConfigReader(cloudify_config)
-    prefix = config_reader.resource_prefix
 
     servers = nova.servers.list()
     ports = neutron.list_ports()['ports']

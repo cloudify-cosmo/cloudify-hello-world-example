@@ -19,7 +19,6 @@ __author__ = 'dan'
 import sys
 import os
 import re
-import shutil
 
 from path import path
 import yaml

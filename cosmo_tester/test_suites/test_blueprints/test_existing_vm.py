@@ -16,7 +16,6 @@
 __author__ = 'dank'
 
 import time
-import os
 
 import fabric.api
 import fabric.context_managers
