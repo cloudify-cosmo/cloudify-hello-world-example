@@ -35,10 +35,6 @@ setenv()
 	REPORT_FILE="${BASE_HOST_DIR}/xunit-reports/${RESOURCE_PREFIX}report.xml"
 	BASE_CLOUDIFY_CONFIG="${BASE_HOST_DIR}/cloudify-config-hp-paid-system-tests-tenant.yaml"
 
-	# for documenation purposes, these are set by `run_flake8` and `run_nose`
-	FLAKE8_EXIT_CODE=
-	NOSE_EXIT_CODE=
-
 	# base dir is the virtualenv directory
 	BASE_DIR=$PWD
 	SYSTEM_TESTS_DIR="${BASE_DIR}/cloudify-system-tests"
@@ -62,7 +58,6 @@ clone_and_install_system_tests()
 	pip install ./cloudify-cli -r cloudify-cli/dev-requirements.txt
 	pip install ./cloudify-openstack-provider
 	pip install -e ./cloudify-system-tests
-	pip install flake8
 }
 
 clone_and_checkout()
@@ -86,15 +81,6 @@ generate_config()
 	/vagrant/update_config.py $GENERATED_CLOUDIFY_CONFIG
 }
 
-run_flake8()
-{
-	echo "### Running flake8"
-	set +e
-	flake8 $SYSTEM_TESTS_DIR
-	FLAKE8_EXIT_CODE=$?
-	set -e
-}
-
 run_nose()
 {
 	echo "### Running nosetests: ${NOSETESTS_TO_RUN}"
@@ -102,19 +88,12 @@ run_nose()
 	set +e
 	nosetests $NOSETESTS_TO_RUN --verbose --nocapture --nologcapture --with-xunit --xunit-file=$REPORT_FILE
 	NOSE_EXIT_CODE=$?
-	set -e
-	popd
-}
-
-check_results()
-{
 	if [ $NOSE_EXIT_CODE -ne 0 ]; then
 		echo "### nose failed [exit_code=${NOSE_EXIT_CODE}]"
 		exit $NOSE_EXIT_CODE
-	elif [ $FLAKE8_EXIT_CODE -ne 0 ]; then
-		echo "### flake8 failed [exit_code=${FLAKE8_EXIT_CODE}]"
-		exit $FLAKE8_EXIT_CODE
 	fi
+	set -e
+	popd
 }
 
 main()
@@ -124,9 +103,7 @@ main()
 	setenv
 	clone_and_install_system_tests
 	generate_config
-	run_flake8
 	run_nose
-	check_results
 }
 
 main
