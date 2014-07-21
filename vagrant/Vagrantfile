@@ -1,13 +1,5 @@
 ENV['VAGRANT_DEFAULT_PROVIDER'] = 'docker'
 
-test_configurations =
-[
-    {
-        :suite_name   => 'system_tests1',
-        :tests_to_run => 'cosmo_tester/test_suites/test_blueprints/hello_world_bash_test.py:HelloWorldBashTest.test_hello_world_on_ubuntu'
-    }
-]
-
 def vagrant_configure(test_configurations)
   Vagrant.configure('2') do |config|
     config.vm.provider 'docker' do |d|
@@ -25,6 +17,21 @@ def vagrant_configure(test_configurations)
       end
     end
   end
+end
+
+def test_configurations
+  configurations = []
+  suites = ENV['NOSETESTS_TO_RUN'] || ''
+  suites = suites.split(',')
+  suites.each_with_index do |suite, index|
+    if not suite.empty?
+      configurations.push({
+        :suite_name   => "system_tests#{index+1}",
+        :tests_to_run => suite
+      })
+    end
+  end
+  configurations
 end
 
 def build_env(test_config)
