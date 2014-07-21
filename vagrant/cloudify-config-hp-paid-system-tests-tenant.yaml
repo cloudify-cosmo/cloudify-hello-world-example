@@ -1,0 +1,83 @@
+keystone:
+    username: ''
+    password: ''
+    tenant_name: ''
+    auth_url: ''
+
+
+networking:
+    neutron_supported_region: true
+    int_network:
+        create_if_missing: true
+        name: systemt-cloudify-admin-network
+    subnet:
+        create_if_missing: true
+        name: systemt-cloudify-admin-network-subnet
+        ip_version: 4
+        cidr: 10.67.79.0/24
+        dns_nameservers: []
+    ext_network:
+        create_if_missing: false
+        name: Ext-Net
+    router:
+        create_if_missing: true
+        name: systemt-cloudify-router
+    agents_security_group:
+        create_if_missing: true
+        name: systemt-cloudify-sg-agents
+    management_security_group:
+        create_if_missing: true
+        name: systemt-cloudify-sg-management
+        cidr: 0.0.0.0/0
+
+compute:
+    region: region-b.geo-1
+    management_server:
+        user_on_management: ubuntu
+        userhome_on_management: /home/ubuntu
+        instance:
+            create_if_missing: true
+            name: systemt-cloudify-manager
+            image: 75d47d10-fef8-473b-9dd1-fe2f7649cb41
+            flavor: 102
+        management_keypair:
+            create_if_missing: true
+            name: systemt-tests
+            private_key_path: ~/.ssh/systemt-tests.pem
+    agent_servers:
+        agents_keypair:
+            create_if_missing: true
+            name: systemt-tests
+            private_key_path: ~/.ssh/systemt-tests.pem
+
+
+cloudify:
+    resources_prefix: ''
+
+    server:
+        packages:
+            components_package_url: http://gigaspaces-repository-eu.s3.amazonaws.com/org/cloudify3/nightly/cloudify-components_amd64.deb
+            core_package_url: http://gigaspaces-repository-eu.s3.amazonaws.com/org/cloudify3/nightly/cloudify-core_amd64.deb
+            ui_package_url: http://gigaspaces-repository-eu.s3.amazonaws.com/org/cloudify3/nightly/cloudify-ui_amd64.deb
+    agents:
+        packages:
+            ubuntu_agent_url: http://gigaspaces-repository-eu.s3.amazonaws.com/org/cloudify3/nightly/cloudify-ubuntu-agent_amd64.deb
+            windows_agent_url: http://gigaspaces-repository-eu.s3.amazonaws.com/org/cloudify3/nightly/cloudify-windows-agent_amd64.deb
+            centos_agent_url: "http://gigaspaces-repository-eu.s3.amazonaws.com/org/cloudify3/nightly/cloudify-centos-agent_amd64.deb"
+        config:
+            min_workers: 2
+            max_workers: 5
+            remote_execution_port: 22
+            user: ubuntu
+    workflows:
+        task_retries: 20
+        retry_interval: 30
+
+    bootstrap:
+        ssh:
+            initial_connectivity_retries: 20
+            initial_connectivity_retries_interval: 15
+            command_retries: 3
+            retries_interval: 3
+            connection_attempts: 1
+            socket_timeout: 10
