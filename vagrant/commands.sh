@@ -19,7 +19,7 @@ test_logs()
 
 test_start()
 {
-    __mkdir_if_not_exists $reports_dir
+    __mkdir_if_not_exists $REPORTS_DIR
     __clean_reports_dir
     vagrant up
 }
@@ -99,8 +99,8 @@ main()
         logs)
             test_logs;;
         *)
-            echo "commands.sh: bad command: $cmd"; exit 1;;
+            echo "commands.sh: bad command: ${cmd}"; exit 1;;
     esac
 }
 
-main
+main $@

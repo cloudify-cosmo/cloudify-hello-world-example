@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+# flake8: NOQA
 
 import sys
 import os
@@ -8,7 +9,7 @@ from cosmo_tester.framework.util import YamlPatcher
 properties = {
     'KEYSTONE_PASSWORD'     : 'keystone.password',
     'KEYSTONE_USERNAME'     : 'keystone.username',
-    'KEYSTONE_TENTANT'      : 'keystone.tenant_name',
+    'KEYSTONE_TENANT'       : 'keystone.tenant_name',
     'KEYSTONE_AUTH_URL'     : 'keystone.auth_url',
     'RESOURCE_PREFIX'       : 'cloudify.resources_prefix',
     'COMPONENTS_PACKAGE_URL': 'cloudify.server.packages.components_package_url',
