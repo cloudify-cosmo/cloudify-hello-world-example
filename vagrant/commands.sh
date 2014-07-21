@@ -44,7 +44,7 @@ setenv()
     # keystone
     __add_env_var KEYSTONE_PASSWORD
     __add_env_var KEYSTONE_USERNAME
-    __add_env_var KEYSTONE_TENTANT
+    __add_env_var KEYSTONE_TENANT
     __add_env_var KEYSTONE_AUTH_URL
 
     # branch names
