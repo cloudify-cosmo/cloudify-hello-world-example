@@ -43,8 +43,9 @@ setenv()
 	# So that we get to see output faster from docker-logs
 	export PYTHONUNBUFFERED="true"
 
-	# export config location for system tests
+	# export system tests related variables
 	export CLOUDIFY_TEST_CONFIG_PATH=$GENERATED_CLOUDIFY_CONFIG
+	export CLOUDIFY_TEST_HANDLER_MODULE=${CLOUDIFY_TEST_HANDLER_MODULE='cosmo_tester.framework.handlers.openstack'}
 }
 
 clone_and_install_system_tests()

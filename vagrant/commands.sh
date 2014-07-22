@@ -44,7 +44,9 @@ setenv()
     # suites
     __add_env_var NOSETESTS_TO_RUN
     __add_suite 'cosmo_tester/test_suites/test_blueprints/hello_world_bash_test.py:HelloWorldBashTest.test_hello_world_on_ubuntu'
-    __add_suite 'cosmo_tester/test_suites/test_blueprints/python_webserver_test.py'
+    #__add_suite 'cosmo_tester/test_suites/test_blueprints/python_webserver_test.py'
+
+    __add_env_var CLOUDIFY_TEST_HANDLER_MODULE "cosmo_tester.framework.handlers.openstack"
 
     # keystone
     __add_env_var KEYSTONE_PASSWORD
@@ -55,7 +57,7 @@ setenv()
     # branch names
     __add_env_var BRANCH_NAME "develop"
     __add_env_var BRANCH_NAME_OPENSTACK_PROVIDER "feature/CFY-948-agent-keypair-file-resource-prefix"
-    __add_env_var BRANCH_NAME_SYSTEM_TESTS "feature/CFY-949-isolation"
+    __add_env_var BRANCH_NAME_SYSTEM_TESTS "feature/CFY-959-provider-abstraction"
     __add_env_var BRANCH_NAME_CLI
 
     # packages

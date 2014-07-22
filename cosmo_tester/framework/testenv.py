@@ -107,10 +107,11 @@ class TestEnvironment(object):
                                .format(self.cloudify_config_path))
 
         if CLOUDIFY_TEST_HANDLER_MODULE in os.environ:
-            handler_name = os.environ[CLOUDIFY_TEST_HANDLER_MODULE]
+            handler_module_name = os.environ[CLOUDIFY_TEST_HANDLER_MODULE]
         else:
-            handler_name = 'cosmo_tester.framework.handlers.openstack'
-        self.handler = importlib.import_module(handler_name)
+            handler_module_name = 'cosmo_tester.framework.handlers.openstack'
+        handler_module = importlib.import_module(handler_module_name)
+        self.handler = getattr(handler_module, 'handler')
 
         if CLOUDIFY_TEST_MANAGEMENT_IP in os.environ:
             self._running_env_setup(os.environ[CLOUDIFY_TEST_MANAGEMENT_IP])
@@ -146,6 +147,7 @@ class TestEnvironment(object):
         try:
             cfy.bootstrap(
                 self.cloudify_config_path,
+                self.handler.provider,
                 keep_up_on_failure=False,
                 verbose=True,
                 dev_mode=False)

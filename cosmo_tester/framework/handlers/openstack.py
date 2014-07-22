@@ -27,10 +27,13 @@ import novaclient.v1_1.client as nvclient
 import neutronclient.v2_0.client as neclient
 from retrying import retry
 
-CLOUDIFY_TEST_NO_CLEANUP = 'CLOUDIFY_TEST_NO_CLEANUP'
+from cosmo_tester.framework.handlers import BaseHandler
+
 
 logging.getLogger('neutronclient.client').setLevel(logging.INFO)
 logging.getLogger('novaclient.client').setLevel(logging.INFO)
+
+CLOUDIFY_TEST_NO_CLEANUP = 'CLOUDIFY_TEST_NO_CLEANUP'
 
 ubuntu_image_name = 'Ubuntu Server 12.04 LTS (amd64 20140606) - Partner Image'
 centos_image_name = 'centos-python2.7'
@@ -241,17 +244,15 @@ def _handled_exception(resource_id, failed, resource_group):
         failed[resource_group][resource_id] = ex
 
 
-class OpenstackCleanupContext(object):
-
-    logger = logging.getLogger('CleanupContext')
-    logger.setLevel(logging.DEBUG)
+class OpenstackCleanupContext(BaseHandler.CleanupContext):
 
     def __init__(self, context_name, cloudify_config):
-        self.context_name = context_name
-        self.cloudify_config = cloudify_config
+        super(OpenstackCleanupContext, self).__init__(context_name,
+                                                      cloudify_config)
         self.before_run = openstack_infra_state(cloudify_config)
 
     def cleanup(self):
+        super(OpenstackCleanupContext, self).cleanup()
         resources_to_teardown = self.get_resources_to_teardown()
         if os.environ.get(CLOUDIFY_TEST_NO_CLEANUP):
             self.logger.warn('[{0}] SKIPPING cleanup: of the resources: {1}'
@@ -272,10 +273,10 @@ class OpenstackCleanupContext(object):
                                            after=current_state)
 
 
-class CloudifyOpenstackConfigReader(object):
+class CloudifyOpenstackConfigReader(BaseHandler.CloudifyConfigReader):
 
     def __init__(self, cloudify_config):
-        self.config = cloudify_config
+        super(CloudifyOpenstackConfigReader, self).__init__(cloudify_config)
 
     @property
     def management_server_name(self):
@@ -343,11 +344,16 @@ class CloudifyOpenstackConfigReader(object):
         return self.config['cloudify'].get('resources_prefix', '')
 
 
-def make_unique_configuration(patch):
-    suffix = '-%06x' % random.randrange(16 ** 6)
-    patch.append_value('compute.management_server.instance.name',
-                       suffix)
+class OpenstackHandler(BaseHandler):
 
+    provider = 'openstack'
+    CleanupContext = OpenstackCleanupContext
+    CloudifyConfigReader = CloudifyOpenstackConfigReader
 
-CleanupContext = OpenstackCleanupContext
-CloudifyConfigReader = CloudifyOpenstackConfigReader
+    @staticmethod
+    def make_unique_configuration(patch):
+        suffix = '-%06x' % random.randrange(16 ** 6)
+        patch.append_value('compute.management_server.instance.name',
+                           suffix)
+
+handler = OpenstackHandler
