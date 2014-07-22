@@ -335,14 +335,6 @@ class CloudifyOpenstackConfigReader(BaseHandler.CloudifyConfigReader):
     def management_security_group(self):
         return self.config['networking']['management_security_group']['name']
 
-    @property
-    def cloudify_agent_user(self):
-        return self.config['cloudify']['agents']['config']['user']
-
-    @property
-    def resource_prefix(self):
-        return self.config['cloudify'].get('resources_prefix', '')
-
 
 class OpenstackHandler(BaseHandler):
 

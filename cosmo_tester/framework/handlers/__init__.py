@@ -38,6 +38,14 @@ class BaseCloudifyConfigReader(object):
     def __init__(self, cloudify_config):
         self.config = cloudify_config
 
+    @property
+    def cloudify_agent_user(self):
+        return self.config['cloudify']['agents']['config']['user']
+
+    @property
+    def resource_prefix(self):
+        return self.config['cloudify'].get('resources_prefix', '')
+
 
 class BaseHandler(object):
 
