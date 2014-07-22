@@ -35,7 +35,7 @@ setenv()
 	BASE_CONFIG_DIR="${BASE_HOST_DIR}/configurations"
 	REPORT_FILE="${BASE_HOST_DIR}/xunit-reports/${RESOURCE_PREFIX}report.xml"
 	CLOUDIFY_TEST_CONFIG=${CLOUDIFY_TEST_CONFIG='cloudify-config-hp-paid-system-tests-tenant.yaml'}
-	CLOUDIFY_TEST_CONFIG_PATH="${BASE_CONFIG_DIR}/${CLOUDIFY_TEST_CONFIG}"
+	ORIGINAL_CLOUDIFY_TEST_CONFIG_PATH="${BASE_CONFIG_DIR}/${CLOUDIFY_TEST_CONFIG}"
 
 	# base dir is the virtualenv directory
 	BASE_DIR=$PWD
@@ -80,7 +80,7 @@ clone_and_checkout()
 generate_config()
 {
 	echo "### Generating config file for test suite"
-	cp $CLOUDIFY_TEST_CONFIG_PATH $GENERATED_CLOUDIFY_TEST_CONFIG_PATH
+	cp $ORIGINAL_CLOUDIFY_TEST_CONFIG_PATH $GENERATED_CLOUDIFY_TEST_CONFIG_PATH
 	"${BASE_HOST_DIR}/update_config.py" $GENERATED_CLOUDIFY_TEST_CONFIG_PATH
 }
 
