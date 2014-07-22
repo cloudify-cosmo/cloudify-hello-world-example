@@ -106,16 +106,16 @@ class TestEnvironment(object):
                                ' {0} does not seem to exist'
                                .format(self.cloudify_config_path))
 
-        if CLOUDIFY_TEST_MANAGEMENT_IP in os.environ:
-            self._running_env_setup(os.environ[CLOUDIFY_TEST_MANAGEMENT_IP])
-        else:
-            self._generate_unique_config()
-
         if CLOUDIFY_TEST_HANDLER_MODULE in os.environ:
             handler_name = os.environ[CLOUDIFY_TEST_HANDLER_MODULE]
         else:
             handler_name = 'cosmo_tester.framework.handlers.openstack'
         self.handler = importlib.import_module(handler_name)
+
+        if CLOUDIFY_TEST_MANAGEMENT_IP in os.environ:
+            self._running_env_setup(os.environ[CLOUDIFY_TEST_MANAGEMENT_IP])
+        else:
+            self._generate_unique_config()
 
         self.cloudify_config = yaml.load(self.cloudify_config_path.text())
         self._config_reader = self.handler.CloudifyConfigReader(
