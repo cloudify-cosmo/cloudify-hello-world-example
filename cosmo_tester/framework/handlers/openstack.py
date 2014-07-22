@@ -35,13 +35,6 @@ logging.getLogger('novaclient.client').setLevel(logging.INFO)
 
 CLOUDIFY_TEST_NO_CLEANUP = 'CLOUDIFY_TEST_NO_CLEANUP'
 
-ubuntu_image_name = 'Ubuntu Server 12.04 LTS (amd64 20140606) - Partner Image'
-centos_image_name = 'centos-python2.7'
-centos_image_user = 'root'
-flavor_name = 'standard.small'
-ubuntu_image_id = '75d47d10-fef8-473b-9dd1-fe2f7649cb41'
-small_flavor_id = 101
-
 
 def openstack_clients(cloudify_config):
     creds = _client_creds(cloudify_config)
@@ -341,6 +334,14 @@ class OpenstackHandler(BaseHandler):
     provider = 'openstack'
     CleanupContext = OpenstackCleanupContext
     CloudifyConfigReader = CloudifyOpenstackConfigReader
+
+    ubuntu_image_name = \
+        'Ubuntu Server 12.04 LTS (amd64 20140606) - Partner Image'
+    centos_image_name = 'centos-python2.7'
+    centos_image_user = 'root'
+    flavor_name = 'standard.small'
+    ubuntu_image_id = '75d47d10-fef8-473b-9dd1-fe2f7649cb41'
+    small_flavor_id = 101
 
     @staticmethod
     def make_unique_configuration(patch):

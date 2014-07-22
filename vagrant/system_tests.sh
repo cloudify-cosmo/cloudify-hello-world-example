@@ -32,19 +32,21 @@ setenv()
 
 	# vagrant synched folder
 	BASE_HOST_DIR="/vagrant"
+	BASE_CONFIG_DIR="${BASE_HOST_DIR}/configurations"
 	REPORT_FILE="${BASE_HOST_DIR}/xunit-reports/${RESOURCE_PREFIX}report.xml"
-	BASE_CLOUDIFY_CONFIG="${BASE_HOST_DIR}/cloudify-config-hp-paid-system-tests-tenant.yaml"
+	CLOUDIFY_TEST_CONFIG=${CLOUDIFY_TEST_CONFIG='cloudify-config-hp-paid-system-tests-tenant.yaml'}
+	CLOUDIFY_TEST_CONFIG_PATH="${BASE_CONFIG_DIR}/${CLOUDIFY_TEST_CONFIG}"
 
 	# base dir is the virtualenv directory
 	BASE_DIR=$PWD
 	SYSTEM_TESTS_DIR="${BASE_DIR}/cloudify-system-tests"
-	GENERATED_CLOUDIFY_CONFIG="${BASE_DIR}/generated-cloudify-config-hp-paid-system-tests-tenant.yaml"
+	GENERATED_CLOUDIFY_TEST_CONFIG_PATH="${BASE_DIR}/generated-cloudify-config.yaml"
 
 	# So that we get to see output faster from docker-logs
 	export PYTHONUNBUFFERED="true"
 
 	# export system tests related variables
-	export CLOUDIFY_TEST_CONFIG_PATH=$GENERATED_CLOUDIFY_CONFIG
+	export CLOUDIFY_TEST_CONFIG_PATH=$GENERATED_CLOUDIFY_TEST_CONFIG_PATH
 	export CLOUDIFY_TEST_HANDLER_MODULE=${CLOUDIFY_TEST_HANDLER_MODULE='cosmo_tester.framework.handlers.openstack'}
 }
 
@@ -78,8 +80,8 @@ clone_and_checkout()
 generate_config()
 {
 	echo "### Generating config file for test suite"
-	cp $BASE_CLOUDIFY_CONFIG $GENERATED_CLOUDIFY_CONFIG
-	/vagrant/update_config.py $GENERATED_CLOUDIFY_CONFIG
+	cp $CLOUDIFY_TEST_CONFIG_PATH $GENERATED_CLOUDIFY_TEST_CONFIG_PATH
+	"${BASE_HOST_DIR}/update_config.py" $GENERATED_CLOUDIFY_TEST_CONFIG_PATH
 }
 
 run_nose()
