@@ -23,7 +23,7 @@ from path import path
 
 from cosmo_tester.framework.util import YamlPatcher, get_actual_keypath
 from cosmo_tester.framework.testenv import TestCase
-from cosmo_tester.framework.openstack_api import openstack_clients
+from cosmo_tester.framework.handlers.openstack import openstack_clients
 
 
 class ExistingVMTest(TestCase):

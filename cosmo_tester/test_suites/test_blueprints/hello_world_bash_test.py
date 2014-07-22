@@ -25,7 +25,7 @@ from retrying import retry
 from cosmo_tester.framework.util import YamlPatcher
 from cosmo_tester.framework.testenv import TestCase
 from cosmo_tester.framework.util import get_yaml_as_dict
-from cosmo_tester.framework.openstack_api import openstack_clients
+from cosmo_tester.framework.handlers.openstack import openstack_clients
 from cosmo_tester.framework.git_helper import clone
 
 

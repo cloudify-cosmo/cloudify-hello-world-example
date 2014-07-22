@@ -23,7 +23,7 @@ import tempfile
 import time
 import copy
 import os
-import random
+import importlib
 
 import yaml
 from path import path
@@ -31,16 +31,7 @@ from cloudify_rest_client import CloudifyClient
 
 from cosmo_tester.framework.cfy_helper import CfyHelper
 from cosmo_tester.framework.util import (get_blueprint_path,
-                                         CloudifyConfigReader, YamlPatcher)
-from cosmo_tester.framework.openstack_api import (openstack_infra_state,
-                                                  openstack_infra_state_delta,
-                                                  remove_openstack_resources)
-from cosmo_tester.framework import (openstack_ubuntu_image_name,
-                                    openstack_centos_image_name,
-                                    openstack_centos_image_user,
-                                    openstack_flavor_name,
-                                    openstack_ubuntu_image_id,
-                                    openstack_small_flavor_id)
+                                         YamlPatcher)
 
 root = logging.getLogger()
 ch = logging.StreamHandler(sys.stdout)
@@ -51,19 +42,18 @@ formatter = logging.Formatter(fmt='%(asctime)s [%(levelname)s] '
 ch.setFormatter(formatter)
 
 # clear all other handlers
-for handler in root.handlers:
-    root.removeHandler(handler)
+for logging_handler in root.handlers:
+    root.removeHandler(logging_handler)
 
 root.addHandler(ch)
 logger = logging.getLogger("TESTENV")
 logger.setLevel(logging.DEBUG)
 
-logging.getLogger('neutronclient.client').setLevel(logging.INFO)
-logging.getLogger('novaclient.client').setLevel(logging.INFO)
-
 CLOUDIFY_TEST_MANAGEMENT_IP = 'CLOUDIFY_TEST_MANAGEMENT_IP'
 CLOUDIFY_TEST_CONFIG_PATH = 'CLOUDIFY_TEST_CONFIG_PATH'
 CLOUDIFY_TEST_NO_CLEANUP = 'CLOUDIFY_TEST_NO_CLEANUP'
+CLOUDIFY_TEST_HANDLER_MODULE = 'CLOUDIFY_TEST_HANDLER_MODULE'
+
 
 test_environment = None
 
@@ -93,37 +83,6 @@ def teardown():
         clear_environment()
 
 
-class CleanupContext(object):
-
-    logger = logging.getLogger('CleanupContext')
-    logger.setLevel(logging.DEBUG)
-
-    def __init__(self, context_name, cloudify_config):
-        self.context_name = context_name
-        self.cloudify_config = cloudify_config
-        self.before_run = openstack_infra_state(cloudify_config)
-
-    def cleanup(self):
-        resources_to_teardown = self.get_resources_to_teardown()
-        if os.environ.get(CLOUDIFY_TEST_NO_CLEANUP):
-            self.logger.warn('[{0}] SKIPPING cleanup: of the resources: {1}'
-                             .format(self.context_name, resources_to_teardown))
-            return
-        self.logger.info('[{0}] Performing cleanup: will try removing these '
-                         'resources: {1}'
-                         .format(self.context_name, resources_to_teardown))
-
-        leftovers = remove_openstack_resources(self.cloudify_config,
-                                               resources_to_teardown)
-        self.logger.info('[{0}] Leftover resources after cleanup: {1}'
-                         .format(self.context_name, leftovers))
-
-    def get_resources_to_teardown(self):
-        current_state = openstack_infra_state(self.cloudify_config)
-        return openstack_infra_state_delta(before=self.before_run,
-                                           after=current_state)
-
-
 # Singleton class
 class TestEnvironment(object):
 
@@ -134,6 +93,7 @@ class TestEnvironment(object):
         self._management_running = False
         self.rest_client = None
         self.management_ip = None
+        self.handler = None
 
         if CLOUDIFY_TEST_CONFIG_PATH not in os.environ:
             raise RuntimeError('a path to cloudify-config must be configured '
@@ -151,8 +111,15 @@ class TestEnvironment(object):
         else:
             self._generate_unique_config()
 
+        if CLOUDIFY_TEST_HANDLER_MODULE in os.environ:
+            handler_name = os.environ[CLOUDIFY_TEST_HANDLER_MODULE]
+        else:
+            handler_name = 'cosmo_tester.framework.handlers.openstack'
+        self.handler = importlib.import_module(handler_name)
+
         self.cloudify_config = yaml.load(self.cloudify_config_path.text())
-        self._config_reader = CloudifyConfigReader(self.cloudify_config)
+        self._config_reader = self.handler.CloudifyConfigReader(
+            self.cloudify_config)
 
         global test_environment
         test_environment = self
@@ -161,10 +128,8 @@ class TestEnvironment(object):
         unique_config_path = os.path.join(self._workdir, 'config.yaml')
         shutil.copy(self.cloudify_config_path, unique_config_path)
         self.cloudify_config_path = path(unique_config_path)
-        suffix = '-%06x' % random.randrange(16 ** 6)
         with YamlPatcher(self.cloudify_config_path) as patch:
-            patch.append_value('compute.management_server.instance.name',
-                               suffix)
+            self.handler.make_unique_configuration(patch)
 
     def setup(self):
         os.chdir(self._initial_cwd)
@@ -174,8 +139,8 @@ class TestEnvironment(object):
         if self._management_running:
             return
 
-        self._global_cleanup_context = CleanupContext('testenv',
-                                                      self.cloudify_config)
+        self._global_cleanup_context = self.handler.CleanupContext(
+            'testenv', self.cloudify_config)
         cfy = CfyHelper()
 
         try:
@@ -275,27 +240,27 @@ class TestEnvironment(object):
 
     @property
     def ubuntu_image_name(self):
-        return openstack_ubuntu_image_name
+        return self.handler.ubuntu_image_name
 
     @property
     def centos_image_name(self):
-        return openstack_centos_image_name
+        return self.handler.centos_image_name
 
     @property
     def centos_image_user(self):
-        return openstack_centos_image_user
+        return self.handler.centos_image_user
 
     @property
     def flavor_name(self):
-        return openstack_flavor_name
+        return self.handler.flavor_name
 
     @property
     def ubuntu_image_id(self):
-        return openstack_ubuntu_image_id
+        return self.handler.ubuntu_image_id
 
     @property
     def small_flavor_id(self):
-        return openstack_small_flavor_id
+        return self.handler.small_flavor_id
 
 
 class TestCase(unittest.TestCase):
@@ -319,8 +284,8 @@ class TestCase(unittest.TestCase):
         self.client = self.env.rest_client
         self.test_id = 'system-test-{0}'.format(time.strftime("%Y%m%d-%H%M"))
         self.blueprint_yaml = None
-        self._test_cleanup_context = CleanupContext(self._testMethodName,
-                                                    self.env.cloudify_config)
+        self._test_cleanup_context = self.env.handler.CleanupContext(
+            self._testMethodName, self.env.cloudify_config)
         # register cleanup
         self.addCleanup(self._cleanup)
 

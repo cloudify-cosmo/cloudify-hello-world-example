@@ -15,27 +15,39 @@
 
 __author__ = 'dan'
 
+
+import random
+import logging
+import os
 import time
-from contextlib import contextmanager
 import copy
+from contextlib import contextmanager
 
 import novaclient.v1_1.client as nvclient
 import neutronclient.v2_0.client as neclient
-
 from retrying import retry
 
+CLOUDIFY_TEST_NO_CLEANUP = 'CLOUDIFY_TEST_NO_CLEANUP'
 
-from cosmo_tester.framework.util import CloudifyConfigReader
+logging.getLogger('neutronclient.client').setLevel(logging.INFO)
+logging.getLogger('novaclient.client').setLevel(logging.INFO)
+
+ubuntu_image_name = 'Ubuntu Server 12.04 LTS (amd64 20140606) - Partner Image'
+centos_image_name = 'centos-python2.7'
+centos_image_user = 'root'
+flavor_name = 'standard.small'
+ubuntu_image_id = '75d47d10-fef8-473b-9dd1-fe2f7649cb41'
+small_flavor_id = 101
 
 
 def openstack_clients(cloudify_config):
     creds = _client_creds(cloudify_config)
     return nvclient.Client(**creds), \
-        neclient.Client(username=creds['username'],
-                        password=creds['api_key'],
-                        tenant_name=creds['project_id'],
-                        region_name=creds['region_name'],
-                        auth_url=creds['auth_url'])
+           neclient.Client(username=creds['username'],
+                           password=creds['api_key'],
+                           tenant_name=creds['project_id'],
+                           region_name=creds['region_name'],
+                           auth_url=creds['auth_url'])
 
 
 @retry(stop_max_attempt_number=5, wait_fixed=20000)
@@ -45,7 +57,7 @@ def openstack_infra_state(cloudify_config):
     ConnectionFailed: Connection to neutron failed: Maximum attempts reached
     """
     nova, neutron = openstack_clients(cloudify_config)
-    config_reader = CloudifyConfigReader(cloudify_config)
+    config_reader = CloudifyOpenstackConfigReader(cloudify_config)
     prefix = config_reader.resource_prefix
     return {
         'networks': dict(_networks(neutron, prefix)),
@@ -77,7 +89,7 @@ def remove_openstack_resources(cloudify_config, resources_to_remove):
 def _remove_openstack_resources_impl(cloudify_config,
                                      resources_to_remove):
     nova, neutron = openstack_clients(cloudify_config)
-    config_reader = CloudifyConfigReader(cloudify_config)
+    config_reader = CloudifyOpenstackConfigReader(cloudify_config)
 
     servers = nova.servers.list()
     ports = neutron.list_ports()['ports']
@@ -227,3 +239,115 @@ def _handled_exception(resource_id, failed, resource_group):
         yield
     except BaseException, ex:
         failed[resource_group][resource_id] = ex
+
+
+class OpenstackCleanupContext(object):
+
+    logger = logging.getLogger('CleanupContext')
+    logger.setLevel(logging.DEBUG)
+
+    def __init__(self, context_name, cloudify_config):
+        self.context_name = context_name
+        self.cloudify_config = cloudify_config
+        self.before_run = openstack_infra_state(cloudify_config)
+
+    def cleanup(self):
+        resources_to_teardown = self.get_resources_to_teardown()
+        if os.environ.get(CLOUDIFY_TEST_NO_CLEANUP):
+            self.logger.warn('[{0}] SKIPPING cleanup: of the resources: {1}'
+                             .format(self.context_name, resources_to_teardown))
+            return
+        self.logger.info('[{0}] Performing cleanup: will try removing these '
+                         'resources: {1}'
+                         .format(self.context_name, resources_to_teardown))
+
+        leftovers = remove_openstack_resources(self.cloudify_config,
+                                               resources_to_teardown)
+        self.logger.info('[{0}] Leftover resources after cleanup: {1}'
+                         .format(self.context_name, leftovers))
+
+    def get_resources_to_teardown(self):
+        current_state = openstack_infra_state(self.cloudify_config)
+        return openstack_infra_state_delta(before=self.before_run,
+                                           after=current_state)
+
+
+class CloudifyOpenstackConfigReader(object):
+
+    def __init__(self, cloudify_config):
+        self.config = cloudify_config
+
+    @property
+    def management_server_name(self):
+        return self.config['compute']['management_server']['instance']['name']
+
+    @property
+    def management_server_floating_ip(self):
+        return self.config['compute']['management_server']['floating_ip']
+
+    @property
+    def management_network_name(self):
+        return self.config['networking']['int_network']['name']
+
+    @property
+    def management_sub_network_name(self):
+        return self.config['networking']['subnet']['name']
+
+    @property
+    def management_router_name(self):
+        return self.config['networking']['router']['name']
+
+    @property
+    def agent_key_path(self):
+        return self.config['compute']['agent_servers']['agents_keypair'][
+            'private_key_path']
+
+    @property
+    def managment_user_name(self):
+        return self.config['compute']['management_server'][
+            'user_on_management']
+
+    @property
+    def management_key_path(self):
+        return self.config['compute']['management_server'][
+            'management_keypair']['private_key_path']
+
+    @property
+    def agent_keypair_name(self):
+        return self.config['compute']['agent_servers']['agents_keypair'][
+            'name']
+
+    @property
+    def management_keypair_name(self):
+        return self.config['compute']['management_server'][
+            'management_keypair']['name']
+
+    @property
+    def external_network_name(self):
+        return self.config['networking']['ext_network']['name']
+
+    @property
+    def agents_security_group(self):
+        return self.config['networking']['agents_security_group']['name']
+
+    @property
+    def management_security_group(self):
+        return self.config['networking']['management_security_group']['name']
+
+    @property
+    def cloudify_agent_user(self):
+        return self.config['cloudify']['agents']['config']['user']
+
+    @property
+    def resource_prefix(self):
+        return self.config['cloudify'].get('resources_prefix', '')
+
+
+def make_unique_configuration(patch):
+    suffix = '-%06x' % random.randrange(16 ** 6)
+    patch.append_value('compute.management_server.instance.name',
+                       suffix)
+
+
+CleanupContext = OpenstackCleanupContext
+CloudifyConfigReader = CloudifyOpenstackConfigReader

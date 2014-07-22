@@ -19,7 +19,7 @@ __author__ = 'dan'
 
 from cosmo_tester.framework.testenv import TestCase
 from cosmo_tester.framework.util import YamlPatcher
-from cosmo_tester.framework.openstack_api import openstack_clients
+from cosmo_tester.framework.handlers.openstack import openstack_clients
 
 
 class NeutronGaloreTest(TestCase):
