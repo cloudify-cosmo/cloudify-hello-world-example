@@ -48,7 +48,7 @@ class BaseCloudifyConfigReader(object):
         return self.config['cloudify']['agents']['config']['user']
 
     @property
-    def resource_prefix(self):
+    def resources_prefix(self):
         return self.config['cloudify'].get('resources_prefix', '')
 
 

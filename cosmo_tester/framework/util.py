@@ -54,7 +54,7 @@ def get_yaml_as_dict(yaml_path):
 def get_actual_keypath(env, keypath):
     p = list(os.path.split(keypath))
     base, ext = os.path.splitext(p[-1])
-    base = '{}{}'.format(env.resource_prefix, base)
+    base = '{}{}'.format(env.resources_prefix, base)
     p[-1] = base + ext
     keypath = os.path.join(*p)
     keypath = path(os.path.expanduser(keypath)).abspath()

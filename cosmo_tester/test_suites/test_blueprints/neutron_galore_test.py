@@ -51,7 +51,7 @@ class NeutronGaloreTest(TestCase):
     def post_install_assertions(self, before_state, after_state):
 
         def p(name):
-            return '{}{}'.format(self.env.resource_prefix, name)
+            return '{}{}'.format(self.env.resources_prefix, name)
 
         delta = self.get_manager_state_delta(before_state, after_state)
         node_states = self.get_node_states(delta['node_state'])

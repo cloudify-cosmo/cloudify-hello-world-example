@@ -54,7 +54,7 @@ def openstack_infra_state(cloudify_config):
     """
     nova, neutron = openstack_clients(cloudify_config)
     config_reader = CloudifyOpenstackConfigReader(cloudify_config)
-    prefix = config_reader.resource_prefix
+    prefix = config_reader.resources_prefix
     return {
         'networks': dict(_networks(neutron, prefix)),
         'subnets': dict(_subnets(neutron, prefix)),

@@ -37,7 +37,7 @@ class SimpleOnOpenstackHandler(BaseHandler):
         openstack_config['keystone'].update(
             self.env.cloudify_config['keystone'])
         openstack_config['cloudify'][
-            'resource_prefix'] = self.env.resource_prefix
+            'resources_prefix'] = self.env.resources_prefix
 
         # reuse openstack provider to setup an environment in which
         # everything is already configured

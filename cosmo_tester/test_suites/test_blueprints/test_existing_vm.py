@@ -37,7 +37,7 @@ class ExistingVMTest(TestCase):
         # which does all this work for us.
         # 1. it is needed to work properly
         # 2. it is needed for the cleanup process to work properly
-        prefix = self.env.resource_prefix
+        prefix = self.env.resources_prefix
         server_name = '{}testexistingvm'.format(prefix)
         remote_key_path = '/tmp/{}test-existing-vm.pem'.format(prefix)
         key_name = '{}test_existing_vm_key'.format(prefix)
