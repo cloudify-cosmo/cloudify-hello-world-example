@@ -16,12 +16,6 @@
 __author__ = 'idanmo'
 
 
-import os
-import shutil
-import uuid
-import tarfile
-import filecmp
-
 from cosmo_tester.framework.testenv import TestCase
 
 

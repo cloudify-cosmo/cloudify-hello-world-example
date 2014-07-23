@@ -21,8 +21,7 @@ from cloudify_openstack.cloudify_openstack import ProviderManager
 
 from cosmo_tester.framework.util import get_cloudify_config
 from cosmo_tester.framework.handlers import BaseHandler
-from cosmo_tester.framework.handlers.openstack import (OpenstackCleanupContext,
-                                                       openstack_clients)
+from cosmo_tester.framework.handlers.openstack import OpenstackCleanupContext
 
 
 class SimpleOnOpenstackHandler(BaseHandler):
