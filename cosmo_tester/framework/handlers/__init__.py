@@ -72,4 +72,7 @@ class BaseHandler(object):
     def before_bootstrap(self):
         pass
 
+    def after_bootstrap(self):
+        pass
+
 handler = BaseHandler

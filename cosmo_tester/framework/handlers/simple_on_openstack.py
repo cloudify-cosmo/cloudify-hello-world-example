@@ -36,11 +36,40 @@ def get_openstack_cloudify_config(simple_cloudify_config):
     return openstack_config
 
 
+def get_provider_manager(openstack_config):
+    # use dict config wrapper used by cosmo_cli
+    openstack_config = ProviderConfig(openstack_config)
+    pm = ProviderManager(openstack_config, is_verbose_output=True)
+    pm.update_names_in_config()
+    return pm
+
+
 class SimpleOnOpenstackConfigReader(OpenstackHandler.CloudifyConfigReader):
 
     def __init__(self, cloudify_config):
+        self.original_config = cloudify_config
         openstack_config = get_openstack_cloudify_config(cloudify_config)
         super(SimpleOnOpenstackConfigReader, self).__init__(openstack_config)
+
+    @property
+    def public_ip(self):
+        return self.original_config['public_ip']
+
+    @property
+    def private_ip(self):
+        return self.original_config['private_ip']
+
+    @property
+    def ssh_key_path(self):
+        return self.original_config['ssh_key_path']
+
+    @property
+    def ssh_username(self):
+        return self.original_config['ssh_username']
+
+    @property
+    def context(self):
+        return self.original_config['context']
 
 
 class SimpleOnOpenstackCleanupContext(OpenstackHandler.CleanupContext):
@@ -64,12 +93,7 @@ class SimpleOnOpenstackHandler(OpenstackHandler):
     def before_bootstrap(self):
         # reuse openstack provider to setup an environment in which
         # everything is already configured.
-        openstack_config = get_openstack_cloudify_config(
-            self.env.cloudify_config)
-        # use dict config wrapper used by cosmo_cli
-        openstack_config = ProviderConfig(openstack_config)
-        pm = ProviderManager(openstack_config, is_verbose_output=True)
-        pm.update_names_in_config()
+        pm = get_provider_manager(self.env.cloudify_config)
         public_ip, private_ip, key_path, username, context = pm.provision()
         # update the simple config with the bootstrap info
         with self.update_cloudify_config() as patch:
@@ -80,5 +104,16 @@ class SimpleOnOpenstackHandler(OpenstackHandler):
                 ssh_username=username,
                 context=context
             ))
+
+    def after_bootstrap(self):
+        openstack_config = get_openstack_cloudify_config(
+            self.env.cloudify_config)
+        pm = get_provider_manager(openstack_config)
+        config_reader = self.env._config_reader
+        driver = pm._get_driver(openstack_config)
+        driver.copy_files_to_manager(
+            mgmt_ip=config_reader.public_ip,
+            mgmt_ssh_key=config_reader.ssh_key_path,
+            mgmt_ssh_user=config_reader.ssh_username)
 
 handler = SimpleOnOpenstackHandler
