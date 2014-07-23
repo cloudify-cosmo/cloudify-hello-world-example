@@ -91,9 +91,11 @@ class SimpleOnOpenstackHandler(OpenstackHandler):
     CloudifyConfigReader = SimpleOnOpenstackConfigReader
 
     def before_bootstrap(self):
+        openstack_config = get_openstack_cloudify_config(
+            self.env.cloudify_config)
         # reuse openstack provider to setup an environment in which
         # everything is already configured.
-        pm = get_provider_manager(self.env.cloudify_config)
+        pm = get_provider_manager(openstack_config)
         public_ip, private_ip, key_path, username, context = pm.provision()
         # update the simple config with the bootstrap info
         with self.update_cloudify_config() as patch:
