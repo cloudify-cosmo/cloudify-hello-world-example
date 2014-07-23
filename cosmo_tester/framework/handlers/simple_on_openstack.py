@@ -115,7 +115,7 @@ class SimpleOnOpenstackHandler(OpenstackHandler):
         driver = pm._get_driver(openstack_config)
         driver.copy_files_to_manager(
             mgmt_ip=config_reader.public_ip,
-            mgmt_ssh_key=config_reader.ssh_key_path,
-            mgmt_ssh_user=config_reader.ssh_username)
+            ssh_key=config_reader.ssh_key_path,
+            ssh_user=config_reader.ssh_username)
 
 handler = SimpleOnOpenstackHandler
