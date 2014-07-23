@@ -16,6 +16,10 @@
 __author__ = 'dan'
 
 
+from cloudify_openstack.cloudify_openstack import ProviderManager
+
+
+from cosmo_tester.framework.util import get_cloudify_config
 from cosmo_tester.framework.handlers import BaseHandler
 from cosmo_tester.framework.handlers.openstack import (OpenstackCleanupContext,
                                                        openstack_clients)
@@ -26,7 +30,30 @@ class SimpleOnOpenstackHandler(BaseHandler):
     CleanupContext = OpenstackCleanupContext
 
     def before_bootstrap(self):
-        nova, neutron = openstack_clients(self.env.cloudify_config)
+        # load openstack configuration skeleton
+        config_name = 'cloudify-config-hp-paid-system-tests-tenant.yaml'
+        openstack_config = get_cloudify_config(config_name)
 
+        # update with values injected into current config (simple)
+        openstack_config['keystone'].update(
+            self.env.cloudify_config['keystone'])
+        openstack_config['cloudify'][
+            'resource_prefix'] = self.env.resource_prefix
+
+        # reuse openstack provider to setup an environment in which
+        # everything is already configured
+        pm = ProviderManager(openstack_config, is_verbose_output=True)
+        pm.update_names_in_config()
+        public_ip, private_ip, key_path, username, context = pm.provision()
+
+        # update the simple config with the the bootstrap info
+        with self.update_cloudify_config() as patch:
+            patch.obj.update(dict(
+                public_ip=public_ip,
+                private_ip=private_ip,
+                ssh_key_path=key_path,
+                ssh_username=username,
+                context=context
+            ))
 
 handler = SimpleOnOpenstackHandler

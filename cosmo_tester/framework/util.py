@@ -36,6 +36,17 @@ def get_blueprint_path(blueprint_name):
     return os.path.join(resources_dir, 'blueprints', blueprint_name)
 
 
+def get_cloudify_config(name):
+    reference_dir = resources.__file__
+    for _ in range(3):
+        reference_dir = os.path.dirname(reference_dir)
+    config_path = os.path.join(reference_dir,
+                               'vagrant',
+                               'configurations',
+                               name)
+    return yaml.load(path(config_path).text())
+
+
 def get_yaml_as_dict(yaml_path):
     return yaml.load(path(yaml_path).text())
 
@@ -100,6 +111,8 @@ class YamlPatcher(object):
 
     def _get_parent_obj_prop_name_by_path(self, prop_path):
         split = prop_path.split('.')
+        if len(split) == 1:
+            return self.obj, prop_path
         parent_path = '.'.join(split[:-1])
         parent_obj = self._get_object_by_path(parent_path)
         prop_name = split[-1]

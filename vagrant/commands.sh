@@ -43,11 +43,11 @@ setenv()
 
     # suites
     __add_env_var NOSETESTS_TO_RUN
-    __add_suite "cosmo_tester/test_suites/test_blueprints/hello_world_bash_test.py:HelloWorldBashTest.test_hello_world_on_ubuntu"
-    #__add_suite 'cosmo_tester/test_suites/test_blueprints/python_webserver_test.py'
+    # __add_suite "cosmo_tester/test_suites/test_blueprints/hello_world_bash_test.py:HelloWorldBashTest.test_hello_world_on_ubuntu"
+    __add_suite 'cosmo_tester/test_suites/test_blueprints/stub_test.py'
 
-    __add_env_var CLOUDIFY_TEST_CONFIG "cloudify-config-hp-paid-system-tests-tenant.yaml"
-    __add_env_var CLOUDIFY_TEST_HANDLER_MODULE "cosmo_tester.framework.handlers.openstack"
+    __add_env_var CLOUDIFY_TEST_CONFIG "cloudify-config-simple-provider-on-hp.yaml"
+    __add_env_var CLOUDIFY_TEST_HANDLER_MODULE "cosmo_tester.framework.handlers.simple_on_openstack"
 
     # keystone
     __add_env_var KEYSTONE_PASSWORD
