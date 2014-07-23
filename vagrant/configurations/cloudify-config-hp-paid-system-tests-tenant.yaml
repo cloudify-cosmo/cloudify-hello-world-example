@@ -35,6 +35,7 @@ compute:
     management_server:
         user_on_management: ubuntu
         userhome_on_management: /home/ubuntu
+        creation_timeout: 300
         instance:
             create_if_missing: true
             name: systemt-cloudify-manager

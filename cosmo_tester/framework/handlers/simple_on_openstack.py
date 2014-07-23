@@ -39,16 +39,16 @@ class SimpleOnOpenstackHandler(BaseHandler):
             self.env.cloudify_config['keystone'])
         openstack_config['cloudify'][
             'resources_prefix'] = self.env.resources_prefix
-        openstack_config = ProviderConfig(openstack_config)
 
         # reuse openstack provider to setup an environment in which
-        # everything is already configured
-
+        # everything is already configured.
+        # use dict config wrapper used by cosmo_cli
+        openstack_config = ProviderConfig(openstack_config)
         pm = ProviderManager(openstack_config, is_verbose_output=True)
         pm.update_names_in_config()
         public_ip, private_ip, key_path, username, context = pm.provision()
 
-        # update the simple config with the the bootstrap info
+        # update the simple config with the bootstrap info
         with self.update_cloudify_config() as patch:
             patch.obj.update(dict(
                 public_ip=public_ip,
