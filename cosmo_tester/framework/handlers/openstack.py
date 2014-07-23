@@ -207,9 +207,9 @@ def _key_pairs(nova, prefix):
 
 
 def _floatingips(neutron, prefix):
-    # return [(ip['id'], ip['floating_ip_address'])
-    #         for ip in neutron.list_floatingips()['floatingips']]
-    return []
+    return [(ip['id'], ip['floating_ip_address'])
+            for ip in neutron.list_floatingips()['floatingips']]
+    # return []
 
 
 def _ports(neutron, prefix):
