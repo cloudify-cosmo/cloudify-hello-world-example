@@ -21,8 +21,7 @@ from cloudify_openstack.cloudify_openstack import ProviderManager
 
 
 from cosmo_tester.framework.util import get_cloudify_config
-from cosmo_tester.framework.handlers import BaseHandler
-from cosmo_tester.framework.handlers.openstack import OpenstackCleanupContext
+from cosmo_tester.framework.handlers.openstack import OpenstackHandler
 
 
 def get_openstack_cloudify_config(simple_cloudify_config):
@@ -37,7 +36,14 @@ def get_openstack_cloudify_config(simple_cloudify_config):
     return openstack_config
 
 
-class SimpleOnOpenstackCleanupContext(OpenstackCleanupContext):
+class SimpleOnOpenstackConfigReader(OpenstackHandler.CloudifyConfigReader):
+
+    def __init__(self, cloudify_config):
+        openstack_config = get_openstack_cloudify_config(cloudify_config)
+        super(SimpleOnOpenstackConfigReader, self).__init__(openstack_config)
+
+
+class SimpleOnOpenstackCleanupContext(OpenstackHandler.CleanupContext):
 
     def __init__(self, context_name, cloudify_config):
         openstack_config = get_openstack_cloudify_config(cloudify_config)
@@ -45,9 +51,15 @@ class SimpleOnOpenstackCleanupContext(OpenstackCleanupContext):
                                                               openstack_config)
 
 
-class SimpleOnOpenstackHandler(BaseHandler):
+class SimpleOnOpenstackHandler(OpenstackHandler):
+    """
+    We derive from OpenstackHandler to get the constants it defines
+    also defined here (image names, flavors, etc...)
+    """
+
     provider = 'simple_provider'
     CleanupContext = SimpleOnOpenstackCleanupContext
+    CloudifyConfigReader = SimpleOnOpenstackConfigReader
 
     def before_bootstrap(self):
         # reuse openstack provider to setup an environment in which
