@@ -38,12 +38,12 @@ CLOUDIFY_TEST_NO_CLEANUP = 'CLOUDIFY_TEST_NO_CLEANUP'
 
 def openstack_clients(cloudify_config):
     creds = _client_creds(cloudify_config)
-    return nvclient.Client(**creds), \
-           neclient.Client(username=creds['username'],
-                           password=creds['api_key'],
-                           tenant_name=creds['project_id'],
-                           region_name=creds['region_name'],
-                           auth_url=creds['auth_url'])
+    return (nvclient.Client(**creds),
+            neclient.Client(username=creds['username'],
+                            password=creds['api_key'],
+                            tenant_name=creds['project_id'],
+                            region_name=creds['region_name'],
+                            auth_url=creds['auth_url']))
 
 
 @retry(stop_max_attempt_number=5, wait_fixed=20000)

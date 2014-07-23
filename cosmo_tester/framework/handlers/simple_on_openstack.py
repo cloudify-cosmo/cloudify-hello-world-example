@@ -26,7 +26,7 @@ class SimpleOnOpenstackHandler(BaseHandler):
     CleanupContext = OpenstackCleanupContext
 
     def before_bootstrap(self):
-        pass
+        nova, neutron = openstack_clients(self.env.cloudify_config)
 
 
 handler = SimpleOnOpenstackHandler

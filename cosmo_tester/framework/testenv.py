@@ -30,8 +30,7 @@ from path import path
 from cloudify_rest_client import CloudifyClient
 
 from cosmo_tester.framework.cfy_helper import CfyHelper
-from cosmo_tester.framework.util import (get_blueprint_path,
-                                         YamlPatcher)
+from cosmo_tester.framework.util import get_blueprint_path
 
 root = logging.getLogger()
 ch = logging.StreamHandler(sys.stdout)
