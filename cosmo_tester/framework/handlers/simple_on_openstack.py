@@ -16,6 +16,7 @@
 __author__ = 'dan'
 
 
+from cosmo_cli.cosmo_cli import ProviderConfig
 from cloudify_openstack.cloudify_openstack import ProviderManager
 
 
@@ -38,9 +39,11 @@ class SimpleOnOpenstackHandler(BaseHandler):
             self.env.cloudify_config['keystone'])
         openstack_config['cloudify'][
             'resources_prefix'] = self.env.resources_prefix
+        openstack_config = ProviderConfig(openstack_config)
 
         # reuse openstack provider to setup an environment in which
         # everything is already configured
+
         pm = ProviderManager(openstack_config, is_verbose_output=True)
         pm.update_names_in_config()
         public_ip, private_ip, key_path, username, context = pm.provision()
