@@ -25,29 +25,40 @@ from cosmo_tester.framework.handlers import BaseHandler
 from cosmo_tester.framework.handlers.openstack import OpenstackCleanupContext
 
 
+def get_openstack_cloudify_config(simple_cloudify_config):
+    # load openstack configuration skeleton
+    config_name = 'cloudify-config-hp-paid-system-tests-tenant.yaml'
+    openstack_config = get_cloudify_config(config_name)
+    # update with values injected into current config (simple)
+    openstack_config['keystone'].update(
+        simple_cloudify_config['keystone'])
+    openstack_config['cloudify']['resources_prefix'] = simple_cloudify_config[
+        'cloudify'].get('resources_prefix', '')
+    return openstack_config
+
+
+class SimpleOnOpenstackCleanupContext(OpenstackCleanupContext):
+
+    def __init__(self, context_name, cloudify_config):
+        openstack_config = get_openstack_cloudify_config(cloudify_config)
+        super(SimpleOnOpenstackCleanupContext, self).__init__(context_name,
+                                                              openstack_config)
+
+
 class SimpleOnOpenstackHandler(BaseHandler):
     provider = 'simple_provider'
-    CleanupContext = OpenstackCleanupContext
+    CleanupContext = SimpleOnOpenstackCleanupContext
 
     def before_bootstrap(self):
-        # load openstack configuration skeleton
-        config_name = 'cloudify-config-hp-paid-system-tests-tenant.yaml'
-        openstack_config = get_cloudify_config(config_name)
-
-        # update with values injected into current config (simple)
-        openstack_config['keystone'].update(
-            self.env.cloudify_config['keystone'])
-        openstack_config['cloudify'][
-            'resources_prefix'] = self.env.resources_prefix
-
         # reuse openstack provider to setup an environment in which
         # everything is already configured.
+        openstack_config = get_openstack_cloudify_config(
+            self.env.cloudify_config)
         # use dict config wrapper used by cosmo_cli
         openstack_config = ProviderConfig(openstack_config)
         pm = ProviderManager(openstack_config, is_verbose_output=True)
         pm.update_names_in_config()
         public_ip, private_ip, key_path, username, context = pm.provision()
-
         # update the simple config with the bootstrap info
         with self.update_cloudify_config() as patch:
             patch.obj.update(dict(
