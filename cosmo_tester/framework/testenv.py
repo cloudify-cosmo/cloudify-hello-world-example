@@ -106,17 +106,19 @@ class TestEnvironment(object):
                                ' {0} does not seem to exist'
                                .format(self.cloudify_config_path))
 
+        # make a temp config file so handlers can modify it at will
+        self._generate_unique_config()
+
         if CLOUDIFY_TEST_HANDLER_MODULE in os.environ:
             handler_module_name = os.environ[CLOUDIFY_TEST_HANDLER_MODULE]
         else:
             handler_module_name = 'cosmo_tester.framework.handlers.openstack'
         handler_module = importlib.import_module(handler_module_name)
-        self.handler = getattr(handler_module, 'handler')
+        handler_class = getattr(handler_module, 'handler')
+        self.handler = handler_class(self)
 
         if CLOUDIFY_TEST_MANAGEMENT_IP in os.environ:
             self._running_env_setup(os.environ[CLOUDIFY_TEST_MANAGEMENT_IP])
-        else:
-            self._generate_unique_config()
 
         self.cloudify_config = yaml.load(self.cloudify_config_path.text())
         self._config_reader = self.handler.CloudifyConfigReader(
@@ -129,8 +131,6 @@ class TestEnvironment(object):
         unique_config_path = os.path.join(self._workdir, 'config.yaml')
         shutil.copy(self.cloudify_config_path, unique_config_path)
         self.cloudify_config_path = path(unique_config_path)
-        with YamlPatcher(self.cloudify_config_path) as patch:
-            self.handler.make_unique_configuration(patch)
 
     def setup(self):
         os.chdir(self._initial_cwd)
@@ -145,6 +145,7 @@ class TestEnvironment(object):
         cfy = CfyHelper()
 
         try:
+            self.handler.before_bootstrap()
             cfy.bootstrap(
                 self.cloudify_config_path,
                 self.handler.provider,

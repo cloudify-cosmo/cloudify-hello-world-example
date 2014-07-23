@@ -18,6 +18,11 @@ __author__ = 'dan'
 
 
 import logging
+from contextlib import contextmanager
+
+import yaml
+
+from cosmo_tester.framework.util import YamlPatcher
 
 
 class BaseCleanupContext(object):
@@ -53,8 +58,19 @@ class BaseHandler(object):
     CleanupContext = BaseCleanupContext
     CloudifyConfigReader = BaseCloudifyConfigReader
 
-    @staticmethod
-    def make_unique_configuration(patch):
+    def __init__(self, env):
+        self.env = env
+
+    @contextmanager
+    def update_cloudify_config(self):
+        with YamlPatcher(self.env.cloudify_config_path) as patch:
+            yield patch
+        self.env.cloudify_config = yaml.load(
+            self.env.cloudify_config_path.text())
+        self.env._config_reader = self.CloudifyConfigReader(
+            self.env.cloudify_config)
+
+    def before_bootstrap(self):
         pass
 
 handler = BaseHandler

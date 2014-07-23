@@ -17,9 +17,16 @@ __author__ = 'dan'
 
 
 from cosmo_tester.framework.handlers import BaseHandler
+from cosmo_tester.framework.handlers.openstack import (OpenstackCleanupContext,
+                                                       openstack_clients)
 
 
-class SimpleHandler(BaseHandler):
+class SimpleOnOpenstackHandler(BaseHandler):
     provider = 'simple_provider'
+    CleanupContext = OpenstackCleanupContext
 
-handler = SimpleHandler
+    def before_bootstrap(self):
+        pass
+
+
+handler = SimpleOnOpenstackHandler

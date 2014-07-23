@@ -343,10 +343,10 @@ class OpenstackHandler(BaseHandler):
     ubuntu_image_id = '75d47d10-fef8-473b-9dd1-fe2f7649cb41'
     small_flavor_id = 101
 
-    @staticmethod
-    def make_unique_configuration(patch):
-        suffix = '-%06x' % random.randrange(16 ** 6)
-        patch.append_value('compute.management_server.instance.name',
-                           suffix)
+    def before_bootstrap(self):
+        with self.update_cloudify_config() as patch:
+            suffix = '-%06x' % random.randrange(16 ** 6)
+            patch.append_value('compute.management_server.instance.name',
+                               suffix)
 
 handler = OpenstackHandler

@@ -1,3 +1,14 @@
+#### START OF: used by test frawework to create server vm, etc...
+keystone:
+    username: ''
+    password: ''
+    tenant_name: ''
+    auth_url: ''
+
+compute:
+    region: region-b.geo-1
+#### END OF: used by test frawework to create server vm, etc...
+
 public_ip: Enter-Public-IP-Here
 private_ip: Enter-Private-IP-Here
 ssh_key_path: Enter-SSH-Key-Path-Here
