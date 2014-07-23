@@ -27,12 +27,11 @@ from cosmo_tester.framework.util import YamlPatcher
 
 class BaseCleanupContext(object):
 
-    logger = logging.getLogger('CleanupContext')
-    logger.setLevel(logging.DEBUG)
-
     def __init__(self, context_name, cloudify_config):
         self.context_name = context_name
         self.cloudify_config = cloudify_config
+        self.logger = logging.getLogger('CleanupContext')
+        self.logger.setLevel(logging.DEBUG)
 
     def cleanup(self):
         pass
