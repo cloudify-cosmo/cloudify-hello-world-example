@@ -49,3 +49,6 @@ nosetests.xml
 /transaction.log
 
 *COMMIT_MSG
+
+# QuickBuild
+.qbcache/
