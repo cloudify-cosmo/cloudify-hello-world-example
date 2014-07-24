@@ -51,12 +51,16 @@ def get_yaml_as_dict(yaml_path):
     return yaml.load(path(yaml_path).text())
 
 
-def get_actual_keypath(env, keypath):
+def fix_keypath(env, keypath):
     p = list(os.path.split(keypath))
     base, ext = os.path.splitext(p[-1])
     base = '{}{}'.format(env.resources_prefix, base)
     p[-1] = base + ext
-    keypath = os.path.join(*p)
+    return os.path.join(*p)
+
+
+def get_actual_keypath(env, keypath):
+    keypath = fix_keypath(env, keypath)
     keypath = path(os.path.expanduser(keypath)).abspath()
     if not keypath.exists():
         raise RuntimeError("key file {0} does not exist".format(keypath))
