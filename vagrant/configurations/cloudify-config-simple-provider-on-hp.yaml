@@ -4,9 +4,6 @@ keystone:
     password: ''
     tenant_name: ''
     auth_url: ''
-
-compute:
-    region: region-b.geo-1
 #### END OF: used by test frawework to create server vm, etc...
 
 public_ip: Enter-Public-IP-Here
