@@ -106,17 +106,17 @@ class SimpleOnOpenstackHandler(OpenstackHandler):
                 ssh_username=username,
                 context=context
             ))
-
             # the implementation is such, that the values when reading these
             # properties from the env are actually read from the openstack
             # config, so we copy these values to the simple config
             # for the bootstrap process
+            patch.set_value('compute.region', self.env.region)
+            patch.set_value('cloudify.agents.config.user',
+                            self.env.cloudify_agent_user)
             key_prop = 'compute.agent_servers.agents_keypair.private_key_path'
             key_val = fix_keypath(self.env,
                                   self.env.agent_key_path)
             patch.set_value(key_prop, key_val)
-            user_prop = 'cloudify.agents.config.user'
-            patch.set_value(user_prop, self.env.cloudify_agent_user)
 
     def after_bootstrap(self):
         openstack_config = get_openstack_cloudify_config(

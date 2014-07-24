@@ -272,6 +272,10 @@ class CloudifyOpenstackConfigReader(BaseHandler.CloudifyConfigReader):
         super(CloudifyOpenstackConfigReader, self).__init__(cloudify_config)
 
     @property
+    def region(self):
+        return self.config['compute']['region']
+
+    @property
     def management_server_name(self):
         return self.config['compute']['management_server']['instance']['name']
 

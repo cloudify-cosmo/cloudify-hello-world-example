@@ -238,6 +238,10 @@ class TestEnvironment(object):
         return self._config_reader.cloudify_agent_user
 
     @property
+    def region(self):
+        return self._config_reader.region
+
+    @property
     def resources_prefix(self):
         return self._config_reader.resources_prefix
 
