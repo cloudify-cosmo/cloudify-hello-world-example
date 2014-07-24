@@ -41,13 +41,8 @@ setenv()
 {
     REPORTS_DIR="xunit-reports"
 
-    # suites
-    __add_env_var NOSETESTS_TO_RUN
-    __add_suite "cosmo_tester/test_suites/test_blueprints/hello_world_bash_test.py:HelloWorldBashTest.test_hello_world_on_ubuntu"
-    #__add_suite 'cosmo_tester/test_suites/test_blueprints/stub_test.py'
-
-    __add_env_var CLOUDIFY_TEST_CONFIG "cloudify-config-simple-provider-on-hp.yaml"
-    __add_env_var CLOUDIFY_TEST_HANDLER_MODULE "cosmo_tester.framework.handlers.simple_on_openstack"
+    # suites configuration
+    __add_env_var TEST_SUITES_PATH "${PWD}/suites.json"
 
     # keystone
     __add_env_var KEYSTONE_PASSWORD
@@ -68,16 +63,6 @@ setenv()
     __add_env_var CENTOS_PACKAGE_URL
     __add_env_var WINDOWS_PACKAGE_URL
     __add_env_var UI_PACKAGE_URL
-}
-
-__add_suite()
-{
-    local suite=$1
-    if [[ -z $NOSETESTS_TO_RUN ]]; then
-        export NOSETESTS_TO_RUN=$suite
-    else
-        export NOSETESTS_TO_RUN="${NOSETESTS_TO_RUN},${suite}"
-    fi
 }
 
 __add_env_var()
