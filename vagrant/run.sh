@@ -1,5 +1,11 @@
 #! /bin/bash -e
 
+setenv()
+{
+    # So that we get to see output faster from docker-logs
+    export PYTHONUNBUFFERED="true"
+}
+
 create_virtualenv_if_needed_and_source()
 {
     if [[ ! -d system_tests_controller_venv ]]; then
@@ -19,6 +25,7 @@ run_system_tests()
 
 main()
 {
+    setenv
     create_virtualenv_if_needed_and_source
     run_system_tests
 }
