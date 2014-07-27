@@ -23,7 +23,7 @@ suitesJsonFile = File.createTempFile("suites-",".json")
 // will be translated to TEST_SUITES_PATH
 systemTestsSuitesPath.setValue(suitesJsonFile.getAbsolutePath())
 
-/*
+
 if (isCustomSuite) {
     suites = [[
         'suite_name': customSuiteName,
@@ -44,6 +44,3 @@ if (isCustomSuite) {
 
 jsonOutput = new groovy.json.JsonBuilder()
 suitesJsonFile.write(jsonOutput(suites).toPrettyString())
-*/
-import groovy.lang.GroovySystem
-suitesJsonFile.write(GroovySystem.getVersion())
