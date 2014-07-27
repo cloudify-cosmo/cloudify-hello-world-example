@@ -10,8 +10,8 @@
 # cloudify.openstack contains Cloudify's built-in openstack types and plugins definitions.
 
 imports:
-    - cloudify.bash
-    - cloudify.openstack
+    - http://www.getcloudify.org/spec/openstack-plugin/1.0/plugin.yaml
+    - http://www.getcloudify.org/spec/bash-plugin/1.0/plugin.yaml
 
 types:
 
@@ -28,14 +28,6 @@ blueprint:
     nodes:
         -   name: virtual_ip
             type: cloudify.openstack.floatingip
-            properties:
-
-                ####################################################################################
-                # Uncomment bellow and fill the properties according to your openstack environment.#
-                ####################################################################################
-
-                # floatingip:
-                    # floating_network_name: [Enter-External-Network-Name]
 
         -   name: security_group
             type: cloudify.openstack.security_group
@@ -50,23 +42,16 @@ blueprint:
             type: cloudify.openstack.server
             instances:
                 deploy: 1
-            properties:
-                install_agent: true
-                worker_config:
-                    user: ubuntu
-                    key: ~/.ssh/cloudify-agents-kp.pem
-                management_network_name: cloudify-admin-network
-
-                ####################################################################################
-                # Uncomment bellow and fill the properties according to your openstack environment.#
-                ####################################################################################
-
-                # server:
-                    # name: bash-web-server
-                    # image_name: [Enter-Image-Name]
-                    # flavor_name: [Enter-Flavor-Name]
-                    # key_name: cloudify-agents-kp
-                    # security_groups: ['cloudify-sg-agents', 'webserver_security_group']
+            ####################################################################################
+            # Uncomment bellow and fill the properties according to your openstack environment.#
+            ####################################################################################
+            #properties:
+            #    server:
+            #        name: bash-web-server
+            #        image_name: [Enter-Image-Name]
+            #        flavor_name: [Enter-Flavor-Name]
+            #        key_name: cloudify-agents-kp
+            #        security_groups: ['webserver_security_group']
             relationships:
                 -   type: cloudify.openstack.server_connected_to_floating_ip
                     target: virtual_ip
