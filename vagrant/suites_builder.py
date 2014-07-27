@@ -8,7 +8,7 @@ import tempfile
 
 all_suites_json_path = 'suites.json'
 tests_suites = os.environ['SYSTEM_TESTS_SUITES'].split(',')
-custom_suite = os.environ['SYSTEM_TESTS_CUSTOM_SUITE']
+custom_suite = os.environ['SYSTEM_TESTS_CUSTOM_SUITE'] == 'yes'
 custom_suite_name = os.environ['SYSTEM_TESTS_CUSTOM_SUITE_NAME']
 custom_tests_to_run = os.environ['SYSTEM_TESTS_CUSTOM_TESTS_TO_RUN']
 custom_cloudify_config = os.environ['SYSTEM_TESTS_CUSTOM_CLOUDIFY_CONFIG']
@@ -21,8 +21,7 @@ if custom_suite:
         'suite_name': custom_suite_name,
         'tests_to_run': custom_tests_to_run,
         'cloudify_test_config': custom_cloudify_config,
-        'cloudify_test_handler_module': custom_handler_module,
-        'custom_suite': custom_suite
+        'cloudify_test_handler_module': custom_handler_module
     }]
 else:
     with open(all_suites_json_path) as f:
