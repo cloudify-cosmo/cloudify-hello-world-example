@@ -21,7 +21,8 @@ if custom_suite:
         'suite_name': custom_suite_name,
         'tests_to_run': custom_tests_to_run,
         'cloudify_test_config': custom_cloudify_config,
-        'cloudify_test_handler_module': custom_handler_module
+        'cloudify_test_handler_module': custom_handler_module,
+        'custom_suite': custom_suite
     }]
 else:
     with open(all_suites_json_path) as f:
