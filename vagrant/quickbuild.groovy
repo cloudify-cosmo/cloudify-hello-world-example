@@ -36,7 +36,7 @@ if (isCustomSuite) {
     allSuites = jsonInput.parse(new File(allSuitesPath))
     suites = []
     for (suite in allSuites) {
-        if testsSuites.containes(suite.suite_name) {
+        if (testsSuites.containes(suite.suite_name)) {
             suites.add(suite)
         }
     }
