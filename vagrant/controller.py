@@ -75,7 +75,7 @@ def test_run():
 
 def setenv():
     for env_var, default_value in env_variables.items():
-        if default_value:
+        if default_value and not os.environ.get(env_var):
             os.environ[env_var] = default_value
     cloudify_enviroment_varaible_names = ':'.join(env_variables.keys())
     os.environ['CLOUDIFY_ENVIRONMENT_VARIABLE_NAMES'] = cloudify_enviroment_varaible_names
@@ -94,7 +94,6 @@ def get_containers_names():
 def main():
     setenv()
     cmd=sys.argv[1]
-    container_name='test_suite1'
     if cmd == 'run':
         test_run()
     elif cmd == 'start':
