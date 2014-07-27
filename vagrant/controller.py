@@ -29,7 +29,7 @@ env_variables = {
 
     # branch names
     'BRANCH_NAME': 'develop',
-    'BRANCH_NAME_OPENSTACK_PROVIDER': 'feature/CFY-948-agent-keypair-file-resource-prefix',
+    'BRANCH_NAME_OPENSTACK_PROVIDER': '',
     'BRANCH_NAME_SYSTEM_TESTS': 'feature/CFY-959-provider-abstraction',
     'BRANCH_NAME_CLI': '',
 
