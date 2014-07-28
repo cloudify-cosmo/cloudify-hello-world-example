@@ -41,7 +41,7 @@ def get_cloudify_config(name):
     for _ in range(3):
         reference_dir = os.path.dirname(reference_dir)
     config_path = os.path.join(reference_dir,
-                               'vagrant',
+                               'suites',
                                'configurations',
                                name)
     return yaml.load(path(config_path).text())
