@@ -6,7 +6,7 @@ import os
 import json
 import tempfile
 
-all_suites_json_path = 'suites.json'
+all_suites_json_path = '../suites/suites.json'
 tests_suites = os.environ['SYSTEM_TESTS_SUITES'].split(',')
 custom_suite = os.environ['SYSTEM_TESTS_CUSTOM_SUITE'] == 'yes'
 custom_suite_name = os.environ['SYSTEM_TESTS_CUSTOM_SUITE_NAME']

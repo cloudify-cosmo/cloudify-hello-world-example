@@ -19,7 +19,7 @@ reports_dir = path('xunit-reports')
 
 env_variables = {
     # suites configuration
-    'TEST_SUITES_PATH': '{}/suites.json'.format(os.getcwd()),
+    'TEST_SUITES_PATH': '{}/suites/suites.json'.format(os.getcwd()),
 
     # keystone
     'KEYSTONE_PASSWORD': '',
