@@ -28,6 +28,10 @@ install_docker()
     sudo sh -c "echo deb https://get.docker.io/ubuntu docker main > /etc/apt/sources.list.d/docker.list"
     sudo apt-get update
     sudo apt-get install lxc-docker -y
+
+    sudo groupadd docker || :
+    sudo gpasswd -a ${USER} docker
+    sudo service docker restart
 }
 
 main()
