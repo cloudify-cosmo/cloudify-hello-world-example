@@ -20,7 +20,7 @@ create_virtualenv_if_needed_and_source()
 
 builds_suites_json()
 {
-    local suites_json_path=$(./suites_builder.py)
+    local suites_json_path=$(./helpers/suites_builder.py)
     export TEST_SUITES_PATH=$suites_json_path
 }
 

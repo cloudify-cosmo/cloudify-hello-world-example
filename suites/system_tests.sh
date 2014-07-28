@@ -81,7 +81,7 @@ generate_config()
 {
 	echo "### Generating config file for test suite"
 	cp $ORIGINAL_CLOUDIFY_TEST_CONFIG_PATH $GENERATED_CLOUDIFY_TEST_CONFIG_PATH
-	"${BASE_HOST_DIR}/update_config.py" $GENERATED_CLOUDIFY_TEST_CONFIG_PATH
+	"${BASE_HOST_DIR}/helpers/update_config.py" $GENERATED_CLOUDIFY_TEST_CONFIG_PATH
 }
 
 run_nose()
