@@ -29,7 +29,7 @@ logger.setLevel(logging.INFO)
 git = sh_bake(sh.git)
 
 
-def clone(url, basedir, branch='develop'):
+def clone(url, basedir, branch='master'):
 
     repo_name = url.split('.git')[0].split('/')[-1]
 

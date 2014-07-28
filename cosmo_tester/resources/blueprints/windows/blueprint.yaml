@@ -5,7 +5,7 @@ plugins:
     python_script_executor:
         derived_from: cloudify.plugins.agent_plugin
         properties:
-            url: https://github.com/cloudify-cosmo/cloudify-python-plugin/archive/develop.zip
+            url: https://github.com/cloudify-cosmo/cloudify-python-plugin/archive/master.zip
 
 types:
     cloudify.types.python.app_module:

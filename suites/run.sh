@@ -18,12 +18,6 @@ create_virtualenv_if_needed_and_source()
     fi
 }
 
-builds_suites_json()
-{
-    local suites_json_path=$(./helpers/suites_builder.py)
-    export TEST_SUITES_PATH=$suites_json_path
-}
-
 run_system_tests()
 {
     ./suites_runner.py
@@ -33,7 +27,6 @@ main()
 {
     setenv
     create_virtualenv_if_needed_and_source
-    builds_suites_json
     run_system_tests
 }
 

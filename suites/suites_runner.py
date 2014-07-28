@@ -8,6 +8,8 @@ import json
 import sh
 from path import path
 
+from helpers.suites_builder import build_suites_json
+
 def sh_bake(command):
     return command.bake(_out=lambda line: sys.stdout.write(line),
                         _err=lambda line: sys.stderr.write(line))
@@ -18,8 +20,7 @@ vagrant = sh_bake(sh.vagrant)
 reports_dir = path('xunit-reports')
 
 env_variables = {
-    # suites configuration
-    'TEST_SUITES_PATH': '{}/suites/suites.json'.format(os.getcwd()),
+    'TEST_SUITES_PATH': '',
 
     # keystone
     'KEYSTONE_PASSWORD': '',
@@ -28,7 +29,7 @@ env_variables = {
     'KEYSTONE_AUTH_URL': '',
 
     # branch names
-    'BRANCH_NAME': 'develop',
+    'BRANCH_NAME': 'master',
     'BRANCH_NAME_OPENSTACK_PROVIDER': '',
     'BRANCH_NAME_SYSTEM_TESTS': 'feature/CFY-959-provider-abstraction',
     'BRANCH_NAME_CLI': '',
@@ -74,11 +75,20 @@ def test_run():
         sys.exit(1)
 
 def setenv():
+    if 'Docker version 1.1.2' not in sh.docker(version=True):
+        raise RuntimeError('Tested with docker 1.1.2 only. If you know this will work with other versions, '
+                           'Update this code to be more flexible')
+    if 'Vagrant 1.6.3' not in sh.vagrant(version=True):
+        raise RuntimeError('Tested with vagrant 1.6.3 only. If you know this will work with other versions, '
+                           'Update this code to be more flexible')
     for env_var, default_value in env_variables.items():
         if default_value and not os.environ.get(env_var):
             os.environ[env_var] = default_value
     cloudify_enviroment_varaible_names = ':'.join(env_variables.keys())
     os.environ['CLOUDIFY_ENVIRONMENT_VARIABLE_NAMES'] = cloudify_enviroment_varaible_names
+    if not os.environ.get('TEST_SUITES_PATH'):
+        suite_json_path = build_suites_json('suites/suites.json')
+        os.environ['TEST_SUITES_PATH'] = suite_json_path
 
 def setup_reports_dir():
     if not reports_dir.exists():
@@ -93,16 +103,7 @@ def get_containers_names():
 
 def main():
     setenv()
-    cmd=sys.argv[1]
-    if cmd == 'run':
-        test_run()
-    elif cmd == 'start':
-        test_start()
-    elif cmd == 'logs':
-        test_logs()
-    else:
-        print 'commands.sh: bad command: {}'.format(cmd)
-        sys.exit(1)
+    test_run()
 
 if __name__ == '__main__':
     main()
