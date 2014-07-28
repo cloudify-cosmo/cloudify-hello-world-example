@@ -34,7 +34,7 @@ setenv()
 	BASE_HOST_DIR="/vagrant"
 	BASE_CONFIG_DIR="${BASE_HOST_DIR}/configurations"
 	REPORT_FILE="${BASE_HOST_DIR}/xunit-reports/${RESOURCE_PREFIX}report.xml"
-	CLOUDIFY_TEST_CONFIG=${CLOUDIFY_TEST_CONFIG='cloudify-config-hp-paid-system-tests-tenant.yaml'}
+	CLOUDIFY_TEST_CONFIG=${CLOUDIFY_TEST_CONFIG='cloudify-config-opestack-on-hp.yaml'}
 	ORIGINAL_CLOUDIFY_TEST_CONFIG_PATH="${BASE_CONFIG_DIR}/${CLOUDIFY_TEST_CONFIG}"
 
 	# base dir is the virtualenv directory
