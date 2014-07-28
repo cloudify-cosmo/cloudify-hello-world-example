@@ -14,7 +14,11 @@ def sh_bake(command):
     return command.bake(_out=lambda line: sys.stdout.write(line),
                         _err=lambda line: sys.stderr.write(line))
 
-docker = sh_bake(sh.docker)
+if os.environ.get('NON_ROOT_DOCKER'):
+    docker = sh_bake(sh.docker)
+else:
+    docker = sh_bake(sh.sudo.docker)
+
 vagrant = sh_bake(sh.vagrant)
 
 reports_dir = path('xunit-reports')
