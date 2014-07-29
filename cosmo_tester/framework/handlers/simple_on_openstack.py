@@ -26,7 +26,7 @@ from cosmo_tester.framework.handlers.openstack import OpenstackHandler
 
 def get_openstack_cloudify_config(simple_cloudify_config):
     # load openstack configuration skeleton
-    config_name = 'cloudify-config-opestack-on-hp.yaml'
+    config_name = 'cloudify-config-openstack-on-hp.yaml'
     openstack_config = get_cloudify_config(config_name)
     # update with values injected into current config (simple)
     openstack_config['keystone'].update(
