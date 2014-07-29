@@ -36,8 +36,35 @@ def get_blueprint_path(blueprint_name):
     return os.path.join(resources_dir, 'blueprints', blueprint_name)
 
 
+def get_cloudify_config(name):
+    reference_dir = resources.__file__
+    for _ in range(3):
+        reference_dir = os.path.dirname(reference_dir)
+    config_path = os.path.join(reference_dir,
+                               'suites',
+                               'configurations',
+                               name)
+    return yaml.load(path(config_path).text())
+
+
 def get_yaml_as_dict(yaml_path):
     return yaml.load(path(yaml_path).text())
+
+
+def fix_keypath(env, keypath):
+    p = list(os.path.split(keypath))
+    base, ext = os.path.splitext(p[-1])
+    base = '{}{}'.format(env.resources_prefix, base)
+    p[-1] = base + ext
+    return os.path.join(*p)
+
+
+def get_actual_keypath(env, keypath):
+    keypath = fix_keypath(env, keypath)
+    keypath = path(os.path.expanduser(keypath)).abspath()
+    if not keypath.exists():
+        raise RuntimeError("key file {0} does not exist".format(keypath))
+    return keypath
 
 
 class YamlPatcher(object):
@@ -53,7 +80,7 @@ class YamlPatcher(object):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if not exc_type:
-            self.yaml_path.write_text(yaml.dump(self.obj))
+            self.yaml_path.write_text(yaml.safe_dump(self.obj))
 
     def merge_obj(self, obj_prop_path, merged_props):
         obj = self._get_object_by_path(obj_prop_path)
@@ -88,6 +115,8 @@ class YamlPatcher(object):
 
     def _get_parent_obj_prop_name_by_path(self, prop_path):
         split = prop_path.split('.')
+        if len(split) == 1:
+            return self.obj, prop_path
         parent_path = '.'.join(split[:-1])
         parent_obj = self._get_object_by_path(parent_path)
         prop_name = split[-1]
@@ -96,70 +125,3 @@ class YamlPatcher(object):
     @staticmethod
     def _raise_illegal(prop_path):
         raise RuntimeError('illegal path: {0}'.format(prop_path))
-
-
-class CloudifyConfigReader(object):
-
-    def __init__(self, cloudify_config):
-        self.config = cloudify_config
-
-    @property
-    def management_server_name(self):
-        return self.config['compute']['management_server']['instance']['name']
-
-    @property
-    def management_server_floating_ip(self):
-        return self.config['compute']['management_server']['floating_ip']
-
-    @property
-    def management_network_name(self):
-        return self.config['networking']['int_network']['name']
-
-    @property
-    def management_sub_network_name(self):
-        return self.config['networking']['subnet']['name']
-
-    @property
-    def management_router_name(self):
-        return self.config['networking']['router']['name']
-
-    @property
-    def agent_key_path(self):
-        return self.config['compute']['agent_servers']['agents_keypair'][
-            'private_key_path']
-
-    @property
-    def managment_user_name(self):
-        return self.config['compute']['management_server'][
-            'user_on_management']
-
-    @property
-    def management_key_path(self):
-        return self.config['compute']['management_server'][
-            'management_keypair']['private_key_path']
-
-    @property
-    def agent_keypair_name(self):
-        return self.config['compute']['agent_servers']['agents_keypair'][
-            'name']
-
-    @property
-    def management_keypair_name(self):
-        return self.config['compute']['management_server'][
-            'management_keypair']['name']
-
-    @property
-    def external_network_name(self):
-        return self.config['networking']['ext_network']['name']
-
-    @property
-    def agents_security_group(self):
-        return self.config['networking']['agents_security_group']['name']
-
-    @property
-    def management_security_group(self):
-        return self.config['networking']['management_security_group']['name']
-
-    @property
-    def cloudify_agent_user(self):
-        return self.config['cloudify']['agents']['config']['user']

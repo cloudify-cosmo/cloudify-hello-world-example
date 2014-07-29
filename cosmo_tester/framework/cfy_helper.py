@@ -47,11 +47,13 @@ class CfyHelper(object):
 
     def bootstrap(self,
                   cloud_config_path,
+                  provider,
                   keep_up_on_failure=False,
                   verbose=False,
                   dev_mode=False):
         with self.workdir:
-            cfy.init.openstack(
+            cfy.init(
+                provider,
                 verbosity=verbose).wait()
             cfy.bootstrap(
                 config_file=cloud_config_path,

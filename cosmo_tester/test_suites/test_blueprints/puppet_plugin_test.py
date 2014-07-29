@@ -21,7 +21,7 @@ import subprocess
 import tempfile
 import time
 import os
-from os.path import dirname, expanduser
+from os.path import dirname
 
 import requests
 import fabric.api
@@ -29,7 +29,7 @@ import fabric.context_managers
 from path import path
 
 from cosmo_tester.framework.testenv import TestCase
-from cosmo_tester.framework.util import YamlPatcher
+from cosmo_tester.framework.util import YamlPatcher, get_actual_keypath
 
 
 PUPPET_MASTER_VERSION = '3.5.1-1puppetlabs1'
@@ -54,15 +54,6 @@ def find_node_state(node_name, nodes_state):
 def get_nodes_of_type(blueprint, type_):
     return [n for n in blueprint.obj['blueprint']['nodes']
             if n['type'] == type_]
-
-
-def get_agent_key_file(env):
-    with env.cloudify_config_path.dirname():
-        agent_key_file = path(expanduser(env.agent_key_path)).abspath()
-        if not agent_key_file.exists():
-            raise RuntimeError("Agent key file {0} does not exist".format(
-                agent_key_file))
-    return agent_key_file
 
 
 def update_blueprint(env, blueprint, hostname, userdata_vars=None):
@@ -164,7 +155,8 @@ class PuppetPluginAgentTest(TestCase):
         fabric_env.update({
             'timeout': 30,
             'user': bp_info['users'][0],
-            'key_filename': get_agent_key_file(self.env),
+            'key_filename': get_actual_keypath(self.env,
+                                               self.env.agent_key_path),
             'host_string': self.puppet_server_ip,
         })
 
@@ -195,7 +187,8 @@ class PuppetPluginAgentTest(TestCase):
         fabric_env.update({
             'timeout': 30,
             'user': bp_info['users'][0],
-            'key_filename': get_agent_key_file(self.env),
+            'key_filename': get_actual_keypath(self.env,
+                                               self.env.agent_key_path),
             'host_string': puppet_agent_ip,
         })
 
@@ -222,6 +215,7 @@ class PuppetPluginStandaloneTest(TestCase):
         page = requests.get('http://{0}:8080'.format(puppet_standalone_ip))
         self.assertIn('Cloudify Hello World', page.text,
                       'Expected text not found in response')
+        self.execute_uninstall(id_)
 
     def test_puppet_standalone_without_download(self):
         id_ = "{0}-puppet-standalone-{1}-{2}".format(self.test_id,

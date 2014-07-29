@@ -24,9 +24,6 @@ from cosmo_tester.framework.util import YamlPatcher
 
 class PythonWebServerTest(TestCase):
 
-    host_name = 'danktestvm'
-    security_groups = ['webserver_security_group']
-
     def test_python_webserver(self):
 
         blueprint_path = self.copy_blueprint('python-webserver')
@@ -46,10 +43,10 @@ class PythonWebServerTest(TestCase):
         with YamlPatcher(self.webserver_yaml) as patch:
             vm_path = 'type_implementations.vm_openstack_host_impl.properties'
             patch.merge_obj('{0}.server'.format(vm_path), {
-                'name': self.host_name,
+                'name': 'pythonwebserver',
                 'image_name': self.env.ubuntu_image_name,
                 'flavor_name': self.env.flavor_name,
-                'security_groups': self.security_groups,
+                'security_groups': ['webserver_security_group'],
             })
 
     def post_install_assertions(self, before_state, after_state):

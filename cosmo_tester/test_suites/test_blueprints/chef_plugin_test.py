@@ -28,7 +28,7 @@ from path import path
 import sh
 
 from cosmo_tester.framework.testenv import TestCase
-from cosmo_tester.framework.util import YamlPatcher
+from cosmo_tester.framework.util import YamlPatcher, get_actual_keypath
 from cosmo_tester.framework.util import get_blueprint_path
 
 CHEF_SERVER_COOKBOOK_ZIP_URL = (
@@ -84,14 +84,6 @@ def get_nodes_of_type(blueprint, type_):
             if n['type'] == type_]
 
 
-def get_agent_key_file(env):
-    agent_key_file = path(os.path.expanduser(env.agent_key_path)).abspath()
-    if not agent_key_file.exists():
-        raise RuntimeError("Agent key file {0} does not exist".format(
-            agent_key_file))
-    return agent_key_file
-
-
 def update_blueprint(env, blueprint, hostname, userdata_vars=None):
     hostname_base = 'system-test-{0}-{1}'.format(
         time.strftime("%Y%m%d-%H%M"), hostname)
@@ -126,7 +118,8 @@ class ChefPluginClientTest(TestCase):
     def setUp(self, *args, **kwargs):
 
         super(ChefPluginClientTest, self).setUp(*args, **kwargs)
-        agent_key_file = get_agent_key_file(self.env)
+        agent_key_file = get_actual_keypath(self.env,
+                                            self.env.agent_key_path)
 
         blueprint_dir = self.copy_blueprint('chef-plugin')
         self.blueprint_yaml = blueprint_dir / 'chef-server-by-chef-solo.yaml'
@@ -237,7 +230,8 @@ class ChefPluginSoloTest(TestCase):
                 sh.tar('czf', res+'.tar.gz', res)
 
     def test_chef_solo(self):
-        agent_key_file = get_agent_key_file(self.env)
+        agent_key_file = get_actual_keypath(self.env,
+                                            self.env.agent_key_path)
         blueprint_dir = self.blueprint_dir
         self.blueprint_yaml = blueprint_dir / 'chef-solo-test.yaml'
         with YamlPatcher(self.blueprint_yaml) as blueprint:

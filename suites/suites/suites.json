@@ -1,0 +1,8 @@
+[
+{
+    "suite_name": "hp_openstack_all",
+    "tests_to_run": "cosmo_tester/test_suites",
+    "cloudify_test_config": "cloudify-config-openstack-on-hp.yaml",
+    "cloudify_test_handler_module": "cosmo_tester.framework.handlers.openstack"
+}
+]

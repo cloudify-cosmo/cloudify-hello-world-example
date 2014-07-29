@@ -49,3 +49,9 @@ nosetests.xml
 /transaction.log
 
 *COMMIT_MSG
+
+.vagrant/
+xunit-reports/
+system_tests_controller_venv/
+# QuickBuild
+.qbcache/

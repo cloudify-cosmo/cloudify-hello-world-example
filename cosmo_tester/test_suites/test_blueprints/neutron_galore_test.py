@@ -19,13 +19,10 @@ __author__ = 'dan'
 
 from cosmo_tester.framework.testenv import TestCase
 from cosmo_tester.framework.util import YamlPatcher
-from cosmo_tester.framework.openstack_api import openstack_clients
+from cosmo_tester.framework.handlers.openstack import openstack_clients
 
 
 class NeutronGaloreTest(TestCase):
-
-    host_name = 'novaservertest'
-    security_groups = ['neutron_test_security_group_dst']
 
     def test_neutron_galore(self):
 
@@ -45,71 +42,77 @@ class NeutronGaloreTest(TestCase):
         with YamlPatcher(self.blueprint_yaml) as patch:
             vm_path = 'blueprint.nodes[0].properties'
             patch.merge_obj('{0}.server'.format(vm_path), {
-                'name': self.host_name,
+                'name': 'novaservertest',
                 'image_name': self.env.ubuntu_image_name,
                 'flavor_name': self.env.flavor_name,
-                'security_groups': self.security_groups,
+                'security_groups': ['neutron_test_security_group_dst'],
             })
 
     def post_install_assertions(self, before_state, after_state):
+
+        def p(name):
+            return '{}{}'.format(self.env.resources_prefix, name)
+
         delta = self.get_manager_state_delta(before_state, after_state)
         node_states = self.get_node_states(delta['node_state'])
         openstack = self.get_openstack_components(node_states)
 
         floatingip_address = openstack['server']['addresses'][
-            self.env.management_network_name][1]['addr']
+            p(self.env.management_network_name)][1]['addr']
         port_assigned_addr = openstack['server']['addresses'][
-            'neutron_network_test'][0]['addr']
+            p('neutron_network_test')][0]['addr']
         port_security_group_id = openstack['port']['security_groups'][0]
         port_fixed_ip = openstack['port']['fixed_ips'][0]['ip_address']
         port_network_id = openstack['port']['network_id']
         port_subnet_id = openstack['port']['fixed_ips'][0]['subnet_id']
         router_network_id = openstack['router']['external_gateway_info'][
             'network_id']
-        sg_src_id = openstack['sg_src']['id']
+        sg_src_id = openstack[p('sg_src')]['id']
         network_subnet_id = openstack['network']['subnets'][0]
 
         self.assertEqual(openstack['server']['addresses']
-                         [self.env.management_network_name][0]
+                         [p(self.env.management_network_name)][0]
                          ['OS-EXT-IPS:type'], 'fixed')
         self.assertEqual(openstack['server']['addresses']
-                         [self.env.management_network_name][1]
+                         [p(self.env.management_network_name)][1]
                          ['OS-EXT-IPS:type'], 'floating')
         self.assertEqual(openstack['server']['addresses']
-                         ['neutron_network_test'][0]
+                         [p('neutron_network_test')][0]
                          ['OS-EXT-IPS:type'], 'fixed')
         self.assertEqual(openstack['server']['addresses']
-                         ['neutron_network_test'][0]
+                         [p('neutron_network_test')][0]
                          ['version'], 4)
         self.assertTrue(port_assigned_addr.startswith('10.10.10.'))
         self.assert_obj_list_contains_subset(
             openstack['server']['security_groups'],
-            {'name': 'neutron_test_security_group_dst'})
+            {'name': p('neutron_test_security_group_dst')})
         self.assert_obj_list_contains_subset(
             openstack['server']['security_groups'],
-            {'name': self.env.agents_security_group})
+            {'name': p(self.env.agents_security_group)})
         self.assert_obj_list_contains_subset(
             openstack['server']['security_groups'],
-            {'name': 'neutron_test_security_group_src'})
-        self.assertEqual(openstack['server']['name'], 'novaservertest')
-        self.assertEqual(openstack['port']['name'], 'neutron_test_port')
+            {'name': p('neutron_test_security_group_src')})
+        self.assertEqual(openstack['server']['name'], p('novaservertest'))
+        self.assertEqual(openstack['port']['name'], p('neutron_test_port'))
         self.assertEqual(port_fixed_ip, port_assigned_addr)
         self.assertEqual(openstack['floatingip']['floating_ip_address'],
                          floatingip_address)
         self.assertEqual(openstack['floatingip']['floating_network_id'],
                          router_network_id)
-        self.assertEqual(openstack['router']['name'], 'neutron_router_test')
+        self.assertEqual(openstack['router']['name'], p('neutron_router_test'))
         self.assertEqual(openstack['sg_src']['name'],
-                         'neutron_test_security_group_src')
+                         p('neutron_test_security_group_src'))
         self.assertEqual(port_security_group_id, sg_src_id)
-        self.assertEqual(openstack['network']['name'], 'neutron_network_test')
+        self.assertEqual(openstack['network']['name'],
+                         p('neutron_network_test'))
         self.assertEqual(port_network_id, openstack['network']['id'])
-        self.assertEqual(openstack['subnet']['name'], 'neutron_subnet_test')
+        self.assertEqual(openstack['subnet']['name'],
+                         p('neutron_subnet_test'))
         self.assertEqual(openstack['subnet']['cidr'], '10.10.10.0/24')
         self.assertEqual(network_subnet_id, openstack['subnet']['id'])
         self.assertEqual(port_subnet_id, openstack['subnet']['id'])
         self.assertEqual(openstack['sg_dst']['name'],
-                         'neutron_test_security_group_dst')
+                         p('neutron_test_security_group_dst'))
         self.assertEqual(4, len(openstack['sg_dst']['security_group_rules']))
         self.assert_obj_list_contains_subset(
             openstack['sg_dst']['security_group_rules'],
@@ -138,16 +141,16 @@ class NeutronGaloreTest(TestCase):
         self.assertEqual(node_states['floatingip']['floating_ip_address'],
                          floatingip_address)
         self.assertEqual(openstack['server']['addresses']
-                         [self.env.management_network_name][0]['addr'],
+                         [p(self.env.management_network_name)][0]['addr'],
                          node_states['server']['networks']
-                         [self.env.management_network_name][0])
+                         [p(self.env.management_network_name)][0])
         self.assertEqual(openstack['server']['addresses']
-                         ['neutron_network_test'][0]['addr'],
+                         [p('neutron_network_test')][0]['addr'],
                          node_states['server']['networks']
-                         ['neutron_network_test'][0])
+                         [p('neutron_network_test')][0])
         self.assertEqual(node_states['server']['ip'],
                          openstack['server']['addresses']
-                         [self.env.management_network_name][0]['addr'])
+                         [p(self.env.management_network_name)][0]['addr'])
         self.assert_router_connected_to_subnet(openstack['router']['id'],
                                                openstack['router_ports'],
                                                openstack['subnet']['id'])
