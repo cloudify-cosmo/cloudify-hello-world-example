@@ -1,8 +1,20 @@
 [
-{
-    "suite_name": "hp_openstack_all",
-    "tests_to_run": "cosmo_tester/test_suites",
-    "cloudify_test_config": "cloudify-config-openstack-on-hp.yaml",
-    "cloudify_test_handler_module": "cosmo_tester.framework.handlers.openstack"
-}
+    {
+        "suite_name": "hp_openstack_blueprints",
+        "tests_to_run": "cosmo_tester/test_suites/test_blueprints",
+        "cloudify_test_config": "cloudify-config-openstack-on-hp.yaml",
+        "cloudify_test_handler_module": "cosmo_tester.framework.handlers.openstack"
+    },
+    {
+        "suite_name": "hp_openstack_manager_status",
+        "tests_to_run": "cosmo_tester/test_suites/test_manager_status",
+        "cloudify_test_config": "cloudify-config-openstack-on-hp.yaml",
+        "cloudify_test_handler_module": "cosmo_tester.framework.handlers.openstack"
+    },
+    {
+        "suite_name": "hp_openstack_env",
+        "tests_to_run": "cosmo_tester/test_suites/test_openstack_env",
+        "cloudify_test_config": "cloudify-config-openstack-on-hp.yaml",
+        "cloudify_test_handler_module": "cosmo_tester.framework.handlers.openstack"
+    }
 ]
