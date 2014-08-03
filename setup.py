@@ -19,7 +19,7 @@ from setuptools import setup
 
 setup(
     name='cloudify-system-tests',
-    version='3.1',
+    version='3.1a1',
     author='dank',
     author_email='dank@gigaspaces.com',
     packages=['cosmo_tester'],
@@ -37,7 +37,7 @@ setup(
         'path.py==5.1',
         'nose',
         'retrying==1.2.2',
-        'cloudify-cli==3.1',
-        'cloudify-openstack-provider==1.1'
+        'cloudify-cli==3.1a1',
+        'cloudify-openstack-provider==1.1a1'
     ]
 )
