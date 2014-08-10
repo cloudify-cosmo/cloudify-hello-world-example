@@ -11,7 +11,7 @@ This is a blueprint for simple wordpress installation on two VMs:
 
 Tested on `OpenStack` (HP cloud), `Ubuntu 12.04` and `Berkshelf 3.1.4`.
 
-Wordpress installation is at: http://YOUR_WEB_SERVER_FLOATING_IP/wordpress/
+After successful blueprint run, Wordpress installation will be at: http://YOUR_WEB_SERVER_FLOATING_IP/wordpress/
 
 You can use `nova list` and look for `apache_web_vm_XXXXX` named server to discover the floating IP for the URL above.
 
