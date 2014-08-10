@@ -10,63 +10,61 @@ imports:
     - http://www.getcloudify.org/spec/openstack-plugin/1.0/plugin.yaml
     - http://www.getcloudify.org/spec/bash-plugin/1.0/plugin.yaml
 
-types:
+node_types:
     # A web server configured with bash scripts
     cloudify.types.bash.web_server_with_index_and_image:
         derived_from: cloudify.types.bash.web_server
         properties:
-            - image_path
-            - index_path
+            image_path: {}
+            index_path: {}
 
 # The blueprint contains two nodes, a vm and a web server hosted in it.
-blueprint:
-    name: hello_world
-    nodes:
-        -   name: virtual_ip
-            type: cloudify.openstack.floatingip
+node_templates:
+    virtual_ip:
+        type: cloudify.openstack.floatingip
 
-        -   name: security_group
-            type: cloudify.openstack.security_group
-            properties:
-                security_group:
-                    name: webserver_security_group
-                rules:
-                    -   remote_ip_prefix: 0.0.0.0/0
-                        port: 8080
+    security_group:
+        type: cloudify.openstack.security_group
+        properties:
+            security_group:
+                name: webserver_security_group
+            rules:
+                -   remote_ip_prefix: 0.0.0.0/0
+                    port: 8080
 
-        -   name: vm
-            type: cloudify.openstack.server
-            instances:
-                deploy: 1
-            ####################################################################################
-            # Uncomment bellow and fill the properties according to your openstack environment.#
-            ####################################################################################
-            #properties:
-            #    cloudify_agent:
-            #        user: [Enter-User-Name]
-            #    server:
-            #        name: bash-web-server
-            #        image_name: [Enter-Image-Name]
-            #        flavor_name: [Enter-Flavor-Name]
-            #        key_name: cloudify-agents-kp
-            #        security_groups: ['webserver_security_group']
-            relationships:
-                -   type: cloudify.openstack.server_connected_to_floating_ip
-                    target: virtual_ip
-                -   type: cloudify.relationships.connected_to
-                    target: security_group
+    vm:
+        type: cloudify.openstack.server
+        instances:
+            deploy: 1
+        ####################################################################################
+        # Uncomment bellow and fill the properties according to your openstack environment.#
+        ####################################################################################
+        #properties:
+        #    cloudify_agent:
+        #        user: [Enter-User-Name]
+        #    server:
+        #        name: bash-web-server
+        #        image_name: [Enter-Image-Name]
+        #        flavor_name: [Enter-Flavor-Name]
+        #        key_name: cloudify-agents-kp
+        #        security_groups: ['webserver_security_group']
+        relationships:
+            -   type: cloudify.openstack.server_connected_to_floating_ip
+                target: virtual_ip
+            -   type: cloudify.relationships.connected_to
+                target: security_group
 
 
-        -   name: http_web_server
-            type: cloudify.types.bash.web_server_with_index_and_image
-            properties:
-                port: 8080
-                image_path: images/cloudify-logo.png
-                index_path: index.html
-                scripts:
-                    configure: scripts/configure.sh
-                    start: scripts/start.sh
-                    stop: scripts/stop.sh
-            relationships:
-                -   type: cloudify.relationships.contained_in
-                    target: vm
+    http_web_server:
+        type: cloudify.types.bash.web_server_with_index_and_image
+        properties:
+            port: 8080
+            image_path: images/cloudify-logo.png
+            index_path: index.html
+            scripts:
+                configure: scripts/configure.sh
+                start: scripts/start.sh
+                stop: scripts/stop.sh
+        relationships:
+            -   type: cloudify.relationships.contained_in
+                target: vm
