@@ -62,18 +62,10 @@ blueprint:
                     target: ip
                 -   type: cloudify.relationships.connected_to
                     target: security_group
-        ### -   name: apache_web_vm
-        ###     type: cloudify.types.host
-        ###     properties:
-        ###       ip: 10.67.79.24
-
 
         -   name: mysql_db_vm
             type: vm_host
-        ### -   name: mysql_db_vm
-        ###     type: cloudify.types.host
-        ###     properties:
-        ###       ip: 10.67.79.25
+
         -   name: wordpress_app
             type: cloudify.types.chef.app_module
             properties:
