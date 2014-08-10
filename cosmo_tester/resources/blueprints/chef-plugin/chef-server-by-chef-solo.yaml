@@ -2,51 +2,49 @@ imports:
     - http://www.getcloudify.org/spec/openstack-plugin/1.0/plugin.yaml
     - http://www.getcloudify.org/spec/chef-plugin/1.0/plugin.yaml
 
-blueprint:
-    name: system-test-chef-server
-    nodes:
-        -   name: chef_server
-            type: cloudify.openstack.server
-            properties:
-                install_agent: true
-                server:
-                    name: REPLACED-BY-TEST
-                    image_name: REPLACED-BY-TEST
-                    flavor_name: REPLACED-BY-TEST
-                    security_groups: [chef_sg]  # MODIFIED-BY-TEST (adds agents security group to the list)
-                    # MODIFIED-BY-TEST -- {hostname} substitution
-                    userdata: |
-                        #!/bin/bash -ex
-                        grep -q "{hostname}" /etc/hosts || echo "127.0.0.1 {hostname}" >> /etc/hosts
-            relationships:
-                -   type: cloudify.openstack.server_connected_to_floating_ip
-                    target: ip
-                -   type: cloudify.relationships.connected_to
-                    target: chef_sg
-        -   name: ip
-            type: cloudify.openstack.floatingip
-        -   name: chef_sg
-            type: cloudify.openstack.security_group
-            properties:
-                security_group:
-                    name: chef_sg
-                rules:
-                    -   remote_ip_prefix: 0.0.0.0/0
-                        port: 22
-                    -   remote_ip_prefix: 0.0.0.0/0
-                        port: 443
-        -   name: chef_service
-            type: cloudify.types.chef.app_server
-            properties:
-                chef_config:
-                    version: 11.10.4-1  # Chef Solo for installing Chef server
-                    cookbooks: cookbooks.tar.gz
-                    attributes:
-                        # https://github.com/opscode-cookbooks/chef-server
-                        chef-server:
-                            version: 11.0.11-1
-                    runlists:
-                        create: recipe[chef-server]
-            relationships:
-                -   type: cloudify.relationships.contained_in
-                    target: chef_server
+node_templates:
+    chef_server:
+        type: cloudify.openstack.server
+        properties:
+            install_agent: true
+            server:
+                name: REPLACED-BY-TEST
+                image_name: REPLACED-BY-TEST
+                flavor_name: REPLACED-BY-TEST
+                security_groups: [chef_sg]  # MODIFIED-BY-TEST (adds agents security group to the list)
+                # MODIFIED-BY-TEST -- {hostname} substitution
+                userdata: |
+                    #!/bin/bash -ex
+                    grep -q "{hostname}" /etc/hosts || echo "127.0.0.1 {hostname}" >> /etc/hosts
+        relationships:
+            -   type: cloudify.openstack.server_connected_to_floating_ip
+                target: ip
+            -   type: cloudify.relationships.connected_to
+                target: chef_sg
+    ip:
+        type: cloudify.openstack.floatingip
+    chef_sg:
+        type: cloudify.openstack.security_group
+        properties:
+            security_group:
+                name: chef_sg
+            rules:
+                -   remote_ip_prefix: 0.0.0.0/0
+                    port: 22
+                -   remote_ip_prefix: 0.0.0.0/0
+                    port: 443
+    chef_service:
+        type: cloudify.types.chef.app_server
+        properties:
+            chef_config:
+                version: 11.10.4-1  # Chef Solo for installing Chef server
+                cookbooks: cookbooks.tar.gz
+                attributes:
+                    # https://github.com/opscode-cookbooks/chef-server
+                    chef-server:
+                        version: 11.0.11-1
+                runlists:
+                    create: recipe[chef-server]
+        relationships:
+            -   type: cloudify.relationships.contained_in
+                target: chef_server

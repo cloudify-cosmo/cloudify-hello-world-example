@@ -80,8 +80,8 @@ def find_node_state(node_name, nodes_state):
 
 
 def get_nodes_of_type(blueprint, type_):
-    return [n for n in blueprint.obj['blueprint']['nodes']
-            if n['type'] == type_]
+    return [node_obj for _, node_obj in blueprint.obj[
+        'node_templates'].iteritems() if node_obj['type'] == type_]
 
 
 def update_blueprint(env, blueprint, hostname, userdata_vars=None):

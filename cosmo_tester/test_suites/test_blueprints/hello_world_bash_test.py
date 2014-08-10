@@ -89,7 +89,8 @@ def verify_webserver_running(blueprint_yaml, floatingip_node):
     This method is also used by two_deployments_test!
     """
     blueprint = get_yaml_as_dict(blueprint_yaml)
-    webserver_props = blueprint['blueprint']['nodes'][3]['properties']
+    webserver_props = blueprint['node_templates']['http_web_server'][
+        'properties']
     server_port = webserver_props['port']
     server_ip = floatingip_node.runtime_properties['floating_ip_address']
     server_response = requests.get('http://{0}:{1}'.format(server_ip,
@@ -130,7 +131,7 @@ def modify_yaml(env, yaml_file, host_name, security_groups,
     if user is None:
         user = env.cloudify_agent_user
     with YamlPatcher(yaml_file) as patch:
-        vm_properties_path = 'blueprint.nodes[2].properties'
+        vm_properties_path = 'node_templates.vm.properties'
         patch.merge_obj('{0}.cloudify_agent'.format(vm_properties_path), {
             'user': user,
         })
@@ -140,6 +141,7 @@ def modify_yaml(env, yaml_file, host_name, security_groups,
             'flavor_name': env.flavor_name,
             'security_groups': security_groups,
         })
-        sg_name_path = 'blueprint.nodes[1].properties.security_group.name'
+        sg_name_path = 'node_templates.security_group.properties' \
+                       '.security_group.name'
         if security_group_name is not None:
             patch.set_value(sg_name_path, security_group_name)

@@ -2,8 +2,6 @@
 imports:
     - http://www.getcloudify.org/spec/cloudify/3.0/types.yaml
 
-blueprint:
-    name: single_node
-    nodes:
-        -   name: mock_vm
-            type: cloudify.types.base
+node_templates:
+    mock_vm:
+        type: cloudify.types.base

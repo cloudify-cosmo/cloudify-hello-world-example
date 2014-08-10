@@ -1,80 +1,78 @@
 imports:
     - http://www.getcloudify.org/spec/openstack-plugin/1.0/plugin.yaml
 
-blueprint:
-    name: neutron-galore
-    nodes:
-        -   name: nova_server
-            type: cloudify.openstack.server
-            relationships:
-               -   type: cloudify.relationships.connected_to
-                   target: neutron_port
-               -   type: cloudify.relationships.depends_on
-                   target: security_group_dst
-               -   type: cloudify.openstack.server_connected_to_floating_ip
-                   target: floatingip
-            properties:
-                install_agent: true
-                cloudify_agent:
-                    user: ubuntu
-                    port: 22
-        -   name: neutron_network
-            type: cloudify.openstack.network
-            properties:
-                network:
-                    name: neutron_network_test
-        -   name: neutron_subnet
-            type: cloudify.openstack.subnet
-            relationships:
-                -   type: cloudify.relationships.contained_in
-                    target: neutron_network
-                -   type: cloudify.openstack.subnet_connected_to_router
-                    target: neutron_router
-            properties:
-                subnet:
-                    name: neutron_subnet_test
-                    ip_version: 4
-                    cidr: 10.10.10.0/24
-        -   name: neutron_router
-            type: cloudify.openstack.router
-            properties:
-                router:
-                    name: neutron_router_test
-        -   name: neutron_port
-            type: cloudify.openstack.port
-            properties:
-                port:
-                    name: neutron_test_port
-            relationships:
-                -   type: cloudify.relationships.contained_in
-                    target: neutron_network
-                -   type: cloudify.relationships.depends_on
-                    target: neutron_subnet
-                -   type: cloudify.openstack.port_connected_to_security_group
-                    target: security_group_src
-        -   name: security_group_src
-            type: cloudify.openstack.security_group
-            properties:
-                security_group:
-                    name: neutron_test_security_group_src
-        -   name: security_group_dst
-            type: cloudify.openstack.security_group
-            properties:
-                security_group:
-                    name: neutron_test_security_group_dst
-                rules:
-                    -   remote_ip_prefix: 1.2.3.0/24
-                        port: 80
-                    -   remote_ip_prefix: 2.3.4.0/24
-                        port_range_min: 65500
-                        port_range_max: 65510
-                    -   remote_group_node: security_group_src
-                        port: 65521
-                    -   direction: egress
-                        remote_ip_prefix: 3.4.5.0/24
-                        port: 443
-            relationships:
-                -   type: cloudify.relationships.connected_to
-                    target: security_group_src
-        -   name: floatingip
-            type: cloudify.openstack.floatingip
+node_templates:
+    nova_server:
+        type: cloudify.openstack.server
+        relationships:
+           -   type: cloudify.relationships.connected_to
+               target: neutron_port
+           -   type: cloudify.relationships.depends_on
+               target: security_group_dst
+           -   type: cloudify.openstack.server_connected_to_floating_ip
+               target: floatingip
+        properties:
+            install_agent: true
+            cloudify_agent:
+                user: ubuntu
+                port: 22
+    neutron_network:
+        type: cloudify.openstack.network
+        properties:
+            network:
+                name: neutron_network_test
+    neutron_subnet:
+        type: cloudify.openstack.subnet
+        relationships:
+            -   type: cloudify.relationships.contained_in
+                target: neutron_network
+            -   type: cloudify.openstack.subnet_connected_to_router
+                target: neutron_router
+        properties:
+            subnet:
+                name: neutron_subnet_test
+                ip_version: 4
+                cidr: 10.10.10.0/24
+    neutron_router:
+        type: cloudify.openstack.router
+        properties:
+            router:
+                name: neutron_router_test
+    neutron_port:
+        type: cloudify.openstack.port
+        properties:
+            port:
+                name: neutron_test_port
+        relationships:
+            -   type: cloudify.relationships.contained_in
+                target: neutron_network
+            -   type: cloudify.relationships.depends_on
+                target: neutron_subnet
+            -   type: cloudify.openstack.port_connected_to_security_group
+                target: security_group_src
+    security_group_src:
+        type: cloudify.openstack.security_group
+        properties:
+            security_group:
+                name: neutron_test_security_group_src
+    security_group_dst:
+        type: cloudify.openstack.security_group
+        properties:
+            security_group:
+                name: neutron_test_security_group_dst
+            rules:
+                -   remote_ip_prefix: 1.2.3.0/24
+                    port: 80
+                -   remote_ip_prefix: 2.3.4.0/24
+                    port_range_min: 65500
+                    port_range_max: 65510
+                -   remote_group_node: security_group_src
+                    port: 65521
+                -   direction: egress
+                    remote_ip_prefix: 3.4.5.0/24
+                    port: 443
+        relationships:
+            -   type: cloudify.relationships.connected_to
+                target: security_group_src
+    floatingip:
+        type: cloudify.openstack.floatingip

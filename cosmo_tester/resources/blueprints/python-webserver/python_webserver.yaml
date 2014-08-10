@@ -7,12 +7,12 @@ plugins:
         properties:
             url: https://github.com/CloudifySource/cosmo-plugin-python-webserver/archive/develop.zip
 
-types:
+node_types:
     web_server:
         derived_from: cloudify.types.web_server
         properties:
-            -   port
-            -   image_path
+            port: {}
+            image_path: {}
         interfaces:
             cloudify.interfaces.lifecycle:
                 -   configure: python_webserver_installer.tasks.configure

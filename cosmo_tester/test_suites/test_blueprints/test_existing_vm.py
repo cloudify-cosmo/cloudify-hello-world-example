@@ -68,7 +68,7 @@ class ExistingVMTest(TestCase):
 
     def modify_yaml(self, ip, remote_key_path):
         with YamlPatcher(self.blueprint_yaml) as patch:
-            base_path = 'blueprint.nodes[0].properties'
+            base_path = 'node_templates.host.properties'
             patch.set_value('{}.ip'.format(base_path), ip)
             patch.set_value('{}.cloudify_agent.key'.format(base_path),
                             remote_key_path)

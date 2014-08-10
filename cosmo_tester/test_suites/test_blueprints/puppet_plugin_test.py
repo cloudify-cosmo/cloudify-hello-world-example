@@ -52,8 +52,8 @@ def find_node_state(node_name, nodes_state):
 
 
 def get_nodes_of_type(blueprint, type_):
-    return [n for n in blueprint.obj['blueprint']['nodes']
-            if n['type'] == type_]
+    return [node_obj for _, node_obj in blueprint.obj[
+        'node_templates'].iteritems() if node_obj['type'] == type_]
 
 
 def update_blueprint(env, blueprint, hostname, userdata_vars=None):
@@ -286,8 +286,8 @@ class PuppetPluginStandaloneTest(TestCase):
         self.blueprint_yaml = blueprint_dir / 'puppet-standalone-test.yaml'
         with YamlPatcher(self.blueprint_yaml) as blueprint:
             update_blueprint(self.env, blueprint, 'puppet-standalone-' + mode)
-            conf = blueprint.obj['blueprint']['nodes'][1]['properties'][
-                'puppet_config']
+            conf = blueprint.obj['node_templates']['puppet_node_one'][
+                'properties']['puppet_config']
             conf['download'] = download_from
             if manifests_are_from_url:
                 del conf['execute']
