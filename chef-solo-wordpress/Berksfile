@@ -1,0 +1,9 @@
+# *** Official cookbooks *** 
+source "https://supermarket.getchef.com"
+
+cookbook "apt", "= 2.4.0"
+cookbook "mysql", "= 5.3.6"
+cookbook "wordpress", "= 2.2.0"
+
+# *** Local cookbook ***
+cookbook "database_for_wordpress", "= 0.1.0", path: "database_for_wordpress"

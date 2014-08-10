@@ -1,0 +1,132 @@
+# This is a blueprint for simple wordpress installation on
+# two VMs:
+# 1. Apache + wordpress
+# 2. MySQL
+#
+# Tested on OpenStack (HP cloud) and Ubuntu. Should also work on Debian based
+# distros. For others, you should probably modify the installation path
+# below (/var/www/wordpress). Other changes might be required.
+#
+# When done, the Wordpress installation is at:
+# http://YOUR_WEB_SERVER_FLOATING_IP/wordpress/
+
+imports:
+    - http://www.getcloudify.org/spec/openstack-plugin/1.0/plugin.yaml
+
+    # Temporary plugin Chef plugin URL.
+    # After pulling https://github.com/cloudify-cosmo/cloudify-chef-plugin/pull/5
+    # you can switch back to the one below.
+    - https://raw.githubusercontent.com/Fewbytes/cloudify-chef-plugin/with-plugin-yaml/fewbytes-fix-dirs-perms-plugin.yaml
+    # - http://www.getcloudify.org/spec/chef-plugin/1.0/plugin.yaml
+
+types:
+    vm_host:
+        derived_from: cloudify.openstack.server
+        properties:
+            -   server:
+                     # HP Cloud specific - start
+                     image: 261844b3-479c-5446-a2c4-1ea95d53b668 # Ubuntu Server 12.04.2 LTS (amd64 20130318) - Partner Image
+                     flavor_name: standard.medium
+                     # HP Cloud specific - end
+                     security_groups: ['wp_security_group']
+
+blueprint:
+    name: wp_chef
+    nodes:
+        -   name: ip
+            type: cloudify.openstack.floatingip
+            properties:
+                 floatingip:
+                     floating_network_name: Ext-Net
+
+        -   name: security_group
+            type: cloudify.openstack.security_group
+            properties:
+                security_group:
+                    name: wp_security_group
+                rules:
+                    -   remote_ip_prefix: 0.0.0.0/0
+                        port: 80
+                    -   remote_ip_prefix: 0.0.0.0/0
+                        port: 3306
+
+        -   name: apache_web_vm
+            type: vm_host
+            relationships:
+                -   type: cloudify.openstack.server_connected_to_floating_ip
+                    target: ip
+                -   type: cloudify.relationships.connected_to
+                    target: security_group
+            relationships:
+                -   type: cloudify.openstack.server_connected_to_floating_ip
+                    target: ip
+                -   type: cloudify.relationships.connected_to
+                    target: security_group
+        ### -   name: apache_web_vm
+        ###     type: cloudify.types.host
+        ###     properties:
+        ###       ip: 10.67.79.24
+
+
+        -   name: mysql_db_vm
+            type: vm_host
+        ### -   name: mysql_db_vm
+        ###     type: cloudify.types.host
+        ###     properties:
+        ###       ip: 10.67.79.25
+        -   name: wordpress_app
+            type: cloudify.types.chef.app_module
+            properties:
+                chef_config:
+                    version: 11.12.8-1
+                    cookbooks: /cookbooks.tar.gz
+                    runlists:
+                        postconfigure:
+                            - recipe[apt]
+                            - recipe[wordpress]
+                    attributes:
+                        wordpress:
+                            version: 3.9.1
+                            server_name: my-wp-server
+                            server_aliases:
+                                - my-wp-server-alias1
+                                - my-wp-server-alias2
+                            db:
+                                host: {related_chef_attribute: ipaddress}
+                                # Anything except from 'host' comes from MySQL server's Chef attributes.
+                                user: {related_chef_attribute: wordpress.db.user}
+                                pass: {related_chef_attribute: wordpress.db.pass}
+                                name: {related_chef_attribute: wordpress.db.name}
+                                prefix: {related_chef_attribute: wordpress.db.prefix}
+
+            relationships:
+                -  type: cloudify.relationships.contained_in
+                   target: apache_web_vm
+                -  type: cloudify.chef.connected_to
+                   target: mysql_database
+
+
+        -   name: mysql_database
+            type: cloudify.types.chef.db_server
+            properties:
+                chef_config:
+                    version: 11.12.8-1
+                    cookbooks: /cookbooks.tar.gz
+                    runlists:
+                        create:
+                            - recipe[apt]
+                            - recipe[database_for_wordpress]
+                    attributes:
+                        wordpress:
+                            db:
+                                host: '%'
+                                user: wordpress
+                                password: come_on_its_just_demo
+                                name: wordpress
+                                prefix: wp_
+                        mysql:
+                            server_root_password: wordpress
+
+            relationships:
+                -   type: cloudify.relationships.contained_in
+                    target: mysql_db_vm
