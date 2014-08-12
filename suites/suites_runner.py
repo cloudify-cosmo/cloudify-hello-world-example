@@ -44,7 +44,7 @@ env_variables = {
 }
 
 def container_exit_code(container_name):
-    return sh.docker.wait(container_name).strip()
+    return int(sh.docker.wait(container_name).strip())
 
 def container_kill(container_name):
     docker.rm('-f', container_name).wait()
