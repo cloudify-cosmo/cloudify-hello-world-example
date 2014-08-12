@@ -37,7 +37,7 @@ setup(
         'path.py==5.1',
         'nose',
         'retrying==1.2.2',
-        'cloudify-cli==3.1a1',
+        'cloudify==3.1a1',
         'cloudify-openstack-provider==1.1a1'
     ]
 )

@@ -340,11 +340,11 @@ class OpenstackHandler(BaseHandler):
     CloudifyConfigReader = CloudifyOpenstackConfigReader
 
     ubuntu_image_name = \
-        'Ubuntu Server 12.04 LTS (amd64 20140606) - Partner Image'
+        'Ubuntu Server 12.04.2 LTS (amd64 20130318) - Partner Image'
     centos_image_name = 'centos-python2.7'
     centos_image_user = 'root'
     flavor_name = 'standard.small'
-    ubuntu_image_id = '75d47d10-fef8-473b-9dd1-fe2f7649cb41'
+    ubuntu_image_id = '261844b3-479c-5446-a2c4-1ea95d53b668'
     small_flavor_id = 101
 
     def before_bootstrap(self):
