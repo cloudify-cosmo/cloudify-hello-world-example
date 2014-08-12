@@ -40,7 +40,7 @@ class NeutronGaloreTest(TestCase):
 
     def modify_blueprint(self):
         with YamlPatcher(self.blueprint_yaml) as patch:
-            vm_path = 'blueprint.nodes[0].properties'
+            vm_path = 'node_templates.nova_server.properties'
             patch.merge_obj('{0}.server'.format(vm_path), {
                 'name': 'novaservertest',
                 'image_name': self.env.ubuntu_image_name,

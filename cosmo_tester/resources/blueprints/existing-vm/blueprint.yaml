@@ -7,20 +7,18 @@ plugins:
         properties:
             folder: mock-plugin
 
-blueprint:
-    name: existing_vm
-    nodes:
-        -   name: host
-            type: cloudify.types.host
-            properties:
-                ip: PROVIDED_BY_TEST
-                cloudify_agent:
-                    key: PROVIDED_BY_TEST
-        -   name: middle
-            type: cloudify.types.middleware_server
-            relationships:
-                -   type: cloudify.relationships.contained_in
-                    target: host
-            interfaces:
-                cloudify.interfaces.lifecycle:
-                    - create: mock_plugin.mock.create
+node_templates:
+    host:
+        type: cloudify.types.host
+        properties:
+            ip: PROVIDED_BY_TEST
+            cloudify_agent:
+                key: PROVIDED_BY_TEST
+    middle:
+        type: cloudify.types.middleware_server
+        relationships:
+            -   type: cloudify.relationships.contained_in
+                target: host
+        interfaces:
+            cloudify.interfaces.lifecycle:
+                - create: mock_plugin.mock.create

@@ -1,29 +1,27 @@
 imports:
     - python_webserver.yaml
 
-blueprint:
-    name: hello_world
-    nodes:
-        -   name: virtual_ip
-            type: cloudify.types.base
+node_templates:
+    virtual_ip:
+        type: cloudify.types.base
 
-        -   name: security_group
-            type: cloudify.types.base
+    security_group:
+        type: cloudify.types.base
 
-        -   name: vm
-            type: cloudify.types.host
-            instances:
-                deploy: 1
-            relationships:
-                -   type: cloudify.relationships.connected_to
-                    target: virtual_ip
-                -   type: cloudify.relationships.connected_to
-                    target: security_group
+    vm:
+        type: cloudify.types.host
+        instances:
+            deploy: 1
+        relationships:
+            -   type: cloudify.relationships.connected_to
+                target: virtual_ip
+            -   type: cloudify.relationships.connected_to
+                target: security_group
 
-        -   name: http_web_server
-            type: cloudify.types.web_server
-            properties:
-                port: 8080
-            relationships:
-                -   type: cloudify.relationships.contained_in
-                    target: vm
+    http_web_server:
+        type: cloudify.types.web_server
+        properties:
+            port: 8080
+        relationships:
+            -   type: cloudify.relationships.contained_in
+                target: vm

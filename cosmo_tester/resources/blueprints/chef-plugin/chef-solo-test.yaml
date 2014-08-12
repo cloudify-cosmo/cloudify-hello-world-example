@@ -2,123 +2,118 @@ imports:
     - http://www.getcloudify.org/spec/openstack-plugin/1.0/plugin.yaml
     - http://www.getcloudify.org/spec/chef-plugin/1.0/plugin.yaml
 
-blueprint:
-    name: system-test-chef-client
-    nodes:
-        -   name: server
-            type: cloudify.openstack.server
-            properties:
-                install_agent: true
-                server:
-                    name: REPLACED-BY-TEST
-                    image_name: REPLACED-BY-TEST
-                    flavor_name: REPLACED-BY-TEST
-                    security_groups: [chef_sg]  # MODIFIED-BY-TEST (adds agents security group to the list)
-            relationships:
-                -   type: cloudify.openstack.server_connected_to_floating_ip
-                    target: ip
-                -   type: cloudify.relationships.connected_to
-                    target: chef_sg
-        -   name: ip
-            type: cloudify.openstack.floatingip
-        -   name: chef_node_one
-            type: cloudify.types.chef.db_server
-            properties:
-                chef_config:
-                    version: 11.10.4-1
+node_templates:
+    server:
+        type: cloudify.openstack.server
+        properties:
+            install_agent: true
+            server:
+                name: REPLACED-BY-TEST
+                image_name: REPLACED-BY-TEST
+                flavor_name: REPLACED-BY-TEST
+                security_groups: [chef_sg]  # MODIFIED-BY-TEST (adds agents security group to the list)
+        relationships:
+            -   type: cloudify.openstack.server_connected_to_floating_ip
+                target: ip
+            -   type: cloudify.relationships.connected_to
+                target: chef_sg
+    ip:
+        type: cloudify.openstack.floatingip
+    chef_node_one:
+        type: cloudify.types.chef.db_server
+        properties:
+            chef_config:
+                version: 11.10.4-1
 
-                    cookbooks: cookbooks.tar.gz
+                cookbooks: cookbooks.tar.gz
 
-                    environment: _default
-                    attributes:
-                        test_attr_1: test_val_1
-                        create_file:
-                            file_name: /tmp/blueprint.txt
-                            file_contents: 'Great success number #2 !'
-                    runlists:
-                        create:    recipe[create-file]
-            relationships:
-                -   type: cloudify.relationships.contained_in
-                    target: server
-        -   name: chef_node_two
-            type: cloudify.types.chef.app_server
-            properties:
-                chef_config:
-                    version: 11.10.4-1
+                environment: _default
+                attributes:
+                    test_attr_1: test_val_1
+                    create_file:
+                        file_name: /tmp/blueprint.txt
+                        file_contents: 'Great success number #2 !'
+                runlists:
+                    create:    recipe[create-file]
+        relationships:
+            -   type: cloudify.relationships.contained_in
+                target: server
+    chef_node_two:
+        type: cloudify.types.chef.app_server
+        properties:
+            chef_config:
+                version: 11.10.4-1
 
-                    cookbooks: cookbooks.tar.gz
+                cookbooks: cookbooks.tar.gz
 
-                    environment: _default
-                    attributes:
-                        other_file_name: {related_chef_attribute: create_file.file_name}
-                        test_attr_2: test_val_2
-                        create_file:
-                            file_name: /tmp/blueprint2.txt
-                            file_contents: {related_chef_attribute: create_file.file_name}
-                    runlists:
-                        establish: recipe[create-file]
-            relationships:
-                -   type: cloudify.chef.connected_to
-                    target: chef_node_one
-                -   type: cloudify.relationships.contained_in
-                    target: server
-        -   # Concurrent installation with chef_node_one
-            name: chef_node_env_e1
-            type: cloudify.types.chef.app_server
-            properties:
-                chef_config:
-                    version: 11.10.4-1
-                    cookbooks: cookbooks.tar.gz
-                    environments: environments.tar.gz
-                    environment: e1
-                    attributes:
-                        create_file:
-                            file_name: /tmp/chef_node_env.e1.txt
-                    runlists:
-                        create: recipe[create-file]
-            relationships:
-                -   type: cloudify.relationships.contained_in
-                    target: server
-        -   # Concurrent installation with chef_node_one
-            name: chef_node_role_r1
-            type: cloudify.types.chef.app_server
-            properties:
-                chef_config:
-                    version: 11.10.4-1
-                    cookbooks: cookbooks.tar.gz
-                    roles: roles.tar.gz
-                    runlists:
-                        create: role[r1]
-            relationships:
-                -   type: cloudify.relationships.contained_in
-                    target: server
-        -   # Concurrent installation with chef_node_one
-            name: chef_node_data_bag_user
-            type: cloudify.types.chef.app_server
-            properties:
-                chef_config:
-                    version: 11.10.4-1
-                    cookbooks: cookbooks.tar.gz
-                    roles:     roles.tar.gz
-                    data_bags: data_bags.tar.gz
-                    attributes:
-                        create_file:
-                            file_name: /tmp/chef_node_data_bag_user.db1.i1.txt
-                            data_bag_name: db1
-                            data_bag_item: i1
-                            data_bag_key: k1
-                    runlists: []
-                    runlist: recipe[create-file::from-data-bag]
-            relationships:
-                -   type: cloudify.relationships.contained_in
-                    target: server
-        -   name: chef_sg
-            type: cloudify.openstack.security_group
-            properties:
-                security_group:
-                    name: chef_sg
-                rules:
-                    -   remote_ip_prefix: 0.0.0.0/0
-                        port: 22
-                    -   remote_ip_prefix: 0.0.0.0/0
-                        port: 443
+                environment: _default
+                attributes:
+                    other_file_name: {related_chef_attribute: create_file.file_name}
+                    test_attr_2: test_val_2
+                    create_file:
+                        file_name: /tmp/blueprint2.txt
+                        file_contents: {related_chef_attribute: create_file.file_name}
+                runlists:
+                    establish: recipe[create-file]
+        relationships:
+            -   type: cloudify.chef.connected_to
+                target: chef_node_one
+            -   type: cloudify.relationships.contained_in
+                target: server
+    chef_node_env_e1: # Concurrent installation with chef_node_one
+        type: cloudify.types.chef.app_server
+        properties:
+            chef_config:
+                version: 11.10.4-1
+                cookbooks: cookbooks.tar.gz
+                environments: environments.tar.gz
+                environment: e1
+                attributes:
+                    create_file:
+                        file_name: /tmp/chef_node_env.e1.txt
+                runlists:
+                    create: recipe[create-file]
+        relationships:
+            -   type: cloudify.relationships.contained_in
+                target: server
+    chef_node_role_r1: # Concurrent installation with chef_node_one
+        type: cloudify.types.chef.app_server
+        properties:
+            chef_config:
+                version: 11.10.4-1
+                cookbooks: cookbooks.tar.gz
+                roles: roles.tar.gz
+                runlists:
+                    create: role[r1]
+        relationships:
+            -   type: cloudify.relationships.contained_in
+                target: server
+    chef_node_data_bag_user: # Concurrent installation with chef_node_one
+        type: cloudify.types.chef.app_server
+        properties:
+            chef_config:
+                version: 11.10.4-1
+                cookbooks: cookbooks.tar.gz
+                roles:     roles.tar.gz
+                data_bags: data_bags.tar.gz
+                attributes:
+                    create_file:
+                        file_name: /tmp/chef_node_data_bag_user.db1.i1.txt
+                        data_bag_name: db1
+                        data_bag_item: i1
+                        data_bag_key: k1
+                runlists: []
+                runlist: recipe[create-file::from-data-bag]
+        relationships:
+            -   type: cloudify.relationships.contained_in
+                target: server
+    chef_sg:
+        type: cloudify.openstack.security_group
+        properties:
+            security_group:
+                name: chef_sg
+            rules:
+                -   remote_ip_prefix: 0.0.0.0/0
+                    port: 22
+                -   remote_ip_prefix: 0.0.0.0/0
+                    port: 443
