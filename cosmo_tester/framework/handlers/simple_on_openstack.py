@@ -13,8 +13,6 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
-__author__ = 'dan'
-
 
 from cosmo_cli.cosmo_cli import ProviderConfig
 from cloudify_openstack.cloudify_openstack import ProviderManager
@@ -118,7 +116,8 @@ class SimpleOnOpenstackHandler(OpenstackHandler):
                                   self.env.agent_key_path)
             patch.set_value(key_prop, key_val)
 
-    def after_bootstrap(self):
+    def after_bootstrap(self, provider_context):
+        super(SimpleOnOpenstackHandler, self).after_bootstrap(provider_context)
         openstack_config = get_openstack_cloudify_config(
             self.env.cloudify_config)
         pm = get_provider_manager(openstack_config)

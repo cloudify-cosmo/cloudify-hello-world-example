@@ -72,7 +72,10 @@ class BaseHandler(object):
     def before_bootstrap(self):
         pass
 
-    def after_bootstrap(self):
+    def after_bootstrap(self, provider_context):
+        pass
+
+    def after_teardown(self):
         pass
 
 handler = BaseHandler
