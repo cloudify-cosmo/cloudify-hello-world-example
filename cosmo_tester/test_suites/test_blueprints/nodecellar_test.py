@@ -47,7 +47,7 @@ class NodecellarAppTest(TestCase):
     def modify_blueprint(self):
         with YamlPatcher(self.blueprint_yaml) as patch:
             vm_type_path = 'node_types.vm_host.properties'
-            patch.merge_obj('{0}.server'.format(vm_type_path), {
+            patch.merge_obj('{0}.server.default'.format(vm_type_path), {
                 'image_name': self.env.ubuntu_image_name,
                 'flavor_name': self.env.flavor_name
             })
