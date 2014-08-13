@@ -154,6 +154,11 @@ class CfyHelper(object):
             settings = _load_cosmo_working_dir_settings()
             return settings.get_management_server()
 
+    def get_provider_context(self):
+        with self.workdir:
+            settings = _load_cosmo_working_dir_settings()
+            return settings.get_provider_context()
+
     def close(self):
         if self.tmpdir:
             shutil.rmtree(self._cfy_workdir)

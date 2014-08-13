@@ -152,7 +152,7 @@ class TestEnvironment(object):
                 verbose=True,
                 dev_mode=False)
             self._running_env_setup(cfy.get_management_ip())
-            self.handler.after_bootstrap()
+            self.handler.after_bootstrap(cfy.get_provider_context())
         finally:
             cfy.close()
 
@@ -171,6 +171,7 @@ class TestEnvironment(object):
             self._global_cleanup_context.cleanup()
             if os.path.exists(self._workdir):
                 shutil.rmtree(self._workdir)
+        self.handler.after_teardown()
 
     def _running_env_setup(self, management_ip):
         self.management_ip = management_ip
