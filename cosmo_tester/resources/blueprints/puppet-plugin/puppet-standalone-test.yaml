@@ -60,7 +60,8 @@ node_templates:
         properties:
             floatingip:
                 floating_network_name: REPLACED-BY-TEST
-    -   name: puppet_sg
+
+    puppet_sg:
         type: cloudify.openstack.security_group
         properties:
             security_group:
