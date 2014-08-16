@@ -59,11 +59,14 @@ def fix_keypath(env, keypath):
     return os.path.join(*p)
 
 
-def get_actual_keypath(env, keypath):
+def get_actual_keypath(env, keypath, raise_on_missing=True):
     keypath = fix_keypath(env, keypath)
     keypath = path(os.path.expanduser(keypath)).abspath()
     if not keypath.exists():
-        raise RuntimeError("key file {0} does not exist".format(keypath))
+        if raise_on_missing:
+            raise RuntimeError("key file {0} does not exist".format(keypath))
+        else:
+            return None
     return keypath
 
 

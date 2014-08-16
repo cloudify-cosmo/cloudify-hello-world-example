@@ -28,7 +28,7 @@ import neutronclient.v2_0.client as neclient
 from retrying import retry
 
 from cosmo_tester.framework.handlers import BaseHandler
-from cosmo_tester.framework.util import fix_keypath
+from cosmo_tester.framework.util import get_actual_keypath
 
 
 logging.getLogger('neutronclient.client').setLevel(logging.INFO)
@@ -363,13 +363,17 @@ class OpenstackHandler(BaseHandler):
 
     def after_teardown(self):
         if self.remove_agent_keypair:
-            agent_key_path = fix_keypath(self.env, self.env.agent_key_path)
-            if os.path.exists(agent_key_path):
+            agent_key_path = get_actual_keypath(self.env,
+                                                self.env.agent_key_path,
+                                                raise_on_missing=False)
+            if agent_key_path:
                 os.remove(agent_key_path)
         if self.remove_management_keypair:
-            management_key_path = fix_keypath(self.env,
-                                              self.env.management_key_path)
-            if os.path.exists(management_key_path):
+            management_key_path = get_actual_keypath(
+                self.env,
+                self.env.management_key_path,
+                raise_on_missing=False)
+            if management_key_path:
                 os.remove(management_key_path)
 
 handler = OpenstackHandler
