@@ -98,7 +98,7 @@ class ExistingVMTest(TestCase):
                       name,
                       key_name,
                       security_groups,
-                      timeout=120):
+                      timeout=300):
         server = {
             'name': name,
             'image': self.env.ubuntu_image_id,
@@ -117,4 +117,7 @@ class ExistingVMTest(TestCase):
         for network, network_ips in srv.networks.items():
             if network == self.env.management_network_name:
                 return str(network_ips[0])
-        raise RuntimeError('Failed finding new server ip')
+        raise RuntimeError(
+            'Failed finding new server ip [expected management network '
+            'name={}, vm networks={}]'.format(self.env.management_network_name,
+                                              srv.networks))
