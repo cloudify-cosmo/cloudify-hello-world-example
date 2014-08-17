@@ -15,6 +15,7 @@
 
 __author__ = 'boris'
 
+
 from cosmo_tester.framework.git_helper import clone
 import hello_world_bash_test as bash
 from cosmo_tester.framework.testenv import TestCase
@@ -23,20 +24,21 @@ from cosmo_tester.framework.testenv import TestCase
 CLOUDIFY_EXAMPLES_URL = "https://github.com/cloudify-cosmo/" \
                         "cloudify-examples.git"
 
+
 class UninstallAfterFailureTest(TestCase):
-    #def test_uninstall_after_failure_on_ubuntu(self):
-        #self._run(self.env.ubuntu_image_name, self.env.cloudify_agent_user)
+    # def test_uninstall_after_failure_on_ubuntu(self):
+        # self._run(self.env.ubuntu_image_name, self.env.cloudify_agent_user)
 
     def _run(self, image_name, user):
         self.repo_dir = clone(CLOUDIFY_EXAMPLES_URL, self.workdir)
         self.blueprint_path = self.repo_dir / 'hello-world'
         self.blueprint_yaml = self.blueprint_path / 'blueprint.yaml'
         bash.modify_yaml(env=self.env,
-                    yaml_file=self.blueprint_yaml,
-                    host_name='bash-web-server',
-                    image_name=image_name,
-                    user=user,
-                    security_groups=['jibrish'])
+                         yaml_file=self.blueprint_yaml,
+                         host_name='bash-web-server',
+                         image_name=image_name,
+                         user=user,
+                         security_groups=['jibrish'])
         try:
             self.upload_deploy_and_execute_install(fetch_state=False)
             self.fail("install should fail!")
@@ -47,4 +49,3 @@ class UninstallAfterFailureTest(TestCase):
         except Exception as e:
             print "failed to uninstall ", e
             self.fail("uninstall failed!")
-
