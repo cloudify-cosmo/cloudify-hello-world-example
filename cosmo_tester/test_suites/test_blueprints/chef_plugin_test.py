@@ -109,7 +109,8 @@ def update_blueprint(env, blueprint, hostname, userdata_vars=None):
                 props['userdata'] = props['userdata'].format(
                     hostname=vm_hostname, **(userdata_vars or {}))
         users.append('ubuntu')
-
+    # Append resources_prefix to host names list
+    hostnames = ['{0}{1}'.format(env.resources_prefix, x) for x in hostnames]
     return {'hostnames': hostnames, 'users': users}
 
 
