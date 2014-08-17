@@ -349,6 +349,20 @@ class TestCase(unittest.TestCase):
             del after['nodes'][node_id]
         return after
 
+    def execute_install(self,
+                        deployment_id=None,
+                        fetch_state=True):
+        before_state = None
+        after_state = None
+        if fetch_state:
+            before_state = self.get_manager_state()
+        self.cfy.execute_install(
+            deployment_id=deployment_id,
+            )
+        if fetch_state:
+            after_state = self.get_manager_state()
+        return before_state, after_state
+
     def upload_deploy_and_execute_install(self, blueprint_id=None,
                                           deployment_id=None,
                                           fetch_state=True):
