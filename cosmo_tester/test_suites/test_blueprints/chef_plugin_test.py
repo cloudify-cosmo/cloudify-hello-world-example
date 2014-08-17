@@ -128,8 +128,9 @@ class ChefPluginClientTest(TestCase):
         with YamlPatcher(self.blueprint_yaml) as blueprint:
             bp_info = update_blueprint(self.env, blueprint, 'chef-server')
 
-        self.chef_server_hostname = '{0}{1}'.format(self.env.resources_prefix,
-                                                    bp_info['hostnames'][0])
+        self.chef_server_hostname = '{0}{1}'.format(
+            self.env.resources_prefix.replace('_', '-'),
+            bp_info['hostnames'][0])
 
         cookbooks_dir = blueprint_dir / 'cookbooks'
 
