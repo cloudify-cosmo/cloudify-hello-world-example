@@ -43,6 +43,8 @@ class ExistingVMTest(TestCase):
         key_name = '{}test_existing_vm_key'.format(prefix)
         agents_security_group = '{}{}'.format(prefix,
                                               self.env.agents_security_group)
+        management_network_name = '{}{}'.format(
+            prefix, self.env.management_network_name)
 
         nova_client, _ = openstack_clients(self.env.cloudify_config)
         self.create_keypair_and_copy_to_manager(
@@ -53,7 +55,8 @@ class ExistingVMTest(TestCase):
             name=server_name,
             nova_client=nova_client,
             key_name=key_name,
-            security_groups=[agents_security_group])
+            security_groups=[agents_security_group],
+            management_network_name=management_network_name)
 
         self.modify_yaml(ip=private_server_ip,
                          remote_key_path=remote_key_path)
@@ -98,6 +101,7 @@ class ExistingVMTest(TestCase):
                       name,
                       key_name,
                       security_groups,
+                      management_network_name,
                       timeout=300):
         server = {
             'name': name,
@@ -115,9 +119,9 @@ class ExistingVMTest(TestCase):
         if srv.status != 'ACTIVE':
             raise RuntimeError('Failed starting server')
         for network, network_ips in srv.networks.items():
-            if network == self.env.management_network_name:
+            if network == management_network_name:
                 return str(network_ips[0])
         raise RuntimeError(
             'Failed finding new server ip [expected management network '
-            'name={}, vm networks={}]'.format(self.env.management_network_name,
+            'name={}, vm networks={}]'.format(management_network_name,
                                               srv.networks))
