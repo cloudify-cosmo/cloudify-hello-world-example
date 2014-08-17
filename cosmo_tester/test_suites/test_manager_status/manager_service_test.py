@@ -14,6 +14,7 @@
 #    * limitations under the License.
 
 from cosmo_tester.framework.testenv import TestCase
+from cosmo_tester.framework.util import get_actual_keypath
 from fabric.api import env, reboot
 
 
@@ -21,7 +22,8 @@ class RebootManagerTest(TestCase):
     def _reboot_server(self):
         env.update({
             'user': self.env.managment_user_name,
-            'key_filename': self.env.management_key_path,
+            'key_filename': get_actual_keypath(self.env,
+                                               self.env.management_key_path),
             'host_string': self.env.management_ip,
         })
         reboot()
