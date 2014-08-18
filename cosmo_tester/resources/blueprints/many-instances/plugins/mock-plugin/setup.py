@@ -20,6 +20,6 @@ from setuptools import setup
 
 setup(
     name='mock-plugin',
-    version='3.1a1',
+    version='3.1a2',
     packages=['mock_plugin']
 )
