@@ -2,7 +2,7 @@ imports:
     - http://www.getcloudify.org/spec/cloudify/3.1/types.yaml
 
 plugins:
-    mock_plugin:
+    mock-plugin:
         derived_from: cloudify.plugins.agent_plugin
         properties:
             folder: mock-plugin
@@ -21,4 +21,4 @@ node_templates:
                 target: host
         interfaces:
             cloudify.interfaces.lifecycle:
-                - create: mock_plugin.mock.create
+                - create: mock-plugin.mock_plugin.mock.create

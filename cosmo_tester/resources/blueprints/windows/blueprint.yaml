@@ -3,7 +3,7 @@ imports:
     - http://www.getcloudify.org/spec/openstack-plugin/1.1/plugin.yaml
 
 plugins:
-    python_script_executor:
+    python-plugin:
         derived_from: cloudify.plugins.agent_plugin
         properties:
             url: https://github.com/cloudify-cosmo/cloudify-python-plugin/archive/master.zip
@@ -13,7 +13,7 @@ node_types:
         derived_from: cloudify.types.app_module
         interfaces:
             cloudify.interfaces.lifecycle:
-                - start: python_script_executor.tasks.run
+                - start: python-plugin.python_script_executor.tasks.run
         properties:
             scripts: {}
 
