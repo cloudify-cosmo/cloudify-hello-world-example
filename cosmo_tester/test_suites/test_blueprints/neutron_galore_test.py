@@ -173,13 +173,12 @@ class NeutronGaloreTest(TestCase):
 
     def get_openstack_components(self, states):
         nova, neutron = openstack_clients(self.env.cloudify_config)
-        sid = 'openstack_server_id'
         eid = 'external_id'
         sg = 'security_group'
         i = 'floatingip'  # sorry, must fit short line :\
         rid = states['router'][eid]
         return {
-            'server': nova.servers.get(states['server'][sid]).to_dict(),
+            'server': nova.servers.get(states['server'][eid]).to_dict(),
             'network': neutron.show_network(states['network'][eid])['network'],
             'subnet': neutron.show_subnet(states['subnet'][eid])['subnet'],
             'router': neutron.show_router(rid)['router'],
