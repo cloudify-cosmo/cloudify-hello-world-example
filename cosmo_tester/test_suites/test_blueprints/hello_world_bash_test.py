@@ -62,7 +62,7 @@ class HelloWorldBashTest(TestCase):
 
         nova, neutron = openstack_clients(self.env.cloudify_config)
 
-        server_id = server_node.runtime_properties['openstack_server_id']
+        server_id = server_node.runtime_properties['external_id']
         floating_ip_id = floatingip_node.runtime_properties['external_id']
         sg_id = security_group_node.runtime_properties['external_id']
 
