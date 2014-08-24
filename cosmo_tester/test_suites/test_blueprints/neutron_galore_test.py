@@ -67,8 +67,8 @@ class NeutronGaloreTest(TestCase):
         port_subnet_id = openstack['port']['fixed_ips'][0]['subnet_id']
         router_network_id = openstack['router']['external_gateway_info'][
             'network_id']
-        sg_src_id = openstack[p('sg_src')]['id']
-        sg_dst_rule_id = openstack[p('sg_dst_rule')]['id']
+        sg_src_id = openstack['sg_src']['id']
+        sg_dst_rule_id = openstack['sg_dst_rule']['id']
         network_subnet_id = openstack['network']['subnets'][0]
 
         self.assertEqual(openstack['server']['addresses']
