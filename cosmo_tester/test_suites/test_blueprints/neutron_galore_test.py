@@ -68,6 +68,7 @@ class NeutronGaloreTest(TestCase):
         router_network_id = openstack['router']['external_gateway_info'][
             'network_id']
         sg_src_id = openstack[p('sg_src')]['id']
+        sg_dst_rule_id = openstack[p('sg_dst_rule')]['id']
         network_subnet_id = openstack['network']['subnets'][0]
 
         self.assertEqual(openstack['server']['addresses']
@@ -113,7 +114,9 @@ class NeutronGaloreTest(TestCase):
         self.assertEqual(port_subnet_id, openstack['subnet']['id'])
         self.assertEqual(openstack['sg_dst']['name'],
                          p('neutron_test_security_group_dst'))
-        self.assertEqual(4, len(openstack['sg_dst']['security_group_rules']))
+        self.assertEqual(openstack['sg_dst_rule']['security_group_id'],
+                         openstack['sg_dst']['id'])
+        self.assertEqual(5, len(openstack['sg_dst']['security_group_rules']))
         self.assert_obj_list_contains_subset(
             openstack['sg_dst']['security_group_rules'],
             {'remote_ip_prefix': '1.2.3.0/24',
@@ -138,6 +141,14 @@ class NeutronGaloreTest(TestCase):
              'port_range_min': 443,
              'port_range_max': 443,
              'direction': 'egress'})
+        self.assert_obj_list_contains_subset(
+            openstack['sg_dst']['security_group_rules'],
+            {'remote_ip_prefix': '4.5.6.0/24',
+             'port_range_min': 65511,
+             'port_range_max': 65511,
+             'direction': 'ingress',
+             'protocol': 'udp',
+             'id': sg_dst_rule_id})
         self.assertEqual(node_states['floatingip']['floating_ip_address'],
                          floatingip_address)
         self.assertEqual(openstack['server']['addresses']
@@ -168,6 +179,8 @@ class NeutronGaloreTest(TestCase):
             'port': self._node_state('neutron_port', node_states),
             'sg_src': self._node_state('security_group_src', node_states),
             'sg_dst': self._node_state('security_group_dst', node_states),
+            'sg_dst_rule': self._node_state('security_group_dst_rule',
+                                            node_states),
             'floatingip': self._node_state('floatingip', node_states)
         }
 
@@ -185,6 +198,8 @@ class NeutronGaloreTest(TestCase):
             'port': neutron.show_port(states['port'][eid])['port'],
             'sg_src': neutron.show_security_group(states['sg_src'][eid])[sg],
             'sg_dst': neutron.show_security_group(states['sg_dst'][eid])[sg],
+            'sg_dst_rule': neutron.show_security_group_rule(
+                states['sg_dst_rule'][eid])['security_group_rule'],
             'floatingip': neutron.show_floatingip(states[i][eid])[i],
             'router_ports': neutron.list_ports(device_id=rid)['ports']
         }

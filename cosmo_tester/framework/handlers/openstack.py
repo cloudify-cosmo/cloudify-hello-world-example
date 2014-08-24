@@ -61,6 +61,7 @@ def openstack_infra_state(cloudify_config):
         'subnets': dict(_subnets(neutron, prefix)),
         'routers': dict(_routers(neutron, prefix)),
         'security_groups': dict(_security_groups(neutron, prefix)),
+        'security_group_rules': dict(_security_group_rules(neutron, prefix)),
         'servers': dict(_servers(nova, prefix)),
         'key_pairs': dict(_key_pairs(nova, prefix)),
         'floatingips': dict(_floatingips(neutron, prefix)),
@@ -95,6 +96,8 @@ def _remove_openstack_resources_impl(cloudify_config,
     networks = neutron.list_networks()['networks']
     keypairs = nova.keypairs.list()
     floatingips = neutron.list_floatingips()['floatingips']
+    security_group_rules = neutron.list_security_group_rules()[
+        'security_group_rules']
     security_groups = neutron.list_security_groups()['security_groups']
 
     failed = {
@@ -105,6 +108,7 @@ def _remove_openstack_resources_impl(cloudify_config,
         'networks': {},
         'key_pairs': {},
         'floatingips': {},
+        'security_group_rules': {},
         'security_groups': {}
     }
 
@@ -142,6 +146,12 @@ def _remove_openstack_resources_impl(cloudify_config,
         if floatingip['id'] in resources_to_remove['floatingips']:
             with _handled_exception(floatingip['id'], failed, 'floatingips'):
                 neutron.delete_floatingip(floatingip['id'])
+    for security_group_rule in security_group_rules:
+        if security_group_rule['id'] in \
+                resources_to_remove['security_group_rules']:
+            with _handled_exception(security_group_rule['id'], failed,
+                                    'security_group_rules'):
+                neutron.delete_security_group_rule(security_group_rule['id'])
     for security_group in security_groups:
         if security_group['name'] == 'default':
             continue
@@ -193,6 +203,11 @@ def _security_groups(neutron, prefix):
     return [(n['id'], n['name'])
             for n in neutron.list_security_groups()['security_groups']
             if _check_prefix(n['name'], prefix)]
+
+
+def _security_group_rules(neutron, prefix):
+    return [(rule['id'], rule) for rule in
+            neutron.list_security_group_rules()['security_group_rules']]
 
 
 def _servers(nova, prefix):
