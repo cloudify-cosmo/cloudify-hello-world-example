@@ -15,9 +15,7 @@
 
 __author__ = 'elip'
 
-
 import requests
-
 from neutronclient.common.exceptions import NeutronException
 from novaclient.exceptions import NotFound
 from retrying import retry
@@ -29,8 +27,8 @@ from cosmo_tester.framework.handlers.openstack import openstack_clients
 from cosmo_tester.framework.git_helper import clone
 
 
-CLOUDIFY_EXAMPLES_URL = "https://github.com/cloudify-cosmo/" \
-                        "cloudify-examples.git"
+CLOUDIFY_HELLO_WORLD_EXAMPLE_URL = "https://github.com/cloudify-cosmo/" \
+                                   "cloudify-hello-world-example.git"
 
 
 class HelloWorldBashTest(TestCase):
@@ -53,6 +51,8 @@ class HelloWorldBashTest(TestCase):
         verify_webserver_running(blueprint_yaml=self.blueprint_yaml,
                                  floatingip_node=floatingip_node)
         nova, neutron = openstack_clients(self.env.cloudify_config)
+
+        server_id = server_node.runtime_properties['external_id']
         server_id = server_node.runtime_properties['openstack_server_id']
         floating_ip_id = floatingip_node.runtime_properties['external_id']
         sg_id = security_group_node.runtime_properties['external_id']
@@ -72,7 +72,7 @@ class HelloWorldBashTest(TestCase):
                           floating_ip_id)
 
     def _run(self, image_name, user, reinstall=False):
-        self.repo_dir = clone(CLOUDIFY_EXAMPLES_URL, self.workdir)
+        self.repo_dir = clone(CLOUDIFY_HELLO_WORLD_EXAMPLE_URL, self.workdir)
         self.blueprint_path = self.repo_dir / 'hello-world'
         self.blueprint_yaml = self.blueprint_path / 'blueprint.yaml'
         modify_yaml(env=self.env,
