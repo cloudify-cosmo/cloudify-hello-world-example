@@ -36,49 +36,65 @@ class HelloWorldBashTest(TestCase):
     def test_hello_world_on_ubuntu(self):
         self._run(self.env.ubuntu_image_name, self.env.cloudify_agent_user)
 
+    def test_hello_world_on_ubuntu_with_reinstall(self):
+        self._run(self.env.ubuntu_image_name, self.env.cloudify_agent_user)
+        self._run(self.env.ubuntu_image_name, self.env.cloudify_agent_user,
+                  is_existing_deployment=True)
+
     def test_hello_world_on_centos(self):
         self._run(self.env.centos_image_name, self.env.centos_image_user)
 
-    def _run(self, image_name, user):
-        self.repo_dir = clone(CLOUDIFY_HELLO_WORLD_EXAMPLE_URL, self.workdir)
-        self.blueprint_path = self.repo_dir / 'hello-world'
-        self.blueprint_yaml = self.blueprint_path / 'blueprint.yaml'
-        modify_yaml(env=self.env,
-                    yaml_file=self.blueprint_yaml,
-                    host_name='bash-web-server',
-                    image_name=image_name,
-                    user=user,
-                    security_groups=['webserver_security_group'])
-
-        self.upload_deploy_and_execute_install(fetch_state=False)
-
+    def verify_deployment_installed(self):
         (floatingip_node,
          security_group_node,
          server_node) = get_instances(client=self.client,
                                       deployment_id=self.test_id)
-
         verify_webserver_running(blueprint_yaml=self.blueprint_yaml,
                                  floatingip_node=floatingip_node)
-
         nova, neutron = openstack_clients(self.env.cloudify_config)
 
         server_id = server_node.runtime_properties['external_id']
         floating_ip_id = floatingip_node.runtime_properties['external_id']
         sg_id = security_group_node.runtime_properties['external_id']
-
         nova_server = nova.servers.get(server_id)
         neutron_floating_ip = neutron.show_floatingip(floating_ip_id)
         neutron_sg = neutron.show_security_group(sg_id)
         self.logger.info("Agent server : {0}".format(nova_server))
         self.logger.info("Floating ip : {0}".format(neutron_floating_ip))
         self.logger.info("Agent security group : {0}".format(neutron_sg))
+        return floating_ip_id, neutron, nova, server_id, sg_id
 
-        self.execute_uninstall()
-        # No components should exist after uninstall
+    def assert_components_cleared(self, floating_ip_id, neutron, nova,
+                                  server_id, sg_id):
         self.assertRaises(NotFound, nova.servers.get, server_id)
         self.assertRaises(NeutronException, neutron.show_security_group, sg_id)
         self.assertRaises(NeutronException, neutron.show_floatingip,
                           floating_ip_id)
+
+    def _run(self, image_name, user, is_existing_deployment=False):
+        if not is_existing_deployment:
+            self.repo_dir = clone(CLOUDIFY_HELLO_WORLD_EXAMPLE_URL,
+                                  self.workdir)
+            self.blueprint_path = self.repo_dir / 'hello-world'
+            self.blueprint_yaml = self.blueprint_path / 'blueprint.yaml'
+            modify_yaml(env=self.env,
+                        yaml_file=self.blueprint_yaml,
+                        host_name='bash-web-server',
+                        image_name=image_name,
+                        user=user,
+                        security_groups=['webserver_security_group'])
+
+            self.upload_deploy_and_execute_install(fetch_state=False)
+        else:
+            self.execute_install(deployment_id=self.test_id, fetch_state=False)
+
+        floating_ip_id, neutron, nova, server_id, sg_id =\
+            self.verify_deployment_installed()
+
+        self.execute_uninstall()
+        # No components should exist after uninstall
+        self.assert_components_cleared(floating_ip_id, neutron, nova,
+                                       server_id, sg_id)
 
 
 @retry(stop_max_attempt_number=5, wait_fixed=3000)

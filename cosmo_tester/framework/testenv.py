@@ -349,18 +349,32 @@ class TestCase(unittest.TestCase):
             del after['nodes'][node_id]
         return after
 
+    def execute_install(self,
+                        deployment_id=None,
+                        fetch_state=True):
+        return self._make_operation_with_before_after_states(
+            self.cfy.execute_install,
+            fetch_state,
+            deployment_id=deployment_id)
+
     def upload_deploy_and_execute_install(self, blueprint_id=None,
                                           deployment_id=None,
                                           fetch_state=True):
+
+        return self._make_operation_with_before_after_states(
+            self.cfy.upload_deploy_and_execute_install,
+            fetch_state,
+            str(self.blueprint_yaml),
+            blueprint_id=blueprint_id or self.test_id,
+            deployment_id=deployment_id or self.test_id)
+
+    def _make_operation_with_before_after_states(self, operation, fetch_state,
+                                                 *args, **kwargs):
         before_state = None
         after_state = None
         if fetch_state:
             before_state = self.get_manager_state()
-        self.cfy.upload_deploy_and_execute_install(
-            str(self.blueprint_yaml),
-            blueprint_id=blueprint_id or self.test_id,
-            deployment_id=deployment_id or self.test_id,
-        )
+        operation(*args, **kwargs)
         if fetch_state:
             after_state = self.get_manager_state()
         return before_state, after_state
