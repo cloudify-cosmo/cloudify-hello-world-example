@@ -2,7 +2,7 @@ imports:
     - http://www.getcloudify.org/spec/cloudify/3.1/types.yaml
 
 plugins:
-    mock_plugin:
+    mock:
         derived_from: cloudify.plugins.manager_plugin
         properties:
             folder: mock-plugin
@@ -12,42 +12,42 @@ node_types:
         derived_from: cloudify.types.host
         interfaces:
             cloudify.interfaces.lifecycle:
-                - create: mock_plugin.mock.create
-                - configure: mock_plugin.mock.configure
-                - start: mock_plugin.mock.start
-                - stop: mock_plugin.mock.stop
-                - delete: mock_plugin.mock.delete
+                - create: mock.mock_plugin.mock.create
+                - configure: mock.mock_plugin.mock.configure
+                - start: mock.mock_plugin.mock.start
+                - stop: mock.mock_plugin.mock.stop
+                - delete: mock.mock_plugin.mock.delete
             cloudify.interfaces.host:
-                - get_state: mock_plugin.mock.get_state
+                - get_state: mock.mock_plugin.mock.get_state
 
     middle:
         derived_from: cloudify.types.middleware_server
         interfaces:
             cloudify.interfaces.lifecycle:
-                - create: mock_plugin.mock.create
-                - configure: mock_plugin.mock.configure
-                - start: mock_plugin.mock.start
-                - stop: mock_plugin.mock.stop
-                - delete: mock_plugin.mock.delete
+                - create: mock.mock_plugin.mock.create
+                - configure: mock.mock_plugin.mock.configure
+                - start: mock.mock_plugin.mock.start
+                - stop: mock.mock_plugin.mock.stop
+                - delete: mock.mock_plugin.mock.delete
 
 relationships:
     contained_in:
         derived_from: cloudify.relationships.contained_in
         source_interfaces:
             cloudify.interfaces.relationship_lifecycle:
-                - preconfigure: mock_plugin.mock.preconfigure
-                - postconfigure: mock_plugin.mock.postconfigure
-                - establish: mock_plugin.mock.establish
-                - unlink: mock_plugin.mock.unlink
+                - preconfigure: mock.mock_plugin.mock.preconfigure
+                - postconfigure: mock.mock_plugin.mock.postconfigure
+                - establish: mock.mock_plugin.mock.establish
+                - unlink: mock.mock_plugin.mock.unlink
 
     connected_to:
         derived_from: cloudify.relationships.connected_to
         source_interfaces:
             cloudify.interfaces.relationship_lifecycle:
-                - preconfigure: mock_plugin.mock.preconfigure
-                - postconfigure: mock_plugin.mock.postconfigure
-                - establish: mock_plugin.mock.establish
-                - unlink: mock_plugin.mock.unlink
+                - preconfigure: mock.mock_plugin.mock.preconfigure
+                - postconfigure: mock.mock_plugin.mock.postconfigure
+                - establish: mock.mock_plugin.mock.establish
+                - unlink: mock.mock_plugin.mock.unlink
 
 node_templates:
     host:
