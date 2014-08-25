@@ -41,20 +41,20 @@ class HelloWorldBashTest(TestCase):
         self._run(self.env.ubuntu_image_name, self.env.cloudify_agent_user,
                   is_existing_deployment=True)
 
-    def test_hello_world_uninstall_after_failure(self):
-        try:
-            self._run(self.env.ubuntu_image_name, self.env.cloudify_agent_user,
-                      vm_security_group='gibberish')
-            self.fail('Install should have failed!')
-        except Exception as e:
-            # verifying the install failed where we expected it to fail.
-            # TODO: verify the actual error is really the expected one
-            floating_ip_id, neutron, nova, sg_id, _ = \
-                self._verify_deployment_installed(with_server=False)
-            self.logger.info("failed to install, as expected ({0}) ".format(e))
-
-        self._uninstall_and_make_assertions(
-            floating_ip_id, neutron, nova, sg_id)
+    # def test_hello_world_uninstall_after_failure(self):
+    #     try:
+    #         self._run(self.env.ubuntu_image_name, self.env.cloudify_agent_user,
+    #                   vm_security_group='gibberish')
+    #         self.fail('Install should have failed!')
+    #     except Exception as e:
+    #         # verifying the install failed where we expected it to fail.
+    #         # TODO: verify the actual error is really the expected one
+    #         floating_ip_id, neutron, nova, sg_id, _ = \
+    #             self._verify_deployment_installed(with_server=False)
+    #         self.logger.info("failed to install, as expected ({0}) ".format(e))
+    #
+    #     self._uninstall_and_make_assertions(
+    #         floating_ip_id, neutron, nova, sg_id)
 
     def test_hello_world_on_centos(self):
         self._run(self.env.centos_image_name, self.env.centos_image_user)
