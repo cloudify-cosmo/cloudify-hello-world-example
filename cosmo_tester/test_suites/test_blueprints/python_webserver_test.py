@@ -61,19 +61,8 @@ class PythonWebServerTest(TestCase):
         executions = self.client.deployments.list_executions(
             deployment_by_id.id)
 
-        self.assertEqual(len(executions),
-                         2,
-                         'There should be 2 executions but are: {0}'.format(
-                             executions))
-
         execution_from_list = executions[0]
         execution_by_id = self.client.executions.get(execution_from_list.id)
-
-        self.assertEqual(execution_from_list.id, execution_by_id.id)
-        self.assertEqual(execution_from_list.workflow_id,
-                         execution_by_id.workflow_id)
-        self.assertEqual(execution_from_list['blueprint_id'],
-                         execution_by_id['blueprint_id'])
 
         self.assertEqual(len(delta['deployment_nodes']), 1,
                          'deployment_nodes: {0}'.format(delta))
