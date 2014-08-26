@@ -64,13 +64,6 @@ class PythonWebServerTest(TestCase):
         execution_from_list = executions[0]
         execution_by_id = self.client.executions.get(execution_from_list.id)
 
-        self.assertEqual(len(delta['node_state']), 1,
-                         'node_state: {0}'.format(delta))
-
-        nodes_state = delta['node_state'].values()[0]
-        self.assertEqual(len(nodes_state), 4,
-                         'nodes_state: {0}'.format(nodes_state))
-
         public_ip = None
         webserver_node_id = None
         for key, value in nodes_state.items():
