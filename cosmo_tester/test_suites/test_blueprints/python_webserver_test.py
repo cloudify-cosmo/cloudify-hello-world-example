@@ -54,9 +54,6 @@ class PythonWebServerTest(TestCase):
 
         self.logger.info('Current manager state: {0}'.format(delta))
 
-        self.assertEqual(len(delta['blueprints']), 1,
-                         'blueprint: {0}'.format(delta))
-
         self.assertEqual(len(delta['deployments']), 1,
                          'deployment: {0}'.format(delta))
 
