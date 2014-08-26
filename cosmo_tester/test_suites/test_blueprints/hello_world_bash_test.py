@@ -35,12 +35,13 @@ class HelloWorldBashTest(TestCase):
 
     def test_hello_world_on_ubuntu(self):
         self._run(self.env.ubuntu_image_name, self.env.cloudify_agent_user)
-
-    def test_hello_world_with_reinstall(self):
-        self._run(self.env.ubuntu_image_name, self.env.cloudify_agent_user)
+        # checking reinstallation scenario
         self._run(self.env.ubuntu_image_name, self.env.cloudify_agent_user,
                   is_existing_deployment=True)
 
+    # TODO: uncomment this once the issue with validating agent plugins is
+    #       resolved - right now it'll fail because the VM creation is where
+    #       the execution should fail
     # def test_hello_world_uninstall_after_failure(self):
     #     try:
     #         self._run(self.env.ubuntu_image_name, self.env.cloudify_agent_user, # NOQA
