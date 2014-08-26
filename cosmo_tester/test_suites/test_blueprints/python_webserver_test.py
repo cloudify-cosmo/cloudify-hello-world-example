@@ -16,8 +16,6 @@
 
 __author__ = 'dan'
 
-import requests
-
 from cosmo_tester.framework.testenv import TestCase
 from cosmo_tester.framework.util import YamlPatcher
 
@@ -63,53 +61,6 @@ class PythonWebServerTest(TestCase):
 
         execution_from_list = executions[0]
         execution_by_id = self.client.executions.get(execution_from_list.id)
-
-        public_ip = None
-        webserver_node_id = None
-        for key, value in nodes_state.items():
-            if key.startswith('vm'):
-                self.assertTrue('ip' in value['runtime_properties'],
-                                'Missing ip in runtime_properties: {0}'
-                                .format(nodes_state))
-                self.assertTrue('networks' in value['runtime_properties'],
-                                'Missing networks in runtime_properties: {0}'
-                                .format(nodes_state))
-                self.assertEqual(value['state'], 'started',
-                                 'vm node should be started: {0}'
-                                 .format(nodes_state))
-            elif key.startswith('virtual_ip'):
-                public_ip = value['runtime_properties']['floating_ip_address']
-            elif key.startswith('http_web_server'):
-                webserver_node_id = key
-
-        events, total_events = self.client.events.get(execution_by_id.id)
-
-        self.assertGreater(len(events), 0,
-                           'Expected at least 1 event for execution id: {0}'
-                           .format(execution_by_id.id))
-
-        web_server_page_response = requests.get('http://{0}:8080'
-                                                .format(public_ip))
-        self.assertTrue(webserver_node_id in web_server_page_response.text,
-                        'Expected to find {0} in web server response: {1}'
-                        .format(webserver_node_id, web_server_page_response))
-
-        img_tag = "<img src='"
-        fail_message = \
-            'Expected to find an img tag with src attribute in web server ' \
-            'response: {0}'.format(web_server_page_response)
-        self.assertTrue(img_tag in web_server_page_response.text, fail_message)
-
-        src_start = web_server_page_response.text.index(img_tag) + len(img_tag)
-        src_end = src_start + \
-            web_server_page_response.text[src_start:].index("'")
-
-        img_src = web_server_page_response.text[src_start:src_end]
-        img_url = 'http://{0}:8080/{1}'.format(public_ip, img_src)
-        img_response = requests.get(img_url)
-        self.assertEqual(200, img_response.status_code,
-                         'Failed to get image from web server at {0}'
-                         .format(img_url))
 
     def post_uninstall_assertions(self):
         # TODO
