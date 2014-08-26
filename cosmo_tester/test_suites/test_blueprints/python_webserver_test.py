@@ -54,9 +54,6 @@ class PythonWebServerTest(TestCase):
 
         self.logger.info('Current manager state: {0}'.format(delta))
 
-        self.assertEqual(len(delta['deployments']), 1,
-                         'deployment: {0}'.format(delta))
-
         deployment_from_list = delta['deployments'].values()[0]
 
         deployment_by_id = self.client.deployments.get(deployment_from_list.id)
