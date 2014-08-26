@@ -35,10 +35,12 @@ class ManyInstancesTest(TestCase):
             blueprint_id=self.test_id,
             deployment_id=self.test_id)
 
-        install_workers = self.client.deployments.list_executions(
-            deployment_id=self.test_id)[0]
-        self.logger.info('Waiting for install workers workflow to terminate')
-        self.wait_for_execution(install_workers, timeout=120)
+        deployment_env_creation_execution = \
+            self.client.deployments.list_executions(
+                deployment_id=self.test_id)[0]
+        self.logger.info('Waiting for create_deployment_environment workflow '
+                         'execution to terminate')
+        self.wait_for_execution(deployment_env_creation_execution, timeout=120)
 
         execution = self.client.deployments.execute(deployment_id=self.test_id,
                                                     workflow_id='install')
