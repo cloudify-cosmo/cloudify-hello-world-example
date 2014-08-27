@@ -16,9 +16,9 @@ node_types:
             image_path: {}
         interfaces:
             cloudify.interfaces.lifecycle:
-                -   configure: python_webserver_installer.tasks.configure
-                -   start: python_webserver_installer.tasks.start
-                -   stop: python_webserver_installer.tasks.stop
+                -   configure: python_webserver_installer.python_webserver_installer.tasks.configure
+                -   start: python_webserver_installer.python_webserver_installer.tasks.start
+                -   stop: python_webserver_installer.python_webserver_installer.tasks.stop
 
 
 # Test is in charge if filling in missing properties
