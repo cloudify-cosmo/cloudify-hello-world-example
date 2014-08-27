@@ -35,7 +35,7 @@ def build_suites_json(all_suites_json_path):
                         env_custom_handler_module))
 
     tests_suites = env_system_tests_suites.split(',')
-    custom_suite = env_custom_suite == 'yes'
+    custom_suite = env_custom_suite in ['yes', 'true']
     custom_suite_name = env_custom_suite_name
     custom_tests_to_run = env_custom_tests_to_run
     custom_cloudify_config = env_custom_cloudify_config
