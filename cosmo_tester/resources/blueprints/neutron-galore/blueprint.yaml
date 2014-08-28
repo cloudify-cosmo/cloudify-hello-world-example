@@ -75,15 +75,5 @@ node_templates:
         relationships:
             -   type: cloudify.relationships.connected_to
                 target: security_group_src
-    security_group_dst_rule:
-        type: cloudify.openstack.security_group_rule
-        properties:
-            security_group_rule:
-                remote_ip_prefix: 4.5.6.0/24
-                port: 65511
-                protocol: udp
-        relationships:
-            -   type: cloudify.relationships.security_group_rule_in_security_group
-                target: security_group_dst
     floatingip:
         type: cloudify.openstack.floatingip
