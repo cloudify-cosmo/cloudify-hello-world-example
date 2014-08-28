@@ -60,6 +60,17 @@ class HelloWorldBashTest(TestCase):
     def test_hello_world_on_centos(self):
         self._run(self.env.centos_image_name, self.env.centos_image_user)
 
+    def assert_events(self):
+        deployment_by_id = self.client.deployments.get(self.test_id)
+        executions = self.client.deployments.list_executions(
+            deployment_by_id.id)
+        execution_from_list = executions[0]
+        execution_by_id = self.client.executions.get(execution_from_list.id)
+        events, total_events = self.client.events.get(execution_by_id.id)
+        self.assertGreater(len(events), 0,
+                           'Expected at least 1 event for execution id: {0}'
+                           .format(execution_by_id.id))
+
     def _run(self, image_name, user, is_existing_deployment=False,
              vm_security_group='webserver_security_group'):
         if not is_existing_deployment:
@@ -77,6 +88,11 @@ class HelloWorldBashTest(TestCase):
             self.upload_deploy_and_execute_install(fetch_state=False)
         else:
             self.execute_install(deployment_id=self.test_id, fetch_state=False)
+
+        # We assert for events to test events are actually
+        # sent in a real world environment.
+        # This is the only test that needs to make this assertion.
+        self.assert_events()
 
         floating_ip_id, neutron, nova, sg_id, server_id =\
             self._verify_deployment_installed()
