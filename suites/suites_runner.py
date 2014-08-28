@@ -4,11 +4,17 @@
 import os
 import sys
 import json
+import logging
 
 import sh
 from path import path
 
 from helpers.suites_builder import build_suites_json
+
+logging.basicConfig()
+
+logger = logging.getLogger('suites_runner')
+logger.setLevel(logging.INFO)
 
 def sh_bake(command):
     return command.bake(_out=lambda line: sys.stdout.write(line),
@@ -60,18 +66,18 @@ def test_run():
     containers = get_containers_names()
     test_start()
     test_logs()
-    print 'wait for containers exit status codes'
+    logger.info('wait for containers exit status codes')
     exit_codes = [(c, container_exit_code(c)) for c in containers]
-    print 'removing containers'
+    logger.info('removing containers')
     for c in containers:
         container_kill(c)
     failed_containers = [(c, exit_code)
                          for c, exit_code in exit_codes
                          if exit_code != 0]
     if failed_containers:
-        print 'Failed test suites:'
+        logger.info('Failed test suites:')
         for c, exit_code in failed_containers:
-            print '\t{}: exit code: {}'.format(c, exit_code)
+            logger.info('\t{}: exit code: {}'.format(c, exit_code))
         sys.exit(1)
 
 def setenv():
