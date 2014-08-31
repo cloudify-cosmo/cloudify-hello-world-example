@@ -2,24 +2,21 @@
 # Cloudify Hello World blueprint.
 #
 # The blueprint describes an OpenStack vm created using Cloudify's OpenStack plugin
-# and simple web server started using Cloudify's bash plugin.
+# and simple web server started using Cloudify's script plugin.
 # In addition, an OpenStack floating ip and security group are created and associated with the created vm.
 #
 
 imports:
     - http://www.getcloudify.org/spec/cloudify/3.1/types.yaml
     - http://www.getcloudify.org/spec/openstack-plugin/1.1/plugin.yaml
-    - http://www.getcloudify.org/spec/bash-plugin/1.1/plugin.yaml
+    - http://www.getcloudify.org/spec/script-plugin/1.1/plugin.yaml
 
-node_types:
-    # A web server configured with bash scripts
-    cloudify.types.bash.web_server_with_index_and_image:
-        derived_from: cloudify.types.bash.web_server
-        properties:
-            image_path: {}
-            index_path: {}
+inputs:
+    webserver_port:
+        description: >
+            The HTTP web server port
+        default: 8080
 
-# The blueprint contains two nodes, a vm and a web server hosted in it.
 node_templates:
     virtual_ip:
         type: cloudify.openstack.floatingip
@@ -31,12 +28,10 @@ node_templates:
                 name: webserver_security_group
             rules:
                 -   remote_ip_prefix: 0.0.0.0/0
-                    port: 8080
+                    port: { get_input: webserver_port }
 
     vm:
         type: cloudify.openstack.server
-        instances:
-            deploy: 1
         ####################################################################################
         # Uncomment bellow and fill the properties according to your openstack environment.#
         ####################################################################################
@@ -57,15 +52,23 @@ node_templates:
 
 
     http_web_server:
-        type: cloudify.types.bash.web_server_with_index_and_image
+        type: cloudify.types.web_server
         properties:
-            port: 8080
-            image_path: images/cloudify-logo.png
-            index_path: index.html
-            scripts:
-                configure: scripts/configure.sh
-                start: scripts/start.sh
-                stop: scripts/stop.sh
+            port: { get_input: webserver_port }
         relationships:
             -   type: cloudify.relationships.contained_in
                 target: vm
+        interfaces:
+            cloudify.interfaces.lifecycle:
+                -   configure:
+                        mapping: script.script_runner.tasks.run
+                        properties:
+                            script_path: scripts/configure.sh
+                -   start:
+                        mapping: script.script_runner.tasks.run
+                        properties:
+                            script_path: scripts/start.sh
+                -   stop:
+                        mapping: script.script_runner.tasks.run
+                        properties:
+                            script_path: scripts/stop.sh
