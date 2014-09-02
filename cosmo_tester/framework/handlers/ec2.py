@@ -127,7 +127,7 @@ def remove_ec2_resources(cloudify_config, resources_to_remove):
 
 def _remove_ec2_resources_impl(cloudify_config,
                                resources_to_remove):
-    ec2_conn = boto_client(cloudify_config['connection']['cloud_provider_name'])
+    conn = boto_client(cloudify_config['connection']['cloud_provider_name'])
     failed = {
         'servers': {},
         'key_pairs': {},
@@ -137,18 +137,18 @@ def _remove_ec2_resources_impl(cloudify_config,
 
     for server_id, server_name in resources_to_remove['servers'].items():
         with _handled_exception(server_id, failed, 'servers'):
-            ec2_conn.terminate_instances(instance_ids=list(id))
+            conn.terminate_instances(instance_ids=list(id))
     for key_fingerprint, key_name in resources_to_remove['key_pairs'].items():
         with _handled_exception(key_fingerprint, failed, 'key_pairs'):
-            ec2_conn.delete_key_pair(key_name=key_name)
+            conn.delete_key_pair(key_name=key_name)
     for alloc_id, public_ip in resources_to_remove['elastic_ips'].items():
         with _handled_exception(alloc_id, failed, 'elastic_ips'):
-            ec2_conn.release_address(public_ip=public_ip)
+            conn.release_address(public_ip=public_ip)
     for sg_id, sg_name in resources_to_remove['security_groups'].items():
         if sg_name == 'default':
             continue
         with _handled_exception(sg_id, failed, 'security_groups'):
-            ec2_conn.delete_security_group(name=sg_name)
+            conn.delete_security_group(name=sg_name)
 
     return failed
 
@@ -173,16 +173,16 @@ class Ec2CleanupContext(BaseHandler.CleanupContext):
         resources_to_teardown = self.get_resources_to_teardown()
         if os.environ.get(CLOUDIFY_TEST_NO_CLEANUP):
             self.logger.warn('[{0}] SKIPPING cleanup: of the resources: {1}'
-                .format(self.context_name, resources_to_teardown))
+                             .format(self.context_name, resources_to_teardown))
             return
         self.logger.info('[{0}] Performing cleanup: will try removing these '
                          'resources: {1}'
-            .format(self.context_name, resources_to_teardown))
+                         .format(self.context_name, resources_to_teardown))
 
         leftovers = remove_ec2_resources(self.cloudify_config,
                                          resources_to_teardown)
         self.logger.info('[{0}] Leftover resources after cleanup: {1}'
-            .format(self.context_name, leftovers))
+                         .format(self.context_name, leftovers))
 
     def get_resources_to_teardown(self):
         current_state = ec2_infra_state(self.cloudify_config)
@@ -257,15 +257,14 @@ class LibcloudHandler(BaseHandler):
             return self._ubuntu_ami
 
         conn = boto_client(self.env._config_reader.libcloud_provider_name)
-        ubuntu_images = conn.get_all_images(filters=
-        {
+        ubuntu_images = conn.get_all_images(filters={
             'name': 'ubuntu/images/ebs/'
                     'ubuntu-precise-12.04-amd64-server-20131003'
         })
         if ubuntu_images.__len__() == 0:
             # the default ubuntu-precise-12.04 AMI for region 'ec2_us_east'.
-            # AMI ids might become deprecated but we don't want to fail the test
-            # since it might not be using this property.
+            # AMI ids might become deprecated but we don't want to fail the
+            # test since it might not be using this property.
             return 'ami-a73264ce'
 
         self._ubuntu_ami = ubuntu_images[0].id
@@ -299,7 +298,4 @@ class LibcloudHandler(BaseHandler):
             if management_key_path:
                 os.remove(management_key_path)
 
-
 handler = LibcloudHandler
-
-

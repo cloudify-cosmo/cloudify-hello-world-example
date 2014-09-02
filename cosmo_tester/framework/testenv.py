@@ -101,7 +101,7 @@ class TestEnvironment(object):
         if not self.cloudify_config_path.isfile():
             raise RuntimeError('cloud-config file configured in env variable'
                                ' {0} does not seem to exist'
-                .format(self.cloudify_config_path))
+                               .format(self.cloudify_config_path))
 
         # make a temp config file so handlers can modify it at will
         self._generate_unique_config()
@@ -177,10 +177,11 @@ class TestEnvironment(object):
         response = self.rest_client.manager.get_status()
         if not response['status'] == 'running':
             raise RuntimeError('Manager at {0} is not running.'
-                .format(self.management_ip))
+                               .format(self.management_ip))
         self._management_running = True
 
-    #Will return provider specific handler/config properties.
+    # Will return provider specific handler/config properties if not found in
+    # test env.
     def __getattr__(self, item):
         if hasattr(self.handler, item):
             return getattr(self.handler, item)

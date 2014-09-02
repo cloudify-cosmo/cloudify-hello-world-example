@@ -12,24 +12,17 @@
 #    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
-from nose import util
-
-
-from cosmo_tester.framework.testenv import TestCase
 
 import requests
 import json
 import cosmo_tester.framework.util as util
 import shutil
 import os
-from path import path
 
 from requests.exceptions import ConnectionError
 
 from cosmo_tester.framework.testenv import TestCase
-from cosmo_tester.framework.util import YamlPatcher
 from cosmo_tester.framework.git_helper import clone
-
 
 
 NODECELLAR_URL = "https://github.com/cloudify-cosmo/" \
@@ -38,14 +31,12 @@ NODECELLAR_URL = "https://github.com/cloudify-cosmo/" \
 
 class NodecellarAppTest(TestCase):
     def test_nodecellar(self):
-        #print(self.env.ubuntu_image_name)
 
-        self.repo_dir = clone(NODECELLAR_URL, self.workdir) #path('/tmp/cosmo-test-Bps4rB/git/cloudify-nodecellar-openstack')
+        self.repo_dir = clone(NODECELLAR_URL, self.workdir)
         ec2_blueprint_yaml = os.path.join(
             util.get_blueprint_path('nodecellar_ec2'), 'blueprint_ec2.yaml')
         self.blueprint_yaml = self.repo_dir / 'blueprint_ec2.yaml'
         shutil.copyfile(ec2_blueprint_yaml, self.blueprint_yaml)
-
 
         before, after = self.upload_deploy_and_execute_install()
 
@@ -105,13 +96,13 @@ class NodecellarAppTest(TestCase):
             if '_vm' in key:
                 self.assertTrue('ip' in value['runtime_properties'],
                                 'Missing ip in runtime_properties: {0}'
-                                    .format(nodes_state))
+                                .format(nodes_state))
                 self.assertTrue('networks' in value['runtime_properties'],
                                 'Missing networks in runtime_properties: {0}'
-                                    .format(nodes_state))
+                                .format(nodes_state))
                 self.assertEqual(value['state'], 'started',
                                  'vm node should be started: {0}'
-                                     .format(nodes_state))
+                                 .format(nodes_state))
             elif key.startswith('floatingip'):
                 self.public_ip = value['runtime_properties'][
                     'floating_ip_address']
@@ -124,16 +115,16 @@ class NodecellarAppTest(TestCase):
 
         self.assertGreater(len(events), 0,
                            'Expected at least 1 event for execution id: {0}'
-                               .format(execution_by_id.id))
+                           .format(execution_by_id.id))
 
         nodejs_server_page_response = requests.get('http://{0}:8080'
-            .format(self.public_ip))
+                                                   .format(self.public_ip))
         self.assertEqual(200, nodejs_server_page_response.status_code,
                          'Failed to get home page of nodecellar app')
         page_title = 'Node Cellar'
         self.assertTrue(page_title in nodejs_server_page_response.text,
                         'Expected to find {0} in web server response: {1}'
-                            .format(page_title, nodejs_server_page_response))
+                        .format(page_title, nodejs_server_page_response))
 
         wines_page_response = requests.get('http://{0}:8080/wines'.format(
             self.public_ip))
@@ -146,15 +137,15 @@ class NodecellarAppTest(TestCase):
             wines_json = json.loads(wines_page_response.text)
             if type(wines_json) != list:
                 self.fail('Response from wines page is not a JSON list: {0}'
-                    .format(wines_page_response.text))
+                          .format(wines_page_response.text))
 
             self.assertGreater(len(wines_json), 0,
                                'Expected at least 1 wine data in nodecellar '
                                'app; json returned on wines page is: {0}'
-                                   .format(wines_page_response.text))
+                               .format(wines_page_response.text))
         except BaseException:
             self.fail('Response from wines page is not a valid JSON: {0}'
-                .format(wines_page_response.text))
+                      .format(wines_page_response.text))
 
     def post_uninstall_assertions(self):
         nodes_instances = self.client.node_instances.list(self.deployment_id)
