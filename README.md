@@ -12,7 +12,7 @@ This repository contains Cloudify's system tests which in most cases mean that t
 
 In addition, plugins functionality is tested and Cloudify's examples.
 
-# Running System Tests
+## Running System Tests
 
 System tests are written as standard Python unit tests and should be ran using nose.
 
