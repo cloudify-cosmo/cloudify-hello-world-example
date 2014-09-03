@@ -22,6 +22,7 @@ import os
 from requests.exceptions import ConnectionError
 
 from cosmo_tester.framework.testenv import TestCase
+from cosmo_tester.framework.util import YamlPatcher
 from cosmo_tester.framework.git_helper import clone
 
 
@@ -37,6 +38,7 @@ class NodecellarAppTest(TestCase):
             util.get_blueprint_path('nodecellar_ec2'), 'blueprint_ec2.yaml')
         self.blueprint_yaml = self.repo_dir / 'blueprint_ec2.yaml'
         shutil.copyfile(ec2_blueprint_yaml, self.blueprint_yaml)
+        self.modify_blueprint()
 
         before, after = self.upload_deploy_and_execute_install()
 
@@ -45,6 +47,14 @@ class NodecellarAppTest(TestCase):
         self.execute_uninstall()
 
         self.post_uninstall_assertions()
+
+    def modify_blueprint(self):
+        with YamlPatcher(self.blueprint_yaml) as patch:
+            vm_type_path = 'node_types.vm_host.properties'
+            patch.merge_obj('{0}.server.default'.format(vm_type_path), {
+                'image_name': self.env.ubuntu_agent_ami,
+                'size_name': self.env.medium_instance_type
+            })
 
     def post_install_assertions(self, before_state, after_state):
         delta = self.get_manager_state_delta(before_state, after_state)
