@@ -107,7 +107,7 @@ class HelloWorldBashTest(TestCase):
         server_id = None
         if with_server:
             verify_webserver_running(
-                server_node=get_server_node(
+                web_server_node=get_web_server_node(
                     self.client, self.test_id),
                 floatingip_node_instance=floatingip_node)
 
@@ -155,11 +155,11 @@ class HelloWorldBashTest(TestCase):
 
 
 @retry(stop_max_attempt_number=5, wait_fixed=3000)
-def verify_webserver_running(server_node, floatingip_node_instance):
+def verify_webserver_running(web_server_node, floatingip_node_instance):
     """
     This method is also used by two_deployments_test!
     """
-    server_port = server_node.properties['port']
+    server_port = web_server_node.properties['port']
     server_ip = \
         floatingip_node_instance.runtime_properties['floating_ip_address']
     server_response = requests.get('http://{0}:{1}'.format(server_ip,
@@ -188,11 +188,12 @@ def get_instances(client, deployment_id):
     return floatingip_node, security_group_node, server_node
 
 
-def get_server_node(client, deployment_id):
+def get_web_server_node(client, deployment_id):
     """
     This method is also used by two_deployments_test!
     """
-    return client.nodes.get(deployment_id=deployment_id, node_id='vm')
+    return client.nodes.get(deployment_id=deployment_id,
+                            node_id='http_web_server')
 
 
 def modify_yaml(env, yaml_file, host_name, security_groups,

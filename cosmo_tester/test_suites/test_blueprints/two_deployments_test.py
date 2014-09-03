@@ -65,7 +65,7 @@ class TwoDeploymentsTest(TestCase):
                 deployment_id=deployment_id)
 
             bash.verify_webserver_running(
-                server_node=bash.get_server_node(
+                web_server_node=bash.get_web_server_node(
                     self.client, self.test_id),
                 floatingip_node_instance=floatingip_node)
 
