@@ -19,7 +19,7 @@ node_templates:
                 password: 1408Rokk
 
     app:
-        type: cloudify.types.python.app_module
+        type: cloudify.types.app_module
         properties:
             scripts:
                 start: scripts/hello.py
