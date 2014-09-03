@@ -37,6 +37,7 @@ env_variables = {
     # branch names
     'BRANCH_NAME': 'master',
     'BRANCH_NAME_OPENSTACK_PROVIDER': '',
+    'BRANCH_NAME_LIBCLOUD_PROVIDER': '',
     'BRANCH_NAME_SYSTEM_TESTS': '',
     'BRANCH_NAME_CLI': '',
 

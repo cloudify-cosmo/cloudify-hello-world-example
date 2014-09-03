@@ -13,6 +13,7 @@ setenv()
 	# injected by quickbuild
 	BRANCH_NAME=${BRANCH_NAME='master'}
 	BRANCH_NAME_OPENSTACK_PROVIDER=${BRANCH_NAME_OPENSTACK_PROVIDER=$BRANCH_NAME}
+	BRANCH_NAME_LIBCLOUD_PROVIDER=${BRANCH_NAME_LIBCLOUD_PROVIDER=$BRANCH_NAME}
 	BRANCH_NAME_CLI=${BRANCH_NAME_CLI=$BRANCH_NAME}
 	BRANCH_NAME_SYSTEM_TESTS=${BRANCH_NAME_SYSTEM_TESTS=$BRANCH_NAME}
 	NOSETESTS_TO_RUN=${NOSETESTS_TO_RUN='cosmo_tester/test_suites'}
@@ -56,10 +57,12 @@ clone_and_install_system_tests()
 	clone_and_checkout cloudify-system-tests $BRANCH_NAME_SYSTEM_TESTS
 	clone_and_checkout cloudify-cli $BRANCH_NAME_CLI
 	clone_and_checkout cloudify-openstack-provider $BRANCH_NAME_OPENSTACK_PROVIDER
+	clone_and_checkout cloudify-libcloud-provider $BRANCH_NAME_LIBCLOUD_PROVIDER
 
 	echo "### Installing system tests dependencies"
 	pip install ./cloudify-cli -r cloudify-cli/dev-requirements.txt
 	pip install ./cloudify-openstack-provider
+	pip install ./cloudify-libcloud-provider
 	pip install -e ./cloudify-system-tests
 }
 
