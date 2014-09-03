@@ -45,76 +45,6 @@ class NeutronGaloreTest(TestCase):
 
         self.post_uninstall_assertions()
 
-    def _test_use_existing(self):
-        before_openstack_infra_state = openstack_infra_state(
-            self.env.cloudify_config)
-
-        self._modify_blueprint_use_existing()
-
-        bp_and_dep_name = self.test_id + '-use-existing'
-        _, after = self.upload_deploy_and_execute_install(
-            blueprint_id=bp_and_dep_name, deployment_id=bp_and_dep_name)
-
-        self._post_use_existing_install_assertions(
-            bp_and_dep_name, before_openstack_infra_state, after['node_state'])
-
-        self.execute_uninstall(bp_and_dep_name)
-
-        self._post_use_existing_uninstall_assertions(bp_and_dep_name)
-
-    def _modify_blueprint_use_existing(self):
-        node_instances = self.client.node_instances().list(
-            deployment_id=self.test_id)
-
-        node_id_to_external_resource_id = {
-            node_instance.node_id: node_instance.runtime_properties[
-                'external_id'] for node_instance in node_instances
-        }
-
-        with YamlPatcher(self.blueprint_yaml) as patch:
-            for node_id, resource_id in node_id_to_external_resource_id:
-                patch.merge_obj(
-                    'node_templates.{0}.properties'.format(node_id),
-                    {
-                        'use_existing': True,
-                        'resource_id': resource_id
-                    })
-
-    def _post_use_existing_install_assertions(self,
-                                              use_existing_deployment_id,
-                                              before_openstack_infra_state,
-                                              after_nodes_state):
-        # verify there aren't any new resources on Openstack
-        after_openstack_infra_state = openstack_infra_state(
-            self.env.cloudify_config)
-        delta = openstack_infra_state_delta(before_openstack_infra_state,
-                                            after_openstack_infra_state)
-        for delta_resources_of_single_type in delta.values():
-            self.assertFalse(delta_resources_of_single_type)
-
-        # verify the runtime properties of the new deployment's nodes
-        original_deployment_node_states = self.get_node_states(
-            after_nodes_state, self.test_id)
-        use_existing_deployment_node_states = self.get_node_states(
-            after_nodes_state, use_existing_deployment_id)
-        self.assertDictEqual(original_deployment_node_states,
-                             use_existing_deployment_node_states)
-
-    def _post_use_existing_uninstall_assertions(self,
-                                                use_existing_deployment_id):
-        # verify the external resources are all still up and running
-        original_deployment_node_states = self.get_node_states(
-            self.get_manager_state(), self.test_id)
-        self.post_install_assertions(original_deployment_node_states)
-
-        # verify the use_existing deployment has no runtime properties on
-        # the nodes
-        node_instances = self.client.node_instances.list(
-            deployment_id=use_existing_deployment_id)
-        instances_with_runtime_props = [instance for instance in node_instances
-                                        if instance.runtime_properties]
-        self.assertEquals(0, len(instances_with_runtime_props))
-
     def modify_blueprint(self):
         with YamlPatcher(self.blueprint_yaml) as patch:
             vm_path = 'node_templates.nova_server.properties'
@@ -124,11 +54,6 @@ class NeutronGaloreTest(TestCase):
                 'flavor_name': self.env.flavor_name,
                 'security_groups': ['neutron_test_security_group_dst'],
             })
-
-    def get_delta_node_states(self, before_state, after_state):
-        delta = self.get_manager_state_delta(before_state, after_state)
-        node_states = self.get_node_states(delta['node_state'], self.test_id)
-        return node_states
 
     def post_install_assertions(self, node_states):
 
@@ -239,6 +164,76 @@ class NeutronGaloreTest(TestCase):
         leftovers = self._test_cleanup_context.get_resources_to_teardown()
         self.assertTrue(all([len(g) == 0 for g in leftovers.values()]))
 
+    def _test_use_existing(self):
+        before_openstack_infra_state = openstack_infra_state(
+            self.env.cloudify_config)
+
+        self._modify_blueprint_use_existing()
+
+        bp_and_dep_name = self.test_id + '-use-existing'
+        _, after = self.upload_deploy_and_execute_install(
+            blueprint_id=bp_and_dep_name, deployment_id=bp_and_dep_name)
+
+        self._post_use_existing_install_assertions(
+            bp_and_dep_name, before_openstack_infra_state, after['node_state'])
+
+        self.execute_uninstall(bp_and_dep_name)
+
+        self._post_use_existing_uninstall_assertions(bp_and_dep_name)
+
+    def _modify_blueprint_use_existing(self):
+        node_instances = self.client.node_instances().list(
+            deployment_id=self.test_id)
+
+        node_id_to_external_resource_id = {
+            node_instance.node_id: node_instance.runtime_properties[
+                'external_id'] for node_instance in node_instances
+        }
+
+        with YamlPatcher(self.blueprint_yaml) as patch:
+            for node_id, resource_id in node_id_to_external_resource_id:
+                patch.merge_obj(
+                    'node_templates.{0}.properties'.format(node_id),
+                    {
+                        'use_existing': True,
+                        'resource_id': resource_id
+                    })
+
+    def _post_use_existing_install_assertions(self,
+                                              use_existing_deployment_id,
+                                              before_openstack_infra_state,
+                                              after_nodes_state):
+        # verify there aren't any new resources on Openstack
+        after_openstack_infra_state = openstack_infra_state(
+            self.env.cloudify_config)
+        delta = openstack_infra_state_delta(before_openstack_infra_state,
+                                            after_openstack_infra_state)
+        for delta_resources_of_single_type in delta.values():
+            self.assertFalse(delta_resources_of_single_type)
+
+        # verify the runtime properties of the new deployment's nodes
+        original_deployment_node_states = self.get_node_states(
+            after_nodes_state, self.test_id)
+        use_existing_deployment_node_states = self.get_node_states(
+            after_nodes_state, use_existing_deployment_id)
+        self.assertDictEqual(original_deployment_node_states,
+                             use_existing_deployment_node_states)
+
+    def _post_use_existing_uninstall_assertions(self,
+                                                use_existing_deployment_id):
+        # verify the external resources are all still up and running
+        original_deployment_node_states = self.get_node_states(
+            self.get_manager_state(), self.test_id)
+        self.post_install_assertions(original_deployment_node_states)
+
+        # verify the use_existing deployment has no runtime properties on
+        # the nodes
+        node_instances = self.client.node_instances.list(
+            deployment_id=use_existing_deployment_id)
+        instances_with_runtime_props = [instance for instance in node_instances
+                                        if instance.runtime_properties]
+        self.assertEquals(0, len(instances_with_runtime_props))
+
     def get_node_states(self, node_states, deployment_id):
         return {
             'server': self._node_state('nova_server', node_states,
@@ -258,6 +253,11 @@ class NeutronGaloreTest(TestCase):
             'floatingip': self._node_state('floatingip', node_states,
                                            deployment_id)
         }
+
+    def get_delta_node_states(self, before_state, after_state):
+        delta = self.get_manager_state_delta(before_state, after_state)
+        node_states = self.get_node_states(delta['node_state'], self.test_id)
+        return node_states
 
     def get_openstack_components(self, states):
         nova, neutron = openstack_clients(self.env.cloudify_config)
