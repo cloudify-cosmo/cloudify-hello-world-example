@@ -1,21 +1,7 @@
 imports:
     - http://www.getcloudify.org/spec/cloudify/3.1/types.yaml
     - http://www.getcloudify.org/spec/openstack-plugin/1.1/plugin.yaml
-
-plugins:
-    python_runner:
-        derived_from: cloudify.plugins.agent_plugin
-        properties:
-            url: https://github.com/cloudify-cosmo/cloudify-python-plugin/archive/master.zip
-
-node_types:
-    cloudify.types.python.app_module:
-        derived_from: cloudify.types.app_module
-        interfaces:
-            cloudify.interfaces.lifecycle:
-                - start: python_runner.python_script_executor.tasks.run
-        properties:
-            scripts: {}
+    - http://www.getcloudify.org/spec/script-plugin/1.1/plugin.yaml
 
 node_templates:
     vm:
@@ -30,13 +16,19 @@ node_templates:
                     successful_consecutive_status_queries_count: 2
                     start_timeout: 60
                 user: Administrator
-                password : 1408Rokk
+                password: 1408Rokk
 
     app:
         type: cloudify.types.python.app_module
         properties:
             scripts:
                 start: scripts/hello.py
+        interfaces:
+            cloudify.interfaces.lifecycle:
+                -   start:
+                        mapping: script.script_runner.tasks.run
+                        properties:
+                            script_path: scripts/hello.py
         relationships:
             -   type: cloudify.relationships.contained_in
                 target: vm
