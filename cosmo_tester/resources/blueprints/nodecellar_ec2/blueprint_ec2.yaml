@@ -11,25 +11,10 @@ node_types:
     vm_host:
         derived_from: cloudify.libcloud.server
         properties:
-            install_agent: 
-              default: true            
-            worker_config:
-              default:
-                  user: ubuntu 
-                  port: 22
-                  # example for ssh key file (see `key_name` below) 
-                  # this file matches the agent key configured during the bootstrap
-                  #key: ~/.ssh/adaml-cloudify-agents-kp.pem
-
-                  # Uncomment and update `management_network_name` when working a n neutron enabled openstack
-                  #-   management_network_name: cfy-kobyn-mng-network
             server:
               default:
-                  #image_name: 8c096c29-a666-4b82-99c4-c77dc70cfb40
                   image_name: ami-a73264ce
                   size_name: m1.medium
-                  #flavor: 102
-                  #key_name: adaml-cloudify-agents-kp
                   security_groups: ['node_cellar_sg']
     mongo_database:
         derived_from: cloudify.types.bash.db_server
