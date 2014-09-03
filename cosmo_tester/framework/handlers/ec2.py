@@ -31,7 +31,7 @@ from cosmo_tester.framework.testenv import CLOUDIFY_TEST_NO_CLEANUP
 def boto_client(libcloud_provider_name, access_id=None, secret_key=None):
     # We use the libcloud provider to determine the region to use with boto
     region = _get_region_by_libcloud_provider(libcloud_provider_name)
-    if access_id and secret_key is not '':
+    if access_id and secret_key:
         return boto.ec2.connect_to_region(region, aws_access_key_id=access_id,
                                           aws_secret_access_key=secret_key)
     elif 'AWS_ACCESS_KEY_ID' in os.environ \
