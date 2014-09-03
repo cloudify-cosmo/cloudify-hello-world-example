@@ -22,7 +22,6 @@ from retrying import retry
 
 from cosmo_tester.framework.util import YamlPatcher
 from cosmo_tester.framework.testenv import TestCase
-from cosmo_tester.framework.util import get_yaml_as_dict
 from cosmo_tester.framework.handlers.openstack import openstack_clients
 from cosmo_tester.framework.git_helper import clone
 
@@ -107,8 +106,10 @@ class HelloWorldBashTest(TestCase):
 
         server_id = None
         if with_server:
-            verify_webserver_running(blueprint_yaml=self.blueprint_yaml,
-                                     floatingip_node=floatingip_node)
+            verify_webserver_running(
+                server_node_instance=get_server_node(
+                    self.client, self.test_id),
+                floatingip_node_instance=floatingip_node)
 
             server_id = server_node.runtime_properties['external_id']
             nova_server = nova.servers.get(server_id)
@@ -154,15 +155,13 @@ class HelloWorldBashTest(TestCase):
 
 
 @retry(stop_max_attempt_number=5, wait_fixed=3000)
-def verify_webserver_running(blueprint_yaml, floatingip_node):
+def verify_webserver_running(server_node, floatingip_node_instance):
     """
     This method is also used by two_deployments_test!
     """
-    blueprint = get_yaml_as_dict(blueprint_yaml)
-    webserver_props = blueprint['node_templates']['http_web_server'][
-        'properties']
-    server_port = webserver_props['port']
-    server_ip = floatingip_node.runtime_properties['floating_ip_address']
+    server_port = server_node.properties['port']
+    server_ip = \
+        floatingip_node_instance.runtime_properties['floating_ip_address']
     server_response = requests.get('http://{0}:{1}'.format(server_ip,
                                                            server_port))
     if server_response.status_code != 200:
@@ -187,6 +186,13 @@ def get_instances(client, deployment_id):
         if instance.node_id == 'vm':
             server_node = instance
     return floatingip_node, security_group_node, server_node
+
+
+def get_server_node(client, deployment_id):
+    """
+    This method is also used by two_deployments_test!
+    """
+    return client.nodes.get(deployment_id=deployment_id, node_id='vm')
 
 
 def modify_yaml(env, yaml_file, host_name, security_groups,
