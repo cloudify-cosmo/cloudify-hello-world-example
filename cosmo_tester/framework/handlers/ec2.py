@@ -13,14 +13,13 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
-__author__ = 'adaml'
 
 import random
 import os
 import copy
+import logging
 from time import sleep
 from contextlib import contextmanager
-import logging
 
 import boto.ec2
 
@@ -29,10 +28,19 @@ from cosmo_tester.framework.util import get_actual_keypath
 from cosmo_tester.framework.testenv import CLOUDIFY_TEST_NO_CLEANUP
 
 
-def boto_client(libcloud_provider_name):
+def boto_client(libcloud_provider_name, access_id=None, secret_key=None):
     # We use the libcloud provider to determine the region to use with boto
     region = _get_region_by_libcloud_provider(libcloud_provider_name)
-    return boto.ec2.connect_to_region(region)
+    if access_id and secret_key is not '':
+        return boto.ec2.connect_to_region(region, aws_access_key_id=access_id,
+                                          aws_secret_access_key=secret_key)
+    elif 'AWS_ACCESS_KEY_ID' in os.environ \
+            and 'AWS_SECRET_ACCESS_KEY' in os.environ:
+        # try to connect using env var credentials
+        return boto.ec2.connect_to_region(region)
+
+    raise RuntimeError('Unable to initialize aws client. aws credentials '
+                       'were not found in config file or environment.')
 
 
 def _get_region_by_libcloud_provider(provider_name):
@@ -61,9 +69,10 @@ def _get_region_by_libcloud_provider(provider_name):
 
 
 def ec2_infra_state(cloudify_config):
-
     config_reader = CloudifyEc2ConfigReader(cloudify_config)
-    ec2_conn = boto_client(config_reader.libcloud_provider_name)
+    ec2_conn = boto_client(config_reader.libcloud_provider_name,
+                           access_id=config_reader.aws_access_id,
+                           secret_key=config_reader.aws_secret_key)
     # TODO: The resource name prefix is currently not implemented on the ec2
     # provider.Using wild-card until we get it fixed. (CFY-1261)
     sg_prefix_regex = config_reader.resources_prefix + '*'
@@ -127,7 +136,9 @@ def remove_ec2_resources(cloudify_config, resources_to_remove):
 
 def _remove_ec2_resources_impl(cloudify_config,
                                resources_to_remove):
-    conn = boto_client(cloudify_config['connection']['cloud_provider_name'])
+    conn = boto_client(cloudify_config['connection']['cloud_provider_name'],
+                       access_id=cloudify_config['connection']['access_id'],
+                       secret_key=cloudify_config['connection']['secret_key'])
     failed = {
         'servers': {},
         'key_pairs': {},
@@ -239,6 +250,14 @@ class CloudifyEc2ConfigReader(BaseHandler.CloudifyConfigReader):
     def libcloud_provider_name(self):
         return self.config['connection']['cloud_provider_name']
 
+    @property
+    def aws_access_id(self):
+        return self.config['connection']['access_id']
+
+    @property
+    def aws_secret_key(self):
+        return self.config['connection']['secret_key']
+
 
 class LibcloudHandler(BaseHandler):
     provider = 'libcloud'
@@ -246,6 +265,7 @@ class LibcloudHandler(BaseHandler):
     CloudifyConfigReader = CloudifyEc2ConfigReader
 
     medium_instance_type = 'm1.medium'
+    ubuntu_agent_ami = 'ami-a73264ce'
 
     def __init__(self, env):
         super(LibcloudHandler, self).__init__(env)
@@ -256,16 +276,15 @@ class LibcloudHandler(BaseHandler):
         if self._ubuntu_ami is not None:
             return self._ubuntu_ami
 
-        conn = boto_client(self.env._config_reader.libcloud_provider_name)
+        conn = boto_client(self.env._config_reader.libcloud_provider_name,
+                           access_id=self.env._config_reader.aws_access_id,
+                           secret_key=self.env._config_reader.aws_secret_key)
         ubuntu_images = conn.get_all_images(filters={
             'name': 'ubuntu/images/ebs/'
                     'ubuntu-precise-12.04-amd64-server-20131003'
         })
         if ubuntu_images.__len__() == 0:
-            # the default ubuntu-precise-12.04 AMI for region 'ec2_us_east'.
-            # AMI ids might become deprecated but we don't want to fail the
-            # test since it might not be using this property.
-            return 'ami-a73264ce'
+            raise RuntimeError('could not find ubuntu ami')
 
         self._ubuntu_ami = ubuntu_images[0].id
         return self._ubuntu_ami
@@ -297,5 +316,6 @@ class LibcloudHandler(BaseHandler):
                 raise_on_missing=False)
             if management_key_path:
                 os.remove(management_key_path)
+
 
 handler = LibcloudHandler
