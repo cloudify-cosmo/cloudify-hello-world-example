@@ -13,7 +13,7 @@ node_templates:
            -   type: cloudify.openstack.server_connected_to_floating_ip
                target: floatingip
         properties:
-            install_agent: true
+            install_agent: false
             cloudify_agent:
                 user: ubuntu
                 port: 22

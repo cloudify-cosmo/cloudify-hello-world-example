@@ -64,8 +64,10 @@ class TwoDeploymentsTest(TestCase):
                 client=self.client,
                 deployment_id=deployment_id)
 
-            bash.verify_webserver_running(blueprint_yaml=blueprint_yaml,
-                                          floatingip_node=floatingip_node)
+            bash.verify_webserver_running(
+                web_server_node=bash.get_web_server_node(
+                    self.client, deployment_id),
+                floatingip_node_instance=floatingip_node)
 
             self.cfy.execute_uninstall(deployment_id=deployment_id)
         except Exception, e:
