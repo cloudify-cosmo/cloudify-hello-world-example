@@ -107,7 +107,7 @@ class HelloWorldBashTest(TestCase):
         server_id = None
         if with_server:
             verify_webserver_running(
-                server_node_instance=get_server_node(
+                server_node=get_server_node(
                     self.client, self.test_id),
                 floatingip_node_instance=floatingip_node)
 
