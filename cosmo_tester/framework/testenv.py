@@ -53,7 +53,6 @@ CLOUDIFY_TEST_CONFIG_PATH = 'CLOUDIFY_TEST_CONFIG_PATH'
 CLOUDIFY_TEST_NO_CLEANUP = 'CLOUDIFY_TEST_NO_CLEANUP'
 CLOUDIFY_TEST_HANDLER_MODULE = 'CLOUDIFY_TEST_HANDLER_MODULE'
 
-
 test_environment = None
 
 
@@ -84,7 +83,6 @@ def teardown():
 
 # Singleton class
 class TestEnvironment(object):
-
     # Singleton class
     def __init__(self):
         self._initial_cwd = os.getcwd()
@@ -182,97 +180,19 @@ class TestEnvironment(object):
                                .format(self.management_ip))
         self._management_running = True
 
-    @property
-    def management_network_name(self):
-        return self._config_reader.management_network_name
-
-    @property
-    def agent_key_path(self):
-        return self._config_reader.agent_key_path
-
-    @property
-    def agent_keypair_name(self):
-        return self._config_reader.agent_keypair_name
-
-    @property
-    def external_network_name(self):
-        return self._config_reader.external_network_name
-
-    @property
-    def agents_security_group(self):
-        return self._config_reader.agents_security_group
-
-    @property
-    def management_server_name(self):
-        return self._config_reader.management_server_name
-
-    @property
-    def management_server_floating_ip(self):
-        return self._config_reader.management_server_floating_ip
-
-    @property
-    def management_sub_network_name(self):
-        return self._config_reader.management_sub_network_name
-
-    @property
-    def management_router_name(self):
-        return self._config_reader.management_router_name
-
-    @property
-    def managment_user_name(self):
-        return self._config_reader.managment_user_name
-
-    @property
-    def management_key_path(self):
-        return self._config_reader.management_key_path
-
-    @property
-    def management_keypair_name(self):
-        return self._config_reader.management_keypair_name
-
-    @property
-    def management_security_group(self):
-        return self._config_reader.management_security_group
-
-    @property
-    def cloudify_agent_user(self):
-        return self._config_reader.cloudify_agent_user
-
-    @property
-    def region(self):
-        return self._config_reader.region
-
-    @property
-    def resources_prefix(self):
-        return self._config_reader.resources_prefix
-
-    @property
-    def ubuntu_image_name(self):
-        return self.handler.ubuntu_image_name
-
-    @property
-    def centos_image_name(self):
-        return self.handler.centos_image_name
-
-    @property
-    def centos_image_user(self):
-        return self.handler.centos_image_user
-
-    @property
-    def flavor_name(self):
-        return self.handler.flavor_name
-
-    @property
-    def ubuntu_image_id(self):
-        return self.handler.ubuntu_image_id
-
-    @property
-    def small_flavor_id(self):
-        return self.handler.small_flavor_id
+    # Will return provider specific handler/config properties if not found in
+    # test env.
+    def __getattr__(self, item):
+        if hasattr(self.handler, item):
+            return getattr(self.handler, item)
+        elif hasattr(self._config_reader, item):
+            return getattr(self._config_reader, item)
+        else:
+            raise AttributeError(
+                'Property \'{0}\' was not found in env'.format(item))
 
 
 class TestCase(unittest.TestCase):
-
     @classmethod
     def setUpClass(cls):
         pass

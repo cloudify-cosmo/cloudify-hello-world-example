@@ -38,6 +38,8 @@ setup(
         'nose',
         'retrying==1.2.2',
         'cloudify==3.1a3',
-        'cloudify-openstack-provider==1.1a3'
+        'cloudify-openstack-provider==1.1a3',
+        'cloudify-libcloud-provider==1.1a3',
+        'boto==2.32.1'
     ]
 )
