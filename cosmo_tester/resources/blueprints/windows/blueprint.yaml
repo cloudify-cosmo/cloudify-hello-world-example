@@ -20,9 +20,6 @@ node_templates:
 
     app:
         type: cloudify.types.app_module
-        properties:
-            scripts:
-                start: scripts/hello.py
         interfaces:
             cloudify.interfaces.lifecycle:
                 -   start:
