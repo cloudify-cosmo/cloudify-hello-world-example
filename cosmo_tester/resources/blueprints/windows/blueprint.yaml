@@ -13,8 +13,9 @@ node_templates:
                 flavor: 102
             cloudify_agent:
                 service:
-                    successful_consecutive_status_queries_count: 2
-                    start_timeout: 60
+                    successful_consecutive_status_queries_count: 10
+                    status_transition_sleep_interval: 5
+                    start_timeout: 120
                 user: Administrator
                 password: 1408Rokk
 

@@ -1,4 +1,4 @@
-__author__ = 'elip'
 
+from cloudiy import ctx
 
 ctx.logger.info('Hello from application running inside a windows machine.')  # NOQA
