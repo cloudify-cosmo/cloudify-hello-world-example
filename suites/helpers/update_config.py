@@ -7,6 +7,8 @@ import os
 from cosmo_tester.framework.util import YamlPatcher
 
 properties = {
+    'AWS_ACCESS_ID'         : 'connection.access_id',
+    'AWS_SECRET_KEY'        : 'connection.secret_key',
     'KEYSTONE_PASSWORD'     : 'keystone.password',
     'KEYSTONE_USERNAME'     : 'keystone.username',
     'KEYSTONE_TENANT'       : 'keystone.tenant_name',
