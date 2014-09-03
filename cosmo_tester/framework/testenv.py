@@ -188,7 +188,7 @@ class TestEnvironment(object):
         elif hasattr(self._config_reader, item):
             return getattr(self._config_reader, item)
         else:
-            raise RuntimeError(
+            raise AttributeError(
                 'Property \'{0}\' was not found in env'.format(item))
 
 
