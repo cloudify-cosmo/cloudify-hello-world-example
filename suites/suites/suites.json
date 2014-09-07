@@ -16,5 +16,11 @@
         "tests_to_run": "cosmo_tester/test_suites/test_openstack_env",
         "cloudify_test_config": "cloudify-config-openstack-on-hp.yaml",
         "cloudify_test_handler_module": "cosmo_tester.framework.handlers.openstack"
+    },
+    {
+        "suite_name": "aws_ec2_env",
+        "tests_to_run": "cosmo_tester/test_suites/test_ec2_env",
+        "cloudify_test_config": "cloudify-config-ec2.yaml",
+        "cloudify_test_handler_module": "cosmo_tester.framework.handlers.ec2"
     }
 ]
