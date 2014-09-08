@@ -55,3 +55,4 @@ xunit-reports/
 system_tests_controller_venv/
 # QuickBuild
 .qbcache/
+out/
