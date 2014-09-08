@@ -61,6 +61,7 @@ node_templates:
         properties:
             security_group:
                 name: neutron_test_security_group_dst
+            disable_default_egress_rules: True
             rules:
                 -   remote_ip_prefix: 1.2.3.0/24
                     port: 80
