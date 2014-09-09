@@ -179,7 +179,7 @@ class NeutronGaloreTest(TestCase):
         self._post_use_external_resource_uninstall_assertions(bp_and_dep_name)
 
     def _modify_blueprint_use_external_resource(self):
-        node_instances = self.client.node_instances().list(
+        node_instances = self.client.node_instances.list(
             deployment_id=self.test_id)
 
         node_id_to_external_resource_id = {
