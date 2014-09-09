@@ -39,7 +39,7 @@ class NeutronGaloreTest(TestCase):
         node_states = self.get_delta_node_states(before, after)
         self.post_install_assertions(node_states)
 
-        self._test_use_existing()
+        self._test_use_external_resource()
 
         self.execute_uninstall()
 
@@ -161,25 +161,25 @@ class NeutronGaloreTest(TestCase):
         leftovers = self._test_cleanup_context.get_resources_to_teardown()
         self.assertTrue(all([len(g) == 0 for g in leftovers.values()]))
 
-    def _test_use_existing(self):
+    def _test_use_external_resource(self):
         before_openstack_infra_state = openstack_infra_state(
             self.env.cloudify_config)
 
-        self._modify_blueprint_use_existing()
+        self._modify_blueprint_use_external_resource()
 
-        bp_and_dep_name = self.test_id + '-use-existing'
+        bp_and_dep_name = self.test_id + '-use-external-resource'
         _, after = self.upload_deploy_and_execute_install(
             blueprint_id=bp_and_dep_name, deployment_id=bp_and_dep_name)
 
-        self._post_use_existing_install_assertions(
+        self._post_use_external_resource_install_assertions(
             bp_and_dep_name, before_openstack_infra_state, after['node_state'])
 
         self.execute_uninstall(bp_and_dep_name)
 
-        self._post_use_existing_uninstall_assertions(bp_and_dep_name)
+        self._post_use_external_resource_uninstall_assertions(bp_and_dep_name)
 
-    def _modify_blueprint_use_existing(self):
-        node_instances = self.client.node_instances().list(
+    def _modify_blueprint_use_external_resource(self):
+        node_instances = self.client.node_instances.list(
             deployment_id=self.test_id)
 
         node_id_to_external_resource_id = {
@@ -192,14 +192,13 @@ class NeutronGaloreTest(TestCase):
                 patch.merge_obj(
                     'node_templates.{0}.properties'.format(node_id),
                     {
-                        'use_existing': True,
+                        'use_external_resource': True,
                         'resource_id': resource_id
                     })
 
-    def _post_use_existing_install_assertions(self,
-                                              use_existing_deployment_id,
-                                              before_openstack_infra_state,
-                                              after_nodes_state):
+    def _post_use_external_resource_install_assertions(
+            self, use_external_resource_deployment_id,
+            before_openstack_infra_state, after_nodes_state):
         # verify there aren't any new resources on Openstack
         after_openstack_infra_state = openstack_infra_state(
             self.env.cloudify_config)
@@ -211,22 +210,22 @@ class NeutronGaloreTest(TestCase):
         # verify the runtime properties of the new deployment's nodes
         original_deployment_node_states = self.get_node_states(
             after_nodes_state, self.test_id)
-        use_existing_deployment_node_states = self.get_node_states(
-            after_nodes_state, use_existing_deployment_id)
+        use_external_resource_deployment_node_states = self.get_node_states(
+            after_nodes_state, use_external_resource_deployment_id)
         self.assertDictEqual(original_deployment_node_states,
-                             use_existing_deployment_node_states)
+                             use_external_resource_deployment_node_states)
 
-    def _post_use_existing_uninstall_assertions(self,
-                                                use_existing_deployment_id):
+    def _post_use_external_resource_uninstall_assertions(
+            self, use_external_resource_deployment_id):
         # verify the external resources are all still up and running
         original_deployment_node_states = self.get_node_states(
             self.get_manager_state(), self.test_id)
         self.post_install_assertions(original_deployment_node_states)
 
-        # verify the use_existing deployment has no runtime properties on
-        # the nodes
+        # verify the use_external_resource deployment has no runtime
+        # properties on the nodes
         node_instances = self.client.node_instances.list(
-            deployment_id=use_existing_deployment_id)
+            deployment_id=use_external_resource_deployment_id)
         instances_with_runtime_props = [instance for instance in node_instances
                                         if instance.runtime_properties]
         self.assertEquals(0, len(instances_with_runtime_props))
