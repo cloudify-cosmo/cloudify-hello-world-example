@@ -185,7 +185,8 @@ class NeutronGaloreTest(TestCase):
         }
 
         with YamlPatcher(self.blueprint_yaml) as patch:
-            for node_id, resource_id in node_id_to_external_resource_id:
+            for node_id, resource_id in \
+                    node_id_to_external_resource_id.iteritems():
                 patch.merge_obj(
                     'node_templates.{0}.properties'.format(node_id),
                     {
