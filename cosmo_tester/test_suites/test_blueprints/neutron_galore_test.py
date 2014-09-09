@@ -77,9 +77,6 @@ class NeutronGaloreTest(TestCase):
                          [p(self.env.management_network_name)][0]
                          ['OS-EXT-IPS:type'], 'fixed')
         self.assertEqual(openstack['server']['addresses']
-                         [p(self.env.management_network_name)][1]
-                         ['OS-EXT-IPS:type'], 'floating')
-        self.assertEqual(openstack['server']['addresses']
                          [p('neutron_network_test')][0]
                          ['OS-EXT-IPS:type'], 'fixed')
         self.assertEqual(openstack['server']['addresses']
