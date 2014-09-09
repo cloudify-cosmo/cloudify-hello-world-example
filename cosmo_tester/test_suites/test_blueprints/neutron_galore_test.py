@@ -62,8 +62,6 @@ class NeutronGaloreTest(TestCase):
 
         openstack = self.get_openstack_components(node_states)
 
-        floatingip_address = openstack['server']['addresses'][
-            p(self.env.management_network_name)][1]['addr']
         port_assigned_addr = openstack['server']['addresses'][
             p('neutron_network_test')][0]['addr']
         port_security_group_id = openstack['port']['security_groups'][0]
@@ -100,8 +98,7 @@ class NeutronGaloreTest(TestCase):
         self.assertEqual(openstack['server']['name'], p('novaservertest'))
         self.assertEqual(openstack['port']['name'], p('neutron_test_port'))
         self.assertEqual(port_fixed_ip, port_assigned_addr)
-        self.assertEqual(openstack['floatingip']['floating_ip_address'],
-                         floatingip_address)
+
         self.assertEqual(openstack['floatingip']['floating_network_id'],
                          router_network_id)
         self.assertEqual(openstack['router']['name'], p('neutron_router_test'))
@@ -144,7 +141,7 @@ class NeutronGaloreTest(TestCase):
              'port_range_max': 443,
              'direction': 'egress'})
         self.assertEqual(node_states['floatingip']['floating_ip_address'],
-                         floatingip_address)
+                         openstack['floatingip']['floating_ip_address'])
         self.assertEqual(openstack['server']['addresses']
                          [p(self.env.management_network_name)][0]['addr'],
                          node_states['server']['networks']
