@@ -72,3 +72,8 @@ node_templates:
                         mapping: script.script_runner.tasks.run
                         properties:
                             script_path: scripts/stop.sh
+
+outputs:
+    http_endpoint:
+        description: HTTP web server endpoint.
+        value: { get_attribute: [ vm, ip ] }
