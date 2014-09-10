@@ -26,7 +26,7 @@ export CLOUDIFY_TEST_CONFIG_PATH="/some_path/cloudify-config.yaml"
 export CLOUDIFY_TEST_MANAGEMENT_IP="10.0.0.1"
 
 # Specifies whether to cleanup cloud resources on test termination (if set)
-export CLOUDIFY_TEST_NO_CLEANUP
+export CLOUDIFY_TEST_NO_CLEANUP="true"
 
 # Cloud handler for the test (default: openstack)
 export CLOUDIFY_TEST_HANDLER_MODULE="CLOUDIFY_TEST_HANDLER_MODULE"
