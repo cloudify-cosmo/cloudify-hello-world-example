@@ -1,0 +1,57 @@
+imports:
+    - http://www.getcloudify.org/spec/cloudify/3.1/types.yaml
+    - http://www.getcloudify.org/spec/openstack-plugin/1.1/plugin.yaml
+    - http://www.getcloudify.org/spec/diamond-plugin/1.1/plugin.yaml
+    - policies/diamond_test.yaml
+
+plugins:
+    diamond_test:
+        derived_from: cloudify.plugins.manager_plugin
+        properties:
+            folder: diamond-test-workflows-plugin
+
+inputs:
+    image_name: {}
+    flavor: {}
+    diamond_config: {}
+
+node_templates:
+    vm:
+        type: cloudify.openstack.server
+        properties:
+            server:
+                name: diamond-agent-server
+                image_name: { get_input: image_name }
+                flavor: { get_input: flavor }
+        interfaces:
+            cloudify.interfaces.monitor_lifecycle:
+                - start:
+                    mapping: diamond.diamond_agent.tasks.install
+                    diamond_config: { get_input: diamond_config }
+                - stop: diamond.diamond_agent.tasks.stop
+
+workflows:
+    on_monitor_event:
+        mapping: diamond_test.diamond_test_workflows.workflows.on_monitor_event
+        parameters:
+            service: {}
+            metric: {}
+
+groups:
+    vms:
+        members: [vm]
+        policies:
+            test_policy:
+                type: diamond_test
+                properties:
+                    #contains: { get_input: contains }
+                    contains: some_string
+                triggers:
+                    test_trigger:
+                        type: cloudify.policies.triggers.execute_workflow
+                        parameters:
+                            workflow: on_monitor_event
+                            force: true
+                            workflow_parameters:
+                                service: { get_property: [SELF, service] }
+                                metric: { get_property: [SELF, metric] }
