@@ -25,9 +25,8 @@ class MonitoringTest(TestCase):
 
         diamond_config = {}
 
-        service_contains = ''
-        expected_service = ''
-        expected_metric = ''
+        expected_service_contains = ''
+        expected_metric_contains = ''
 
         self.upload_deploy_and_execute_install(inputs={
             'image_name': self.env.self.env.ubuntu_image_name,
@@ -36,14 +35,14 @@ class MonitoringTest(TestCase):
         })
 
         self.wait_for_expected_outputs({
-            'service': expected_service,
-            'metric': expected_metric
+            'service': expected_service_contains,
+            'metric': expected_metric_contains
         }, timeout=300)
 
     def wait_for_expected_outputs(self, expected_outputs, timeout):
         def assertion():
             outputs = self.client.deployments.outputs.get(self.test_id)
             for output_name, expected_value in expected_outputs.items():
-                self.assertEqual(outputs[output_name]['value'][0],
-                                 expected_value)
+                self.assertIn(expected_value,
+                              outputs[output_name]['value'][0])
         self.repetitive(assertion, timeout=timeout)
