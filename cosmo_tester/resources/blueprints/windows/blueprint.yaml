@@ -15,7 +15,8 @@ node_templates:
                 service:
                     successful_consecutive_status_queries_count: 10
                     status_transition_sleep_interval: 5
-                    start_timeout: 120
+                    start_timeout: 240
+                    stop_timeout: 240
                 user: Administrator
                 password: 1408Rokk
 
