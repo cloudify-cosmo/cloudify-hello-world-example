@@ -35,7 +35,12 @@ def build_env(test_config)
             cloudify_env[name] = ENV[name]
         end
     end
-    cloudify_env['RESOURCE_PREFIX'] = test_config[:suite_name] + '-'
+    if test_config[:resource_prefix]
+      resource_prefix = test_config[:resource_prefix]
+    else
+      resource_prefix = test_config[:suite_name] + '-'
+    end
+    cloudify_env['RESOURCE_PREFIX'] = resource_prefix
     cloudify_env['NOSETESTS_TO_RUN'] = test_config[:tests_to_run]
     cloudify_env['CLOUDIFY_TEST_CONFIG'] = test_config[:cloudify_test_config]
     cloudify_env['CLOUDIFY_TEST_HANDLER_MODULE'] = test_config[:cloudify_test_handler_module]
