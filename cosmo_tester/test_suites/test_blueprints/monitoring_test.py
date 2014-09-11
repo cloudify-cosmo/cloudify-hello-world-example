@@ -25,7 +25,9 @@ class MonitoringTest(TestCase):
 
         diamond_config = {}
 
-        #TODO input: contains = ''
+        service_contains = ''
+        expected_service = ''
+        expected_metric = ''
 
         self.upload_deploy_and_execute_install(inputs={
             'image_name': self.env.self.env.ubuntu_image_name,
@@ -33,4 +35,15 @@ class MonitoringTest(TestCase):
             'diamond_config': diamond_config
         })
 
-        self.execute_uninstall()
+        self.wait_for_expected_outputs({
+            'service': expected_service,
+            'metric': expected_metric
+        }, timeout=300)
+
+    def wait_for_expected_outputs(self, expected_outputs, timeout):
+        def assertion():
+            outputs = self.client.deployments.outputs.get(self.test_id)
+            for output_name, expected_value in expected_outputs.items():
+                self.assertEqual(outputs[output_name]['value'][0],
+                                 expected_value)
+        self.repetitive(assertion, timeout=timeout)

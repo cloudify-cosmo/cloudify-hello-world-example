@@ -9,11 +9,21 @@ plugins:
         derived_from: cloudify.plugins.manager_plugin
         properties:
             folder: diamond-test-workflows-plugin
+    mock:
+        derived_from: cloudify.plugins.manager_plugin
+        properties:
+            folder: mock-plugin
 
 inputs:
     image_name: {}
     flavor: {}
     diamond_config: {}
+
+outputs:
+    service:
+        value: { get_attribute: [vm, service] }
+    metric:
+        value: { get_attribute: [vm, metric] }
 
 node_templates:
     vm:
@@ -29,6 +39,8 @@ node_templates:
                     mapping: diamond.diamond_agent.tasks.install
                     diamond_config: { get_input: diamond_config }
                 - stop: diamond.diamond_agent.tasks.stop
+            test:
+                - op: mock.mock_plugin.mock.from_on_monitor_event
 
 workflows:
     on_monitor_event:

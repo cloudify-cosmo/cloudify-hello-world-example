@@ -1,5 +1,5 @@
 # **************************************************************************
-# * Copyright (c) 2014 GigaSpaces Technologies Ltd. All rights reserved
+# * Copyright (c) 2013 GigaSpaces Technologies Ltd. All rights reserved
 # *
 # * Licensed under the Apache License, Version 2.0 (the "License");
 # * you may not use this file except in compliance with the License.
@@ -14,15 +14,13 @@
 #    * limitations under the License.
 # ***************************************************************************/
 
+__author__ = 'dank'
 
-from cloudify.decorators import workflow
+
+from cloudify.decorators import operation
 
 
-@workflow
-def on_monitor_event(ctx, service, metric, **_):
-    node = next(ctx.nodes)
-    instance = next(node.instances)
-    instance.execute_operation('test.op', kwargs={
-        'service': service,
-        'metric': metric
-    })
+@operation
+def from_on_monitor_event(ctx, service, metric, **_):
+    ctx.runtime_properties['service'] = service
+    ctx.runtime_properties['metric'] = metric
