@@ -3,9 +3,8 @@ imports:
 
 plugins:
     mock:
-        derived_from: cloudify.plugins.manager_plugin
-        properties:
-            folder: mock-plugin
+        executor: central_deployment_agent
+        source: mock-plugin
 
 node_types:
     host:

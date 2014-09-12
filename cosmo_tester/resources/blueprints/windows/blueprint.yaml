@@ -4,9 +4,8 @@ imports:
 
 plugins:
     python_runner:
-        derived_from: cloudify.plugins.agent_plugin
-        properties:
-            url: https://github.com/cloudify-cosmo/cloudify-python-plugin/archive/master.zip
+        executor: host_agent
+        source: https://github.com/cloudify-cosmo/cloudify-python-plugin/archive/master.zip
 
 node_types:
     cloudify.types.python.app_module:
