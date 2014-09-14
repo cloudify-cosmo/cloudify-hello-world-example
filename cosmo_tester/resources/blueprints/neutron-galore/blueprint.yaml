@@ -2,6 +2,13 @@ imports:
     - http://www.getcloudify.org/spec/cloudify/3.1/types.yaml
     - http://www.getcloudify.org/spec/openstack-plugin/1.1/plugin.yaml
 
+
+inputs:
+    server_name: {}
+    image_name: {}
+    flavor_name: {}
+    security_groups: {}
+
 node_templates:
     nova_server:
         type: cloudify.openstack.server
@@ -13,10 +20,15 @@ node_templates:
            -   type: cloudify.openstack.server_connected_to_floating_ip
                target: floatingip
         properties:
-            install_agent: true
+            install_agent: false
             cloudify_agent:
                 user: ubuntu
                 port: 22
+            server:
+                name: { get_input: server_name }
+                image_name: { get_input: image_name }
+                flavor_name: { get_input: flavor_name }
+                security_groups: { get_input: security_groups }
     neutron_network:
         type: cloudify.openstack.network
         properties:
@@ -61,6 +73,7 @@ node_templates:
         properties:
             security_group:
                 name: neutron_test_security_group_dst
+            disable_default_egress_rules: True
             rules:
                 -   remote_ip_prefix: 1.2.3.0/24
                     port: 80

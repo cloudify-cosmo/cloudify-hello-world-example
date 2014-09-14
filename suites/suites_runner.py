@@ -28,6 +28,10 @@ reports_dir = path('xunit-reports')
 env_variables = {
     'TEST_SUITES_PATH': '',
 
+    # ec2 creds
+    'AWS_ACCESS_ID': '',
+    'AWS_SECRET_KEY': '',
+
     # keystone
     'KEYSTONE_PASSWORD': '',
     'KEYSTONE_USERNAME': '',
@@ -37,6 +41,7 @@ env_variables = {
     # branch names
     'BRANCH_NAME': 'master',
     'BRANCH_NAME_OPENSTACK_PROVIDER': '',
+    'BRANCH_NAME_LIBCLOUD_PROVIDER': '',
     'BRANCH_NAME_SYSTEM_TESTS': '',
     'BRANCH_NAME_CLI': '',
 

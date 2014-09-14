@@ -6,13 +6,17 @@ plugins:
         executor: host_agent
         source: mock-plugin
 
+inputs:
+    ip: {}
+    agent_key: {}
+
 node_templates:
     host:
         type: cloudify.types.host
         properties:
-            ip: PROVIDED_BY_TEST
+            ip: { get_input: ip }
             cloudify_agent:
-                key: PROVIDED_BY_TEST
+                key: { get_input: agent_key }
     middle:
         type: cloudify.types.middleware_server
         relationships:

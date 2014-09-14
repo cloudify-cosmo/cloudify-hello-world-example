@@ -19,7 +19,11 @@ __author__ = 'dan'
 
 from cosmo_tester.framework.testenv import TestCase
 from cosmo_tester.framework.util import YamlPatcher
-from cosmo_tester.framework.handlers.openstack import openstack_clients
+from cosmo_tester.framework.handlers.openstack import (
+    openstack_clients,
+    openstack_infra_state,
+    openstack_infra_state_delta
+)
 
 
 class NeutronGaloreTest(TestCase):
@@ -28,37 +32,31 @@ class NeutronGaloreTest(TestCase):
 
         blueprint_path = self.copy_blueprint('neutron-galore')
         self.blueprint_yaml = blueprint_path / 'blueprint.yaml'
-        self.modify_blueprint()
 
-        before, after = self.upload_deploy_and_execute_install()
-
-        self.post_install_assertions(before, after)
-
-        self.execute_uninstall()
-
-        self.post_uninstall_assertions()
-
-    def modify_blueprint(self):
-        with YamlPatcher(self.blueprint_yaml) as patch:
-            vm_path = 'node_templates.nova_server.properties'
-            patch.merge_obj('{0}.server'.format(vm_path), {
-                'name': 'novaservertest',
+        before, after = self.upload_deploy_and_execute_install(
+            inputs={
+                'server_name': 'novaservertest',
                 'image_name': self.env.ubuntu_image_name,
                 'flavor_name': self.env.flavor_name,
                 'security_groups': ['neutron_test_security_group_dst'],
             })
 
-    def post_install_assertions(self, before_state, after_state):
+        node_states = self.get_delta_node_states(before, after)
+        self.post_install_assertions(node_states)
+
+        self._test_use_external_resource()
+
+        self.execute_uninstall()
+
+        self.post_uninstall_assertions()
+
+    def post_install_assertions(self, node_states):
 
         def p(name):
             return '{}{}'.format(self.env.resources_prefix, name)
 
-        delta = self.get_manager_state_delta(before_state, after_state)
-        node_states = self.get_node_states(delta['node_state'])
         openstack = self.get_openstack_components(node_states)
 
-        floatingip_address = openstack['server']['addresses'][
-            p(self.env.management_network_name)][1]['addr']
         port_assigned_addr = openstack['server']['addresses'][
             p('neutron_network_test')][0]['addr']
         port_security_group_id = openstack['port']['security_groups'][0]
@@ -73,9 +71,6 @@ class NeutronGaloreTest(TestCase):
         self.assertEqual(openstack['server']['addresses']
                          [p(self.env.management_network_name)][0]
                          ['OS-EXT-IPS:type'], 'fixed')
-        self.assertEqual(openstack['server']['addresses']
-                         [p(self.env.management_network_name)][1]
-                         ['OS-EXT-IPS:type'], 'floating')
         self.assertEqual(openstack['server']['addresses']
                          [p('neutron_network_test')][0]
                          ['OS-EXT-IPS:type'], 'fixed')
@@ -95,8 +90,7 @@ class NeutronGaloreTest(TestCase):
         self.assertEqual(openstack['server']['name'], p('novaservertest'))
         self.assertEqual(openstack['port']['name'], p('neutron_test_port'))
         self.assertEqual(port_fixed_ip, port_assigned_addr)
-        self.assertEqual(openstack['floatingip']['floating_ip_address'],
-                         floatingip_address)
+
         self.assertEqual(openstack['floatingip']['floating_network_id'],
                          router_network_id)
         self.assertEqual(openstack['router']['name'], p('neutron_router_test'))
@@ -139,7 +133,7 @@ class NeutronGaloreTest(TestCase):
              'port_range_max': 443,
              'direction': 'egress'})
         self.assertEqual(node_states['floatingip']['floating_ip_address'],
-                         floatingip_address)
+                         openstack['floatingip']['floating_ip_address'])
         self.assertEqual(openstack['server']['addresses']
                          [p(self.env.management_network_name)][0]['addr'],
                          node_states['server']['networks']
@@ -159,23 +153,106 @@ class NeutronGaloreTest(TestCase):
         leftovers = self._test_cleanup_context.get_resources_to_teardown()
         self.assertTrue(all([len(g) == 0 for g in leftovers.values()]))
 
-    def get_node_states(self, node_states):
-        return {
-            'server': self._node_state('nova_server', node_states),
-            'network': self._node_state('neutron_network', node_states),
-            'subnet': self._node_state('neutron_subnet', node_states),
-            'router': self._node_state('neutron_router', node_states),
-            'port': self._node_state('neutron_port', node_states),
-            'sg_src': self._node_state('security_group_src', node_states),
-            'sg_dst': self._node_state('security_group_dst', node_states),
-            'floatingip': self._node_state('floatingip', node_states)
+    def _test_use_external_resource(self):
+        before_openstack_infra_state = openstack_infra_state(
+            self.env.cloudify_config)
+
+        self._modify_blueprint_use_external_resource()
+
+        bp_and_dep_name = self.test_id + '-use-external-resource'
+        _, after = self.upload_deploy_and_execute_install(
+            blueprint_id=bp_and_dep_name, deployment_id=bp_and_dep_name)
+
+        self._post_use_external_resource_install_assertions(
+            bp_and_dep_name, before_openstack_infra_state, after['node_state'])
+
+        self.execute_uninstall(bp_and_dep_name)
+
+        self._post_use_external_resource_uninstall_assertions(bp_and_dep_name)
+
+    def _modify_blueprint_use_external_resource(self):
+        node_instances = self.client.node_instances.list(
+            deployment_id=self.test_id)
+
+        node_id_to_external_resource_id = {
+            node_instance.node_id: node_instance.runtime_properties[
+                'external_id'] for node_instance in node_instances
         }
+
+        with YamlPatcher(self.blueprint_yaml) as patch:
+            for node_id, resource_id in \
+                    node_id_to_external_resource_id.iteritems():
+                patch.merge_obj(
+                    'node_templates.{0}.properties'.format(node_id),
+                    {
+                        'use_external_resource': True,
+                        'resource_id': resource_id
+                    })
+
+    def _post_use_external_resource_install_assertions(
+            self, use_external_resource_deployment_id,
+            before_openstack_infra_state, after_nodes_state):
+        # verify there aren't any new resources on Openstack
+        after_openstack_infra_state = openstack_infra_state(
+            self.env.cloudify_config)
+        delta = openstack_infra_state_delta(before_openstack_infra_state,
+                                            after_openstack_infra_state)
+        for delta_resources_of_single_type in delta.values():
+            self.assertFalse(delta_resources_of_single_type)
+
+        # verify the runtime properties of the new deployment's nodes
+        # original_deployment_node_states = self.get_node_states(
+        #     after_nodes_state, self.test_id)
+        # use_external_resource_deployment_node_states = self.get_node_states(
+        #     after_nodes_state, use_external_resource_deployment_id)
+        # self.assertDictEqual(original_deployment_node_states,
+        #                      use_external_resource_deployment_node_states)
+
+    def _post_use_external_resource_uninstall_assertions(
+            self, use_external_resource_deployment_id):
+        # verify the external resources are all still up and running
+        original_deployment_node_states = self.get_node_states(
+            self.get_manager_state()['node_state'], self.test_id)
+        self.post_install_assertions(original_deployment_node_states)
+
+        # verify the use_external_resource deployment has no runtime
+        # properties on the nodes
+        node_instances = self.client.node_instances.list(
+            deployment_id=use_external_resource_deployment_id)
+        instances_with_runtime_props = [instance for instance in node_instances
+                                        if instance.runtime_properties]
+        self.assertEquals(0, len(instances_with_runtime_props))
+
+    def get_node_states(self, node_states, deployment_id):
+        return {
+            'server': self._node_state('nova_server', node_states,
+                                       deployment_id),
+            'network': self._node_state('neutron_network', node_states,
+                                        deployment_id),
+            'subnet': self._node_state('neutron_subnet', node_states,
+                                       deployment_id),
+            'router': self._node_state('neutron_router', node_states,
+                                       deployment_id),
+            'port': self._node_state('neutron_port', node_states,
+                                     deployment_id),
+            'sg_src': self._node_state('security_group_src', node_states,
+                                       deployment_id),
+            'sg_dst': self._node_state('security_group_dst', node_states,
+                                       deployment_id),
+            'floatingip': self._node_state('floatingip', node_states,
+                                           deployment_id)
+        }
+
+    def get_delta_node_states(self, before_state, after_state):
+        delta = self.get_manager_state_delta(before_state, after_state)
+        node_states = self.get_node_states(delta['node_state'], self.test_id)
+        return node_states
 
     def get_openstack_components(self, states):
         nova, neutron = openstack_clients(self.env.cloudify_config)
         eid = 'external_id'
         sg = 'security_group'
-        i = 'floatingip'  # sorry, must fit short line :\
+        i = 'floatingip'
         rid = states['router'][eid]
         return {
             'server': nova.servers.get(states['server'][eid]).to_dict(),
@@ -189,8 +266,8 @@ class NeutronGaloreTest(TestCase):
             'router_ports': neutron.list_ports(device_id=rid)['ports']
         }
 
-    def _node_state(self, starts_with, node_states):
-        node_states = node_states.values()[0].values()
+    def _node_state(self, starts_with, node_states, deployment_id):
+        node_states = node_states[deployment_id].values()
         state = [state for state in node_states
                  if state['id'].startswith(starts_with)][0]
         self.assertEqual(state['state'], 'started')
