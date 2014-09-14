@@ -19,6 +19,7 @@ __author__ = 'dank'
 import threading
 import Queue
 
+from cosmo_tester.framework.util import YamlPatcher
 from cosmo_tester.framework.testenv import TestCase
 from cosmo_tester.framework.git_helper import clone
 import hello_world_bash_test as bash
@@ -49,16 +50,19 @@ class TwoDeploymentsTest(TestCase):
             blueprint_yaml = self.blueprint_path / file_name
             blueprint_yaml.write_text(self.blueprint_yaml.text())
             sg = 'sg{}'.format(index)
-            bash.modify_yaml(env=self.env,
-                             yaml_file=blueprint_yaml,
-                             host_name='host{}'.format(index),
-                             security_groups=[sg],
+            self.modify_yaml(security_groups=[sg],
                              security_group_name=sg)
 
             self.cfy.upload_deploy_and_execute_install(
                 blueprint_path=blueprint_yaml,
                 blueprint_id=blueprint_id,
-                deployment_id=deployment_id)
+                deployment_id=deployment_id,
+                # inputs are not used (overridden by modify_yaml)
+                inputs=dict(
+                    agent_user='',
+                    image_name='',
+                    flavor_name='',
+                ))
 
             floatingip_node, _, _ = bash.get_instances(
                 client=self.client,
@@ -74,6 +78,24 @@ class TwoDeploymentsTest(TestCase):
             queue.put(e)
         else:
             queue.put(True)
+
+    def modify_yaml(self,
+                    security_groups,
+                    security_group_name):
+        with YamlPatcher(self.blueprint_yaml) as patch:
+            vm_properties_path = 'node_templates.vm.properties'
+            patch.merge_obj(
+                '{0}.cloudify_agent'.format(vm_properties_path), {
+                    'user': self.env.cloudify_agent_user,
+                })
+            patch.merge_obj('{0}.server'.format(vm_properties_path), {
+                'image_name': self.env.ubuntu_image_name,
+                'flavor_name': self.env.flavor_name,
+                'security_groups': security_groups,
+            })
+            sg_name_path = 'node_templates.security_group.properties' \
+                           '.security_group.name'
+            patch.set_value(sg_name_path, security_group_name)
 
     class Deployment(object):
 

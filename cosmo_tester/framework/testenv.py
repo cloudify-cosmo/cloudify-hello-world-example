@@ -279,14 +279,16 @@ class TestCase(unittest.TestCase):
 
     def upload_deploy_and_execute_install(self, blueprint_id=None,
                                           deployment_id=None,
-                                          fetch_state=True):
+                                          fetch_state=True,
+                                          inputs=None):
 
         return self._make_operation_with_before_after_states(
             self.cfy.upload_deploy_and_execute_install,
             fetch_state,
             str(self.blueprint_yaml),
             blueprint_id=blueprint_id or self.test_id,
-            deployment_id=deployment_id or self.test_id)
+            deployment_id=deployment_id or self.test_id,
+            inputs=inputs)
 
     def _make_operation_with_before_after_states(self, operation, fetch_state,
                                                  *args, **kwargs):
@@ -325,3 +327,15 @@ class TestCase(unittest.TestCase):
         for event in events:
             self.logger.info(json.dumps(event))
         raise AssertionError('Execution "{}" timed out'.format(execution.id))
+
+    def repetitive(self, func, timeout=10, exception_class=Exception,
+                   **kwargs):
+        deadline = time.time() + timeout
+        while True:
+            try:
+                func(**kwargs)
+                break
+            except exception_class:
+                if time.time() > deadline:
+                    raise
+                time.sleep(1)

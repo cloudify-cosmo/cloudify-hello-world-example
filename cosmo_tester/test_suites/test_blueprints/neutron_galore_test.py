@@ -32,9 +32,14 @@ class NeutronGaloreTest(TestCase):
 
         blueprint_path = self.copy_blueprint('neutron-galore')
         self.blueprint_yaml = blueprint_path / 'blueprint.yaml'
-        self.modify_blueprint()
 
-        before, after = self.upload_deploy_and_execute_install()
+        before, after = self.upload_deploy_and_execute_install(
+            inputs={
+                'server_name': 'novaservertest',
+                'image_name': self.env.ubuntu_image_name,
+                'flavor_name': self.env.flavor_name,
+                'security_groups': ['neutron_test_security_group_dst'],
+            })
 
         node_states = self.get_delta_node_states(before, after)
         self.post_install_assertions(node_states)
@@ -44,16 +49,6 @@ class NeutronGaloreTest(TestCase):
         self.execute_uninstall()
 
         self.post_uninstall_assertions()
-
-    def modify_blueprint(self):
-        with YamlPatcher(self.blueprint_yaml) as patch:
-            vm_path = 'node_templates.nova_server.properties'
-            patch.merge_obj('{0}.server'.format(vm_path), {
-                'name': 'novaservertest',
-                'image_name': self.env.ubuntu_image_name,
-                'flavor_name': self.env.flavor_name,
-                'security_groups': ['neutron_test_security_group_dst'],
-            })
 
     def post_install_assertions(self, node_states):
 

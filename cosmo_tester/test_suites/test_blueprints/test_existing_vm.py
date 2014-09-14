@@ -21,7 +21,7 @@ import fabric.api
 import fabric.context_managers
 from path import path
 
-from cosmo_tester.framework.util import YamlPatcher, get_actual_keypath
+from cosmo_tester.framework.util import get_actual_keypath
 from cosmo_tester.framework.testenv import TestCase
 from cosmo_tester.framework.handlers.openstack import openstack_clients
 
@@ -58,23 +58,18 @@ class ExistingVMTest(TestCase):
             security_groups=[agents_security_group],
             management_network_name=management_network_name)
 
-        self.modify_yaml(ip=private_server_ip,
-                         remote_key_path=remote_key_path)
-
-        self.upload_deploy_and_execute_install(fetch_state=False)
+        self.upload_deploy_and_execute_install(
+            fetch_state=False,
+            inputs=dict(
+                ip=private_server_ip,
+                agent_key=remote_key_path
+            ))
 
         instances = self.client.node_instances.list(deployment_id=self.test_id)
         middle_runtime_properties = [i.runtime_properties for i in instances
                                      if i.node_id == 'middle'][0]
         self.assertDictEqual({'working': True}, middle_runtime_properties)
         self.execute_uninstall()
-
-    def modify_yaml(self, ip, remote_key_path):
-        with YamlPatcher(self.blueprint_yaml) as patch:
-            base_path = 'node_templates.host.properties'
-            patch.set_value('{}.ip'.format(base_path), ip)
-            patch.set_value('{}.cloudify_agent.key'.format(base_path),
-                            remote_key_path)
 
     def create_keypair_and_copy_to_manager(self,
                                            nova_client,
