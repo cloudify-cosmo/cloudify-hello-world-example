@@ -99,12 +99,10 @@ def update_blueprint(env, blueprint, hostname, userdata_vars=None):
     }
     props = vm['properties']['server']
 
-    server_userdata = """
-#!/bin/bash -ex
+    server_userdata = """#!/bin/bash -ex
 grep -q "{hostname}" /etc/hosts || echo "127.0.0.1 {hostname}" >> /etc/hosts"""
 
-    client_userdata = """
-#!/bin/bash -ex
+    client_userdata = """#!/bin/bash -ex
 grep -q "{chef_server_hostname}" /etc/hosts || \
 echo "{chef_server_ip} {chef_server_hostname}" >> /etc/hosts
 """
