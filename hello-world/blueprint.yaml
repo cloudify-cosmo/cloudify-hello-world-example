@@ -17,6 +17,18 @@ inputs:
             The HTTP web server port
         default: 8080
 
+    agent_user:
+        description: >
+            User name used when SSH-ing into the started machine
+
+    image_name:
+        description: >
+            Openstack image name to use for the new server
+
+    flavor_name:
+        description: >
+            Openstack flavor name to use for the new server
+
 node_templates:
     virtual_ip:
         type: cloudify.openstack.floatingip
@@ -32,18 +44,13 @@ node_templates:
 
     vm:
         type: cloudify.openstack.server
-        ####################################################################################
-        # Uncomment bellow and fill the properties according to your openstack environment.#
-        ####################################################################################
-        #properties:
-        #    cloudify_agent:
-        #        user: [Enter-User-Name]
-        #    server:
-        #        name: bash-web-server
-        #        image_name: [Enter-Image-Name]
-        #        flavor_name: [Enter-Flavor-Name]
-        #        key_name: cloudify-agents-kp
-        #        security_groups: ['webserver_security_group']
+        properties:
+           cloudify_agent:
+               user: { get_input: agent_user }
+           server:
+               image_name: { get_input: image_name }
+               flavor_name: { get_input: flavor_name }
+               security_groups: ['webserver_security_group']
         relationships:
             -   type: cloudify.openstack.server_connected_to_floating_ip
                 target: virtual_ip
