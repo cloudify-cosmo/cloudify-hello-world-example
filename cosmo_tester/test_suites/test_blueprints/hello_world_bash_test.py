@@ -61,8 +61,8 @@ class HelloWorldBashTest(TestCase):
 
     def assert_events(self):
         deployment_by_id = self.client.deployments.get(self.test_id)
-        executions = self.client.deployments.list_executions(
-            deployment_by_id.id)
+        executions = self.client.executions.list(
+            deployment_id=deployment_by_id.id)
         execution_from_list = executions[0]
         execution_by_id = self.client.executions.get(execution_from_list.id)
         events, total_events = self.client.events.get(execution_by_id.id)

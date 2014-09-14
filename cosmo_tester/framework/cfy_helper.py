@@ -13,7 +13,6 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
-__author__ = 'dank'
 
 import tempfile
 import shutil
@@ -170,8 +169,8 @@ class CfyHelper(object):
                           include_logs=True,
                           execute_timeout=DEFAULT_EXECUTE_TIMEOUT):
         with self.workdir:
-            cfy.deployments.execute(
-                workflow,
+            cfy.executions.start(
+                workflow_id=workflow,
                 deployment_id=deployment_id,
                 timeout=execute_timeout,
                 verbosity=verbose,

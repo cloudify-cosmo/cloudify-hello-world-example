@@ -36,7 +36,7 @@ class ManyInstancesTest(TestCase):
             deployment_id=self.test_id)
 
         deployment_env_creation_execution = \
-            self.client.deployments.list_executions(
+            self.client.executions.list(
                 deployment_id=self.test_id)[0]
         self.logger.info('Waiting for create_deployment_environment workflow '
                          'execution to terminate')
