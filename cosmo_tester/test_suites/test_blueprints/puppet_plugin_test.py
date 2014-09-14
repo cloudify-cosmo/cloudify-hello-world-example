@@ -59,41 +59,36 @@ def get_nodes_of_type(blueprint, type_):
 def update_blueprint(env, blueprint, hostname, userdata_vars=None):
     hostname_base = 'system-test-{0}-{1}'.format(
         time.strftime("%Y%m%d-%H%M"), hostname)
-    vms = get_nodes_of_type(blueprint, 'cloudify.openstack.server')
-    if len(vms) > 1:
-        hostnames = ['{0}-{1:2}'.format(hostname_base, i)
-                     for i in range(0, len(vms))]
-    else:
-        hostnames = [hostname_base]
+    vm = get_nodes_of_type(blueprint, 'cloudify.openstack.server')[0]
+    hostnames = [hostname_base]
 
     users = []
-    for vm_idx, vm in enumerate(vms):
-        vm_hostname = hostnames[vm_idx]
 
-        # vm['properties']['server'] does not exist when using existing one
-        if 'server' in vm['properties']:
-            vm['properties']['server'].update({
-                'flavor_name': env.flavor_name,
-                'image_name': env.ubuntu_image_name,
-                'key_name': env.agent_keypair_name,
-                'name': vm_hostname,
-            })
-            vm['properties']['management_network_name'] = (
-                env.management_network_name)
-            vm['properties']['server']['security_groups'].append(
-                env.agents_security_group)
-            props = vm['properties']['server']
-            if 'userdata' in props:
-                props['userdata'] = props['userdata'].format(
-                    hostname=vm_hostname, **(userdata_vars or {}))
-        users.append('ubuntu')
+    vm_hostname = hostname_base
 
-    fips = get_nodes_of_type(blueprint, 'cloudify.openstack.floatingip')
-    for fip in fips:
-            fip_fip = fip['properties']['floatingip']
-            fip_fip['floating_network_name'] = env.external_network_name
+    inputs = {
+        'flavor_name': env.flavor_name,
+        'image_name': env.ubuntu_image_name,
+        'server_name': vm_hostname,
+    }
 
-    return {'hostnames': hostnames, 'users': users}
+    server_userdata = """#!/bin/bash -ex
+grep -q "{hostname}" /etc/hosts || echo "127.0.0.1 {hostname}" >> /etc/hosts"""
+
+    client_userdata = """#!/bin/bash -ex
+grep -q puppet /etc/hosts || echo "{puppet_server_ip} puppet" >> /etc/hosts"""
+
+    props = vm['properties']['server']
+    if 'userdata' in props:
+        if userdata_vars:
+            userdata = client_userdata.format(**userdata_vars)
+        else:
+            hostname = '{0}{1}'.format(env.resources_prefix,
+                                       vm_hostname).replace('_', '-')
+            userdata = server_userdata.format(hostname=hostname)
+        inputs['userdata'] = userdata
+    users.append('ubuntu')
+    return {'hostnames': hostnames, 'users': users}, inputs
 
 
 def setup_puppet_server(local_dir):
@@ -139,13 +134,15 @@ class PuppetPluginAgentTest(TestCase):
         self.blueprint_yaml = blueprint_dir / 'puppet-server-by-puppet.yaml'
 
         with YamlPatcher(self.blueprint_yaml) as blueprint:
-            bp_info = update_blueprint(self.env, blueprint, 'puppet-master')
+            bp_info, inputs = update_blueprint(self.env, blueprint,
+                                               'puppet-master')
 
         self.puppet_server_hostname = bp_info['hostnames'][0]
 
         self.puppet_server_id = self.test_id + '-puppet-master'
         id_ = self.puppet_server_id
-        before, after = self.upload_deploy_and_execute_install(id_, id_)
+        before, after = self.upload_deploy_and_execute_install(
+            id_, id_, inputs=inputs)
 
         fip_node = find_node_state('ip', after['node_state'][id_])
         self.puppet_server_ip = \
@@ -171,12 +168,15 @@ class PuppetPluginAgentTest(TestCase):
         blueprint_dir = self.blueprint_dir
         self.blueprint_yaml = blueprint_dir / 'puppet-agent-test.yaml'
         with YamlPatcher(self.blueprint_yaml) as blueprint:
-            bp_info = update_blueprint(self.env, blueprint, 'puppet-agent', {
-                'puppet_server_ip': self.puppet_server_ip,
-            })
+            bp_info, inputs = update_blueprint(
+                self.env, blueprint,
+                'puppet-agent', {
+                    'puppet_server_ip': self.puppet_server_ip,
+                })
 
         id_ = self.test_id + '-puppet-agent-' + str(int(time.time()))
-        before, after = self.upload_deploy_and_execute_install(id_, id_)
+        before, after = self.upload_deploy_and_execute_install(
+            id_, id_, inputs=inputs)
 
         # import pdb; pdb.set_trace()
 
@@ -205,8 +205,9 @@ class PuppetPluginAgentTest(TestCase):
 
 class PuppetPluginStandaloneTest(TestCase):
 
-    def execute_and_check(self, id_):
-        before, after = self.upload_deploy_and_execute_install(id_, id_)
+    def execute_and_check(self, id_, inputs=None):
+        before, after = self.upload_deploy_and_execute_install(
+            id_, id_, inputs=inputs)
 
         fip_node = find_node_state('ip', after['node_state'][id_])
         puppet_standalone_ip = \
@@ -225,8 +226,9 @@ class PuppetPluginStandaloneTest(TestCase):
 
         self.blueprint_yaml = blueprint_dir / 'puppet-standalone-test.yaml'
         with YamlPatcher(self.blueprint_yaml) as blueprint:
-            update_blueprint(self.env, blueprint, 'puppet-standalone-nodl')
-        self.execute_and_check(id_)
+            _, inputs = update_blueprint(self.env, blueprint,
+                                         'puppet-standalone-nodl')
+        self.execute_and_check(id_, inputs=inputs)
 
     def _test_puppet_standalone_with_download(self, manifests_are_from_url):
         """ Tests standalone Puppet.
@@ -285,7 +287,8 @@ class PuppetPluginStandaloneTest(TestCase):
 
         self.blueprint_yaml = blueprint_dir / 'puppet-standalone-test.yaml'
         with YamlPatcher(self.blueprint_yaml) as blueprint:
-            update_blueprint(self.env, blueprint, 'puppet-standalone-' + mode)
+            _, inputs = update_blueprint(self.env, blueprint,
+                                         'puppet-standalone-' + mode)
             conf = blueprint.obj['node_templates']['puppet_node_one'][
                 'properties']['puppet_config']
             conf['download'] = download_from
@@ -294,7 +297,7 @@ class PuppetPluginStandaloneTest(TestCase):
                 conf['manifest'] = {'start': 'manifests/site.pp'}
             else:
                 del conf['execute']['configure']
-        self.execute_and_check(id_)
+        self.execute_and_check(id_, inputs=inputs)
 
     def test_puppet_standalone_with_resource(self):
         self._test_puppet_standalone_with_download(False)

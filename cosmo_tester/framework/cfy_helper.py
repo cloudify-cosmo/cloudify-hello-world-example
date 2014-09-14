@@ -17,6 +17,7 @@ __author__ = 'dank'
 
 import tempfile
 import shutil
+import json
 
 import sh
 from path import path
@@ -81,7 +82,8 @@ class CfyHelper(object):
             deployment_id,
             verbose=False,
             include_logs=True,
-            execute_timeout=DEFAULT_EXECUTE_TIMEOUT):
+            execute_timeout=DEFAULT_EXECUTE_TIMEOUT,
+            inputs=None):
         with self.workdir:
             self.upload_blueprint(
                 blueprint_path=blueprint_path,
@@ -90,7 +92,8 @@ class CfyHelper(object):
             self.create_deployment(
                 blueprint_id=blueprint_id,
                 deployment_id=deployment_id,
-                verbose=verbose)
+                verbose=verbose,
+                inputs=inputs)
             self.execute_install(
                 deployment_id=deployment_id,
                 execute_timeout=execute_timeout,
@@ -100,12 +103,20 @@ class CfyHelper(object):
     def create_deployment(self,
                           blueprint_id,
                           deployment_id,
-                          verbose=False):
+                          verbose=False,
+                          inputs=None):
         with self.workdir:
+            inputs = inputs or {}
+            inputs_file = tempfile.mktemp(prefix=deployment_id,
+                                          suffix='-inputs.json',
+                                          dir=self.workdir)
+            with open(inputs_file, 'w') as f:
+                f.write(json.dumps(inputs))
             cfy.deployments.create(
                 blueprint_id=blueprint_id,
                 deployment_id=deployment_id,
-                verbosity=verbose).wait()
+                verbosity=verbose,
+                inputs=inputs_file).wait()
 
     def execute_install(self,
                         deployment_id,
