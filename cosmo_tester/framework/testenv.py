@@ -13,7 +13,6 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
-__author__ = 'dan'
 
 import unittest
 import logging
@@ -24,6 +23,7 @@ import time
 import copy
 import os
 import importlib
+import json
 
 import yaml
 from path import path
@@ -320,6 +320,12 @@ class TestCase(unittest.TestCase):
             if status == 'terminated':
                 return
             time.sleep(1)
+        events, _ = self.client.events.get(execution.id,
+                                           batch_size=1000,
+                                           include_logs=True)
+        self.logger.info('Deployment creation events & logs:')
+        for event in events:
+            self.logger.info(json.dumps(event))
         raise AssertionError('Execution "{}" timed out'.format(execution.id))
 
     def repetitive(self, func, timeout=10, exception_class=Exception,

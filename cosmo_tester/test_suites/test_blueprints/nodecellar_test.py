@@ -68,8 +68,8 @@ class NodecellarAppTest(TestCase):
         deployment_by_id = self.client.deployments.get(deployment_from_list.id)
         self.deployment_id = deployment_from_list.id
 
-        executions = self.client.deployments.list_executions(
-            deployment_by_id.id)
+        executions = self.client.executions.list(
+            deployment_id=deployment_by_id.id)
 
         self.assertEqual(len(executions), 2,
                          'There should be 2 executions but are: {0}'.format(

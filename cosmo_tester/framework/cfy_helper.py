@@ -13,7 +13,6 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
-__author__ = 'dank'
 
 import tempfile
 import shutil
@@ -22,7 +21,7 @@ import json
 import sh
 from path import path
 
-from cosmo_cli.cosmo_cli import _load_cosmo_working_dir_settings
+from cloudify_cli.utils import load_cloudify_working_dir_settings
 from cosmo_tester.framework.util import sh_bake
 
 
@@ -54,13 +53,13 @@ class CfyHelper(object):
                   dev_mode=False):
         with self.workdir:
             cfy.init(
-                provider,
-                verbosity=verbose).wait()
+                provider=provider,
+                verbose=verbose).wait()
             cfy.bootstrap(
                 config_file=cloud_config_path,
                 keep_up_on_failure=keep_up_on_failure,
                 dev_mode=dev_mode,
-                verbosity=verbose).wait()
+                verbose=verbose).wait()
 
     def teardown(self,
                  cloud_config_path,
@@ -73,7 +72,7 @@ class CfyHelper(object):
                 ignore_deployments=ignore_deployments,
                 ignore_validation=ignore_validation,
                 force=True,
-                verbosity=verbose).wait()
+                verbose=verbose).wait()
 
     def upload_deploy_and_execute_install(
             self,
@@ -115,7 +114,7 @@ class CfyHelper(object):
             cfy.deployments.create(
                 blueprint_id=blueprint_id,
                 deployment_id=deployment_id,
-                verbosity=verbose,
+                verbose=verbose,
                 inputs=inputs_file).wait()
 
     def execute_install(self,
@@ -124,7 +123,7 @@ class CfyHelper(object):
                         include_logs=True,
                         execute_timeout=DEFAULT_EXECUTE_TIMEOUT):
         self._execute_workflow(
-            'install',
+            workflow='install',
             deployment_id=deployment_id,
             execute_timeout=execute_timeout,
             verbose=verbose,
@@ -136,7 +135,7 @@ class CfyHelper(object):
                           include_logs=True,
                           execute_timeout=DEFAULT_EXECUTE_TIMEOUT):
         self._execute_workflow(
-            'uninstall',
+            workflow='uninstall',
             deployment_id=deployment_id,
             execute_timeout=execute_timeout,
             verbose=verbose,
@@ -148,9 +147,9 @@ class CfyHelper(object):
                          verbose=False):
         with self.workdir:
             cfy.blueprints.upload(
-                blueprint_path,
+                blueprint_path=blueprint_path,
                 blueprint_id=blueprint_id,
-                verbosity=verbose).wait()
+                verbose=verbose).wait()
 
     def download_blueprint(self, blueprint_id):
         with self.workdir:
@@ -158,16 +157,18 @@ class CfyHelper(object):
 
     def use(self, management_ip):
         with self.workdir:
-            cfy.use(management_ip).wait()
+            cfy.use(
+                management_ip=management_ip
+            ).wait()
 
     def get_management_ip(self):
         with self.workdir:
-            settings = _load_cosmo_working_dir_settings()
+            settings = load_cloudify_working_dir_settings()
             return settings.get_management_server()
 
     def get_provider_context(self):
         with self.workdir:
-            settings = _load_cosmo_working_dir_settings()
+            settings = load_cloudify_working_dir_settings()
             return settings.get_provider_context()
 
     def close(self):
@@ -181,9 +182,9 @@ class CfyHelper(object):
                           include_logs=True,
                           execute_timeout=DEFAULT_EXECUTE_TIMEOUT):
         with self.workdir:
-            cfy.deployments.execute(
-                workflow,
+            cfy.executions.start(
+                workflow=workflow,
                 deployment_id=deployment_id,
                 timeout=execute_timeout,
-                verbosity=verbose,
+                verbose=verbose,
                 include_logs=include_logs).wait()

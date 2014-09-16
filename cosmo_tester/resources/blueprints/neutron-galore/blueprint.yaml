@@ -2,6 +2,13 @@ imports:
     - http://www.getcloudify.org/spec/cloudify/3.1/types.yaml
     - http://www.getcloudify.org/spec/openstack-plugin/1.1/plugin.yaml
 
+
+inputs:
+    server_name: {}
+    image_name: {}
+    flavor_name: {}
+    security_groups: {}
+
 node_templates:
     nova_server:
         type: cloudify.openstack.server
@@ -17,6 +24,11 @@ node_templates:
             cloudify_agent:
                 user: ubuntu
                 port: 22
+            server:
+                name: { get_input: server_name }
+                image_name: { get_input: image_name }
+                flavor_name: { get_input: flavor_name }
+                security_groups: { get_input: security_groups }
     neutron_network:
         type: cloudify.openstack.network
         properties:
