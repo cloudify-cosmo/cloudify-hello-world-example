@@ -3,9 +3,8 @@ imports:
 
 plugins:
     mock:
-        derived_from: cloudify.plugins.agent_plugin
-        properties:
-            folder: mock-plugin
+        executor: host_agent
+        source: mock-plugin
 
 inputs:
     ip: {}
