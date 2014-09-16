@@ -54,12 +54,12 @@ class CfyHelper(object):
         with self.workdir:
             cfy.init(
                 provider=provider,
-                verbosity=verbose).wait()
+                verbose=verbose).wait()
             cfy.bootstrap(
                 config_file=cloud_config_path,
                 keep_up_on_failure=keep_up_on_failure,
                 dev_mode=dev_mode,
-                verbosity=verbose).wait()
+                verbose=verbose).wait()
 
     def teardown(self,
                  cloud_config_path,
@@ -72,7 +72,7 @@ class CfyHelper(object):
                 ignore_deployments=ignore_deployments,
                 ignore_validation=ignore_validation,
                 force=True,
-                verbosity=verbose).wait()
+                verbose=verbose).wait()
 
     def upload_deploy_and_execute_install(
             self,
@@ -114,7 +114,7 @@ class CfyHelper(object):
             cfy.deployments.create(
                 blueprint_id=blueprint_id,
                 deployment_id=deployment_id,
-                verbosity=verbose,
+                verbose=verbose,
                 inputs=inputs_file).wait()
 
     def execute_install(self,
@@ -149,7 +149,7 @@ class CfyHelper(object):
             cfy.blueprints.upload(
                 blueprint_path=blueprint_path,
                 blueprint_id=blueprint_id,
-                verbosity=verbose).wait()
+                verbose=verbose).wait()
 
     def download_blueprint(self, blueprint_id):
         with self.workdir:
@@ -186,5 +186,5 @@ class CfyHelper(object):
                 workflow=workflow,
                 deployment_id=deployment_id,
                 timeout=execute_timeout,
-                verbosity=verbose,
+                verbose=verbose,
                 include_logs=include_logs).wait()
