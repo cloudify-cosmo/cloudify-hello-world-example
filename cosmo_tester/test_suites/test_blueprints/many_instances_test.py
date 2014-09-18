@@ -42,8 +42,8 @@ class ManyInstancesTest(TestCase):
                          'execution to terminate')
         self.wait_for_execution(deployment_env_creation_execution, timeout=240)
 
-        execution = self.client.deployments.execute(deployment_id=self.test_id,
-                                                    workflow_id='install')
+        execution = self.client.executions.start(deployment_id=self.test_id,
+                                                 workflow_id='install')
         self.logger.info('Waiting for install workflow to terminate')
         start = time.time()
         self.wait_for_execution(execution, timeout=600)
