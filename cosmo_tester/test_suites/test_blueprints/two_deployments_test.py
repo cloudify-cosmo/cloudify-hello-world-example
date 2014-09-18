@@ -50,7 +50,8 @@ class TwoDeploymentsTest(TestCase):
             blueprint_yaml = self.blueprint_path / file_name
             blueprint_yaml.write_text(self.blueprint_yaml.text())
             sg = 'sg{}'.format(index)
-            self.modify_yaml(security_groups=[sg],
+            self.modify_yaml(blueprint_path=blueprint_yaml,
+                             security_groups=[sg],
                              security_group_name=sg)
 
             self.cfy.upload_deploy_and_execute_install(
@@ -80,9 +81,10 @@ class TwoDeploymentsTest(TestCase):
             queue.put(True)
 
     def modify_yaml(self,
+                    blueprint_path,
                     security_groups,
                     security_group_name):
-        with YamlPatcher(self.blueprint_yaml) as patch:
+        with YamlPatcher(blueprint_path) as patch:
             vm_properties_path = 'node_templates.vm.properties'
             patch.merge_obj(
                 '{0}.cloudify_agent'.format(vm_properties_path), {
