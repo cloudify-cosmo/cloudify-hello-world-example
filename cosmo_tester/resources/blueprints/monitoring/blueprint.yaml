@@ -23,9 +23,19 @@ plugins:
         source: https://github.com/cloudify-cosmo/cloudify-diamond-plugin/archive/master.zip
 
 inputs:
-    image_name: {}
-    flavor: {}
-    diamond_config: {}
+    image_name:
+        default: ''
+    flavor:
+        default: ''
+    diamond_config:
+        default:
+            interval: 1
+            collectors:
+                ExampleCollector: { config: { stub: prop } }
+                CPUCollector: { config: { stub: prop } }
+                MemoryCollector: { config: { stub: prop } }
+                LoadAverageCollector: { config: { stub: prop } }
+                DiskUsageCollector: { config: { stub: prop } }
 
 outputs:
     service:
@@ -49,7 +59,7 @@ node_templates:
                     mapping: diamond.diamond_agent.tasks.install
                     properties:
                         diamond_config: { get_input: diamond_config }
-                - stop: diamond.diamond_agent.tasks.stop
+                - stop: diamond.diamond_agent.tasks.uninstall
             test:
                 - op: mock.mock_plugin.mock.from_on_monitor_event
 

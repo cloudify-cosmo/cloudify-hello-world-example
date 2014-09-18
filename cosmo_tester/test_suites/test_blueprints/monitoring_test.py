@@ -23,24 +23,12 @@ class MonitoringTest(TestCase):
         blueprint_path = self.copy_blueprint('monitoring')
         self.blueprint_yaml = blueprint_path / 'blueprint.yaml'
 
-        diamond_config = {
-            'interval': 1,
-            'collectors': {
-                'ExampleCollector': {
-                    'config': {
-                        'stub': 'prop'
-                    },
-                },
-            },
-        }
-
         expected_service_contains = 'example'
         expected_metric = 42.0
 
         self.upload_deploy_and_execute_install(inputs={
             'image_name': '', #self.env.self.env.ubuntu_image_name,
             'flavor': '', #self.env.flavor_name,
-            'diamond_config': diamond_config
         })
 
         self.wait_for_expected_outputs(
