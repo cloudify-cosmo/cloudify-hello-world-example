@@ -33,18 +33,19 @@ class NeutronGaloreTest(TestCase):
         blueprint_path = self.copy_blueprint('neutron-galore')
         self.blueprint_yaml = blueprint_path / 'blueprint.yaml'
 
-        before, after = self.upload_deploy_and_execute_install(
-            inputs={
-                'server_name': 'novaservertest',
-                'image_name': self.env.ubuntu_image_name,
-                'flavor_name': self.env.flavor_name,
-                'security_groups': ['neutron_test_security_group_dst'],
-            })
+        inputs = {
+            'server_name': 'novaservertest',
+            'image_name': self.env.ubuntu_image_name,
+            'flavor_name': self.env.flavor_name,
+            'security_groups': ['neutron_test_security_group_dst'],
+        }
+
+        before, after = self.upload_deploy_and_execute_install(inputs=inputs)
 
         node_states = self.get_delta_node_states(before, after)
         self.post_install_assertions(node_states)
 
-        self._test_use_external_resource()
+        self._test_use_external_resource(inputs=inputs)
 
         self.execute_uninstall()
 
@@ -153,7 +154,7 @@ class NeutronGaloreTest(TestCase):
         leftovers = self._test_cleanup_context.get_resources_to_teardown()
         self.assertTrue(all([len(g) == 0 for g in leftovers.values()]))
 
-    def _test_use_external_resource(self):
+    def _test_use_external_resource(self, inputs):
         before_openstack_infra_state = openstack_infra_state(
             self.env.cloudify_config)
 
@@ -161,7 +162,9 @@ class NeutronGaloreTest(TestCase):
 
         bp_and_dep_name = self.test_id + '-use-external-resource'
         _, after = self.upload_deploy_and_execute_install(
-            blueprint_id=bp_and_dep_name, deployment_id=bp_and_dep_name)
+            blueprint_id=bp_and_dep_name,
+            deployment_id=bp_and_dep_name,
+            inputs=inputs)
 
         self._post_use_external_resource_install_assertions(
             bp_and_dep_name, before_openstack_infra_state, after['node_state'])
