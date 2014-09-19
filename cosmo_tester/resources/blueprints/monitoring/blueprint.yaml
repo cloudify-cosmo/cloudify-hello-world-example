@@ -23,19 +23,17 @@ plugins:
         source: https://github.com/cloudify-cosmo/cloudify-diamond-plugin/archive/master.zip
 
 inputs:
-    image_name:
-        default: ''
-    flavor:
-        default: ''
+    image_name: {}
+    flavor: {}
     diamond_config:
         default:
             interval: 1
             collectors:
-                ExampleCollector: { config: { stub: prop } }
-                CPUCollector: { config: { stub: prop } }
-                MemoryCollector: { config: { stub: prop } }
-                LoadAverageCollector: { config: { stub: prop } }
-                DiskUsageCollector: { config: { stub: prop } }
+                ExampleCollector: {}
+                CPUCollector: {}
+                MemoryCollector: {}
+                LoadAverageCollector: {}
+                DiskUsageCollector: {}
 
 outputs:
     service:
