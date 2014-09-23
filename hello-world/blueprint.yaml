@@ -11,7 +11,6 @@ tosca_definitions_version: cloudify_dsl_1_0
 imports:
     - http://www.getcloudify.org/spec/cloudify/3.1/types.yaml
     - http://www.getcloudify.org/spec/openstack-plugin/1.1/plugin.yaml
-    - http://www.getcloudify.org/spec/script-plugin/1.1/plugin.yaml
 
 inputs:
     webserver_port:
@@ -69,18 +68,9 @@ node_templates:
                 target: vm
         interfaces:
             cloudify.interfaces.lifecycle:
-                -   configure:
-                        mapping: script.script_runner.tasks.run
-                        properties:
-                            script_path: scripts/configure.sh
-                -   start:
-                        mapping: script.script_runner.tasks.run
-                        properties:
-                            script_path: scripts/start.sh
-                -   stop:
-                        mapping: script.script_runner.tasks.run
-                        properties:
-                            script_path: scripts/stop.sh
+                -   configure: scripts/configure.sh
+                -   start: scripts/start.sh
+                -   stop: scripts/stop.sh
 
 outputs:
     http_endpoint:
