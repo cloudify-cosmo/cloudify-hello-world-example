@@ -1,4 +1,4 @@
-# ***************************************************************************
+# **************************************************************************
 # * Copyright (c) 2013 GigaSpaces Technologies Ltd. All rights reserved
 # *
 # * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,4 +12,10 @@
 #    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
-# **************************************************************************/
+# ***************************************************************************/
+
+from cloudify import ctx
+from cloudify.state import ctx_parameters as inputs
+
+ctx.runtime_properties['service'] = inputs.service
+ctx.runtime_properties['metric'] = inputs.metric

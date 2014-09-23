@@ -6,14 +6,6 @@ imports:
     - http://www.getcloudify.org/spec/diamond-plugin/1.1/plugin.yaml
     - policies/diamond_test.yaml
 
-plugins:
-    diamond_test:
-        executor: central_deployment_agent
-        source: diamond-test-workflows-plugin
-    mock:
-        executor: central_deployment_agent
-        source: mock-plugin
-
 inputs:
     image_name: {}
     flavor: {}
@@ -48,12 +40,11 @@ node_templates:
                     properties:
                         diamond_config: { get_input: diamond_config }
                 - stop: diamond.diamond_agent.tasks.uninstall
-            test:
-                - op: mock.mock_plugin.mock.from_on_monitor_event
+            test: scripts/mock_operation.py
 
 workflows:
     on_monitor_event:
-        mapping: diamond_test.diamond_test_workflows.workflows.on_monitor_event
+        mapping: scripts/from_on_monitor_event.py
         parameters:
             service: {}
             metric: {}

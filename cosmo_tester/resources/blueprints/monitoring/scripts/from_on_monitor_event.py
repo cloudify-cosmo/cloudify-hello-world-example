@@ -1,4 +1,4 @@
-# ***************************************************************************
+# **************************************************************************
 # * Copyright (c) 2014 GigaSpaces Technologies Ltd. All rights reserved
 # *
 # * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,10 +15,11 @@
 # ***************************************************************************/
 
 
-from setuptools import setup
+from cloudify.workflows import ctx, parameters as inputs
 
-setup(
-    name='diamond-test-workflows-plugin',
-    version='1.0',
-    packages=['diamond_test_workflows']
-)
+node = next(ctx.nodes)
+instance = next(node.instances)
+instance.execute_operation('test.op', kwargs={
+    'service': inputs.service,
+    'metric': inputs.metric
+})
