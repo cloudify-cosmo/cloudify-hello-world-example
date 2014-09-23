@@ -27,14 +27,16 @@ class MonitoringTest(TestCase):
         expected_metric = 42.0
 
         self.upload_deploy_and_execute_install(inputs={
-            'image_name': '', #self.env.self.env.ubuntu_image_name,
-            'flavor': '', #self.env.flavor_name,
+            'image_name': self.env.self.env.ubuntu_image_name,
+            'flavor': self.env.flavor_name,
         })
 
         self.wait_for_expected_outputs(
             expected_service_contains,
             expected_metric,
             timeout=300)
+
+        self.execute_uninstall()
 
     def wait_for_expected_outputs(self,
                                   expected_service_contains,

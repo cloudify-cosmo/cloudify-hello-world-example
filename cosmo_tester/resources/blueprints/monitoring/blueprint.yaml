@@ -1,14 +1,10 @@
 tosca_definitions_version: cloudify_1_0
 
 imports:
-#    - http://www.getcloudify.org/spec/cloudify/3.1/types.yaml
-#    - http://www.getcloudify.org/spec/openstack-plugin/1.1/plugin.yaml
-#    - http://www.getcloudify.org/spec/diamond-plugin/1.1/plugin.yaml
-#    - policies/diamond_test.yaml
-
-    - https://raw.githubusercontent.com/cloudify-cosmo/cloudify-manager/master/resources/rest-service/cloudify/types/types.yaml
+    - http://www.getcloudify.org/spec/cloudify/3.1/types.yaml
+    - http://www.getcloudify.org/spec/openstack-plugin/1.1/plugin.yaml
+    - http://www.getcloudify.org/spec/diamond-plugin/1.1/plugin.yaml
     - policies/diamond_test.yaml
-
 
 plugins:
     diamond_test:
@@ -17,10 +13,6 @@ plugins:
     mock:
         executor: central_deployment_agent
         source: mock-plugin
-
-    diamond:
-        executor: host_agent
-        source: https://github.com/cloudify-cosmo/cloudify-diamond-plugin/archive/master.zip
 
 inputs:
     image_name: {}
@@ -43,14 +35,12 @@ outputs:
 
 node_templates:
     vm:
-#        type: cloudify.openstack.server
-        type: cloudify.types.host
+        type: cloudify.openstack.server
         properties:
-#            server:
-#                name: diamond-agent-server
-#                image_name: { get_input: image_name }
-#                flavor: { get_input: flavor }
-            ip: 11.0.0.7
+            server:
+                name: diamond-agent-server
+                image_name: { get_input: image_name }
+                flavor: { get_input: flavor }
         interfaces:
             cloudify.interfaces.monitor_lifecycle:
                 - start:
