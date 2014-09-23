@@ -14,9 +14,6 @@
 #    * limitations under the License.
 # ***************************************************************************/
 
-__author__ = 'dank'
-
-
 from cloudify.decorators import operation
 
 

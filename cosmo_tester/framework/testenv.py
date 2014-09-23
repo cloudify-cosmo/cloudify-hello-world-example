@@ -55,12 +55,6 @@ CLOUDIFY_TEST_HANDLER_MODULE = 'CLOUDIFY_TEST_HANDLER_MODULE'
 
 test_environment = None
 
-os.environ.update({
-    CLOUDIFY_TEST_MANAGEMENT_IP: '11.0.0.7',
-    CLOUDIFY_TEST_CONFIG_PATH: '/home/dan/work/cfy/cloudify-config.yaml',
-    CLOUDIFY_TEST_HANDLER_MODULE: 'cosmo_tester.framework.handlers'
-})
-
 
 def initialize_without_bootstrap():
     global test_environment

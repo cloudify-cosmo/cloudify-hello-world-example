@@ -14,8 +14,6 @@
 #    * limitations under the License.
 # ***************************************************************************/
 
-__author__ = 'dank'
-
 from setuptools import setup
 
 setup(
