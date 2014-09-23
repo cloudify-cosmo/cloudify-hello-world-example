@@ -6,9 +6,9 @@ imports:
     - http://www.getcloudify.org/spec/libcloud-plugin/1.1/plugin.yaml
 plugins:
     nodecellar_config_plugin:
-        derived_from: cloudify.plugins.agent_plugin
+        executor: host_agent
         properties:
-            folder: nodecellar-config-plugin
+            source: nodecellar-config-plugin
 node_types:
     vm_host:
         derived_from: cloudify.libcloud.server
