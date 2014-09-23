@@ -28,9 +28,9 @@ setup(
     zip_safe=False,
     install_requires=[
         'fabric',
-        'python-novaclient',
-        'python-keystoneclient',
-        'python-neutronclient',
+        'python-novaclient==2.17.0',
+        'python-keystoneclient==0.7.1',
+        'python-neutronclient==2.3.4',
         'PyYAML==3.10',
         'requests==2.2.1',
         'sh==1.09',
