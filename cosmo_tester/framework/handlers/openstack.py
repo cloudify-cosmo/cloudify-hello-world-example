@@ -358,8 +358,9 @@ class OpenstackHandler(BaseHandler):
         resources = provider_context['resources']
         agent_keypair = resources['agents_keypair']
         management_keypair = resources['management_keypair']
-        self.remove_agent_keypair = agent_keypair['created'] is True
-        self.remove_management_keypair = management_keypair['created'] is True
+        self.remove_agent_keypair = agent_keypair['external_resource'] is False
+        self.remove_management_keypair = \
+            management_keypair['external_resource'] is False
 
     def after_teardown(self):
         if self.remove_agent_keypair:
