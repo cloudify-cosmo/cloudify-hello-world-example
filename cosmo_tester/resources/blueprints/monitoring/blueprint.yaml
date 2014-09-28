@@ -8,7 +8,7 @@ imports:
 
 inputs:
     image_name: {}
-    flavor: {}
+    flavor_name: {}
     diamond_config:
         default:
             interval: 1
@@ -32,7 +32,7 @@ node_templates:
             server:
                 name: diamond-agent-server
                 image_name: { get_input: image_name }
-                flavor: { get_input: flavor }
+                flavor_name: { get_input: flavor_name }
         interfaces:
             cloudify.interfaces.monitor_lifecycle:
                 - start:

@@ -28,7 +28,7 @@ class MonitoringTest(TestCase):
 
         self.upload_deploy_and_execute_install(inputs={
             'image_name': self.env.self.env.ubuntu_image_name,
-            'flavor': self.env.flavor_name,
+            'flavor_name': self.env.flavor_name,
         })
 
         self.wait_for_expected_outputs(
