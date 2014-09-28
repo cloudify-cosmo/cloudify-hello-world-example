@@ -3,7 +3,6 @@ tosca_definitions_version: cloudify_dsl_1_0
 imports:
     - http://www.getcloudify.org/spec/cloudify/3.1/types.yaml
     - http://www.getcloudify.org/spec/openstack-plugin/1.1/plugin.yaml
-    - http://www.getcloudify.org/spec/script-plugin/1.1/plugin.yaml
 
 node_templates:
     vm:
@@ -26,10 +25,7 @@ node_templates:
         type: cloudify.types.app_module
         interfaces:
             cloudify.interfaces.lifecycle:
-                -   start:
-                        mapping: script.script_runner.tasks.run
-                        properties:
-                            script_path: scripts/hello.py
+                -   start: scripts/hello.py
         relationships:
             -   type: cloudify.relationships.contained_in
                 target: vm

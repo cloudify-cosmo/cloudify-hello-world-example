@@ -1,0 +1,68 @@
+tosca_definitions_version: cloudify_1_0
+
+imports:
+    - http://www.getcloudify.org/spec/cloudify/3.1/types.yaml
+    - http://www.getcloudify.org/spec/openstack-plugin/1.1/plugin.yaml
+    - http://www.getcloudify.org/spec/diamond-plugin/1.1/plugin.yaml
+    - policies/diamond_test.yaml
+
+inputs:
+    image_name: {}
+    flavor: {}
+    diamond_config:
+        default:
+            interval: 1
+            collectors:
+                ExampleCollector: {}
+                CPUCollector: {}
+                MemoryCollector: {}
+                LoadAverageCollector: {}
+                DiskUsageCollector: {}
+
+outputs:
+    service:
+        value: { get_attribute: [vm, service] }
+    metric:
+        value: { get_attribute: [vm, metric] }
+
+node_templates:
+    vm:
+        type: cloudify.openstack.server
+        properties:
+            server:
+                name: diamond-agent-server
+                image_name: { get_input: image_name }
+                flavor: { get_input: flavor }
+        interfaces:
+            cloudify.interfaces.monitor_lifecycle:
+                - start:
+                    mapping: diamond.diamond_agent.tasks.install
+                    properties:
+                        diamond_config: { get_input: diamond_config }
+                - stop: diamond.diamond_agent.tasks.uninstall
+            test: scripts/mock_operation.py
+
+workflows:
+    on_monitor_event:
+        mapping: scripts/from_on_monitor_event.py
+        parameters:
+            service: {}
+            metric: {}
+
+groups:
+    vms:
+        members: [vm]
+        policies:
+            test_policy:
+                type: diamond_test
+                properties:
+                    contains: example
+                triggers:
+                    test_trigger:
+                        type: cloudify.policies.triggers.execute_workflow
+                        parameters:
+                            workflow: on_monitor_event
+                            force: true
+                            workflow_parameters:
+                                service: { get_property: [SELF, service] }
+                                metric: { get_property: [SELF, metric] }
