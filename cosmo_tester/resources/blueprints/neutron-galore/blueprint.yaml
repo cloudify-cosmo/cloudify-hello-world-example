@@ -9,7 +9,6 @@ inputs:
     server_name: {}
     image_name: {}
     flavor_name: {}
-    security_groups: {}
 
 node_templates:
     nova_server:
@@ -17,7 +16,7 @@ node_templates:
         relationships:
            -   type: cloudify.relationships.connected_to
                target: neutron_port
-           -   type: cloudify.relationships.depends_on
+           -   type: cloudify.openstack.server_connected_to_security_group
                target: security_group_dst
            -   type: cloudify.openstack.server_connected_to_floating_ip
                target: floatingip
@@ -30,7 +29,6 @@ node_templates:
                 name: { get_input: server_name }
                 image_name: { get_input: image_name }
                 flavor_name: { get_input: flavor_name }
-                security_groups: { get_input: security_groups }
     neutron_network:
         type: cloudify.openstack.network
         properties:

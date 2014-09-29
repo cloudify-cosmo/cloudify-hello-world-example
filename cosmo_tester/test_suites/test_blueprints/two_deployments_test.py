@@ -51,7 +51,6 @@ class TwoDeploymentsTest(TestCase):
             blueprint_yaml.write_text(self.blueprint_yaml.text())
             sg = 'sg{}'.format(index)
             self.modify_yaml(blueprint_path=blueprint_yaml,
-                             security_groups=[sg],
                              security_group_name=sg)
 
             self.cfy.upload_deploy_and_execute_install(
@@ -82,7 +81,6 @@ class TwoDeploymentsTest(TestCase):
 
     def modify_yaml(self,
                     blueprint_path,
-                    security_groups,
                     security_group_name):
         with YamlPatcher(blueprint_path) as patch:
             vm_properties_path = 'node_templates.vm.properties'
@@ -93,7 +91,6 @@ class TwoDeploymentsTest(TestCase):
             patch.merge_obj('{0}.server'.format(vm_properties_path), {
                 'image_name': self.env.ubuntu_image_name,
                 'flavor_name': self.env.flavor_name,
-                'security_groups': security_groups,
             })
             sg_name_path = 'node_templates.security_group.properties' \
                            '.security_group.name'

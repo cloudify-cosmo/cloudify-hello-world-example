@@ -37,7 +37,6 @@ class NeutronGaloreTest(TestCase):
             'server_name': 'novaservertest',
             'image_name': self.env.ubuntu_image_name,
             'flavor_name': self.env.flavor_name,
-            'security_groups': ['neutron_test_security_group_dst'],
         }
 
         before, after = self.upload_deploy_and_execute_install(inputs=inputs)
