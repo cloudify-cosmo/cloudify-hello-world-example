@@ -33,6 +33,12 @@ node_templates:
                 name: diamond-agent-server
                 image_name: { get_input: image_name }
                 flavor_name: { get_input: flavor_name }
+                userdata: |
+                    #! /bin/bash
+                    # this is needed for installing the diamond plugin
+                    sudo apt-get update
+                    sudo apt-get install -fqy
+                    sudo apt-get install build-essential -qy
         interfaces:
             cloudify.interfaces.monitor_lifecycle:
                 - start:
