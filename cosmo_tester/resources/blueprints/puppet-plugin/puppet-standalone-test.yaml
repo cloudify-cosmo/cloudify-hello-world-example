@@ -23,7 +23,7 @@ node_templates:
         relationships:
             -   type: cloudify.openstack.server_connected_to_floating_ip
                 target: ip
-            -   type: cloudify.relationships.connected_tou
+            -   type: cloudify.relationships.connected_to
                 target: puppet_sg
 
     puppet_node_one:
