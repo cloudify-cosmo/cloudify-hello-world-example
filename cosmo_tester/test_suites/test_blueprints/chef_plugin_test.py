@@ -92,10 +92,13 @@ def update_blueprint(env, blueprint, hostname, userdata_vars=None):
     users = []
     vm_hostname = hostname_base
 
+    sg = '{0}{1}'.format(env.resources_prefix, 'chef_sg')
+
     inputs = {
         'flavor_name': env.flavor_name,
         'image_name': env.ubuntu_image_name,
         'server_name': vm_hostname,
+        'security_groups': [sg],
     }
     props = vm['properties']['server']
 

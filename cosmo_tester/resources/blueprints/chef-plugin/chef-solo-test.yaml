@@ -9,6 +9,7 @@ inputs:
     server_name: {}
     image_name: {}
     flavor_name: {}
+    security_groups: {}
 
 node_templates:
     server:
@@ -19,10 +20,11 @@ node_templates:
                 name: { get_input: server_name }
                 image_name: { get_input: image_name }
                 flavor_name: { get_input: flavor_name }
+                security_groups: { get_input: security_groups }
         relationships:
             -   type: cloudify.openstack.server_connected_to_floating_ip
                 target: ip
-            -   type: cloudify.openstack.server_connected_to_security_group
+            -   type: cloudify.relationships.connected_to
                 target: chef_sg
     ip:
         type: cloudify.openstack.floatingip
