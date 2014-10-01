@@ -46,7 +46,8 @@ node_templates:
                     properties:
                         diamond_config: { get_input: diamond_config }
                 - stop: diamond.diamond_agent.tasks.uninstall
-            test: scripts/mock_operation.py
+            test:
+                - op: scripts/mock_operation.py
 
 workflows:
     on_monitor_event:
