@@ -27,7 +27,7 @@ class MonitoringTest(TestCase):
         expected_metric = 42.0
 
         self.upload_deploy_and_execute_install(inputs={
-            'image_name': self.env.self.env.ubuntu_image_name,
+            'image_name': self.env.ubuntu_image_name,
             'flavor_name': self.env.flavor_name,
         })
 
