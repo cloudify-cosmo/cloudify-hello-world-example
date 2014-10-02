@@ -77,8 +77,10 @@ def bootstrap():
 def teardown():
     global test_environment
     if test_environment:
-        test_environment.teardown()
-        clear_environment()
+        try:
+            test_environment.teardown()
+        finally:
+            clear_environment()
 
 
 # Singleton class
