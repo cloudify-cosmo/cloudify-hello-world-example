@@ -45,6 +45,6 @@ class MonitoringTest(TestCase):
         def assertion():
             outputs = self.client.deployments.outputs.get(self.test_id)
             outputs = outputs['outputs']
-            self.assertIn(expected_service_contains, outputs['service'])
+            self.assertIn(expected_service_contains, outputs['service'] or '')
             self.assertEqual(expected_metric, outputs['metric'])
         self.repetitive(assertion, timeout=timeout)
