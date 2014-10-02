@@ -162,7 +162,7 @@ class TestEnvironment(object):
         self.setup()
         cfy = CfyHelper()
         try:
-            cfy.use(self.management_ip)
+            cfy.use(self.management_ip, provider=True)
             cfy.teardown(
                 self.cloudify_config_path,
                 verbose=True)

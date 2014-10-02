@@ -155,10 +155,11 @@ class CfyHelper(object):
         with self.workdir:
             cfy.blueprints.download(blueprint_id=blueprint_id).wait()
 
-    def use(self, management_ip):
+    def use(self, management_ip, provider=True):
         with self.workdir:
             cfy.use(
-                management_ip=management_ip
+                management_ip=management_ip,
+                provider=provider
             ).wait()
 
     def get_management_ip(self):
