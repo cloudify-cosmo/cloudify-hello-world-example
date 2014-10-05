@@ -77,8 +77,10 @@ def bootstrap():
 def teardown():
     global test_environment
     if test_environment:
-        test_environment.teardown()
-        clear_environment()
+        try:
+            test_environment.teardown()
+        finally:
+            clear_environment()
 
 
 # Singleton class
@@ -160,7 +162,7 @@ class TestEnvironment(object):
         self.setup()
         cfy = CfyHelper()
         try:
-            cfy.use(self.management_ip)
+            cfy.use(self.management_ip, provider=True)
             cfy.teardown(
                 self.cloudify_config_path,
                 verbose=True)

@@ -4,11 +4,12 @@ imports:
     - http://www.getcloudify.org/spec/cloudify/3.1/types.yaml
     - http://www.getcloudify.org/spec/bash-plugin/1.1/plugin.yaml
     - http://www.getcloudify.org/spec/libcloud-plugin/1.1/plugin.yaml
+
 plugins:
     nodecellar_config_plugin:
         executor: host_agent
-        properties:
-            source: nodecellar-config-plugin
+        source: nodecellar-config-plugin
+
 node_types:
     vm_host:
         derived_from: cloudify.libcloud.server
@@ -61,12 +62,10 @@ node_templates:
             port: 28017
 
     floatingip:
-      type: cloudify.libcloud.floatingip    
+      type: cloudify.libcloud.floatingip
 
     mongod_vm:
       type: vm_host
-      instances:
-          deploy: 1
       properties:
           cloudify_agent:
               user: ubuntu
@@ -76,8 +75,6 @@ node_templates:
 
     nodejs_vm:
       type: vm_host
-      instances:
-          deploy: 1
       properties:
           cloudify_agent:
               user: ubuntu
@@ -92,7 +89,7 @@ node_templates:
       properties:
             role: mongod
             port: 27017
-            scripts:            
+            scripts:
                 create: mongo-scripts/install-mongo.sh
                 start: mongo-scripts/start-mongo.sh
                 stop: mongo-scripts/stop-mongo.sh
@@ -103,7 +100,7 @@ node_templates:
     nodejs:
       type: nodejs_server
       properties:
-            scripts:            
+            scripts:
                 create: nodejs-scripts/install-nodejs.sh
       relationships:
         - type: cloudify.relationships.contained_in
@@ -115,16 +112,16 @@ node_templates:
             app_name: nodecellar
             startup_script: server.js
             git_url: https://github.com/cloudify-cosmo/nodecellar.git
-            git_branch: master 
+            git_branch: master
             base_port: 8080
             num_instances: 1
             env_file_path: /tmp/mongo_host_and_port.sh
-            scripts:            
+            scripts:
                 create: nodejs-scripts/install-app.sh
                 start: nodejs-scripts/start-app.sh
                 stop: nodejs-scripts/stop-app.sh
       relationships:
         - type: cloudify.relationships.contained_in
           target: nodejs
-        - type: nodecellar_connected_to_mongo 
+        - type: nodecellar_connected_to_mongo
           target: mongod
