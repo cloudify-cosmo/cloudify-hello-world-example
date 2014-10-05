@@ -59,13 +59,17 @@ class NeutronGaloreTest(TestCase):
 
         port_assigned_addr = openstack['server']['addresses'][
             p('neutron_network_test')][0]['addr']
-        port_security_group_id = openstack['port']['security_groups'][0]
+        # the port will get connected to the dst security group automatically
+        #  when the server connects to the security group
+        port_dst_security_group_id = openstack['port']['security_groups'][0]
+        port_security_group_id = openstack['port']['security_groups'][1]
         port_fixed_ip = openstack['port']['fixed_ips'][0]['ip_address']
         port_network_id = openstack['port']['network_id']
         port_subnet_id = openstack['port']['fixed_ips'][0]['subnet_id']
         router_network_id = openstack['router']['external_gateway_info'][
             'network_id']
         sg_src_id = openstack['sg_src']['id']
+        sg_dst_id = openstack['sg_dst']['id']
         network_subnet_id = openstack['network']['subnets'][0]
 
         self.assertEqual(openstack['server']['addresses']
@@ -96,6 +100,7 @@ class NeutronGaloreTest(TestCase):
         self.assertEqual(openstack['router']['name'], p('neutron_router_test'))
         self.assertEqual(openstack['sg_src']['name'],
                          p('neutron_test_security_group_src'))
+        self.assertEqual(port_dst_security_group_id, sg_dst_id)
         self.assertEqual(port_security_group_id, sg_src_id)
         self.assertEqual(openstack['network']['name'],
                          p('neutron_network_test'))
