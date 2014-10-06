@@ -40,6 +40,7 @@ def build_env(test_config)
     else
       resource_prefix = test_config[:suite_name] + '-'
     end
+    cloudify_env['SUITE_NAME'] = test_config[:suite_name]
     cloudify_env['RESOURCE_PREFIX'] = resource_prefix
     cloudify_env['NOSETESTS_TO_RUN'] = test_config[:tests_to_run]
     cloudify_env['CLOUDIFY_TEST_CONFIG'] = test_config[:cloudify_test_config]

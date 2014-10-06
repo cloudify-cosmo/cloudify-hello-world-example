@@ -23,7 +23,7 @@ def sh_bake(command):
 docker = sh_bake(sh.docker)
 vagrant = sh_bake(sh.vagrant)
 
-reports_dir = path('xunit-reports')
+reports_dir = path(os.path.dirname(__file__)) / 'xunit-reports'
 
 env_variables = {
     'TEST_SUITES_PATH': '',

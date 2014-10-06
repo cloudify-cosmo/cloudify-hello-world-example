@@ -32,9 +32,10 @@ setenv()
 	# UI_PACKAGE_URL=
 
 	# vagrant synched folder
+	SUITE_NAME=${SUITE_NAME='default-suite'}
 	BASE_HOST_DIR="/vagrant"
 	BASE_CONFIG_DIR="${BASE_HOST_DIR}/configurations"
-	REPORT_FILE="${BASE_HOST_DIR}/xunit-reports/${RESOURCE_PREFIX}report.xml"
+	REPORT_FILE="${BASE_HOST_DIR}/xunit-reports/${SUITE_NAME}-report.xml"
 	CLOUDIFY_TEST_CONFIG=${CLOUDIFY_TEST_CONFIG='cloudify-config-openstack-on-hp.yaml'}
 	ORIGINAL_CLOUDIFY_TEST_CONFIG_PATH="${BASE_CONFIG_DIR}/${CLOUDIFY_TEST_CONFIG}"
 
