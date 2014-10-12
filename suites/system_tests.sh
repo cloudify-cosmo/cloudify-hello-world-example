@@ -59,11 +59,14 @@ clone_and_install_system_tests()
 	clone_and_checkout cloudify-cli $BRANCH_NAME_CLI
 	clone_and_checkout cloudify-openstack-provider $BRANCH_NAME_OPENSTACK_PROVIDER
 	clone_and_checkout cloudify-libcloud-provider $BRANCH_NAME_LIBCLOUD_PROVIDER
+	#check vsphere name of provider and git address
+	clone_and_checkout cloudify-vsphere-provider $BRANCH_NAME_VSPHERE_PROVIDER
 
 	echo "### Installing system tests dependencies"
 	pip install ./cloudify-cli -r cloudify-cli/dev-requirements.txt
 	pip install ./cloudify-openstack-provider
 	pip install ./cloudify-libcloud-provider
+	pip install ./cloudify-vsphere-provider
 	pip install -e ./cloudify-system-tests
 }
 

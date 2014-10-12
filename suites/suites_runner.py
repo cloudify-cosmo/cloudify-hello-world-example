@@ -28,6 +28,12 @@ reports_dir = path(os.path.dirname(__file__)) / 'xunit-reports'
 env_variables = {
     'TEST_SUITES_PATH': '',
 
+    #vSphere creds
+    'VSPHERE_USERNAME': '',
+    'VSPHERE_PASSWORD': '',
+    'VSPHERE_URL': '',
+    'VSPHERE_DATACENTER_NAME': '',
+
     # ec2 creds
     'AWS_ACCESS_ID': '',
     'AWS_SECRET_KEY': '',

@@ -28,6 +28,13 @@ openstack_properties = {
     'KEYSTONE_AUTH_URL'     : 'keystone.auth_url',
 }
 
+vsphere_properties = {
+    'VSPHERE_USERNAME'      : 'connection.username',
+    'VSPHERE_PASSWORD'      : 'connection.password',
+    'VSPHERE_URL'           : 'connection.url',
+    'VSPHERE_DATACENTER_NAME': 'connection.datacenter_name',
+}
+
 def main():
     yaml_path = sys.argv[1]
     handler = os.environ.get('CLOUDIFY_TEST_HANDLER_MODULE')
@@ -37,6 +44,8 @@ def main():
         cloud_properties = openstack_properties
     elif handler == 'cosmo_tester.framework.handlers.ec2':
         cloud_properties = ec2_properties
+    elif handler == 'cosmo_tester.framework.handlers.vsphere':
+        cloud_properties = vsphere_properties
     else:
         raise RuntimeError('Unsupported handler: {}'.format(handler))
 

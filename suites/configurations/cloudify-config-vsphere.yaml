@@ -1,0 +1,82 @@
+connection:
+    username: ''
+    password: ''
+    url: ''
+#    port: 443
+#    resource_pool_name: Resources
+#    auto_placement: False
+    datacenter_name: ''
+
+networking:
+    use_dhcp: True
+    switch:
+        distributed: True
+        name: DSwitch
+    dmz_network:
+        create_if_missing: False
+        name: DMZ
+        vlan_id: 0
+#        network: Enter-Network-IP-Here
+#        gateway: Enter-Network-Gateway-Here
+    management_network:
+        create_if_missing: False
+        name: Management
+        vlan_id: 101
+#        network: Enter-Network-IP-Here
+#        gateway: Enter-Network-Gateway-Here
+    application_network:
+        create_if_missing: False
+        name: Application
+        vlan_id: 100
+#        network: Enter-Network-IP-Here
+#        gateway: Enter-Network-Gateway-Here
+#
+compute:
+    management_server:
+        user_on_management: giga
+        userhome_on_management: /home/giga
+        instance:
+            create_if_missing: True
+            name: cloudify-boris-manager
+            template: ubuntu-configured-template
+            cpus: 2
+            memory: 6144
+#        network:
+#            dmz_network:
+#                ip: Enter-IP-Here
+#            management_network:
+#                ip: Enter-IP-Here
+        management_keypair:
+            private_key_path: ~/.ssh/cloudify
+    agent_servers:
+        agents_keypair:
+            private_key_path: ~/.ssh/cloudify
+
+cloudify:
+    server:
+        packages:
+            components_package_url: "http://gigaspaces-repository-eu.s3.amazonaws.com/org/cloudify3/3.0.0/nightly_6/cloudify-components_3.0.0-ga-b6_amd64.deb"
+            core_package_url: "http://gigaspaces-repository-eu.s3.amazonaws.com/org/cloudify3/3.0.0/nightly_6/cloudify-core_3.0.0-ga-b6_amd64.deb"
+            ui_package_url: "http://gigaspaces-repository-eu.s3.amazonaws.com/org/cloudify3/3.0.0/nightly_6/cloudify-ui_3.0.0-ga-b6_amd64.deb"
+    agents:
+        packages:
+            ubuntu_agent_url: "http://gigaspaces-repository-eu.s3.amazonaws.com/org/cloudify3/3.0.0/nightly_6/cloudify-ubuntu-agent_3.0.0-ga-b6_amd64.deb"
+            centos_agent_url: "http://gigaspaces-repository-eu.s3.amazonaws.com/org/cloudify3/3.0.0/nightly_6/cloudify-centos-agent_3.0.0-ga-b6_amd64.deb"
+            windows_agent_url: "http://gigaspaces-repository-eu.s3.amazonaws.com/org/cloudify3/3.0.0/nightly_6/cloudify-windows-agent_3.0.0-ga-b6_amd64.deb"
+        config:
+            min_workers: 2
+            max_workers: 5
+            remote_execution_port: 22
+            #user: (no default - optional parameter)
+    workflows:
+        task_retries: 20  # -1 means we retry forever
+        retry_interval: 30
+
+    bootstrap:
+        ssh:
+            initial_connectivity_retries: 20
+            initial_connectivity_retries_interval: 15
+            command_retries: 3
+            retries_interval: 3
+            connection_attempts: 1
+            socket_timeout: 10
