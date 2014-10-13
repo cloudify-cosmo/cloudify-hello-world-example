@@ -89,7 +89,7 @@ def ec2_infra_state(cloudify_config):
 def _security_groups(ec2_conn, prefix_regex):
     return [(n.id, n.name)
             for n in ec2_conn.get_all_security_groups(
-            filters={'group-name': prefix_regex})]
+                filters={'group-name': prefix_regex})]
 
 
 def _servers(ec2_conn, prefix_regex):

@@ -79,6 +79,7 @@ class CloudifyVsphereConfigReader(BaseHandler.CloudifyConfigReader):
     def application_network_name(self):
         return self.config['networking']['application_network']['name']
 
+
 class VsphereHandler(BaseHandler):
     provider = 'vsphere'
     CleanupContext = VsphereCleanupContext

@@ -17,10 +17,10 @@ from cosmo_tester.framework.testenv import TestCase
 
 __author__ = 'boris'
 
+
 class HelloVsphereTest(TestCase):
     def test_hello(self):
         self.blueprint_path = util.get_blueprint_path('hello-vsphere')
         self.blueprint_yaml = self.blueprint_path / 'blueprint.yaml'
         #self.modify_blueprint()
         before, after = self.upload_deploy_and_execute_install()
-
