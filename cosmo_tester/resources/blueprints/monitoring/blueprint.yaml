@@ -12,12 +12,14 @@ inputs:
     diamond_config:
         default:
             interval: 1
-            collectors:
-                ExampleCollector: {}
-                CPUCollector: {}
-                MemoryCollector: {}
-                LoadAverageCollector: {}
-                DiskUsageCollector: {}
+
+    collectors_config:
+        default:
+            ExampleCollector: {}
+            CPUCollector: {}
+            MemoryCollector: {}
+            LoadAverageCollector: {}
+            DiskUsageCollector: {}
 
 outputs:
     service:
@@ -34,12 +36,19 @@ node_templates:
                 image_name: { get_input: image_name }
                 flavor_name: { get_input: flavor_name }
         interfaces:
-            cloudify.interfaces.monitor_lifecycle:
-                - start:
+            cloudify.interfaces.monitoring_agent:
+                - install:
                     mapping: diamond.diamond_agent.tasks.install
                     properties:
                         diamond_config: { get_input: diamond_config }
-                - stop: diamond.diamond_agent.tasks.uninstall
+                - start: diamond.diamond_agent.tasks.start
+                - stop: diamond.diamond_agent.tasks.stop
+                - uninstall: diamond.diamond_agent.tasks.uninstall
+            cloudify.interfaces.monitoring:
+                - start:
+                    mapping: diamond.diamond_agent.tasks.add_collectors
+                    properties:
+                        collectors_config: { get_input: collectors_config }
             test:
                 - op: scripts/mock_operation.py
 
