@@ -54,11 +54,21 @@ env_variables = {
     'UI_PACKAGE_URL': ''
 }
 
+def list_containers():
+    return sh.docker.ps(a=True).strip()
+
 def container_exit_code(container_name):
     return int(sh.docker.wait(container_name).strip())
 
-def container_kill(container_name):
-    docker.rm('-f', container_name).wait()
+def container_kill(container_name, ignore_errors=False):
+    try:
+        logger.info('Killing container: {0}'.format(container_name))
+        docker.rm('-f', container_name).wait()
+    except Exception:
+        if ignore_errors:
+            pass
+        else:
+            raise
 
 def test_logs():
     vagrant('docker-logs', f=True).wait()
@@ -68,7 +78,11 @@ def test_start():
     vagrant.up().wait()
 
 def test_run():
+    logger.info('Current containers:\n{0}'
+                .format(list_containers()))
     containers = get_containers_names()
+    for c in containers:
+        container_kill(c, ignore_errors=True)
     test_start()
     test_logs()
     logger.info('wait for containers exit status codes')
