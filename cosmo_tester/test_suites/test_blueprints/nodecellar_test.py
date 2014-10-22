@@ -14,8 +14,6 @@
 #    * limitations under the License.
 
 
-__author__ = 'ran'
-
 import requests
 import json
 from requests.exceptions import ConnectionError
@@ -25,16 +23,21 @@ from cosmo_tester.framework.util import YamlPatcher
 from cosmo_tester.framework.git_helper import clone
 
 NODECELLAR_URL = "https://github.com/cloudify-cosmo/" \
-                 "cloudify-nodecellar-openstack.git"
+                 "cloudify-nodecellar-example.git"
 
 
 class NodecellarAppTest(TestCase):
 
-    def test_nodecellar(self):
-
+    def _test_nodecellar_impl(self, blueprint_file, image_name, flavor_name):
         self.repo_dir = clone(NODECELLAR_URL, self.workdir)
-        self.blueprint_yaml = self.repo_dir / 'blueprint.yaml'
-        self.modify_blueprint()
+        self.blueprint_yaml = self.repo_dir / 'openstack-blueprint.yaml'
+
+        with YamlPatcher(self.blueprint_yaml) as patch:
+            vm_type_path = 'node_types.vm_host.properties'
+            patch.merge_obj('{0}.server.default'.format(vm_type_path), {
+                'image_name': image_name,
+                'flavor_name': flavor_name
+            })
 
         before, after = self.upload_deploy_and_execute_install()
 
@@ -43,14 +46,6 @@ class NodecellarAppTest(TestCase):
         self.execute_uninstall()
 
         self.post_uninstall_assertions()
-
-    def modify_blueprint(self):
-        with YamlPatcher(self.blueprint_yaml) as patch:
-            vm_type_path = 'node_types.vm_host.properties'
-            patch.merge_obj('{0}.server.default'.format(vm_type_path), {
-                'image_name': self.env.ubuntu_image_name,
-                'flavor_name': self.env.flavor_name
-            })
 
     def post_install_assertions(self, before_state, after_state):
         delta = self.get_manager_state_delta(before_state, after_state)
@@ -165,3 +160,11 @@ class NodecellarAppTest(TestCase):
                       'but no error was raised.')
         except ConnectionError:
             pass
+
+
+class OpenStackNodeCellarTest(NodecellarAppTest):
+
+    def test_openstack_nodecellar(self):
+        self._test_nodecellar_impl('openstack-blueprint.yaml',
+                                   self.env.ubuntu_image_name,
+                                   self.env.flavor_name)
