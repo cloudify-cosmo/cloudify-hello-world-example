@@ -14,8 +14,6 @@
 #    * limitations under the License.
 
 
-__author__ = 'ran'
-
 import requests
 import json
 from requests.exceptions import ConnectionError
@@ -33,7 +31,7 @@ class NodecellarAppTest(TestCase):
     def test_nodecellar(self):
 
         self.repo_dir = clone(NODECELLAR_URL, self.workdir)
-        self.blueprint_yaml = self.repo_dir / 'blueprint.yaml'
+        self.blueprint_yaml = self.repo_dir / 'openstack-blueprint.yaml'
         self.modify_blueprint()
 
         before, after = self.upload_deploy_and_execute_install()
