@@ -25,7 +25,7 @@ node_templates:
         type: cloudify.types.app_module
         interfaces:
             cloudify.interfaces.lifecycle:
-                -   start: scripts/hello.py
+                start: scripts/hello.py
         relationships:
             -   type: cloudify.relationships.contained_in
                 target: vm
