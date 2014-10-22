@@ -23,7 +23,7 @@ from cosmo_tester.framework.util import YamlPatcher
 from cosmo_tester.framework.git_helper import clone
 
 NODECELLAR_URL = "https://github.com/cloudify-cosmo/" \
-                 "cloudify-nodecellar-openstack.git"
+                 "cloudify-nodecellar-example.git"
 
 
 class NodecellarAppTest(TestCase):
