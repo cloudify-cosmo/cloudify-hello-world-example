@@ -33,7 +33,7 @@ networking:
 compute:
     region: region-b.geo-1
     management_server:
-        user_on_management: ubuntu
+        user_on_management: ubuntuגד
         userhome_on_management: /home/ubuntu
         creation_timeout: 300
         instance:
