@@ -66,9 +66,9 @@ node_templates:
                 target: vm
         interfaces:
             cloudify.interfaces.lifecycle:
-                -   configure: scripts/configure.sh
-                -   start: scripts/start.sh
-                -   stop: scripts/stop.sh
+                configure: scripts/configure.sh
+                start: scripts/start.sh
+                stop: scripts/stop.sh
 
 outputs:
     http_endpoint:
