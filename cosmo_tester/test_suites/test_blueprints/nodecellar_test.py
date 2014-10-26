@@ -30,7 +30,7 @@ class NodecellarAppTest(TestCase):
 
     def _test_nodecellar_impl(self, blueprint_file, image_name, flavor_name):
         self.repo_dir = clone(NODECELLAR_URL, self.workdir)
-        self.blueprint_yaml = self.repo_dir / 'openstack-blueprint.yaml'
+        self.blueprint_yaml = self.repo_dir / blueprint_file
 
         self.modify_blueprint(image_name, flavor_name)
 
