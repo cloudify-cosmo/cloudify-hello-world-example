@@ -9,6 +9,7 @@ inputs:
     server_name: {}
     image_name: {}
     flavor_name: {}
+    private_key_path: {}
 
 node_templates:
     nova_server:
@@ -20,6 +21,8 @@ node_templates:
                target: security_group_dst
            -   type: cloudify.openstack.server_connected_to_floating_ip
                target: floatingip
+           -   type: cloudify.openstack.server_connected_to_keypair
+               target: keypair
         properties:
             install_agent: false
             cloudify_agent:
@@ -90,3 +93,7 @@ node_templates:
                 target: security_group_src
     floatingip:
         type: cloudify.openstack.floatingip
+    keypair:
+        type: cloudify.openstack.keypair
+        properties:
+            private_key_path: { get_input: private_key_path }
