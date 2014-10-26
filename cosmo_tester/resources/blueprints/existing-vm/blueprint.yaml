@@ -26,4 +26,4 @@ node_templates:
                 target: host
         interfaces:
             cloudify.interfaces.lifecycle:
-                - create: mock.mock_plugin.mock.create
+                create: mock.mock_plugin.mock.create

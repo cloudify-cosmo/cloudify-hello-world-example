@@ -19,7 +19,9 @@ node_types:
             puppet_config: {}
         interfaces:
             cloudify.interfaces.lifecycle:
-                - create: puppet.puppet_plugin.install.operation
+                create:
+                    implementation: puppet.puppet_plugin.install.operation
+                    inputs: {}
 
 node_templates:
     puppet_master_vm:
