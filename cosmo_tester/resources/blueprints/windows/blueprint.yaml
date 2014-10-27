@@ -6,7 +6,7 @@ imports:
 
 node_templates:
     vm:
-        type: cloudify.openstack.windows_server
+        type: cloudify.openstack.nodes.WindowsServer
         properties:
             server:
                 name: windows-agent-vm
@@ -22,7 +22,7 @@ node_templates:
                 password: 1408Rokk
 
     app:
-        type: cloudify.types.app_module
+        type: cloudify.nodes.ApplicationModule
         interfaces:
             cloudify.interfaces.lifecycle:
                 start: scripts/hello.py
