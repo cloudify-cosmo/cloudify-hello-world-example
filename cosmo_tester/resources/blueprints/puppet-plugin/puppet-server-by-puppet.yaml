@@ -14,7 +14,7 @@ inputs:
 
 node_types:
     cloudify.types.puppet.puppet_master_service:
-        derived_from: cloudify.types.middleware_server
+        derived_from: cloudify.nodes.SoftwareComponent
         properties:
             puppet_config: {}
         interfaces:
@@ -25,7 +25,7 @@ node_types:
 
 node_templates:
     puppet_master_vm:
-        type: cloudify.openstack.server
+        type: cloudify.openstack.nodes.Server
         properties:
             server:
                 name: { get_input: server_name }
@@ -39,9 +39,9 @@ node_templates:
             -   type: cloudify.relationships.connected_to
                 target: puppet_sg
     ip:
-        type: cloudify.openstack.floatingip
+        type: cloudify.openstack.server.FloatingIP
     puppet_sg:
-        type: cloudify.openstack.security_group
+        type: cloudify.openstack.server.SecurityGroup
         properties:
             security_group:
                 name: puppet_sg
@@ -51,7 +51,7 @@ node_templates:
                 -   remote_ip_prefix: 0.0.0.0/0
                     port: 8140
     system_tests_puppet_master_service:
-        type: cloudify.types.puppet.puppet_master_service
+        type: cloudify.puppet.nodes.PuppetMasterService
         properties:
             puppet_config:
                 server: puppet

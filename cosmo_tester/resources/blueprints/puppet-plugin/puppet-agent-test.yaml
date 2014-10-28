@@ -15,7 +15,7 @@ inputs:
 
 node_templates:
     db-vm:
-        type: cloudify.openstack.server
+        type: cloudify.openstack.nodes.Server
         properties:
             server:
                 name: { get_input: server_name }
@@ -27,7 +27,7 @@ node_templates:
             -   type: cloudify.openstack.server_connected_to_floating_ip
                 target: ip
     puppet_db:
-        type: cloudify.types.puppet.db_server
+        type: cloudify.puppet.nodes.DBMS
         properties:
             puppet_config:
                 add_operation_tag: True,

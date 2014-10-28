@@ -14,13 +14,13 @@ inputs:
 
 node_templates:
     host:
-        type: cloudify.types.host
+        type: cloudify.nodes.Compute
         properties:
             ip: { get_input: ip }
             cloudify_agent:
                 key: { get_input: agent_key }
     middle:
-        type: cloudify.types.middleware_server
+        type: cloudify.nodes.SoftwareComponent
         relationships:
             -   type: cloudify.relationships.contained_in
                 target: host

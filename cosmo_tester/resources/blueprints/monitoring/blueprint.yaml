@@ -29,7 +29,7 @@ outputs:
 
 node_templates:
     vm:
-        type: cloudify.openstack.server
+        type: cloudify.openstack.nodes.Server
         properties:
             server:
                 name: diamond-agent-server
