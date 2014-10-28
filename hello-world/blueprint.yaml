@@ -32,10 +32,10 @@ inputs:
 
 node_templates:
     virtual_ip:
-        type: cloudify.openstack.floatingip
+        type: cloudify.openstack.nodes.FloatingIP
 
     security_group:
-        type: cloudify.openstack.security_group
+        type: cloudify.openstack.nodes.SecurityGroup
         properties:
             security_group:
                 name: webserver_security_group
@@ -44,7 +44,7 @@ node_templates:
                     port: { get_property: [ http_web_server, port ] }
 
     vm:
-        type: cloudify.openstack.server
+        type: cloudify.openstack.nodes.Server
         properties:
            cloudify_agent:
                user: { get_input: agent_user }
@@ -58,7 +58,7 @@ node_templates:
                 target: security_group
 
     http_web_server:
-        type: cloudify.types.web_server
+        type: cloudify.nodes.WebServer
         properties:
             port: { get_input: webserver_port }
         relationships:
