@@ -2,7 +2,7 @@ tosca_definitions_version: cloudify_dsl_1_0
 
 imports:
     - http://www.getcloudify.org/spec/cloudify/3.1rc1/types.yaml
-    - http://www.getcloudify.org/spec/openstack-plugin/3.1rc1/plugin.yaml
+    - http://www.getcloudify.org/spec/openstack-plugin/1.1rc1/plugin.yaml
 
 
 inputs:
@@ -13,7 +13,7 @@ inputs:
 
 node_templates:
     nova_server:
-        type: cloudify.openstack.server
+        type: cloudify.openstack.nodes.Server
         relationships:
            -   type: cloudify.relationships.connected_to
                target: neutron_port
@@ -33,12 +33,12 @@ node_templates:
                 image_name: { get_input: image_name }
                 flavor_name: { get_input: flavor_name }
     neutron_network:
-        type: cloudify.openstack.network
+        type: cloudify.openstack.nodes.Network
         properties:
             network:
                 name: neutron_network_test
     neutron_subnet:
-        type: cloudify.openstack.subnet
+        type: cloudify.openstack.nodes.Subnet
         relationships:
             -   type: cloudify.relationships.contained_in
                 target: neutron_network
@@ -50,12 +50,12 @@ node_templates:
                 ip_version: 4
                 cidr: 10.10.10.0/24
     neutron_router:
-        type: cloudify.openstack.router
+        type: cloudify.openstack.nodes.Router
         properties:
             router:
                 name: neutron_router_test
     neutron_port:
-        type: cloudify.openstack.port
+        type: cloudify.openstack.nodes.Port
         properties:
             port:
                 name: neutron_test_port
@@ -67,12 +67,12 @@ node_templates:
             -   type: cloudify.openstack.port_connected_to_security_group
                 target: security_group_src
     security_group_src:
-        type: cloudify.openstack.security_group
+        type: cloudify.openstack.nodes.SecurityGroup
         properties:
             security_group:
                 name: neutron_test_security_group_src
     security_group_dst:
-        type: cloudify.openstack.security_group
+        type: cloudify.openstack.nodes.SecurityGroup
         properties:
             security_group:
                 name: neutron_test_security_group_dst
@@ -92,8 +92,8 @@ node_templates:
             -   type: cloudify.relationships.connected_to
                 target: security_group_src
     floatingip:
-        type: cloudify.openstack.floatingip
+        type: cloudify.openstack.nodes.FloatingIP
     keypair:
-        type: cloudify.openstack.keypair
+        type: cloudify.openstack.nodes.KeyPair
         properties:
             private_key_path: { get_input: private_key_path }

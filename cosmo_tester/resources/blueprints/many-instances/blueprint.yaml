@@ -10,7 +10,7 @@ plugins:
 
 node_types:
     host:
-        derived_from: cloudify.types.host
+        derived_from: cloudify.nodes.Compute
         interfaces:
             cloudify.interfaces.lifecycle:
                 create:
@@ -34,7 +34,7 @@ node_types:
                     inputs: {}
 
     middle:
-        derived_from: cloudify.types.middleware_server
+        derived_from: cloudify.nodes.SoftwareComponent
         interfaces:
             cloudify.interfaces.lifecycle:
                 create:

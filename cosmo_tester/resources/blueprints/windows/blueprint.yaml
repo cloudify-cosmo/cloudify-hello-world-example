@@ -2,11 +2,11 @@ tosca_definitions_version: cloudify_dsl_1_0
 
 imports:
     - http://www.getcloudify.org/spec/cloudify/3.1rc1/types.yaml
-    - http://www.getcloudify.org/spec/openstack-plugin/3.1rc1/plugin.yaml
+    - http://www.getcloudify.org/spec/openstack-plugin/1.1rc1/plugin.yaml
 
 node_templates:
     vm:
-        type: cloudify.openstack.windows_server
+        type: cloudify.openstack.nodes.WindowsServer
         properties:
             server:
                 name: windows-agent-vm
@@ -22,7 +22,7 @@ node_templates:
                 password: 1408Rokk
 
     app:
-        type: cloudify.types.app_module
+        type: cloudify.nodes.ApplicationModule
         interfaces:
             cloudify.interfaces.lifecycle:
                 start: scripts/hello.py

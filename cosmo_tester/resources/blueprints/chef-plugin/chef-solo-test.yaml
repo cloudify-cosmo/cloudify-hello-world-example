@@ -2,8 +2,8 @@ tosca_definitions_version: cloudify_dsl_1_0
 
 imports:
     - http://www.getcloudify.org/spec/cloudify/3.1rc1/types.yaml
-    - http://www.getcloudify.org/spec/openstack-plugin/3.1rc1/plugin.yaml
-    - http://www.getcloudify.org/spec/chef-plugin/3.1rc1/plugin.yaml
+    - http://www.getcloudify.org/spec/openstack-plugin/1.1rc1/plugin.yaml
+    - http://www.getcloudify.org/spec/chef-plugin/1.1rc1/plugin.yaml
 
 inputs:
     server_name: {}
@@ -13,7 +13,7 @@ inputs:
 
 node_templates:
     server:
-        type: cloudify.openstack.server
+        type: cloudify.openstack.nodes.Server
         properties:
             install_agent: true
             server:
@@ -27,9 +27,9 @@ node_templates:
             -   type: cloudify.relationships.connected_to
                 target: chef_sg
     ip:
-        type: cloudify.openstack.floatingip
+        type: cloudify.openstack.nodes.FloatingIP
     chef_node_one:
-        type: cloudify.types.chef.db_server
+        type: cloudify.chef.nodes.DBMS
         properties:
             chef_config:
                 version: 11.10.4-1
@@ -48,7 +48,7 @@ node_templates:
             -   type: cloudify.relationships.contained_in
                 target: server
     chef_node_two:
-        type: cloudify.types.chef.app_server
+        type: cloudify.chef.nodes.ApplicationServer
         properties:
             chef_config:
                 version: 11.10.4-1
@@ -70,7 +70,7 @@ node_templates:
             -   type: cloudify.relationships.contained_in
                 target: server
     chef_node_env_e1: # Concurrent installation with chef_node_one
-        type: cloudify.types.chef.app_server
+        type: cloudify.chef.nodes.ApplicationServer
         properties:
             chef_config:
                 version: 11.10.4-1
@@ -86,7 +86,7 @@ node_templates:
             -   type: cloudify.relationships.contained_in
                 target: server
     chef_node_role_r1: # Concurrent installation with chef_node_one
-        type: cloudify.types.chef.app_server
+        type: cloudify.chef.nodes.ApplicationServer
         properties:
             chef_config:
                 version: 11.10.4-1
@@ -98,7 +98,7 @@ node_templates:
             -   type: cloudify.relationships.contained_in
                 target: server
     chef_node_data_bag_user: # Concurrent installation with chef_node_one
-        type: cloudify.types.chef.app_server
+        type: cloudify.chef.nodes.ApplicationServer
         properties:
             chef_config:
                 version: 11.10.4-1
@@ -117,7 +117,7 @@ node_templates:
             -   type: cloudify.relationships.contained_in
                 target: server
     chef_sg:
-        type: cloudify.openstack.security_group
+        type: cloudify.openstack.nodes.SecurityGroup
         properties:
             security_group:
                 name: chef_sg
