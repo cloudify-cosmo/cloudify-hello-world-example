@@ -321,12 +321,18 @@ class NeutronGaloreTest(TestCase):
         config_reader = self.env.handler.CloudifyConfigReader(
             self.env.cloudify_config)
 
+        manager_key_path = config_reader.management_key_path
+        manager_key_path = os.path.join(
+            os.path.dirname(manager_key_path),
+            config_reader.resources_prefix + os.path.basename(
+                manager_key_path))
+        manager_key_path = os.path.expanduser(manager_key_path)
+
         fabric_env = fabric.api.env
         fabric_env.update({
             'timeout': 30,
             'user': config_reader.managment_user_name,
-            'key_filename': os.path.expanduser(
-                config_reader.management_key_path),
+            'key_filename': manager_key_path,
             'host_string': self.env.management_ip
         })
 
