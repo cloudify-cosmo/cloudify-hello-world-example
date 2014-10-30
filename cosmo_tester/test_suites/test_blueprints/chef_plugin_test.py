@@ -202,7 +202,7 @@ class ChefPluginClientTest(TestCase):
                 'chef_server_hostname': self.chef_server_hostname,
             })
             chef_node = get_nodes_of_type(blueprint,
-                                          'cloudify.types.chef.db_server')[0]
+                                          'cloudify.chef.nodes.DBMS')[0]
             chef_config = chef_node['properties']['chef_config']
             chef_config['chef_server_url'] = 'https://{0}:443'.format(
                 self.chef_server_ip)
