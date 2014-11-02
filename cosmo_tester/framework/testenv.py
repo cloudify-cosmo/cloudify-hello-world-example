@@ -111,7 +111,7 @@ class TestEnvironment(object):
             os.environ.get(BOOTSTRAP_USING_PROVIDERS, False)
 
         if not self.is_provider_bootstrap:
-            if not MANAGER_BLUEPRINTS_DIR in os.environ:
+            if MANAGER_BLUEPRINTS_DIR not in os.environ:
                 raise RuntimeError(
                     'manager blueprints dir must be configured in '
                     '"MANAGER_BLUEPRINTS_DIR" env variable in order to '

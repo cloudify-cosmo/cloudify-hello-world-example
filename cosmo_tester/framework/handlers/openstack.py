@@ -27,7 +27,8 @@ import novaclient.v1_1.client as nvclient
 import neutronclient.v2_0.client as neclient
 from retrying import retry
 
-from cosmo_tester.framework.handlers import (BaseHandler, \
+from cosmo_tester.framework.handlers import (
+    BaseHandler,
     BaseCloudifyProviderConfigReader,
     BaseCloudifyInputsConfigReader)
 from cosmo_tester.framework.util import get_actual_keypath

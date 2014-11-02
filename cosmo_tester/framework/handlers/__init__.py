@@ -82,7 +82,6 @@ class BaseHandler(object):
         self.CloudifyConfigReader = BaseCloudifyProviderConfigReader if \
             env.is_provider_bootstrap else BaseCloudifyInputsConfigReader
 
-
     @contextmanager
     def update_cloudify_config(self):
         with YamlPatcher(self.env.cloudify_config_path,
