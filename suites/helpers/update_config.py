@@ -34,8 +34,8 @@ shared_inputs_properties = {
 }
 
 openstack_inputs_properties = {
-    'KEYSTONE_PASSWORD'     : 'keystone_username',
-    'KEYSTONE_USERNAME'     : 'keystone_password',
+    'KEYSTONE_USERNAME'     : 'keystone_username',
+    'KEYSTONE_PASSWORD'     : 'keystone_password',
     'KEYSTONE_TENANT'       : 'keystone_tenant_name',
     'KEYSTONE_AUTH_URL'     : 'keystone_url'
 }

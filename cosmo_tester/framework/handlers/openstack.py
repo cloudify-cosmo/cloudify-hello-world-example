@@ -43,12 +43,6 @@ CLOUDIFY_TEST_NO_CLEANUP = 'CLOUDIFY_TEST_NO_CLEANUP'
 def openstack_clients(env):
 
     creds = _client_creds(env)
-
-    raise RuntimeError('=== user {0} pass {1} ten {2} '
-                                      'region {3} url {4} ==='.format(creds[
-        'username'], creds['api_key'], creds['project_id'], creds[
-        'region_name'], creds['auth_url']))
-
     return (nvclient.Client(**creds),
             neclient.Client(username=creds['username'],
                             password=creds['api_key'],
