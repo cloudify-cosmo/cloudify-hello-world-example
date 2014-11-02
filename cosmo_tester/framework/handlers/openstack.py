@@ -44,8 +44,7 @@ def openstack_clients(env):
 
     creds = _client_creds(env)
 
-    logging.getLogger('TESTLOG').info('=== openstack credentials ===')
-    logging.getLogger('TESTLOG').info('=== user {0} pass {1} ten {2} '
+    raise RuntimeError('=== user {0} pass {1} ten {2} '
                                       'region {3} url {4} ==='.format(creds[
         'username'], creds['api_key'], creds['project_id'], creds[
         'region_name'], creds['auth_url']))
