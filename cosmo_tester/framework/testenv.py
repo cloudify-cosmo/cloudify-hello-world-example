@@ -110,6 +110,10 @@ class TestEnvironment(object):
         self.is_provider_bootstrap = \
             os.environ.get(BOOTSTRAP_USING_PROVIDERS, False)
 
+        self.logger = logging.getLogger("test-logger")
+        self.logger.info('==== is_provider_bootstrap = {0} ===='.format(
+            self.is_provider_bootstrap))
+
         if not self.is_provider_bootstrap:
             if MANAGER_BLUEPRINTS_DIR not in os.environ:
                 raise RuntimeError(
