@@ -21,7 +21,7 @@ from fabric.api import env, reboot
 class RebootManagerTest(TestCase):
     def _reboot_server(self):
         env.update({
-            'user': self.env.managment_user_name,
+            'user': self.env.management_user_name,
             'key_filename': get_actual_keypath(self.env,
                                                self.env.management_key_path),
             'host_string': self.env.management_ip,

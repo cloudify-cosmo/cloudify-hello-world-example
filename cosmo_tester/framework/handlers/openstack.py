@@ -27,7 +27,9 @@ import novaclient.v1_1.client as nvclient
 import neutronclient.v2_0.client as neclient
 from retrying import retry
 
-from cosmo_tester.framework.handlers import BaseHandler
+from cosmo_tester.framework.handlers import (BaseHandler, \
+    BaseCloudifyProviderConfigReader,
+    BaseCloudifyInputsConfigReader)
 from cosmo_tester.framework.util import get_actual_keypath
 
 
@@ -37,8 +39,8 @@ logging.getLogger('novaclient.client').setLevel(logging.INFO)
 CLOUDIFY_TEST_NO_CLEANUP = 'CLOUDIFY_TEST_NO_CLEANUP'
 
 
-def openstack_clients(cloudify_config):
-    creds = _client_creds(cloudify_config)
+def openstack_clients(env):
+    creds = _client_creds(env)
     return (nvclient.Client(**creds),
             neclient.Client(username=creds['username'],
                             password=creds['api_key'],
@@ -48,13 +50,13 @@ def openstack_clients(cloudify_config):
 
 
 @retry(stop_max_attempt_number=5, wait_fixed=20000)
-def openstack_infra_state(cloudify_config):
+def openstack_infra_state(env):
     """
     @retry decorator is used because this error sometimes occur:
     ConnectionFailed: Connection to neutron failed: Maximum attempts reached
     """
-    nova, neutron = openstack_clients(cloudify_config)
-    config_reader = CloudifyOpenstackConfigReader(cloudify_config)
+    nova, neutron = openstack_clients(env)
+    config_reader = _get_openstack_config_reader(env)(env.cloudify_config)
     prefix = config_reader.resources_prefix
     return {
         'networks': dict(_networks(neutron, prefix)),
@@ -68,14 +70,14 @@ def openstack_infra_state(cloudify_config):
     }
 
 
-def remove_openstack_resources(cloudify_config, resources_to_remove):
+def remove_openstack_resources(env, resources_to_remove):
     # basically sort of a workaround, but if we get the order wrong
     # the first time, there is a chance things would better next time
     # 3'rd time can't really hurt, can it?
     # 3 is a charm
     for _ in range(3):
         resources_to_remove = _remove_openstack_resources_impl(
-            cloudify_config, resources_to_remove)
+            env, resources_to_remove)
         if all([len(g) == 0 for g in resources_to_remove.values()]):
             break
         # give openstack some time to update its data structures
@@ -83,10 +85,10 @@ def remove_openstack_resources(cloudify_config, resources_to_remove):
     return resources_to_remove
 
 
-def _remove_openstack_resources_impl(cloudify_config,
+def _remove_openstack_resources_impl(env,
                                      resources_to_remove):
-    nova, neutron = openstack_clients(cloudify_config)
-    config_reader = CloudifyOpenstackConfigReader(cloudify_config)
+    nova, neutron = openstack_clients(env)
+    config_reader = _get_openstack_config_reader(env)(env.cloudify_config)
 
     servers = nova.servers.list()
     ports = neutron.list_ports()['ports']
@@ -161,13 +163,15 @@ def openstack_infra_state_delta(before, after):
     }
 
 
-def _client_creds(cloudify_config):
+def _client_creds(env):
+    config_reader = _get_openstack_config_reader(env)(env.cloudify_config)
+
     return {
-        'username': cloudify_config['keystone']['username'],
-        'api_key': cloudify_config['keystone']['password'],
-        'auth_url': cloudify_config['keystone']['auth_url'],
-        'project_id': cloudify_config['keystone']['tenant_name'],
-        'region_name': cloudify_config['compute']['region']
+        'username': config_reader.keystone_username,
+        'api_key': config_reader.keystone_password,
+        'auth_url': config_reader.keystone_url,
+        'project_id': config_reader.keystone_tenant_name,
+        'region_name': config_reader.region
     }
 
 
@@ -238,12 +242,16 @@ def _handled_exception(resource_id, failed, resource_group):
         failed[resource_group][resource_id] = ex
 
 
+def _get_openstack_config_reader(env):
+    return CloudifyOpenstackProviderConfigReader if \
+        env.is_provider_bootstrap else CloudifyOpenstackInputsConfigReader
+
+
 class OpenstackCleanupContext(BaseHandler.CleanupContext):
 
-    def __init__(self, context_name, cloudify_config):
-        super(OpenstackCleanupContext, self).__init__(context_name,
-                                                      cloudify_config)
-        self.before_run = openstack_infra_state(cloudify_config)
+    def __init__(self, context_name, env):
+        super(OpenstackCleanupContext, self).__init__(context_name, env)
+        self.before_run = openstack_infra_state(env)
 
     def cleanup(self):
         super(OpenstackCleanupContext, self).cleanup()
@@ -256,21 +264,22 @@ class OpenstackCleanupContext(BaseHandler.CleanupContext):
                          'resources: {1}'
                          .format(self.context_name, resources_to_teardown))
 
-        leftovers = remove_openstack_resources(self.cloudify_config,
+        leftovers = remove_openstack_resources(self.env,
                                                resources_to_teardown)
         self.logger.info('[{0}] Leftover resources after cleanup: {1}'
                          .format(self.context_name, leftovers))
 
     def get_resources_to_teardown(self):
-        current_state = openstack_infra_state(self.cloudify_config)
+        current_state = openstack_infra_state(self.env)
         return openstack_infra_state_delta(before=self.before_run,
                                            after=current_state)
 
 
-class CloudifyOpenstackConfigReader(BaseHandler.CloudifyConfigReader):
+class CloudifyOpenstackProviderConfigReader(BaseCloudifyProviderConfigReader):
 
     def __init__(self, cloudify_config):
-        super(CloudifyOpenstackConfigReader, self).__init__(cloudify_config)
+        super(CloudifyOpenstackProviderConfigReader, self).__init__(
+            cloudify_config)
 
     @property
     def region(self):
@@ -289,7 +298,7 @@ class CloudifyOpenstackConfigReader(BaseHandler.CloudifyConfigReader):
         return self.config['networking']['int_network']['name']
 
     @property
-    def management_sub_network_name(self):
+    def management_subnet_name(self):
         return self.config['networking']['subnet']['name']
 
     @property
@@ -302,7 +311,7 @@ class CloudifyOpenstackConfigReader(BaseHandler.CloudifyConfigReader):
             'private_key_path']
 
     @property
-    def managment_user_name(self):
+    def management_user_name(self):
         return self.config['compute']['management_server'][
             'user_on_management']
 
@@ -333,12 +342,84 @@ class CloudifyOpenstackConfigReader(BaseHandler.CloudifyConfigReader):
     def management_security_group(self):
         return self.config['networking']['management_security_group']['name']
 
+    @property
+    def keystone_username(self):
+        return self.config['keystone']['username']
+
+    @property
+    def keystone_password(self):
+        return self.config['keystone']['password']
+
+    @property
+    def keystone_tenant_name(self):
+        return self.config['keystone']['tenant_name']
+
+    @property
+    def keystone_url(self):
+        return self.config['keystone']['auth_url']
+
+
+class CloudifyOpenstackInputsConfigReader(BaseCloudifyInputsConfigReader):
+
+    def __init__(self, cloudify_config):
+        super(CloudifyOpenstackInputsConfigReader, self).__init__(
+            cloudify_config)
+
+    @property
+    def region(self):
+        return self.config['region']
+
+    @property
+    def management_server_name(self):
+        return self.config['manager_server_name']
+
+    @property
+    def agent_key_path(self):
+        return self.config['agent_private_key_path']
+
+    @property
+    def management_user_name(self):
+        return self.config['manager_server_user']
+
+    @property
+    def management_key_path(self):
+        return self.config['manager_private_key_path']
+
+    @property
+    def agent_keypair_name(self):
+        return self.config['agent_public_key_name']
+
+    @property
+    def management_keypair_name(self):
+        return self.config['manager_public_key_name']
+
+    @property
+    def external_network_name(self):
+        return self.config['external_network_name']
+
+    @property
+    def keystone_username(self):
+        return self.config['keystone_username']
+
+    @property
+    def keystone_password(self):
+        return self.config['keystone_password']
+
+    @property
+    def keystone_tenant_name(self):
+        return self.config['keystone_tenant_name']
+
+    @property
+    def keystone_url(self):
+        return self.config['keystone_url']
+
 
 class OpenstackHandler(BaseHandler):
 
     provider = 'openstack'
+    manager_blueprint = 'openstack/openstack.yaml'
     CleanupContext = OpenstackCleanupContext
-    CloudifyConfigReader = CloudifyOpenstackConfigReader
+    CloudifyConfigReader = None
 
     ubuntu_image_name = \
         'Ubuntu Server 12.04.2 LTS (amd64 20130318) - Partner Image'
@@ -348,11 +429,17 @@ class OpenstackHandler(BaseHandler):
     ubuntu_image_id = '261844b3-479c-5446-a2c4-1ea95d53b668'
     small_flavor_id = 101
 
+    def __init__(self, env):
+        super(OpenstackHandler, self).__init__(env)
+        self.CloudifyConfigReader = _get_openstack_config_reader(env)
+
     def before_bootstrap(self):
         with self.update_cloudify_config() as patch:
             suffix = '-%06x' % random.randrange(16 ** 6)
-            patch.append_value('compute.management_server.instance.name',
-                               suffix)
+            server_name_prop_path = \
+                'compute.management_server.instance.name' if \
+                self.env.is_provider_bootstrap else 'manager_server_name'
+            patch.append_value(server_name_prop_path, suffix)
 
     def after_bootstrap(self, provider_context):
         resources = provider_context['resources']

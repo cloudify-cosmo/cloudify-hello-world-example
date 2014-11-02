@@ -52,6 +52,8 @@ CLOUDIFY_TEST_MANAGEMENT_IP = 'CLOUDIFY_TEST_MANAGEMENT_IP'
 CLOUDIFY_TEST_CONFIG_PATH = 'CLOUDIFY_TEST_CONFIG_PATH'
 CLOUDIFY_TEST_NO_CLEANUP = 'CLOUDIFY_TEST_NO_CLEANUP'
 CLOUDIFY_TEST_HANDLER_MODULE = 'CLOUDIFY_TEST_HANDLER_MODULE'
+MANAGER_BLUEPRINTS_DIR = 'MANAGER_BLUEPRINTS_DIR'
+BOOTSTRAP_USING_PROVIDERS = 'BOOTSTRAP_USING_PROVIDERS'
 
 test_environment = None
 
@@ -93,17 +95,29 @@ class TestEnvironment(object):
         self.rest_client = None
         self.management_ip = None
         self.handler = None
-
-        if CLOUDIFY_TEST_CONFIG_PATH not in os.environ:
-            raise RuntimeError('a path to cloudify-config must be configured '
-                               'in "CLOUDIFY_TEST_CONFIG_PATH" env variable')
-        self.cloudify_config_path = path(os.environ[CLOUDIFY_TEST_CONFIG_PATH])
         self._workdir = tempfile.mkdtemp(prefix='cloudify-testenv-')
 
+        if CLOUDIFY_TEST_CONFIG_PATH not in os.environ:
+            raise RuntimeError('a path to config must be configured '
+                               'in "CLOUDIFY_TEST_CONFIG_PATH" env variable')
+        self.cloudify_config_path = path(os.environ[CLOUDIFY_TEST_CONFIG_PATH])
+
         if not self.cloudify_config_path.isfile():
-            raise RuntimeError('cloud-config file configured in env variable'
+            raise RuntimeError('config file configured in env variable'
                                ' {0} does not seem to exist'
                                .format(self.cloudify_config_path))
+
+        self.is_provider_bootstrap = \
+            os.environ.get(BOOTSTRAP_USING_PROVIDERS, False)
+
+        if not self.is_provider_bootstrap:
+            if not MANAGER_BLUEPRINTS_DIR in os.environ:
+                raise RuntimeError(
+                    'manager blueprints dir must be configured in '
+                    '"MANAGER_BLUEPRINTS_DIR" env variable in order to '
+                    'run non-provider bootstraps')
+            self.manager_blueprints_base_dir =\
+                os.environ[MANAGER_BLUEPRINTS_DIR]
 
         # make a temp config file so handlers can modify it at will
         self._generate_unique_config()
@@ -127,7 +141,9 @@ class TestEnvironment(object):
         test_environment = self
 
     def _generate_unique_config(self):
-        unique_config_path = os.path.join(self._workdir, 'config.yaml')
+        file_name = 'config.yaml' if self.is_provider_bootstrap else \
+            'inputs.json'
+        unique_config_path = os.path.join(self._workdir, file_name)
         shutil.copy(self.cloudify_config_path, unique_config_path)
         self.cloudify_config_path = path(unique_config_path)
 
@@ -140,34 +156,42 @@ class TestEnvironment(object):
             return
 
         self._global_cleanup_context = self.handler.CleanupContext(
-            'testenv', self.cloudify_config)
-        cfy = CfyHelper()
+            'testenv', self)
 
-        try:
-            self.handler.before_bootstrap()
-            cfy.bootstrap(
+        cfy = CfyHelper(cfy_workdir=self._workdir)
+
+        self.handler.before_bootstrap()
+        if self.is_provider_bootstrap:
+            cfy.bootstrap_with_providers(
                 self.cloudify_config_path,
                 self.handler.provider,
                 keep_up_on_failure=False,
                 verbose=True,
                 dev_mode=False)
-            self._running_env_setup(cfy.get_management_ip())
-            self.handler.after_bootstrap(cfy.get_provider_context())
-        finally:
-            cfy.close()
+        else:
+            cfy.bootstrap(
+                (self.manager_blueprints_base_dir +
+                 self.handler.manager_blueprint),
+                inputs=self.cloudify_config,
+                keep_up_on_failure=False,
+                verbose=True)
+        self._running_env_setup(cfy.get_management_ip())
+        self.handler.after_bootstrap(cfy.get_provider_context())
 
     def teardown(self):
         if self._global_cleanup_context is None:
             return
         self.setup()
-        cfy = CfyHelper()
+        cfy = CfyHelper(cfy_workdir=self._workdir)
         try:
-            cfy.use(self.management_ip, provider=True)
-            cfy.teardown(
-                self.cloudify_config_path,
-                verbose=True)
+            cfy.use(self.management_ip, provider=self.is_provider_bootstrap)
+            if self.is_provider_bootstrap:
+                cfy.teardown(
+                    self.cloudify_config_path,
+                    verbose=True)
+            else:
+                cfy.teardown(verbose=True)
         finally:
-            cfy.close()
             self._global_cleanup_context.cleanup()
             self.handler.after_teardown()
             if os.path.exists(self._workdir):
@@ -215,7 +239,7 @@ class TestCase(unittest.TestCase):
         self.test_id = 'system-test-{0}'.format(time.strftime("%Y%m%d-%H%M"))
         self.blueprint_yaml = None
         self._test_cleanup_context = self.env.handler.CleanupContext(
-            self._testMethodName, self.env.cloudify_config)
+            self._testMethodName, self.env)
         # register cleanup
         self.addCleanup(self._cleanup)
 

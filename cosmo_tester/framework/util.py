@@ -19,6 +19,7 @@ __author__ = 'dan'
 import sys
 import os
 import re
+import json
 
 from path import path
 import yaml
@@ -74,16 +75,19 @@ class YamlPatcher(object):
 
     pattern = re.compile("(.+)\[(\d+)\]")
 
-    def __init__(self, yaml_path):
+    def __init__(self, yaml_path, is_json=False):
         self.yaml_path = path(yaml_path)
         self.obj = yaml.load(self.yaml_path.text())
+        self.is_json = is_json
 
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if not exc_type:
-            self.yaml_path.write_text(yaml.safe_dump(self.obj))
+            output = json.dumps(self.obj) if self.is_json else yaml.safe_dump(
+                self.obj)
+            self.yaml_path.write_text(output)
 
     def merge_obj(self, obj_prop_path, merged_props):
         obj = self._get_object_by_path(obj_prop_path)

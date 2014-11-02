@@ -27,9 +27,9 @@ from cosmo_tester.framework.util import YamlPatcher
 
 class BaseCleanupContext(object):
 
-    def __init__(self, context_name, cloudify_config):
+    def __init__(self, context_name, env):
         self.context_name = context_name
-        self.cloudify_config = cloudify_config
+        self.env = env
         self.logger = logging.getLogger('CleanupContext')
         self.logger.setLevel(logging.DEBUG)
 
@@ -42,6 +42,12 @@ class BaseCloudifyConfigReader(object):
     def __init__(self, cloudify_config):
         self.config = cloudify_config
 
+
+class BaseCloudifyProviderConfigReader(BaseCloudifyConfigReader):
+
+    def __init__(self, cloudify_config):
+        super(BaseCloudifyProviderConfigReader, self).__init__(cloudify_config)
+
     @property
     def cloudify_agent_user(self):
         return self.config['cloudify']['agents']['config']['user']
@@ -49,6 +55,20 @@ class BaseCloudifyConfigReader(object):
     @property
     def resources_prefix(self):
         return self.config['cloudify'].get('resources_prefix', '')
+
+
+class BaseCloudifyInputsConfigReader(BaseCloudifyConfigReader):
+
+    def __init__(self, cloudify_config):
+        super(BaseCloudifyInputsConfigReader, self).__init__(cloudify_config)
+
+    @property
+    def cloudify_agent_user(self):
+        return self.config['agents_user']
+
+    @property
+    def resources_prefix(self):
+        return self.config['resources_prefix']
 
 
 class BaseHandler(object):
@@ -59,10 +79,14 @@ class BaseHandler(object):
 
     def __init__(self, env):
         self.env = env
+        self.CloudifyConfigReader = BaseCloudifyProviderConfigReader if \
+            env.is_provider_bootstrap else BaseCloudifyInputsConfigReader
+
 
     @contextmanager
     def update_cloudify_config(self):
-        with YamlPatcher(self.env.cloudify_config_path) as patch:
+        with YamlPatcher(self.env.cloudify_config_path,
+                         not self.env.is_provider_bootstrap) as patch:
             yield patch
         self.env.cloudify_config = yaml.load(
             self.env.cloudify_config_path.text())
