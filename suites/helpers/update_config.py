@@ -112,7 +112,7 @@ def _get_manager_blueprints(manager_blueprints_base_dir):
     manager_blueprints_dirs = \
         [os.path.join(manager_blueprints_base_dir, dir) for dir in os.listdir(
             manager_blueprints_base_dir) if os.path.isdir(os.path.join(
-                manager_blueprints_base_dir, dir))]
+                manager_blueprints_base_dir, dir)) and not dir.startswith('.')]
 
     for manager_blueprint_dir in manager_blueprints_dirs:
         yaml_files = [os.path.join(manager_blueprint_dir, file) for file in
