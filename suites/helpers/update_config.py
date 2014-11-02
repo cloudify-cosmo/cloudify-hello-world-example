@@ -91,9 +91,9 @@ def main():
         # in manager blueprints mode, we also need to update the blueprints
         # themselves for some configuration parameters which are not exposed
         # as inputs
-        manager_blueprints_dir = os.environ['MANAGER_BLUEPRINTS_DIR']
+        manager_blueprints_base_dir = os.environ['MANAGER_BLUEPRINTS_DIR']
         for manager_blueprint in _get_manager_blueprints(
-                manager_blueprints_dir):
+                manager_blueprints_base_dir):
             _patch_properties(manager_blueprint,
                               shared_manager_blueprint_properties)
 
@@ -106,18 +106,26 @@ def _patch_properties(path, properties, is_json=False):
                 patch.set_value(prop_path, value)
 
 
-def _get_manager_blueprints(manager_blueprints_dir):
-    manager_blueprints_dirs = [dir for dir in os.listdir(
-        manager_blueprints_dir) if os.path.isdir(os.path.join(
-            manager_blueprints_dir, dir))]
+def _get_manager_blueprints(manager_blueprints_base_dir):
+    manager_blueprints_paths = []
+
+    manager_blueprints_dirs = \
+        [os.path.join(manager_blueprints_base_dir, dir) for dir in os.listdir(
+            manager_blueprints_base_dir) if os.path.isdir(os.path.join(
+                manager_blueprints_base_dir, dir))]
 
     for manager_blueprint_dir in manager_blueprints_dirs:
-        yaml_files = [file for file in os.listdir(manager_blueprint_dir) if
+        yaml_files = [os.path.join(manager_blueprint_dir, file) for file in
+                      os.listdir(manager_blueprint_dir) if
                       file.endswith('.yaml')]
         if len(yaml_files) != 1:
             raise RuntimeError(
                 'Expected exactly one .yaml file at {0}, but found {1}'.format(
                 manager_blueprint_dir, len(yaml_files)))
+
+        manager_blueprints_paths.append(yaml_files[0])
+
+    return manager_blueprints_paths
 
 
 if __name__ == '__main__':
