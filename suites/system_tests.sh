@@ -101,7 +101,6 @@ generate_config()
 run_nose()
 {
 	echo "### Running nosetests: ${NOSETESTS_TO_RUN}"
-	echo "### BOOTSTRAP_USING_PROVIDERS: ${BOOTSTRAP_USING_PROVIDERS}"
 	pushd $SYSTEM_TESTS_DIR
 	set +e
 	nosetests $NOSETESTS_TO_RUN --verbose --nocapture --nologcapture --with-xunit --xunit-file=$REPORT_FILE
