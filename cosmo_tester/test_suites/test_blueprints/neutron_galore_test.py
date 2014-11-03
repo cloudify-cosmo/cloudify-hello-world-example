@@ -316,20 +316,18 @@ class NeutronGaloreTest(TestCase):
                   .format(router_id, subnet_id))
 
     def _check_if_private_key_is_on_manager(self):
-        config_reader = self.env.handler.CloudifyConfigReader(
-            self.env.cloudify_config)
 
-        manager_key_path = config_reader.management_key_path
+        manager_key_path = self.env.management_key_path
         manager_key_path = os.path.join(
             os.path.dirname(manager_key_path),
-            config_reader.resources_prefix + os.path.basename(
+            self.env.resources_prefix + os.path.basename(
                 manager_key_path))
         manager_key_path = os.path.expanduser(manager_key_path)
 
         fabric_env = fabric.api.env
         fabric_env.update({
             'timeout': 30,
-            'user': config_reader.management_user_name,
+            'user': self.env.management_user_name,
             'key_filename': manager_key_path,
             'host_string': self.env.management_ip
         })
