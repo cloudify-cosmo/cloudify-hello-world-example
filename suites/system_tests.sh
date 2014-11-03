@@ -32,6 +32,7 @@ setenv()
 	# WINDOWS_PACKAGE_URL=
 	# UI_PACKAGE_URL=
 
+    echo "### Using Providers1 = ${BOOTSTRAP_USING_PROVIDERS} ==="
     BOOTSTRAP_USING_PROVIDERS=${BOOTSTRAP_USING_PROVIDERS=false}
     echo "### Using Providers = ${BOOTSTRAP_USING_PROVIDERS} ==="
     CLOUDIFY_CONFIG_SUFFIX=$([ "$BOOTSTRAP_USING_PROVIDERS" == "false" ] && echo "json" || echo "yaml")
