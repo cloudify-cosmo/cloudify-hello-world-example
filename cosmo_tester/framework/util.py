@@ -61,7 +61,9 @@ def fix_keypath(env, keypath):
 
 
 def get_actual_keypath(env, keypath, raise_on_missing=True):
-    keypath = fix_keypath(env, keypath)
+    if env.is_provider_bootstrap:
+        # providers also use resources_prefix on the private key file
+        keypath = fix_keypath(env, keypath)
     keypath = path(os.path.expanduser(keypath)).abspath()
     if not keypath.exists():
         if raise_on_missing:
