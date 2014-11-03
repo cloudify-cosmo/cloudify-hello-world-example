@@ -52,7 +52,7 @@ setenv()
 	export PYTHONUNBUFFERED="true"
 
 	# export system tests related variables
-	export MANAGER_BLUEPRINTS_DIR="${BASE_DIR}/cloudify-manager-blueprints/"
+	export MANAGER_BLUEPRINTS_DIR="${BASE_DIR}/cloudify-manager-blueprints"
 	export CLOUDIFY_TEST_CONFIG_PATH=$GENERATED_CLOUDIFY_TEST_CONFIG_PATH
 	export CLOUDIFY_TEST_HANDLER_MODULE=${CLOUDIFY_TEST_HANDLER_MODULE='cosmo_tester.framework.handlers.openstack'}
 	export BOOTSTRAP_USING_PROVIDERS=${BOOTSTRAP_USING_PROVIDERS}

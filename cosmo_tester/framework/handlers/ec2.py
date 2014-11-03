@@ -173,10 +173,10 @@ def _handled_exception(resource_id, failed, resource_group):
 
 
 class Ec2CleanupContext(BaseHandler.CleanupContext):
-    def __init__(self, context_name, cloudify_config):
+    def __init__(self, context_name, env):
         super(Ec2CleanupContext, self).__init__(context_name,
-                                                cloudify_config)
-        self.before_run = ec2_infra_state(cloudify_config)
+                                                env)
+        self.before_run = ec2_infra_state(env.cloudify_config)
         self.logger = logging.getLogger('Ec2CleanupContext')
 
     def cleanup(self):
@@ -202,8 +202,9 @@ class Ec2CleanupContext(BaseHandler.CleanupContext):
 
 
 class CloudifyEc2ConfigReader(BaseHandler.CloudifyConfigReader):
-    def __init__(self, cloudify_config):
-        super(CloudifyEc2ConfigReader, self).__init__(cloudify_config)
+    def __init__(self, cloudify_config, **kwargs):
+        super(CloudifyEc2ConfigReader, self).__init__(cloudify_config,
+                                                      **kwargs)
 
     @property
     def management_server_name(self):

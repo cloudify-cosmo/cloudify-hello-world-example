@@ -95,6 +95,7 @@ class TestEnvironment(object):
         self.rest_client = None
         self.management_ip = None
         self.handler = None
+        self._manager_blueprint_path = None
         self._workdir = tempfile.mkdtemp(prefix='cloudify-testenv-')
 
         if CLOUDIFY_TEST_CONFIG_PATH not in os.environ:
@@ -110,14 +111,12 @@ class TestEnvironment(object):
         self.is_provider_bootstrap = \
             os.environ.get(BOOTSTRAP_USING_PROVIDERS, 'false') == 'true'
 
-        if not self.is_provider_bootstrap:
-            if MANAGER_BLUEPRINTS_DIR not in os.environ:
+        if not self.is_provider_bootstrap and MANAGER_BLUEPRINTS_DIR not in \
+                os.environ:
                 raise RuntimeError(
                     'manager blueprints dir must be configured in '
                     '"MANAGER_BLUEPRINTS_DIR" env variable in order to '
                     'run non-provider bootstraps')
-            self.manager_blueprints_base_dir =\
-                os.environ[MANAGER_BLUEPRINTS_DIR]
 
         # make a temp config file so handlers can modify it at will
         self._generate_unique_config()
@@ -130,12 +129,19 @@ class TestEnvironment(object):
         handler_class = getattr(handler_module, 'handler')
         self.handler = handler_class(self)
 
+        if not self.is_provider_bootstrap:
+            manager_blueprints_base_dir = os.environ[MANAGER_BLUEPRINTS_DIR]
+            self._manager_blueprint_path = \
+                os.path.join(manager_blueprints_base_dir,
+                             self.handler.manager_blueprint)
+
         if CLOUDIFY_TEST_MANAGEMENT_IP in os.environ:
             self._running_env_setup(os.environ[CLOUDIFY_TEST_MANAGEMENT_IP])
 
         self.cloudify_config = yaml.load(self.cloudify_config_path.text())
         self._config_reader = self.handler.CloudifyConfigReader(
-            self.cloudify_config)
+            self.cloudify_config,
+            manager_blueprint_path=self._manager_blueprint_path)
 
         global test_environment
         test_environment = self
@@ -170,8 +176,7 @@ class TestEnvironment(object):
                 dev_mode=False)
         else:
             cfy.bootstrap(
-                (self.manager_blueprints_base_dir +
-                 self.handler.manager_blueprint),
+                self._manager_blueprint_path,
                 inputs=self.cloudify_config,
                 keep_up_on_failure=False,
                 verbose=True)

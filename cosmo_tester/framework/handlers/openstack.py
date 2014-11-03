@@ -58,7 +58,7 @@ def openstack_infra_state(env):
     ConnectionFailed: Connection to neutron failed: Maximum attempts reached
     """
     nova, neutron = openstack_clients(env)
-    config_reader = _get_openstack_config_reader(env)(env.cloudify_config)
+    config_reader = _get_openstack_config_reader(env)
     prefix = config_reader.resources_prefix
     return {
         'networks': dict(_networks(neutron, prefix)),
@@ -90,7 +90,7 @@ def remove_openstack_resources(env, resources_to_remove):
 def _remove_openstack_resources_impl(env,
                                      resources_to_remove):
     nova, neutron = openstack_clients(env)
-    config_reader = _get_openstack_config_reader(env)(env.cloudify_config)
+    config_reader = _get_openstack_config_reader(env)
 
     servers = nova.servers.list()
     ports = neutron.list_ports()['ports']
@@ -166,7 +166,7 @@ def openstack_infra_state_delta(before, after):
 
 
 def _client_creds(env):
-    config_reader = _get_openstack_config_reader(env)(env.cloudify_config)
+    config_reader = _get_openstack_config_reader(env)
 
     return {
         'username': config_reader.keystone_username,
@@ -244,9 +244,14 @@ def _handled_exception(resource_id, failed, resource_group):
         failed[resource_group][resource_id] = ex
 
 
-def _get_openstack_config_reader(env):
+def _get_openstack_config_reader_class(env):
     return CloudifyOpenstackProviderConfigReader if \
         env.is_provider_bootstrap else CloudifyOpenstackInputsConfigReader
+
+
+def _get_openstack_config_reader(env):
+    return _get_openstack_config_reader_class(env)(env.cloudify_config,
+                                                   env._manager_blueprint_path)
 
 
 class OpenstackCleanupContext(BaseHandler.CleanupContext):
@@ -279,9 +284,9 @@ class OpenstackCleanupContext(BaseHandler.CleanupContext):
 
 class CloudifyOpenstackProviderConfigReader(BaseCloudifyProviderConfigReader):
 
-    def __init__(self, cloudify_config):
+    def __init__(self, cloudify_config, **kwargs):
         super(CloudifyOpenstackProviderConfigReader, self).__init__(
-            cloudify_config)
+            cloudify_config, **kwargs)
 
     @property
     def region(self):
@@ -363,9 +368,10 @@ class CloudifyOpenstackProviderConfigReader(BaseCloudifyProviderConfigReader):
 
 class CloudifyOpenstackInputsConfigReader(BaseCloudifyInputsConfigReader):
 
-    def __init__(self, cloudify_config):
+    def __init__(self, cloudify_config, manager_blueprint_path, **kwargs):
         super(CloudifyOpenstackInputsConfigReader, self).__init__(
-            cloudify_config)
+            cloudify_config, manager_blueprint_path=manager_blueprint_path,
+            **kwargs)
 
     @property
     def region(self):
@@ -415,6 +421,31 @@ class CloudifyOpenstackInputsConfigReader(BaseCloudifyInputsConfigReader):
     def keystone_url(self):
         return self.config['keystone_url']
 
+    @property
+    def management_network_name(self):
+        return self.manager_blueprint['node_templates'][
+            'management_network']['properties']['resource_id']
+
+    @property
+    def management_subnet_name(self):
+        return self.manager_blueprint['node_templates'][
+            'management_subnet']['properties']['resource_id']
+
+    @property
+    def management_router_name(self):
+        return self.manager_blueprint['node_templates'][
+            'router']['properties']['resource_id']
+
+    @property
+    def agents_security_group(self):
+        return self.manager_blueprint['node_templates'][
+            'agents_security_group']['properties']['resource_id']
+
+    @property
+    def management_security_group(self):
+        return self.manager_blueprint['node_templates'][
+            'management_security_group']['properties']['resource_id']
+
 
 class OpenstackHandler(BaseHandler):
 
@@ -433,7 +464,7 @@ class OpenstackHandler(BaseHandler):
 
     def __init__(self, env):
         super(OpenstackHandler, self).__init__(env)
-        self.CloudifyConfigReader = _get_openstack_config_reader(env)
+        self.CloudifyConfigReader = _get_openstack_config_reader_class(env)
 
     def before_bootstrap(self):
         with self.update_cloudify_config() as patch:
