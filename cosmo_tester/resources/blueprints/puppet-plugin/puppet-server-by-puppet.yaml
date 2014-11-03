@@ -39,9 +39,9 @@ node_templates:
             -   type: cloudify.relationships.connected_to
                 target: puppet_sg
     ip:
-        type: cloudify.openstack.server.FloatingIP
+        type: cloudify.openstack.nodes.FloatingIP
     puppet_sg:
-        type: cloudify.openstack.server.SecurityGroup
+        type: cloudify.openstack.nodes.SecurityGroup
         properties:
             security_group:
                 name: puppet_sg
