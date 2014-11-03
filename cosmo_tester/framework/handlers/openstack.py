@@ -366,6 +366,10 @@ class CloudifyOpenstackProviderConfigReader(BaseCloudifyProviderConfigReader):
     def keystone_url(self):
         return self.config['keystone']['auth_url']
 
+    @property
+    def neutron_url(self):
+        return self.config['networking'].get('neutron_url', None)
+
 
 class CloudifyOpenstackInputsConfigReader(BaseCloudifyInputsConfigReader):
 
@@ -421,6 +425,11 @@ class CloudifyOpenstackInputsConfigReader(BaseCloudifyInputsConfigReader):
     @property
     def keystone_url(self):
         return self.config['keystone_url']
+
+    @property
+    def neutron_url(self):
+        # there's currently no support for this in the manager blueprint
+        return None
 
     @property
     def management_network_name(self):
