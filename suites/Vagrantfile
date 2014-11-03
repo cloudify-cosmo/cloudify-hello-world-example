@@ -47,8 +47,6 @@ def build_env(test_config)
     cloudify_env['CLOUDIFY_TEST_HANDLER_MODULE'] = test_config[:cloudify_test_handler_module]
     if test_config[:bootstrap_using_providers]
         cloudify_env['BOOTSTRAP_USING_PROVIDERS'] = test_config[:bootstrap_using_providers]
-    else
-        cloudify_env['BOOTSTRAP_USING_PROVIDERS'] = 'test'
     end
     cloudify_env
 end

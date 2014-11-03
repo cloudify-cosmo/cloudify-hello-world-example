@@ -33,7 +33,6 @@ setenv()
 	# UI_PACKAGE_URL=
 
     BOOTSTRAP_USING_PROVIDERS=${BOOTSTRAP_USING_PROVIDERS=false}
-    echo "### Using Providers = ${BOOTSTRAP_USING_PROVIDERS} ==="
     CLOUDIFY_CONFIG_SUFFIX=$([ "$BOOTSTRAP_USING_PROVIDERS" == "false" ] && echo "json" || echo "yaml")
 
 	# vagrant synched folder
