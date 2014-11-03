@@ -23,7 +23,10 @@ from contextlib import contextmanager
 
 import boto.ec2
 
-from cosmo_tester.framework.handlers import BaseHandler
+from cosmo_tester.framework.handlers import (
+    BaseHandler,
+    BaseCloudifyProviderConfigReader
+)
 from cosmo_tester.framework.util import get_actual_keypath
 from cosmo_tester.framework.testenv import CLOUDIFY_TEST_NO_CLEANUP
 
@@ -201,7 +204,7 @@ class Ec2CleanupContext(BaseHandler.CleanupContext):
                                      after=current_state)
 
 
-class CloudifyEc2ConfigReader(BaseHandler.CloudifyConfigReader):
+class CloudifyEc2ConfigReader(BaseCloudifyProviderConfigReader):
     def __init__(self, cloudify_config, **kwargs):
         super(CloudifyEc2ConfigReader, self).__init__(cloudify_config,
                                                       **kwargs)
