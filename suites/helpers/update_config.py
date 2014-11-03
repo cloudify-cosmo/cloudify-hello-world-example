@@ -104,6 +104,8 @@ def _patch_properties(path, properties, is_json=False):
         for env_var, prop_path in properties.items():
             value = os.environ.get(env_var)
             if value:
+                if env_var is 'WORKFLOW_TASK_RETRIES':
+                    value = int(value)
                 patch.set_value(prop_path, value)
 
 
