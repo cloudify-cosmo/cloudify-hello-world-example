@@ -191,7 +191,7 @@ class TestEnvironment(object):
         try:
             cfy.use(self.management_ip, provider=self.is_provider_bootstrap)
             if self.is_provider_bootstrap:
-                cfy.teardown(
+                cfy.teardown_with_providers(
                     self.cloudify_config_path,
                     verbose=True)
             else:
