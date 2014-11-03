@@ -4,7 +4,6 @@
         "tests_to_run": "cosmo_tester/test_suites/test_manager_status",
         "cloudify_test_config": "inputs-openstack.json",
         "cloudify_test_handler_module": "cosmo_tester.framework.handlers.openstack"
-//        "bootstrap_using_providers": false
     },
 
 
