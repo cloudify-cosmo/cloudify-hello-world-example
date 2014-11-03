@@ -108,6 +108,9 @@ class TestEnvironment(object):
                                ' {0} does not seem to exist'
                                .format(self.cloudify_config_path))
 
+        raise RuntimeError('provider bootstrap val is {0}'.format(
+            os.environ.get(BOOTSTRAP_USING_PROVIDERS)))
+
         self.is_provider_bootstrap = \
             os.environ.get(BOOTSTRAP_USING_PROVIDERS, 'false') == 'true'
 
