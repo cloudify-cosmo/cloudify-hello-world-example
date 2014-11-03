@@ -193,13 +193,13 @@ class Ec2CleanupContext(BaseHandler.CleanupContext):
                          'resources: {1}'
                          .format(self.context_name, resources_to_teardown))
 
-        leftovers = remove_ec2_resources(self.cloudify_config,
+        leftovers = remove_ec2_resources(self.env.cloudify_config,
                                          resources_to_teardown)
         self.logger.info('[{0}] Leftover resources after cleanup: {1}'
                          .format(self.context_name, leftovers))
 
     def get_resources_to_teardown(self):
-        current_state = ec2_infra_state(self.cloudify_config)
+        current_state = ec2_infra_state(self.env.cloudify_config)
         return ec2_infra_state_delta(before=self.before_run,
                                      after=current_state)
 
