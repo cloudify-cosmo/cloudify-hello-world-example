@@ -250,8 +250,9 @@ def _get_openstack_config_reader_class(env):
 
 
 def _get_openstack_config_reader(env):
-    return _get_openstack_config_reader_class(env)(env.cloudify_config,
-                                                   env._manager_blueprint_path)
+    return _get_openstack_config_reader_class(env)(
+        env.cloudify_config,
+        manager_blueprint_path=env._manager_blueprint_path)
 
 
 class OpenstackCleanupContext(BaseHandler.CleanupContext):
