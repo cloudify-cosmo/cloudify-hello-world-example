@@ -87,7 +87,7 @@ def get_nodes_of_type(blueprint, type_):
 def update_blueprint(env, blueprint, hostname, userdata_vars=None):
     hostname_base = 'system-test-{0}-{1}'.format(
         time.strftime("%Y%m%d-%H%M"), hostname)
-    vm = get_nodes_of_type(blueprint, 'cloudify.openstack.server')[0]
+    vm = get_nodes_of_type(blueprint, 'cloudify.openstack.nodes.Server')[0]
     hostnames = [hostname_base]
     users = []
     vm_hostname = hostname_base
