@@ -13,7 +13,7 @@ inputs:
     userdata: {}
 
 node_types:
-    cloudify.types.puppet.puppet_master_service:
+    cloudify.types.puppet.PuppetMasterService:
         derived_from: cloudify.nodes.SoftwareComponent
         properties:
             puppet_config: {}
