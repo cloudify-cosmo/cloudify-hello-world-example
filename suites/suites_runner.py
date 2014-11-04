@@ -44,6 +44,7 @@ env_variables = {
     'BRANCH_NAME_LIBCLOUD_PROVIDER': '',
     'BRANCH_NAME_SYSTEM_TESTS': '',
     'BRANCH_NAME_CLI': '',
+    'BRANCH_NAME_MANAGER_BLUEPRINTS': '',
 
     # packages
     'COMPONENTS_PACKAGE_URL': '',

@@ -43,4 +43,4 @@ node_templates:
                 target: db-vm
 
     ip:
-        type: cloudify.openstack.floatingip
+        type: cloudify.openstack.nodes.FloatingIP

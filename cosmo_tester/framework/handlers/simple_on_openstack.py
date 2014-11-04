@@ -72,8 +72,8 @@ class SimpleOnOpenstackConfigReader(OpenstackHandler.CloudifyConfigReader):
 
 class SimpleOnOpenstackCleanupContext(OpenstackHandler.CleanupContext):
 
-    def __init__(self, context_name, cloudify_config):
-        openstack_config = get_openstack_cloudify_config(cloudify_config)
+    def __init__(self, context_name, env):
+        openstack_config = get_openstack_cloudify_config(env.cloudify_config)
         super(SimpleOnOpenstackCleanupContext, self).__init__(context_name,
                                                               openstack_config)
 

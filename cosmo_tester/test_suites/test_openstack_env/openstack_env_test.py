@@ -24,11 +24,9 @@ class OpenstackEnvTest(TestCase):
         super(OpenstackEnvTest, self).setUp()
 
     def test_connector_reads_neutron_url(self):
-        cloudify_config = self.env.cloudify_config
-        self.assertEqual(cloudify_config['networking'].get('neutron_url',
-                                                           None), None)
+        self.assertEqual(None, self.env.neutron_url)
 
-        connector = OpenStackConnector(cloudify_config)
+        connector = OpenStackConnector(self.env.cloudify_config)
 
         self.assertEqual(
             connector.get_neutron_client().httpclient.endpoint_url,

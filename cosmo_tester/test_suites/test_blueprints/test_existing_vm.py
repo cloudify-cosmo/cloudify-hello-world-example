@@ -46,7 +46,7 @@ class ExistingVMTest(TestCase):
         management_network_name = '{}{}'.format(
             prefix, self.env.management_network_name)
 
-        nova_client, _ = openstack_clients(self.env.cloudify_config)
+        nova_client, _ = openstack_clients(self.env)
         self.create_keypair_and_copy_to_manager(
             nova_client=nova_client,
             remote_key_path=remote_key_path,

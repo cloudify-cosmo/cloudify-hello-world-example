@@ -15,6 +15,7 @@ setenv()
 	BRANCH_NAME_OPENSTACK_PROVIDER=${BRANCH_NAME_OPENSTACK_PROVIDER=$BRANCH_NAME}
 	BRANCH_NAME_LIBCLOUD_PROVIDER=${BRANCH_NAME_LIBCLOUD_PROVIDER=$BRANCH_NAME}
 	BRANCH_NAME_CLI=${BRANCH_NAME_CLI=$BRANCH_NAME}
+	BRANCH_NAME_MANAGER_BLUEPRINTS=${BRANCH_NAME_MANAGER_BLUEPRINTS=$BRANCH_NAME}
 	BRANCH_NAME_SYSTEM_TESTS=${BRANCH_NAME_SYSTEM_TESTS=$BRANCH_NAME}
 	NOSETESTS_TO_RUN=${NOSETESTS_TO_RUN='cosmo_tester/test_suites'}
 
@@ -31,6 +32,9 @@ setenv()
 	# WINDOWS_PACKAGE_URL=
 	# UI_PACKAGE_URL=
 
+    BOOTSTRAP_USING_PROVIDERS=${BOOTSTRAP_USING_PROVIDERS=false}
+    CLOUDIFY_CONFIG_SUFFIX=$([ "$BOOTSTRAP_USING_PROVIDERS" == "false" ] && echo "json" || echo "yaml")
+
 	# vagrant synched folder
 	SUITE_NAME=${SUITE_NAME='default-suite'}
 	BASE_HOST_DIR="/vagrant"
@@ -42,14 +46,17 @@ setenv()
 	# base dir is the virtualenv directory
 	BASE_DIR=$PWD
 	SYSTEM_TESTS_DIR="${BASE_DIR}/cloudify-system-tests"
-	GENERATED_CLOUDIFY_TEST_CONFIG_PATH="${BASE_DIR}/generated-cloudify-config.yaml"
+	GENERATED_CLOUDIFY_TEST_CONFIG_PATH="${BASE_DIR}/generated-cloudify-config.${CLOUDIFY_CONFIG_SUFFIX}"
 
 	# So that we get to see output faster from docker-logs
 	export PYTHONUNBUFFERED="true"
 
 	# export system tests related variables
+	export MANAGER_BLUEPRINTS_DIR="${BASE_DIR}/cloudify-manager-blueprints"
 	export CLOUDIFY_TEST_CONFIG_PATH=$GENERATED_CLOUDIFY_TEST_CONFIG_PATH
 	export CLOUDIFY_TEST_HANDLER_MODULE=${CLOUDIFY_TEST_HANDLER_MODULE='cosmo_tester.framework.handlers.openstack'}
+	export BOOTSTRAP_USING_PROVIDERS=${BOOTSTRAP_USING_PROVIDERS}
+	export WORKFLOW_TASK_RETRIES=${WORKFLOW_TASK_RETRIES=20}
 }
 
 clone_and_install_system_tests()
@@ -59,6 +66,7 @@ clone_and_install_system_tests()
 	clone_and_checkout cloudify-cli $BRANCH_NAME_CLI
 	clone_and_checkout cloudify-openstack-provider $BRANCH_NAME_OPENSTACK_PROVIDER
 	clone_and_checkout cloudify-libcloud-provider $BRANCH_NAME_LIBCLOUD_PROVIDER
+	clone_and_checkout cloudify-manager-blueprints $BRANCH_NAME_MANAGER_BLUEPRINTS
 
 	echo "### Installing system tests dependencies"
 	pip install ./cloudify-cli -r cloudify-cli/dev-requirements.txt

@@ -101,7 +101,7 @@ class HelloWorldBashTest(TestCase):
     def _verify_deployment_installed(self, with_server=True):
         (floatingip_node, security_group_node, server_node) = self._instances()
 
-        nova, neutron = openstack_clients(self.env.cloudify_config)
+        nova, neutron = openstack_clients(self.env)
 
         server_id = None
         if with_server:

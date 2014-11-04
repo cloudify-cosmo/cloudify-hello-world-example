@@ -13,7 +13,7 @@ inputs:
     userdata: {}
 
 node_types:
-    PuppetMasterService:
+    puppet_master_service:
         derived_from: cloudify.nodes.SoftwareComponent
         properties:
             puppet_config: {}
@@ -39,9 +39,9 @@ node_templates:
             -   type: cloudify.relationships.connected_to
                 target: puppet_sg
     ip:
-        type: cloudify.openstack.server.FloatingIP
+        type: cloudify.openstack.nodes.FloatingIP
     puppet_sg:
-        type: cloudify.openstack.server.SecurityGroup
+        type: cloudify.openstack.nodes.SecurityGroup
         properties:
             security_group:
                 name: puppet_sg
@@ -51,7 +51,7 @@ node_templates:
                 -   remote_ip_prefix: 0.0.0.0/0
                     port: 8140
     system_tests_puppet_master_service:
-        type: PuppetMasterService
+        type: puppet_master_service
         properties:
             puppet_config:
                 server: puppet

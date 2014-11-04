@@ -170,8 +170,7 @@ class NeutronGaloreTest(TestCase):
         self.assertFalse(self._check_if_private_key_is_on_manager())
 
     def _test_use_external_resource(self, inputs):
-        before_openstack_infra_state = openstack_infra_state(
-            self.env.cloudify_config)
+        before_openstack_infra_state = openstack_infra_state(self.env)
 
         self._modify_blueprint_use_external_resource()
 
@@ -215,8 +214,7 @@ class NeutronGaloreTest(TestCase):
         self.assertTrue(self._check_if_private_key_is_on_manager())
 
         # verify there aren't any new resources on Openstack
-        after_openstack_infra_state = openstack_infra_state(
-            self.env.cloudify_config)
+        after_openstack_infra_state = openstack_infra_state(self.env)
         delta = openstack_infra_state_delta(before_openstack_infra_state,
                                             after_openstack_infra_state)
         for delta_resources_of_single_type in delta.values():
@@ -277,7 +275,7 @@ class NeutronGaloreTest(TestCase):
         return node_states
 
     def get_openstack_components(self, states):
-        nova, neutron = openstack_clients(self.env.cloudify_config)
+        nova, neutron = openstack_clients(self.env)
         eid = 'external_id'
         sg = 'security_group'
         i = 'floatingip'
@@ -318,20 +316,18 @@ class NeutronGaloreTest(TestCase):
                   .format(router_id, subnet_id))
 
     def _check_if_private_key_is_on_manager(self):
-        config_reader = self.env.handler.CloudifyConfigReader(
-            self.env.cloudify_config)
 
-        manager_key_path = config_reader.management_key_path
+        manager_key_path = self.env.management_key_path
         manager_key_path = os.path.join(
             os.path.dirname(manager_key_path),
-            config_reader.resources_prefix + os.path.basename(
+            self.env.resources_prefix + os.path.basename(
                 manager_key_path))
         manager_key_path = os.path.expanduser(manager_key_path)
 
         fabric_env = fabric.api.env
         fabric_env.update({
             'timeout': 30,
-            'user': config_reader.managment_user_name,
+            'user': self.env.management_user_name,
             'key_filename': manager_key_path,
             'host_string': self.env.management_ip
         })
