@@ -59,6 +59,7 @@ class CfyHelper(object):
             cfy.bootstrap(
                 blueprint_path=blueprint_path,
                 inputs=inputs_file,
+                install_plugins=True,
                 keep_up_on_failure=keep_up_on_failure,
                 verbose=verbose).wait()
 

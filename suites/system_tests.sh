@@ -73,8 +73,6 @@ clone_and_install_system_tests()
 	pip install ./cloudify-openstack-provider
 	pip install ./cloudify-libcloud-provider
 	pip install -e ./cloudify-system-tests
-	pip install -r ./cloudify-manager-blueprints/openstack/requirements.txt
-	pip install -r ./cloudify-manager-blueprints/simple/requirements.txt
 }
 
 clone_and_checkout()
