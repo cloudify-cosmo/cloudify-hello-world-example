@@ -177,7 +177,7 @@ class TestEnvironment(object):
         else:
             cfy.bootstrap(
                 self._manager_blueprint_path,
-                inputs_file=self.cloudify_config_path,
+                inputs=self.cloudify_config,
                 keep_up_on_failure=False,
                 verbose=True)
         self._running_env_setup(cfy.get_management_ip())

@@ -47,14 +47,14 @@ class CfyHelper(object):
 
     def bootstrap(self,
                   blueprint_path,
-                  inputs_file=None,
+                  inputs=None,
                   keep_up_on_failure=False,
                   verbose=False):
         with self.workdir:
             cfy.init().wait()
 
-            if not inputs_file:
-                inputs_file = self._get_inputs_in_temp_file({}, 'manager')
+            inputs_file = self._get_inputs_in_temp_file(inputs,
+                                                        'manager')
 
             cfy.bootstrap(
                 blueprint_path=blueprint_path,
