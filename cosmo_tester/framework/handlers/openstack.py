@@ -58,8 +58,7 @@ def openstack_infra_state(env):
     ConnectionFailed: Connection to neutron failed: Maximum attempts reached
     """
     nova, neutron = openstack_clients(env)
-    config_reader = _get_openstack_config_reader(env)
-    prefix = config_reader.resources_prefix
+    prefix = env.resources_prefix
     return {
         'networks': dict(_networks(neutron, prefix)),
         'subnets': dict(_subnets(neutron, prefix)),
@@ -90,7 +89,6 @@ def remove_openstack_resources(env, resources_to_remove):
 def _remove_openstack_resources_impl(env,
                                      resources_to_remove):
     nova, neutron = openstack_clients(env)
-    config_reader = _get_openstack_config_reader(env)
 
     servers = nova.servers.list()
     ports = neutron.list_ports()['ports']
@@ -133,7 +131,7 @@ def _remove_openstack_resources_impl(env,
             with _handled_exception(subnet['id'], failed, 'subnets'):
                 neutron.delete_subnet(subnet['id'])
     for network in networks:
-        if network['name'] == config_reader.external_network_name:
+        if network['name'] == env.external_network_name:
             continue
         if network['id'] in resources_to_remove['networks']:
             with _handled_exception(network['id'], failed, 'networks'):
@@ -166,14 +164,12 @@ def openstack_infra_state_delta(before, after):
 
 
 def _client_creds(env):
-    config_reader = _get_openstack_config_reader(env)
-
     return {
-        'username': config_reader.keystone_username,
-        'api_key': config_reader.keystone_password,
-        'auth_url': config_reader.keystone_url,
-        'project_id': config_reader.keystone_tenant_name,
-        'region_name': config_reader.region
+        'username': env.keystone_username,
+        'api_key': env.keystone_password,
+        'auth_url': env.keystone_url,
+        'project_id': env.keystone_tenant_name,
+        'region_name': env.region
     }
 
 
@@ -242,17 +238,6 @@ def _handled_exception(resource_id, failed, resource_group):
         yield
     except BaseException, ex:
         failed[resource_group][resource_id] = ex
-
-
-def _get_openstack_config_reader_class(env):
-    return CloudifyOpenstackProviderConfigReader if \
-        env.is_provider_bootstrap else CloudifyOpenstackInputsConfigReader
-
-
-def _get_openstack_config_reader(env):
-    return _get_openstack_config_reader_class(env)(
-        env.cloudify_config,
-        manager_blueprint_path=env._manager_blueprint_path)
 
 
 class OpenstackCleanupContext(BaseHandler.CleanupContext):
@@ -474,7 +459,8 @@ class OpenstackHandler(BaseHandler):
 
     def __init__(self, env):
         super(OpenstackHandler, self).__init__(env)
-        self.CloudifyConfigReader = _get_openstack_config_reader_class(env)
+        self.CloudifyConfigReader = CloudifyOpenstackProviderConfigReader if \
+            env.is_provider_bootstrap else CloudifyOpenstackInputsConfigReader
 
     def before_bootstrap(self):
         with self.update_cloudify_config() as patch:
