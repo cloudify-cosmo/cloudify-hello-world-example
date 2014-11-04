@@ -48,6 +48,7 @@ class CfyHelper(object):
     def bootstrap(self,
                   blueprint_path,
                   inputs_file=None,
+                  install_plugins=True,
                   keep_up_on_failure=False,
                   verbose=False):
         with self.workdir:
@@ -59,7 +60,7 @@ class CfyHelper(object):
             cfy.bootstrap(
                 blueprint_path=blueprint_path,
                 inputs=inputs_file,
-                install_plugins=True,
+                install_plugins=install_plugins,
                 keep_up_on_failure=keep_up_on_failure,
                 verbose=verbose).wait()
 

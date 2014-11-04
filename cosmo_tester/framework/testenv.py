@@ -54,6 +54,8 @@ CLOUDIFY_TEST_NO_CLEANUP = 'CLOUDIFY_TEST_NO_CLEANUP'
 CLOUDIFY_TEST_HANDLER_MODULE = 'CLOUDIFY_TEST_HANDLER_MODULE'
 MANAGER_BLUEPRINTS_DIR = 'MANAGER_BLUEPRINTS_DIR'
 BOOTSTRAP_USING_PROVIDERS = 'BOOTSTRAP_USING_PROVIDERS'
+INSTALL_MANAGER_BLUEPRINT_DEPENDENCIES = \
+    'INSTALL_MANAGER_BLUEPRINT_DEPENDENCIES'
 
 test_environment = None
 
@@ -109,7 +111,7 @@ class TestEnvironment(object):
                                .format(self.cloudify_config_path))
 
         self.is_provider_bootstrap = \
-            os.environ.get(BOOTSTRAP_USING_PROVIDERS, 'false') == 'true'
+            self._get_boolean_env_var(BOOTSTRAP_USING_PROVIDERS, False)
 
         if not self.is_provider_bootstrap and MANAGER_BLUEPRINTS_DIR not in \
                 os.environ:
@@ -175,9 +177,14 @@ class TestEnvironment(object):
                 verbose=True,
                 dev_mode=False)
         else:
+
+            install_plugins = self._get_boolean_env_var(
+                INSTALL_MANAGER_BLUEPRINT_DEPENDENCIES, True)
+
             cfy.bootstrap(
                 self._manager_blueprint_path,
                 inputs_file=self.cloudify_config_path,
+                install_plugins=install_plugins,
                 keep_up_on_failure=False,
                 verbose=True)
         self._running_env_setup(cfy.get_management_ip())
@@ -201,6 +208,10 @@ class TestEnvironment(object):
             self.handler.after_teardown()
             if os.path.exists(self._workdir):
                 shutil.rmtree(self._workdir)
+
+    def _get_boolean_env_var(self, env_var_name, default_value):
+        return os.environ.get(
+            env_var_name, str(default_value).lower()) == 'true'
 
     def _running_env_setup(self, management_ip):
         self.management_ip = management_ip
