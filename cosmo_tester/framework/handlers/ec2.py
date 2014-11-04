@@ -266,13 +266,14 @@ class CloudifyEc2ConfigReader(BaseCloudifyProviderConfigReader):
 class LibcloudHandler(BaseHandler):
     provider = 'libcloud'
     CleanupContext = Ec2CleanupContext
-    CloudifyConfigReader = CloudifyEc2ConfigReader
+    CloudifyConfigReader = None
 
     medium_instance_type = 'm1.medium'
     ubuntu_agent_ami = 'ami-a73264ce'
 
     def __init__(self, env):
         super(LibcloudHandler, self).__init__(env)
+        self.CloudifyConfigReader = CloudifyEc2ConfigReader
         self._ubuntu_ami = None
 
     @property
