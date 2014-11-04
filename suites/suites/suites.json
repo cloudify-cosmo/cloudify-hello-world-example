@@ -1,7 +1,7 @@
 [
     {
         "suite_name": "hp_openstack_hello_world",
-        "tests_to_run": "cosmo_tester/test_suites/test_manager_status",
+        "tests_to_run": "cosmo_tester/test_suites/test_blueprints",
         "cloudify_test_config": "inputs-openstack.json",
         "cloudify_test_handler_module": "cosmo_tester.framework.handlers.openstack"
     },
