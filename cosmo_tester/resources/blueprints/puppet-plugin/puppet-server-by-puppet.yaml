@@ -13,7 +13,7 @@ inputs:
     userdata: {}
 
 node_types:
-    cloudify.types.puppet.PuppetMasterService:
+    puppet_master_service:
         derived_from: cloudify.nodes.SoftwareComponent
         properties:
             puppet_config: {}
@@ -51,7 +51,7 @@ node_templates:
                 -   remote_ip_prefix: 0.0.0.0/0
                     port: 8140
     system_tests_puppet_master_service:
-        type: cloudify.puppet.nodes.PuppetMasterService
+        type: puppet_master_service
         properties:
             puppet_config:
                 server: puppet
