@@ -88,7 +88,7 @@ def main():
     properties.update(cloud_specific_properties)
     _patch_properties(config_path, properties)
 
-    if bootstrap_using_providers:
+    if not bootstrap_using_providers:
         # in manager blueprints mode, we also need to update the blueprints
         # themselves for some configuration parameters which are not exposed
         # as inputs
