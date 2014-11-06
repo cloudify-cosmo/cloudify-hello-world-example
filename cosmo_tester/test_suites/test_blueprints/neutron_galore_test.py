@@ -64,6 +64,16 @@ class NeutronGaloreTest(TestCase):
         def p(name):
             return '{}{}'.format(self.env.resources_prefix, name)
 
+        management_network_name = self.env.management_network_name
+        agents_security_group = self.env.agents_security_group
+        if self.env.if_provider_config:
+            # using existing resources - manager blueprints currently don't
+            # use the prefix feature for the resources brought up during
+            # bootstrap, and thus this section is only relevant if providers
+            # have been used
+            management_network_name = p(management_network_name)
+            agents_security_group = p(agents_security_group)
+
         openstack = self.get_openstack_components(node_states)
 
         self.assertTrue(self._check_if_private_key_is_on_manager())
@@ -83,7 +93,7 @@ class NeutronGaloreTest(TestCase):
         network_subnet_id = openstack['network']['subnets'][0]
 
         self.assertEqual(openstack['server']['addresses']
-                         [p(self.env.management_network_name)][0]
+                         [management_network_name][0]
                          ['OS-EXT-IPS:type'], 'fixed')
         self.assertEqual(openstack['server']['addresses']
                          [p('neutron_network_test')][0]
@@ -97,7 +107,7 @@ class NeutronGaloreTest(TestCase):
             {'name': p('neutron_test_security_group_dst')})
         self.assert_obj_list_contains_subset(
             openstack['server']['security_groups'],
-            {'name': p(self.env.agents_security_group)})
+            {'name': agents_security_group})
         self.assert_obj_list_contains_subset(
             openstack['server']['security_groups'],
             {'name': p('neutron_test_security_group_src')})
@@ -151,16 +161,16 @@ class NeutronGaloreTest(TestCase):
         self.assertEqual(node_states['floatingip']['floating_ip_address'],
                          openstack['floatingip']['floating_ip_address'])
         self.assertEqual(openstack['server']['addresses']
-                         [p(self.env.management_network_name)][0]['addr'],
+                         [management_network_name][0]['addr'],
                          node_states['server']['networks']
-                         [p(self.env.management_network_name)][0])
+                         [management_network_name][0])
         self.assertEqual(openstack['server']['addresses']
                          [p('neutron_network_test')][0]['addr'],
                          node_states['server']['networks']
                          [p('neutron_network_test')][0])
         self.assertEqual(node_states['server']['ip'],
                          openstack['server']['addresses']
-                         [p(self.env.management_network_name)][0]['addr'])
+                         [management_network_name][0]['addr'])
         self.assert_router_connected_to_subnet(openstack['router']['id'],
                                                openstack['router_ports'],
                                                openstack['subnet']['id'])
