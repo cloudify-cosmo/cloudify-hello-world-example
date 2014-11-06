@@ -44,7 +44,7 @@ class ExistingVMTest(TestCase):
         agents_security_group = self.env.agents_security_group
         management_network_name = self.env.management_network_name
 
-        if self.env.is_providers_bootstrap:
+        if self.env.is_provider_bootstrap:
             # using existing resources - manager blueprints currently don't
             # use the prefix feature for the resources brought up during
             # bootstrap, and thus this section is only relevant if providers
