@@ -41,10 +41,18 @@ class ExistingVMTest(TestCase):
         server_name = '{}testexistingvm'.format(prefix)
         remote_key_path = '/tmp/{}test-existing-vm.pem'.format(prefix)
         key_name = '{}test_existing_vm_key'.format(prefix)
-        agents_security_group = '{}{}'.format(prefix,
-                                              self.env.agents_security_group)
-        management_network_name = '{}{}'.format(
-            prefix, self.env.management_network_name)
+        agents_security_group = self.env.agents_security_group
+        management_network_name = self.env.management_network_name
+
+        if self.env.is_providers_bootstrap:
+            # using existing resources - manager blueprints currently don't
+            # use the prefix feature for the resources brought up during
+            # bootstrap, and thus this section is only relevant if providers
+            # have been used
+            agents_security_group = '{}{}'.format(
+                prefix, self.env.agents_security_group)
+            management_network_name = '{}{}'.format(
+                prefix, self.env.management_network_name)
 
         nova_client, _ = openstack_clients(self.env)
         self.create_keypair_and_copy_to_manager(

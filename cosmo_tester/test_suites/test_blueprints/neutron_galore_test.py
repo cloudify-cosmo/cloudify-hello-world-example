@@ -16,13 +16,14 @@
 
 __author__ = 'dan'
 
-import os
-
 import fabric.api
 import fabric.contrib.files
 
 from cosmo_tester.framework.testenv import TestCase
-from cosmo_tester.framework.util import YamlPatcher
+from cosmo_tester.framework.util import (
+    YamlPatcher,
+    get_actual_keypath
+)
 from cosmo_tester.framework.handlers.openstack import (
     openstack_clients,
     openstack_infra_state,
@@ -317,12 +318,8 @@ class NeutronGaloreTest(TestCase):
 
     def _check_if_private_key_is_on_manager(self):
 
-        manager_key_path = self.env.management_key_path
-        manager_key_path = os.path.join(
-            os.path.dirname(manager_key_path),
-            self.env.resources_prefix + os.path.basename(
-                manager_key_path))
-        manager_key_path = os.path.expanduser(manager_key_path)
+        manager_key_path = get_actual_keypath(
+            self.env, self.env.management_key_path)
 
         fabric_env = fabric.api.env
         fabric_env.update({
