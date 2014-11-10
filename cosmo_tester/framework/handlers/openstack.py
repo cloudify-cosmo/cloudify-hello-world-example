@@ -52,33 +52,40 @@ def openstack_clients(env):
 
 
 @retry(stop_max_attempt_number=5, wait_fixed=20000)
-def openstack_infra_state(env):
+def openstack_infra_state(env, nova_client=None, neutron_client=None):
     """
     @retry decorator is used because this error sometimes occur:
     ConnectionFailed: Connection to neutron failed: Maximum attempts reached
     """
-    nova, neutron = openstack_clients(env)
+    if not nova_client or not neutron_client:
+        nova_client, neutron_client = openstack_clients(env)
+
     prefix = env.resources_prefix
     return {
-        'networks': dict(_networks(neutron, prefix)),
-        'subnets': dict(_subnets(neutron, prefix)),
-        'routers': dict(_routers(neutron, prefix)),
-        'security_groups': dict(_security_groups(neutron, prefix)),
-        'servers': dict(_servers(nova, prefix)),
-        'key_pairs': dict(_key_pairs(nova, prefix)),
-        'floatingips': dict(_floatingips(neutron, prefix)),
-        'ports': dict(_ports(neutron, prefix))
+        'networks': dict(_networks(neutron_client, prefix)),
+        'subnets': dict(_subnets(neutron_client, prefix)),
+        'routers': dict(_routers(neutron_client, prefix)),
+        'security_groups': dict(_security_groups(neutron_client, prefix)),
+        'servers': dict(_servers(nova_client, prefix)),
+        'key_pairs': dict(_key_pairs(nova_client, prefix)),
+        'floatingips': dict(_floatingips(neutron_client, prefix)),
+        'ports': dict(_ports(neutron_client, prefix))
     }
 
 
-def remove_openstack_resources(env, resources_to_remove):
+def remove_openstack_resources(env, resources_to_remove,
+                               nova_client=None, neutron_client=None):
+
+    if not nova_client or not neutron_client:
+        nova_client, neutron_client = openstack_clients(env)
+
     # basically sort of a workaround, but if we get the order wrong
     # the first time, there is a chance things would better next time
     # 3'rd time can't really hurt, can it?
     # 3 is a charm
     for _ in range(3):
         resources_to_remove = _remove_openstack_resources_impl(
-            env, resources_to_remove)
+            env, resources_to_remove, nova_client, neutron_client)
         if all([len(g) == 0 for g in resources_to_remove.values()]):
             break
         # give openstack some time to update its data structures
@@ -86,10 +93,7 @@ def remove_openstack_resources(env, resources_to_remove):
     return resources_to_remove
 
 
-def _remove_openstack_resources_impl(env,
-                                     resources_to_remove):
-    nova, neutron = openstack_clients(env)
-
+def _remove_openstack_resources_impl(env, resources_to_remove, nova, neutron):
     servers = nova.servers.list()
     ports = neutron.list_ports()['ports']
     routers = neutron.list_routers()['routers']
