@@ -50,6 +50,7 @@ class CfyHelper(object):
                   inputs_file=None,
                   install_plugins=True,
                   keep_up_on_failure=False,
+                  validate_only=False,
                   verbose=False):
         with self.workdir:
             cfy.init().wait()
@@ -62,6 +63,7 @@ class CfyHelper(object):
                 inputs=inputs_file,
                 install_plugins=install_plugins,
                 keep_up_on_failure=keep_up_on_failure,
+                validate_only=validate_only,
                 verbose=verbose).wait()
 
     def bootstrap_with_providers(self,
