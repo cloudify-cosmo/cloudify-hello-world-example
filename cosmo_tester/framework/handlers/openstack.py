@@ -413,8 +413,7 @@ class CloudifyOpenstackInputsConfigReader(BaseCloudifyInputsConfigReader):
 
     @property
     def neutron_url(self):
-        # there's currently no support for this in the manager blueprint
-        return None
+        return self.config.get('neutron_url', None)
 
     @property
     def management_network_name(self):

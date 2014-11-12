@@ -50,9 +50,12 @@ class CfyHelper(object):
                   inputs_file=None,
                   install_plugins=True,
                   keep_up_on_failure=False,
+                  validate_only=False,
+                  reset_config=False,
+                  task_retries=5,
                   verbose=False):
         with self.workdir:
-            cfy.init().wait()
+            cfy.init(reset_config=reset_config).wait()
 
             if not inputs_file:
                 inputs_file = self._get_inputs_in_temp_file({}, 'manager')
@@ -62,6 +65,8 @@ class CfyHelper(object):
                 inputs=inputs_file,
                 install_plugins=install_plugins,
                 keep_up_on_failure=keep_up_on_failure,
+                validate_only=validate_only,
+                task_retries=task_retries,
                 verbose=verbose).wait()
 
     def bootstrap_with_providers(self,
