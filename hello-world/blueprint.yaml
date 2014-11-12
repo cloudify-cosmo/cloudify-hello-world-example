@@ -37,8 +37,6 @@ node_templates:
     security_group:
         type: cloudify.openstack.nodes.SecurityGroup
         properties:
-            security_group:
-                name: webserver_security_group
             rules:
                 -   remote_ip_prefix: 0.0.0.0/0
                     port: { get_property: [ http_web_server, port ] }
