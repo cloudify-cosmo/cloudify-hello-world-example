@@ -1,7 +1,7 @@
 tosca_definitions_version: cloudify_dsl_1_0
 
 imports:
-    - http://www.getcloudify.org/spec/cloudify/3.1/types.yaml
+    - http://www.getcloudify.org/spec/cloudify/3.1rc2/types.yaml
 
 plugins:
     mock:
@@ -14,16 +14,16 @@ inputs:
 
 node_templates:
     host:
-        type: cloudify.types.host
+        type: cloudify.nodes.Compute
         properties:
             ip: { get_input: ip }
             cloudify_agent:
                 key: { get_input: agent_key }
     middle:
-        type: cloudify.types.middleware_server
+        type: cloudify.nodes.SoftwareComponent
         relationships:
             -   type: cloudify.relationships.contained_in
                 target: host
         interfaces:
             cloudify.interfaces.lifecycle:
-                - create: mock.mock_plugin.mock.create
+                create: mock.mock_plugin.mock.create

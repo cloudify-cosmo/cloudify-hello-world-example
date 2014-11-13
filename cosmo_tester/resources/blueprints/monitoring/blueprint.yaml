@@ -1,9 +1,9 @@
 tosca_definitions_version: cloudify_dsl_1_0
 
 imports:
-    - http://www.getcloudify.org/spec/cloudify/3.1/types.yaml
-    - http://www.getcloudify.org/spec/openstack-plugin/1.1/plugin.yaml
-    - http://www.getcloudify.org/spec/diamond-plugin/1.1/plugin.yaml
+    - http://www.getcloudify.org/spec/cloudify/3.1rc2/types.yaml
+    - http://www.getcloudify.org/spec/openstack-plugin/1.1rc2/plugin.yaml
+    - http://www.getcloudify.org/spec/diamond-plugin/1.1rc2/plugin.yaml
     - policies/diamond_test.yaml
 
 inputs:
@@ -12,12 +12,14 @@ inputs:
     diamond_config:
         default:
             interval: 1
-            collectors:
-                ExampleCollector: {}
-                CPUCollector: {}
-                MemoryCollector: {}
-                LoadAverageCollector: {}
-                DiskUsageCollector: {}
+
+    collectors_config:
+        default:
+            ExampleCollector: {}
+            CPUCollector: {}
+            MemoryCollector: {}
+            LoadAverageCollector: {}
+            DiskUsageCollector: {}
 
 outputs:
     service:
@@ -27,21 +29,28 @@ outputs:
 
 node_templates:
     vm:
-        type: cloudify.openstack.server
+        type: cloudify.openstack.nodes.Server
         properties:
             server:
                 name: diamond-agent-server
                 image_name: { get_input: image_name }
                 flavor_name: { get_input: flavor_name }
         interfaces:
-            cloudify.interfaces.monitor_lifecycle:
-                - start:
-                    mapping: diamond.diamond_agent.tasks.install
-                    properties:
+            cloudify.interfaces.monitoring_agent:
+                install:
+                    implementation: diamond.diamond_agent.tasks.install
+                    inputs:
                         diamond_config: { get_input: diamond_config }
-                - stop: diamond.diamond_agent.tasks.uninstall
+                start: diamond.diamond_agent.tasks.start
+                stop: diamond.diamond_agent.tasks.stop
+                uninstall: diamond.diamond_agent.tasks.uninstall
+            cloudify.interfaces.monitoring:
+                start:
+                    implementation: diamond.diamond_agent.tasks.add_collectors
+                    inputs:
+                        collectors_config: { get_input: collectors_config }
             test:
-                - op: scripts/mock_operation.py
+                op: scripts/mock_operation.py
 
 workflows:
     on_monitor_event:

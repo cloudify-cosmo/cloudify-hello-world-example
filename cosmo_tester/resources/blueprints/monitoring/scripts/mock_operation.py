@@ -17,5 +17,5 @@
 from cloudify import ctx
 from cloudify.state import ctx_parameters as inputs
 
-ctx.runtime_properties['service'] = inputs.service
-ctx.runtime_properties['metric'] = inputs.metric
+ctx.instance.runtime_properties['service'] = inputs.service
+ctx.instance.runtime_properties['metric'] = inputs.metric

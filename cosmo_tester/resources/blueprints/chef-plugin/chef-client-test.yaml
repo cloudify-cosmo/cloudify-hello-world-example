@@ -1,9 +1,9 @@
 tosca_definitions_version: cloudify_dsl_1_0
 
 imports:
-    - http://www.getcloudify.org/spec/cloudify/3.1/types.yaml
-    - http://www.getcloudify.org/spec/openstack-plugin/1.1/plugin.yaml
-    - http://www.getcloudify.org/spec/chef-plugin/1.1/plugin.yaml
+    - http://www.getcloudify.org/spec/cloudify/3.1rc2/types.yaml
+    - http://www.getcloudify.org/spec/openstack-plugin/1.1rc2/plugin.yaml
+    - http://www.getcloudify.org/spec/chef-plugin/1.1rc2/plugin.yaml
 
 inputs:
     server_name: {}
@@ -14,7 +14,7 @@ inputs:
 
 node_templates:
     server:
-        type: cloudify.openstack.server
+        type: cloudify.openstack.nodes.Server
         properties:
             install_agent: true
             server:
@@ -27,9 +27,9 @@ node_templates:
             -   type: cloudify.openstack.server_connected_to_floating_ip
                 target: ip
     ip:
-        type: cloudify.openstack.floatingip
+        type: cloudify.openstack.nodes.FloatingIP
     chef_node_one:
-        type: cloudify.types.chef.db_server
+        type: cloudify.chef.nodes.DBMS
         properties:
             chef_config:
                 version: 11.10.4-1

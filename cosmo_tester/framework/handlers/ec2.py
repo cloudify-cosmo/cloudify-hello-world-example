@@ -23,7 +23,10 @@ from contextlib import contextmanager
 
 import boto.ec2
 
-from cosmo_tester.framework.handlers import BaseHandler
+from cosmo_tester.framework.handlers import (
+    BaseHandler,
+    BaseCloudifyProviderConfigReader
+)
 from cosmo_tester.framework.util import get_actual_keypath
 from cosmo_tester.framework.testenv import CLOUDIFY_TEST_NO_CLEANUP
 
@@ -173,10 +176,10 @@ def _handled_exception(resource_id, failed, resource_group):
 
 
 class Ec2CleanupContext(BaseHandler.CleanupContext):
-    def __init__(self, context_name, cloudify_config):
+    def __init__(self, context_name, env):
         super(Ec2CleanupContext, self).__init__(context_name,
-                                                cloudify_config)
-        self.before_run = ec2_infra_state(cloudify_config)
+                                                env)
+        self.before_run = ec2_infra_state(env.cloudify_config)
         self.logger = logging.getLogger('Ec2CleanupContext')
 
     def cleanup(self):
@@ -190,20 +193,21 @@ class Ec2CleanupContext(BaseHandler.CleanupContext):
                          'resources: {1}'
                          .format(self.context_name, resources_to_teardown))
 
-        leftovers = remove_ec2_resources(self.cloudify_config,
+        leftovers = remove_ec2_resources(self.env.cloudify_config,
                                          resources_to_teardown)
         self.logger.info('[{0}] Leftover resources after cleanup: {1}'
                          .format(self.context_name, leftovers))
 
     def get_resources_to_teardown(self):
-        current_state = ec2_infra_state(self.cloudify_config)
+        current_state = ec2_infra_state(self.env.cloudify_config)
         return ec2_infra_state_delta(before=self.before_run,
                                      after=current_state)
 
 
-class CloudifyEc2ConfigReader(BaseHandler.CloudifyConfigReader):
-    def __init__(self, cloudify_config):
-        super(CloudifyEc2ConfigReader, self).__init__(cloudify_config)
+class CloudifyEc2ConfigReader(BaseCloudifyProviderConfigReader):
+    def __init__(self, cloudify_config, **kwargs):
+        super(CloudifyEc2ConfigReader, self).__init__(cloudify_config,
+                                                      **kwargs)
 
     @property
     def management_server_name(self):
@@ -262,13 +266,14 @@ class CloudifyEc2ConfigReader(BaseHandler.CloudifyConfigReader):
 class LibcloudHandler(BaseHandler):
     provider = 'libcloud'
     CleanupContext = Ec2CleanupContext
-    CloudifyConfigReader = CloudifyEc2ConfigReader
+    CloudifyConfigReader = None
 
     medium_instance_type = 'm1.medium'
     ubuntu_agent_ami = 'ami-a73264ce'
 
     def __init__(self, env):
         super(LibcloudHandler, self).__init__(env)
+        self.CloudifyConfigReader = CloudifyEc2ConfigReader
         self._ubuntu_ami = None
 
     @property

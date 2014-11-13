@@ -16,14 +16,22 @@
 
 __author__ = 'dan'
 
+import fabric.api
+import fabric.contrib.files
 
 from cosmo_tester.framework.testenv import TestCase
-from cosmo_tester.framework.util import YamlPatcher
+from cosmo_tester.framework.util import (
+    YamlPatcher,
+    get_actual_keypath
+)
 from cosmo_tester.framework.handlers.openstack import (
     openstack_clients,
     openstack_infra_state,
     openstack_infra_state_delta
 )
+
+
+PRIVATE_KEY_PATH = '~/.ssh/neutron-test.pem'
 
 
 class NeutronGaloreTest(TestCase):
@@ -37,6 +45,7 @@ class NeutronGaloreTest(TestCase):
             'server_name': 'novaservertest',
             'image_name': self.env.ubuntu_image_name,
             'flavor_name': self.env.flavor_name,
+            'private_key_path': PRIVATE_KEY_PATH,
         }
 
         before, after = self.upload_deploy_and_execute_install(inputs=inputs)
@@ -55,14 +64,25 @@ class NeutronGaloreTest(TestCase):
         def p(name):
             return '{}{}'.format(self.env.resources_prefix, name)
 
+        management_network_name = self.env.management_network_name
+        agents_security_group = self.env.agents_security_group
+        if self.env.is_provider_bootstrap:
+            # using existing resources - manager blueprints currently don't
+            # use the prefix feature for the resources brought up during
+            # bootstrap, and thus this section is only relevant if providers
+            # have been used
+            management_network_name = p(management_network_name)
+            agents_security_group = p(agents_security_group)
+
         openstack = self.get_openstack_components(node_states)
+
+        self.assertTrue(self._check_if_private_key_is_on_manager())
 
         port_assigned_addr = openstack['server']['addresses'][
             p('neutron_network_test')][0]['addr']
         # the port will get connected to the dst security group automatically
         #  when the server connects to the security group
-        port_dst_security_group_id = openstack['port']['security_groups'][0]
-        port_security_group_id = openstack['port']['security_groups'][1]
+        port_security_groups = openstack['port']['security_groups']
         port_fixed_ip = openstack['port']['fixed_ips'][0]['ip_address']
         port_network_id = openstack['port']['network_id']
         port_subnet_id = openstack['port']['fixed_ips'][0]['subnet_id']
@@ -73,7 +93,7 @@ class NeutronGaloreTest(TestCase):
         network_subnet_id = openstack['network']['subnets'][0]
 
         self.assertEqual(openstack['server']['addresses']
-                         [p(self.env.management_network_name)][0]
+                         [management_network_name][0]
                          ['OS-EXT-IPS:type'], 'fixed')
         self.assertEqual(openstack['server']['addresses']
                          [p('neutron_network_test')][0]
@@ -87,21 +107,22 @@ class NeutronGaloreTest(TestCase):
             {'name': p('neutron_test_security_group_dst')})
         self.assert_obj_list_contains_subset(
             openstack['server']['security_groups'],
-            {'name': p(self.env.agents_security_group)})
+            {'name': agents_security_group})
         self.assert_obj_list_contains_subset(
             openstack['server']['security_groups'],
             {'name': p('neutron_test_security_group_src')})
         self.assertEqual(openstack['server']['name'], p('novaservertest'))
         self.assertEqual(openstack['port']['name'], p('neutron_test_port'))
         self.assertEqual(port_fixed_ip, port_assigned_addr)
-
+        self.assertEqual(openstack['keypair']['name'],
+                         openstack['server']['key_name'])
         self.assertEqual(openstack['floatingip']['floating_network_id'],
                          router_network_id)
         self.assertEqual(openstack['router']['name'], p('neutron_router_test'))
         self.assertEqual(openstack['sg_src']['name'],
                          p('neutron_test_security_group_src'))
-        self.assertEqual(port_dst_security_group_id, sg_dst_id)
-        self.assertEqual(port_security_group_id, sg_src_id)
+        self.assertIn(sg_dst_id, port_security_groups)
+        self.assertIn(sg_src_id, port_security_groups)
         self.assertEqual(openstack['network']['name'],
                          p('neutron_network_test'))
         self.assertEqual(port_network_id, openstack['network']['id'])
@@ -140,16 +161,16 @@ class NeutronGaloreTest(TestCase):
         self.assertEqual(node_states['floatingip']['floating_ip_address'],
                          openstack['floatingip']['floating_ip_address'])
         self.assertEqual(openstack['server']['addresses']
-                         [p(self.env.management_network_name)][0]['addr'],
+                         [management_network_name][0]['addr'],
                          node_states['server']['networks']
-                         [p(self.env.management_network_name)][0])
+                         [management_network_name][0])
         self.assertEqual(openstack['server']['addresses']
                          [p('neutron_network_test')][0]['addr'],
                          node_states['server']['networks']
                          [p('neutron_network_test')][0])
         self.assertEqual(node_states['server']['ip'],
                          openstack['server']['addresses']
-                         [p(self.env.management_network_name)][0]['addr'])
+                         [management_network_name][0]['addr'])
         self.assert_router_connected_to_subnet(openstack['router']['id'],
                                                openstack['router_ports'],
                                                openstack['subnet']['id'])
@@ -157,10 +178,10 @@ class NeutronGaloreTest(TestCase):
     def post_uninstall_assertions(self):
         leftovers = self._test_cleanup_context.get_resources_to_teardown()
         self.assertTrue(all([len(g) == 0 for g in leftovers.values()]))
+        self.assertFalse(self._check_if_private_key_is_on_manager())
 
     def _test_use_external_resource(self, inputs):
-        before_openstack_infra_state = openstack_infra_state(
-            self.env.cloudify_config)
+        before_openstack_infra_state = openstack_infra_state(self.env)
 
         self._modify_blueprint_use_external_resource()
 
@@ -199,9 +220,12 @@ class NeutronGaloreTest(TestCase):
     def _post_use_external_resource_install_assertions(
             self, use_external_resource_deployment_id,
             before_openstack_infra_state, after_nodes_state):
+
+        # verify private key still exists
+        self.assertTrue(self._check_if_private_key_is_on_manager())
+
         # verify there aren't any new resources on Openstack
-        after_openstack_infra_state = openstack_infra_state(
-            self.env.cloudify_config)
+        after_openstack_infra_state = openstack_infra_state(self.env)
         delta = openstack_infra_state_delta(before_openstack_infra_state,
                                             after_openstack_infra_state)
         for delta_resources_of_single_type in delta.values():
@@ -217,6 +241,10 @@ class NeutronGaloreTest(TestCase):
 
     def _post_use_external_resource_uninstall_assertions(
             self, use_external_resource_deployment_id):
+
+        # verify private key still exists
+        self.assertTrue(self._check_if_private_key_is_on_manager())
+
         # verify the external resources are all still up and running
         original_deployment_node_states = self.get_node_states(
             self.get_manager_state()['node_state'], self.test_id)
@@ -247,7 +275,9 @@ class NeutronGaloreTest(TestCase):
             'sg_dst': self._node_state('security_group_dst', node_states,
                                        deployment_id),
             'floatingip': self._node_state('floatingip', node_states,
-                                           deployment_id)
+                                           deployment_id),
+            'keypair': self._node_state('keypair', node_states,
+                                        deployment_id)
         }
 
     def get_delta_node_states(self, before_state, after_state):
@@ -256,7 +286,7 @@ class NeutronGaloreTest(TestCase):
         return node_states
 
     def get_openstack_components(self, states):
-        nova, neutron = openstack_clients(self.env.cloudify_config)
+        nova, neutron = openstack_clients(self.env)
         eid = 'external_id'
         sg = 'security_group'
         i = 'floatingip'
@@ -270,7 +300,8 @@ class NeutronGaloreTest(TestCase):
             'sg_src': neutron.show_security_group(states['sg_src'][eid])[sg],
             'sg_dst': neutron.show_security_group(states['sg_dst'][eid])[sg],
             'floatingip': neutron.show_floatingip(states[i][eid])[i],
-            'router_ports': neutron.list_ports(device_id=rid)['ports']
+            'router_ports': neutron.list_ports(device_id=rid)['ports'],
+            'keypair': nova.keypairs.get(states['keypair'][eid]).to_dict()
         }
 
     def _node_state(self, starts_with, node_states, deployment_id):
@@ -294,3 +325,18 @@ class NeutronGaloreTest(TestCase):
                     return
         self.fail('router {0} is not connected to subnet {1}'
                   .format(router_id, subnet_id))
+
+    def _check_if_private_key_is_on_manager(self):
+
+        manager_key_path = get_actual_keypath(
+            self.env, self.env.management_key_path)
+
+        fabric_env = fabric.api.env
+        fabric_env.update({
+            'timeout': 30,
+            'user': self.env.management_user_name,
+            'key_filename': manager_key_path,
+            'host_string': self.env.management_ip
+        })
+
+        return fabric.contrib.files.exists(PRIVATE_KEY_PATH)

@@ -46,11 +46,35 @@ class CfyHelper(object):
             self.use(management_ip)
 
     def bootstrap(self,
-                  cloud_config_path,
-                  provider,
+                  blueprint_path,
+                  inputs_file=None,
+                  install_plugins=True,
                   keep_up_on_failure=False,
-                  verbose=False,
-                  dev_mode=False):
+                  validate_only=False,
+                  reset_config=False,
+                  task_retries=5,
+                  verbose=False):
+        with self.workdir:
+            cfy.init(reset_config=reset_config).wait()
+
+            if not inputs_file:
+                inputs_file = self._get_inputs_in_temp_file({}, 'manager')
+
+            cfy.bootstrap(
+                blueprint_path=blueprint_path,
+                inputs=inputs_file,
+                install_plugins=install_plugins,
+                keep_up_on_failure=keep_up_on_failure,
+                validate_only=validate_only,
+                task_retries=task_retries,
+                verbose=verbose).wait()
+
+    def bootstrap_with_providers(self,
+                                 cloud_config_path,
+                                 provider,
+                                 keep_up_on_failure=False,
+                                 verbose=False,
+                                 dev_mode=False):
         with self.workdir:
             cfy.init(
                 provider=provider,
@@ -62,10 +86,21 @@ class CfyHelper(object):
                 verbose=verbose).wait()
 
     def teardown(self,
-                 cloud_config_path,
                  ignore_deployments=True,
                  ignore_validation=False,
                  verbose=False):
+        with self.workdir:
+            cfy.teardown(
+                ignore_deployments=ignore_deployments,
+                ignore_validation=ignore_validation,
+                force=True,
+                verbose=verbose).wait()
+
+    def teardown_with_providers(self,
+                                cloud_config_path,
+                                ignore_deployments=True,
+                                ignore_validation=False,
+                                verbose=False):
         with self.workdir:
             cfy.teardown(
                 config_file=cloud_config_path,
@@ -105,12 +140,7 @@ class CfyHelper(object):
                           verbose=False,
                           inputs=None):
         with self.workdir:
-            inputs = inputs or {}
-            inputs_file = tempfile.mktemp(prefix=deployment_id,
-                                          suffix='-inputs.json',
-                                          dir=self.workdir)
-            with open(inputs_file, 'w') as f:
-                f.write(json.dumps(inputs))
+            inputs_file = self._get_inputs_in_temp_file(inputs, deployment_id)
             cfy.deployments.create(
                 blueprint_id=blueprint_id,
                 deployment_id=deployment_id,
@@ -189,3 +219,12 @@ class CfyHelper(object):
                 timeout=execute_timeout,
                 verbose=verbose,
                 include_logs=include_logs).wait()
+
+    def _get_inputs_in_temp_file(self, inputs, inputs_prefix):
+        inputs = inputs or {}
+        inputs_file = tempfile.mktemp(prefix='{0}-'.format(inputs_prefix),
+                                      suffix='-inputs.json',
+                                      dir=self.workdir)
+        with open(inputs_file, 'w') as f:
+            f.write(json.dumps(inputs))
+        return inputs_file

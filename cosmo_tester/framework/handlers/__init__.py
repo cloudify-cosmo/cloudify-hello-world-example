@@ -21,15 +21,16 @@ import logging
 from contextlib import contextmanager
 
 import yaml
+from path import path
 
 from cosmo_tester.framework.util import YamlPatcher
 
 
 class BaseCleanupContext(object):
 
-    def __init__(self, context_name, cloudify_config):
+    def __init__(self, context_name, env):
         self.context_name = context_name
-        self.cloudify_config = cloudify_config
+        self.env = env
         self.logger = logging.getLogger('CleanupContext')
         self.logger.setLevel(logging.DEBUG)
 
@@ -39,8 +40,14 @@ class BaseCleanupContext(object):
 
 class BaseCloudifyConfigReader(object):
 
-    def __init__(self, cloudify_config):
+    def __init__(self, cloudify_config, **kwargs):
         self.config = cloudify_config
+
+
+class BaseCloudifyProviderConfigReader(BaseCloudifyConfigReader):
+
+    def __init__(self, cloudify_config, **kwargs):
+        super(BaseCloudifyProviderConfigReader, self).__init__(cloudify_config)
 
     @property
     def cloudify_agent_user(self):
@@ -51,6 +58,21 @@ class BaseCloudifyConfigReader(object):
         return self.config['cloudify'].get('resources_prefix', '')
 
 
+class BaseCloudifyInputsConfigReader(BaseCloudifyConfigReader):
+
+    def __init__(self, cloudify_config, manager_blueprint_path, **kwargs):
+        super(BaseCloudifyInputsConfigReader, self).__init__(cloudify_config)
+        self.manager_blueprint = yaml.load(path(manager_blueprint_path).text())
+
+    @property
+    def cloudify_agent_user(self):
+        return self.config['agents_user']
+
+    @property
+    def resources_prefix(self):
+        return self.config['resources_prefix']
+
+
 class BaseHandler(object):
 
     provider = 'base'
@@ -59,15 +81,19 @@ class BaseHandler(object):
 
     def __init__(self, env):
         self.env = env
+        self.CloudifyConfigReader = BaseCloudifyProviderConfigReader if \
+            env.is_provider_bootstrap else BaseCloudifyInputsConfigReader
 
     @contextmanager
     def update_cloudify_config(self):
-        with YamlPatcher(self.env.cloudify_config_path) as patch:
+        with YamlPatcher(self.env.cloudify_config_path,
+                         not self.env.is_provider_bootstrap) as patch:
             yield patch
         self.env.cloudify_config = yaml.load(
             self.env.cloudify_config_path.text())
         self.env._config_reader = self.CloudifyConfigReader(
-            self.env.cloudify_config)
+            self.env.cloudify_config,
+            manager_blueprint_path=self.env._manager_blueprint_path)
 
     def before_bootstrap(self):
         pass

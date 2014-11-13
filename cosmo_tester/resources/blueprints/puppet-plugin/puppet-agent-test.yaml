@@ -1,9 +1,9 @@
 tosca_definitions_version: cloudify_dsl_1_0
 
 imports:
-    - http://www.getcloudify.org/spec/cloudify/3.1/types.yaml
-    - http://www.getcloudify.org/spec/openstack-plugin/1.1/plugin.yaml
-    - http://www.getcloudify.org/spec/puppet-plugin/1.1/plugin.yaml
+    - http://www.getcloudify.org/spec/cloudify/3.1rc2/types.yaml
+    - http://www.getcloudify.org/spec/openstack-plugin/1.1rc2/plugin.yaml
+    - http://www.getcloudify.org/spec/puppet-plugin/1.1rc2/plugin.yaml
 
 
 inputs:
@@ -15,7 +15,7 @@ inputs:
 
 node_templates:
     db-vm:
-        type: cloudify.openstack.server
+        type: cloudify.openstack.nodes.Server
         properties:
             server:
                 name: { get_input: server_name }
@@ -27,7 +27,7 @@ node_templates:
             -   type: cloudify.openstack.server_connected_to_floating_ip
                 target: ip
     puppet_db:
-        type: cloudify.types.puppet.db_server
+        type: cloudify.puppet.nodes.DBMS
         properties:
             puppet_config:
                 add_operation_tag: True,
@@ -43,4 +43,4 @@ node_templates:
                 target: db-vm
 
     ip:
-        type: cloudify.openstack.floatingip
+        type: cloudify.openstack.nodes.FloatingIP

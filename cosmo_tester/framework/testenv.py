@@ -25,12 +25,15 @@ import os
 import importlib
 import json
 
+from StringIO import StringIO
+
 import yaml
+from fabric import api as fabric_api
 from path import path
 from cloudify_rest_client import CloudifyClient
 
 from cosmo_tester.framework.cfy_helper import CfyHelper
-from cosmo_tester.framework.util import get_blueprint_path
+from cosmo_tester.framework.util import get_blueprint_path, get_actual_keypath
 
 root = logging.getLogger()
 ch = logging.StreamHandler(sys.stdout)
@@ -52,6 +55,10 @@ CLOUDIFY_TEST_MANAGEMENT_IP = 'CLOUDIFY_TEST_MANAGEMENT_IP'
 CLOUDIFY_TEST_CONFIG_PATH = 'CLOUDIFY_TEST_CONFIG_PATH'
 CLOUDIFY_TEST_NO_CLEANUP = 'CLOUDIFY_TEST_NO_CLEANUP'
 CLOUDIFY_TEST_HANDLER_MODULE = 'CLOUDIFY_TEST_HANDLER_MODULE'
+MANAGER_BLUEPRINTS_DIR = 'MANAGER_BLUEPRINTS_DIR'
+BOOTSTRAP_USING_PROVIDERS = 'BOOTSTRAP_USING_PROVIDERS'
+INSTALL_MANAGER_BLUEPRINT_DEPENDENCIES = \
+    'INSTALL_MANAGER_BLUEPRINT_DEPENDENCIES'
 
 test_environment = None
 
@@ -93,17 +100,28 @@ class TestEnvironment(object):
         self.rest_client = None
         self.management_ip = None
         self.handler = None
-
-        if CLOUDIFY_TEST_CONFIG_PATH not in os.environ:
-            raise RuntimeError('a path to cloudify-config must be configured '
-                               'in "CLOUDIFY_TEST_CONFIG_PATH" env variable')
-        self.cloudify_config_path = path(os.environ[CLOUDIFY_TEST_CONFIG_PATH])
+        self._manager_blueprint_path = None
         self._workdir = tempfile.mkdtemp(prefix='cloudify-testenv-')
 
+        if CLOUDIFY_TEST_CONFIG_PATH not in os.environ:
+            raise RuntimeError('a path to config must be configured '
+                               'in "CLOUDIFY_TEST_CONFIG_PATH" env variable')
+        self.cloudify_config_path = path(os.environ[CLOUDIFY_TEST_CONFIG_PATH])
+
         if not self.cloudify_config_path.isfile():
-            raise RuntimeError('cloud-config file configured in env variable'
+            raise RuntimeError('config file configured in env variable'
                                ' {0} does not seem to exist'
                                .format(self.cloudify_config_path))
+
+        self.is_provider_bootstrap = \
+            self._get_boolean_env_var(BOOTSTRAP_USING_PROVIDERS, False)
+
+        if not self.is_provider_bootstrap and MANAGER_BLUEPRINTS_DIR not in \
+                os.environ:
+                raise RuntimeError(
+                    'manager blueprints dir must be configured in '
+                    '"MANAGER_BLUEPRINTS_DIR" env variable in order to '
+                    'run non-provider bootstraps')
 
         # make a temp config file so handlers can modify it at will
         self._generate_unique_config()
@@ -116,18 +134,27 @@ class TestEnvironment(object):
         handler_class = getattr(handler_module, 'handler')
         self.handler = handler_class(self)
 
+        if not self.is_provider_bootstrap:
+            manager_blueprints_base_dir = os.environ[MANAGER_BLUEPRINTS_DIR]
+            self._manager_blueprint_path = \
+                os.path.join(manager_blueprints_base_dir,
+                             self.handler.manager_blueprint)
+
         if CLOUDIFY_TEST_MANAGEMENT_IP in os.environ:
             self._running_env_setup(os.environ[CLOUDIFY_TEST_MANAGEMENT_IP])
 
         self.cloudify_config = yaml.load(self.cloudify_config_path.text())
         self._config_reader = self.handler.CloudifyConfigReader(
-            self.cloudify_config)
+            self.cloudify_config,
+            manager_blueprint_path=self._manager_blueprint_path)
 
         global test_environment
         test_environment = self
 
     def _generate_unique_config(self):
-        unique_config_path = os.path.join(self._workdir, 'config.yaml')
+        file_name = 'config.yaml' if self.is_provider_bootstrap else \
+            'inputs.json'
+        unique_config_path = os.path.join(self._workdir, file_name)
         shutil.copy(self.cloudify_config_path, unique_config_path)
         self.cloudify_config_path = path(unique_config_path)
 
@@ -140,38 +167,54 @@ class TestEnvironment(object):
             return
 
         self._global_cleanup_context = self.handler.CleanupContext(
-            'testenv', self.cloudify_config)
-        cfy = CfyHelper()
+            'testenv', self)
 
-        try:
-            self.handler.before_bootstrap()
-            cfy.bootstrap(
+        cfy = CfyHelper(cfy_workdir=self._workdir)
+
+        self.handler.before_bootstrap()
+        if self.is_provider_bootstrap:
+            cfy.bootstrap_with_providers(
                 self.cloudify_config_path,
                 self.handler.provider,
                 keep_up_on_failure=False,
                 verbose=True,
                 dev_mode=False)
-            self._running_env_setup(cfy.get_management_ip())
-            self.handler.after_bootstrap(cfy.get_provider_context())
-        finally:
-            cfy.close()
+        else:
+
+            install_plugins = self._get_boolean_env_var(
+                INSTALL_MANAGER_BLUEPRINT_DEPENDENCIES, True)
+
+            cfy.bootstrap(
+                self._manager_blueprint_path,
+                inputs_file=self.cloudify_config_path,
+                install_plugins=install_plugins,
+                keep_up_on_failure=False,
+                verbose=True)
+        self._running_env_setup(cfy.get_management_ip())
+        self.handler.after_bootstrap(cfy.get_provider_context())
 
     def teardown(self):
         if self._global_cleanup_context is None:
             return
         self.setup()
-        cfy = CfyHelper()
+        cfy = CfyHelper(cfy_workdir=self._workdir)
         try:
-            cfy.use(self.management_ip, provider=True)
-            cfy.teardown(
-                self.cloudify_config_path,
-                verbose=True)
+            cfy.use(self.management_ip, provider=self.is_provider_bootstrap)
+            if self.is_provider_bootstrap:
+                cfy.teardown_with_providers(
+                    self.cloudify_config_path,
+                    verbose=True)
+            else:
+                cfy.teardown(verbose=True)
         finally:
-            cfy.close()
             self._global_cleanup_context.cleanup()
             self.handler.after_teardown()
             if os.path.exists(self._workdir):
                 shutil.rmtree(self._workdir)
+
+    def _get_boolean_env_var(self, env_var_name, default_value):
+        return os.environ.get(
+            env_var_name, str(default_value).lower()) == 'true'
 
     def _running_env_setup(self, management_ip):
         self.management_ip = management_ip
@@ -215,7 +258,7 @@ class TestCase(unittest.TestCase):
         self.test_id = 'system-test-{0}'.format(time.strftime("%Y%m%d-%H%M"))
         self.blueprint_yaml = None
         self._test_cleanup_context = self.env.handler.CleanupContext(
-            self._testMethodName, self.env.cloudify_config)
+            self._testMethodName, self.env)
         # register cleanup
         self.addCleanup(self._cleanup)
 
@@ -228,7 +271,25 @@ class TestCase(unittest.TestCase):
         # because it is called regardless of whether setUp succeeded or failed
         # unlike tearDown which is not called when setUp fails (which might
         # happen when tests override setUp)
-        pass
+        if self.env.management_ip:
+            try:
+                self.logger.info('Running ps aux on Cloudify manager...')
+                output = StringIO()
+                with fabric_api.settings(
+                        user=self.env.management_user_name,
+                        host_string=self.env.management_ip,
+                        key_filename=get_actual_keypath(
+                            self.env,
+                            self.env.management_key_path),
+                        disable_known_hosts=True):
+                    fabric_api.run('ps aux --sort -rss', stdout=output)
+                    self.logger.info(
+                        'Cloudify manager ps aux output:\n{0}'.format(
+                            output.getvalue()))
+            except Exception as e:
+                self.logger.info(
+                    'Error running ps aux on Cloudify manager: {0}'.format(
+                        str(e)))
 
     def get_manager_state(self):
         self.logger.info('Fetching manager current state')

@@ -14,20 +14,13 @@
 #    * limitations under the License.
 
 
-from cosmo_tester.framework.testenv import TestCase
-from cloudify_openstack.cloudify_openstack import OpenStackConnector
+from cosmo_tester.framework.testenv import (initialize_without_bootstrap,
+                                            clear_environment)
 
 
-class OpenstackEnvTest(TestCase):
+def setUp():
+    initialize_without_bootstrap()
 
-    def setUp(self):
-        super(OpenstackEnvTest, self).setUp()
 
-    def test_connector_reads_neutron_url(self):
-        self.assertEqual(None, self.env.neutron_url)
-
-        connector = OpenStackConnector(self.env.cloudify_config)
-
-        self.assertEqual(
-            connector.get_neutron_client().httpclient.endpoint_url,
-            'https://region-b.geo-1.network.hpcloudsvc.com')
+def tearDown():
+    clear_environment()

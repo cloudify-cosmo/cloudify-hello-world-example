@@ -1,9 +1,9 @@
 tosca_definitions_version: cloudify_dsl_1_0
 
 imports:
-    - http://www.getcloudify.org/spec/cloudify/3.1/types.yaml
-    - http://www.getcloudify.org/spec/openstack-plugin/1.1/plugin.yaml
-    - http://www.getcloudify.org/spec/chef-plugin/1.1/plugin.yaml
+    - http://www.getcloudify.org/spec/cloudify/3.1rc2/types.yaml
+    - http://www.getcloudify.org/spec/openstack-plugin/1.1rc2/plugin.yaml
+    - http://www.getcloudify.org/spec/chef-plugin/1.1rc2/plugin.yaml
 
 inputs:
     server_name: {}
@@ -14,7 +14,7 @@ inputs:
 
 node_templates:
     chef_server:
-        type: cloudify.openstack.server
+        type: cloudify.openstack.nodes.Server
         properties:
             install_agent: true
             server:
@@ -29,9 +29,9 @@ node_templates:
             -   type: cloudify.relationships.connected_to
                 target: chef_sg
     ip:
-        type: cloudify.openstack.floatingip
+        type: cloudify.openstack.nodes.FloatingIP
     chef_sg:
-        type: cloudify.openstack.security_group
+        type: cloudify.openstack.nodes.SecurityGroup
         properties:
             security_group:
                 name: chef_sg
@@ -41,7 +41,7 @@ node_templates:
                 -   remote_ip_prefix: 0.0.0.0/0
                     port: 443
     chef_service:
-        type: cloudify.types.chef.app_server
+        type: cloudify.chef.nodes.ApplicationServer
         properties:
             chef_config:
                 version: 11.10.4-1  # Chef Solo for installing Chef server
