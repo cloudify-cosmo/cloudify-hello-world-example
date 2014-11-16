@@ -10,13 +10,15 @@ create_activate_and_cd_virtualenv()
 
 setenv()
 {
+	BRANCH_NAME_CORE=${BRANCH_NAME_CORE='3.1rc2'}
+	BRANCH_NAME_PLUGINS=${BRANCH_NAME_PLUGINS='1.1rc2'}
+	BRANCH_NAME_OPENSTACK_PROVIDER=${BRANCH_NAME_OPENSTACK_PROVIDER=${BRANCH_NAME_PLUGINS}}
+	BRANCH_NAME_LIBCLOUD_PROVIDER=${BRANCH_NAME_LIBCLOUD_PROVIDER=${BRANCH_NAME_PLUGINS}}
+	BRANCH_NAME_CLI=${BRANCH_NAME_CLI=${BRANCH_NAME_CORE}}
+	BRANCH_NAME_MANAGER_BLUEPRINTS=${BRANCH_NAME_MANAGER_BLUEPRINTS=${BRANCH_NAME_CORE}}
+
 	# injected by quickbuild
-	BRANCH_NAME=${BRANCH_NAME='master'}
-	BRANCH_NAME_OPENSTACK_PROVIDER=${BRANCH_NAME_OPENSTACK_PROVIDER=$BRANCH_NAME}
-	BRANCH_NAME_LIBCLOUD_PROVIDER=${BRANCH_NAME_LIBCLOUD_PROVIDER=$BRANCH_NAME}
-	BRANCH_NAME_CLI=${BRANCH_NAME_CLI=$BRANCH_NAME}
-	BRANCH_NAME_MANAGER_BLUEPRINTS=${BRANCH_NAME_MANAGER_BLUEPRINTS=$BRANCH_NAME}
-	BRANCH_NAME_SYSTEM_TESTS=${BRANCH_NAME_SYSTEM_TESTS=$BRANCH_NAME}
+	BRANCH_NAME_SYSTEM_TESTS=${BRANCH_NAME_SYSTEM_TESTS=${BRANCH_NAME_CORE}}
 	NOSETESTS_TO_RUN=${NOSETESTS_TO_RUN='cosmo_tester/test_suites'}
 
 	# for documentation purposes, injected by quickbuild, used by `update_config.py`
@@ -33,7 +35,7 @@ setenv()
 	# UI_PACKAGE_URL=
 
     BOOTSTRAP_USING_PROVIDERS=${BOOTSTRAP_USING_PROVIDERS=false}
-    CLOUDIFY_CONFIG_SUFFIX=$([ "$BOOTSTRAP_USING_PROVIDERS" == "false" ] && echo "json" || echo "yaml")
+    CLOUDIFY_CONFIG_SUFFIX=$([ "${BOOTSTRAP_USING_PROVIDERS}" == "false" ] && echo "json" || echo "yaml")
 
 	# vagrant synched folder
 	SUITE_NAME=${SUITE_NAME='default-suite'}
@@ -53,7 +55,7 @@ setenv()
 
 	# export system tests related variables
 	export MANAGER_BLUEPRINTS_DIR="${BASE_DIR}/cloudify-manager-blueprints"
-	export CLOUDIFY_TEST_CONFIG_PATH=$GENERATED_CLOUDIFY_TEST_CONFIG_PATH
+	export CLOUDIFY_TEST_CONFIG_PATH=${GENERATED_CLOUDIFY_TEST_CONFIG_PATH}
 	export CLOUDIFY_TEST_HANDLER_MODULE=${CLOUDIFY_TEST_HANDLER_MODULE='cosmo_tester.framework.handlers.openstack'}
 	export BOOTSTRAP_USING_PROVIDERS=${BOOTSTRAP_USING_PROVIDERS}
 	export WORKFLOW_TASK_RETRIES=${WORKFLOW_TASK_RETRIES=20}
@@ -62,11 +64,11 @@ setenv()
 clone_and_install_system_tests()
 {
 	echo "### Cloning system tests repository and dependencies"
-	clone_and_checkout cloudify-system-tests $BRANCH_NAME_SYSTEM_TESTS
-	clone_and_checkout cloudify-cli $BRANCH_NAME_CLI
-	clone_and_checkout cloudify-openstack-provider $BRANCH_NAME_OPENSTACK_PROVIDER
-	clone_and_checkout cloudify-libcloud-provider $BRANCH_NAME_LIBCLOUD_PROVIDER
-	clone_and_checkout cloudify-manager-blueprints $BRANCH_NAME_MANAGER_BLUEPRINTS
+	clone_and_checkout cloudify-system-tests ${BRANCH_NAME_SYSTEM_TESTS}
+	clone_and_checkout cloudify-cli ${BRANCH_NAME_CLI}
+	clone_and_checkout cloudify-openstack-provider ${BRANCH_NAME_OPENSTACK_PROVIDER}
+	clone_and_checkout cloudify-libcloud-provider ${BRANCH_NAME_LIBCLOUD_PROVIDER}
+	clone_and_checkout cloudify-manager-blueprints ${BRANCH_NAME_MANAGER_BLUEPRINTS}
 
 	echo "### Installing system tests dependencies"
 	pip install ./cloudify-cli -r cloudify-cli/dev-requirements.txt
@@ -81,31 +83,31 @@ clone_and_checkout()
 	local branch_name=$2
 	echo "### Cloning '${repo_name}' and checking out '${branch_name}' branch"
 	git clone "https://github.com/cloudify-cosmo/${repo_name}" --depth 1
-	pushd $repo_name
+	pushd ${repo_name}
 	# We checkout the branch explicitly and not using the -b flag during clone,
 	# because if the branch is missing, it only issues a warning and exits with exit code 0,
 	# which is not what we want
-	git checkout $branch_name
+	git checkout ${branch_name}
 	popd
 }
 
 generate_config()
 {
 	echo "### Generating config file for test suite"
-	cp $ORIGINAL_CLOUDIFY_TEST_CONFIG_PATH $GENERATED_CLOUDIFY_TEST_CONFIG_PATH
-	"${BASE_HOST_DIR}/helpers/update_config.py" $GENERATED_CLOUDIFY_TEST_CONFIG_PATH
+	cp ${ORIGINAL_CLOUDIFY_TEST_CONFIG_PATH} ${GENERATED_CLOUDIFY_TEST_CONFIG_PATH}
+	"${BASE_HOST_DIR}/helpers/update_config.py" ${GENERATED_CLOUDIFY_TEST_CONFIG_PATH}
 }
 
 run_nose()
 {
 	echo "### Running nosetests: ${NOSETESTS_TO_RUN}"
-	pushd $SYSTEM_TESTS_DIR
+	pushd ${SYSTEM_TESTS_DIR}
 	set +e
-	nosetests $NOSETESTS_TO_RUN --verbose --nocapture --nologcapture --with-xunit --xunit-file=$REPORT_FILE
+	nosetests ${NOSETESTS_TO_RUN} --verbose --nocapture --nologcapture --with-xunit --xunit-file=${REPORT_FILE}
 	NOSE_EXIT_CODE=$?
-	if [ $NOSE_EXIT_CODE -ne 0 ]; then
+	if [ ${NOSE_EXIT_CODE} -ne 0 ]; then
 		echo "### nose failed [exit_code=${NOSE_EXIT_CODE}]"
-		exit $NOSE_EXIT_CODE
+		exit ${NOSE_EXIT_CODE}
 	fi
 	set -e
 	popd
