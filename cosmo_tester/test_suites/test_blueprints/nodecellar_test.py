@@ -162,8 +162,15 @@ class NodecellarAppTest(TestCase):
 
 class OpenStackNodeCellarTest(NodecellarAppTest):
 
+    # NOTE: when adding or modifying tests in this class, make sure to also
+    # pay attention to the nova-net nodecellar test class
+    # (OpenStackNovaNetNodeCellarTest) which inherits from this one (and
+    # will therefore run any tests added to this one)
+
+    BLUEPRINT_FILE = 'openstack-blueprint.yaml'
+
     def test_openstack_nodecellar(self):
-        self._test_nodecellar_impl('openstack-blueprint.yaml',
+        self._test_nodecellar_impl(self.BLUEPRINT_FILE,
                                    self.env.ubuntu_image_name,
                                    self.env.flavor_name)
 
