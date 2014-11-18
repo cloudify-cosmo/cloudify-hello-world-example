@@ -450,7 +450,7 @@ class OpenstackHandler(BaseHandler):
 
     ubuntu_image_name = \
         'Ubuntu Server 12.04.2 LTS (amd64 20130318) - Partner Image'
-    centos_image_name = 'centos-python2.7'
+    centos_image_name = 'CentOS 6.3 Server 64-bit 20130116'
     centos_image_user = 'root'
     flavor_name = 'standard.small'
     ubuntu_image_id = '261844b3-479c-5446-a2c4-1ea95d53b668'
