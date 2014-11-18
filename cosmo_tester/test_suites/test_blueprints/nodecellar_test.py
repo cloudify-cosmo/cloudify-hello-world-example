@@ -162,8 +162,10 @@ class NodecellarAppTest(TestCase):
 
 class OpenStackNodeCellarTest(NodecellarAppTest):
 
+    BLUEPRINT_FILE = 'openstack-blueprint.yaml'
+
     def test_openstack_nodecellar(self):
-        self._test_nodecellar_impl('openstack-blueprint.yaml',
+        self._test_nodecellar_impl(self.BLUEPRINT_FILE,
                                    self.env.ubuntu_image_name,
                                    self.env.flavor_name)
 
