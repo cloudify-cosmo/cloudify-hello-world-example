@@ -61,7 +61,7 @@ class HelloVsphereTest(TestCase):
 
     def download_and_modify_plugin(self, blueprint_path):
         url = '{0}?token={1}'.format(self.base_url,
-                                     os.environ[self.token_env_variable])
+                                     os.environ.get(self.token_env_variable))
         plugin = urllib.URLopener()
         file_path = blueprint_path+"/plugin.yaml"
         plugin.retrieve(url, file_path)
@@ -69,7 +69,7 @@ class HelloVsphereTest(TestCase):
             newlines = []
             for line in f.readlines():
                 newlines.append(line.replace(self.cloudify_automation_token_place_holder,
-                                             os.environ[self.cloudify_automation_token_env_variable]))
+                                             os.environ.get(self.cloudify_automation_token_env_variable)))
         with open(file_path, 'w') as f:
             for line in newlines:
                 f.write(line)
