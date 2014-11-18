@@ -12,78 +12,104 @@
 #    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
+import os
 
-from cosmo_tester.framework.handlers import BaseHandler
+from cosmo_tester.framework import vsphere_utils
+
+from cosmo_tester.framework.handlers import BaseHandler, BaseCloudifyInputsConfigReader
 import random
+from cosmo_tester.framework.testenv import CLOUDIFY_TEST_NO_CLEANUP
 
 __author__ = 'boris'
 
+def get_vsphere_state(env):
+    #vms = vsphere_utils.get_all_vms('192.168.30.1', 'administrator@vsphere.local', 'Cloudify1!', '443')
+    vms = vsphere_utils.get_all_vms(env.vsphere_url, env.vsphere_username, env.vsphere_password, '443')
+    for vm in vms:
+        vsphere_utils.print_vm_info(vm)
+    return vms
+
 
 class VsphereCleanupContext(BaseHandler.CleanupContext):
-    def __init__(self, context_name, cloudify_config):
-        super(VsphereCleanupContext, self).__init__(context_name,
-                                                    cloudify_config)
-        #self.before_run = ec2_infra_state(cloudify_config)
-        #self.logger = logging.getLogger('Ec2CleanupContext')
+    def __init__(self, context_name, env):
+        super(VsphereCleanupContext, self).__init__(context_name, env)
+        self.vsphere_state_before = get_vsphere_state(env)
+
 
     def cleanup(self):
         super(VsphereCleanupContext, self).cleanup()
+        if os.environ.get(CLOUDIFY_TEST_NO_CLEANUP):
+            self.logger.warn('SKIPPING cleanup: of the resources')
+            return
+        vsphere_state_after = get_vsphere_state(self.config)
+        diff = self.calc_diff(self.vsphere_state_before, vsphere_state_after)
+        for vm in diff:
+            #TODO call terminate here
+            #vsphere_utils.terminate_vm(self.config)
+            vsphere_utils.print_vm_info(vm)
+
+    #TODO test this method
+    def calc_diff(self, vms_before, vms_after):
+        return list(set(vms_after) - set(vms_before))
 
 
-class CloudifyVsphereConfigReader(BaseHandler.CloudifyConfigReader):
-    def __init__(self, cloudify_config):
-        super(CloudifyVsphereConfigReader, self).__init__(cloudify_config)
+class CloudifyVsphereInputsConfigReader(BaseCloudifyInputsConfigReader):
+
+    def __init__(self, cloudify_config, manager_blueprint_path, **kwargs):
+        super(CloudifyVsphereInputsConfigReader, self).__init__(
+            cloudify_config, manager_blueprint_path=manager_blueprint_path,
+            **kwargs)
 
     @property
     def management_server_name(self):
-        return self.config['compute']['management_server']['instance']['name']
+        return self.config['manager_server_name']
 
     @property
     def agent_key_path(self):
-        return self.config['compute']['agent_servers']['agents_keypair'][
-            'private_key_path']
+        return self.config['agent_private_key_path']
 
     @property
     def management_user_name(self):
-        return self.config['compute']['management_server'][
-            'user_on_management']
+        return self.config['manager_server_user']
 
     @property
     def management_key_path(self):
-        return self.config['compute']['management_server'][
-            'management_keypair']['private_key_path']
+        return self.config['manager_private_key_path']
 
     @property
-    def agent_keypair_name(self):
-        return self.config['compute']['agent_servers']['agents_keypair'][
-            'name']
+    def external_network_name(self):
+        return self.config['external_network_name']
 
     @property
-    def management_keypair_name(self):
-        return self.config['compute']['management_server'][
-            'management_keypair']['name']
+    def vsphere_username(self):
+        return self.config['vsphere_username']
 
     @property
-    def datacenter_name(self):
-        return self.config['connection']['datacenter_name']
+    def vsphere_password(self):
+        return self.config['vsphere_password']
 
     @property
-    def dmz_network_name(self):
-        return self.config['networking']['dmz_network']['name']
+    def vsphere_datacenter_name(self):
+        return self.config['vsphere_datacenter_name']
+
+    @property
+    def vsphere_url(self):
+        return self.config['vsphere_url']
 
     @property
     def management_network_name(self):
-        return self.config['networking']['management_network']['name']
+        return self.config['management_network_name']
 
     @property
-    def application_network_name(self):
-        return self.config['networking']['application_network']['name']
+    def external_network_name(self):
+        return self.config['external_network_name']
 
 
 class VsphereHandler(BaseHandler):
     provider = 'vsphere'
     CleanupContext = VsphereCleanupContext
-    CloudifyConfigReader = CloudifyVsphereConfigReader
+    manager_blueprint = 'manager_blueprint/vsphere.yaml'
+    CloudifyConfigReader = CloudifyVsphereInputsConfigReader
 
     def __init__(self, env):
         super(VsphereHandler, self).__init__(env)
@@ -97,8 +123,8 @@ class VsphereHandler(BaseHandler):
     def before_bootstrap(self):
         with self.update_cloudify_config() as patch:
             suffix = '-%06x' % random.randrange(16 ** 6)
-            patch.append_value('compute.management_server.instance.name',
-                               suffix)
+            patch.append_value('manager_server_name', suffix)
+        print "before bs"
 
     def after_teardown(self):
         print "after teardown stuff"

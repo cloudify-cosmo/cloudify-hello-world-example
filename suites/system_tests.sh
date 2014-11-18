@@ -17,6 +17,9 @@ setenv()
 	BRANCH_NAME_CLI=${BRANCH_NAME_CLI=$BRANCH_NAME}
 	BRANCH_NAME_MANAGER_BLUEPRINTS=${BRANCH_NAME_MANAGER_BLUEPRINTS=$BRANCH_NAME}
 	BRANCH_NAME_SYSTEM_TESTS=${BRANCH_NAME_SYSTEM_TESTS=$BRANCH_NAME}
+	BRANCH_NAME_VSPHERE_PLUGIN=${BRANCH_NAME_VSPHERE_PLUGIN='master'}
+	OPENCM_GIT_PWD=${OPENCM_GIT_PWD}
+
 	NOSETESTS_TO_RUN=${NOSETESTS_TO_RUN='cosmo_tester/test_suites'}
 
 	# for documentation purposes, injected by quickbuild, used by `update_config.py`
@@ -52,11 +55,19 @@ setenv()
 	export PYTHONUNBUFFERED="true"
 
 	# export system tests related variables
-	export MANAGER_BLUEPRINTS_DIR="${BASE_DIR}/cloudify-manager-blueprints"
 	export CLOUDIFY_TEST_CONFIG_PATH=$GENERATED_CLOUDIFY_TEST_CONFIG_PATH
 	export CLOUDIFY_TEST_HANDLER_MODULE=${CLOUDIFY_TEST_HANDLER_MODULE='cosmo_tester.framework.handlers.openstack'}
 	export BOOTSTRAP_USING_PROVIDERS=${BOOTSTRAP_USING_PROVIDERS}
 	export WORKFLOW_TASK_RETRIES=${WORKFLOW_TASK_RETRIES=20}
+	export CLOUDIFY_AUTOMATION_TOKEN=${CLOUDIFY_AUTOMATION_TOKEN}
+	export VSPHERE_PLUGIN_TOKEN=${VSPHERE_PLUGIN_TOKEN}
+	# If handler is vsphere set the manager dir to the plugin's directory
+	if [[ "$CLOUDIFY_TEST_HANDLER_MODULE" = "cosmo_tester.framework.handlers.vsphere" ]]
+    	then
+    		export MANAGER_BLUEPRINTS_DIR="${BASE_DIR}/cloudify-vsphere-plugin"
+    	else
+	        export MANAGER_BLUEPRINTS_DIR="${BASE_DIR}/cloudify-manager-blueprints"
+	fi
 }
 
 clone_and_install_system_tests()
@@ -67,14 +78,13 @@ clone_and_install_system_tests()
 	clone_and_checkout cloudify-openstack-provider $BRANCH_NAME_OPENSTACK_PROVIDER
 	clone_and_checkout cloudify-libcloud-provider $BRANCH_NAME_LIBCLOUD_PROVIDER
 	clone_and_checkout cloudify-manager-blueprints $BRANCH_NAME_MANAGER_BLUEPRINTS
-	#check vsphere name of provider and git address
-	clone_and_checkout cloudify-vsphere-provider $BRANCH_NAME_VSPHERE_PROVIDER
+	clone_and_checkout cloudify-vsphere-plugin $BRANCH_NAME_VSPHERE_PLUGIN Gigaspaces private
 
 	echo "### Installing system tests dependencies"
 	pip install ./cloudify-cli -r cloudify-cli/dev-requirements.txt
 	pip install ./cloudify-openstack-provider
 	pip install ./cloudify-libcloud-provider
-	pip install ./cloudify-vsphere-provider
+	pip install ./cloudify-vsphere-plugin
 	pip install -e ./cloudify-system-tests
 }
 
@@ -82,14 +92,25 @@ clone_and_checkout()
 {
 	local repo_name=$1
 	local branch_name=$2
-	echo "### Cloning '${repo_name}' and checking out '${branch_name}' branch"
-	git clone "https://github.com/cloudify-cosmo/${repo_name}" --depth 1
-	pushd $repo_name
-	# We checkout the branch explicitly and not using the -b flag during clone,
-	# because if the branch is missing, it only issues a warning and exits with exit code 0,
-	# which is not what we want
-	git checkout $branch_name
-	popd
+	base_repo_url="https://github.com/"
+	organization="cloudify-cosmo"
+	custom_organization=$3
+	if [[ -n "$3" ]]
+	then
+		organization=${custom_organization}
+	fi
+	echo "### Cloning '${repo_name}' and checking out '${branch_name}' branch from organization '${organization}'"
+	if [ "$4" = "private" ]; then
+	   git clone "https://opencm:${OPENCM_GIT_PWD}@github.com/${organization}/${repo_name}" --depth 1
+	else
+        git clone "${base_repo_url}${organization}/${repo_name}" --depth 1
+    fi
+    pushd $repo_name
+    # We checkout the branch explicitly and not using the -b flag during clone,
+    # because if the branch is missing, it only issues a warning and exits with exit code 0,
+    # which is not what we want
+    git checkout $branch_name
+    popd
 }
 
 generate_config()
@@ -97,6 +118,11 @@ generate_config()
 	echo "### Generating config file for test suite"
 	cp $ORIGINAL_CLOUDIFY_TEST_CONFIG_PATH $GENERATED_CLOUDIFY_TEST_CONFIG_PATH
 	"${BASE_HOST_DIR}/helpers/update_config.py" $GENERATED_CLOUDIFY_TEST_CONFIG_PATH
+	# replace place holders in vsphere repo in order to access private resources
+	if [[ "$CLOUDIFY_TEST_HANDLER_MODULE" = "cosmo_tester.framework.handlers.vsphere" ]]
+        then
+     		"${BASE_HOST_DIR}/helpers/update_vsphere_config.py" $MANAGER_BLUEPRINTS_DIR
+    fi
 }
 
 run_nose()

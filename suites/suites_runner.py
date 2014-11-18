@@ -27,6 +27,11 @@ reports_dir = path(os.path.dirname(__file__)) / 'xunit-reports'
 
 env_variables = {
     'TEST_SUITES_PATH': '',
+    #opencm creds for private repos
+    'OPENCM_GIT_PWD': '',
+    #tokens used to access private repos
+    'CLOUDIFY_AUTOMATION_TOKEN': '',
+    'VSPHERE_PLUGIN_TOKEN': '',
 
     #vSphere creds
     'VSPHERE_USERNAME': '',
@@ -51,6 +56,7 @@ env_variables = {
     'BRANCH_NAME_SYSTEM_TESTS': '',
     'BRANCH_NAME_CLI': '',
     'BRANCH_NAME_MANAGER_BLUEPRINTS': '',
+    'BRANCH_NAME_VSPHERE_PLUGIN': '',
 
     # packages
     'COMPONENTS_PACKAGE_URL': '',
