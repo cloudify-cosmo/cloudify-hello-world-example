@@ -13,17 +13,14 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 import os
+import random
 
 from cosmo_tester.framework import vsphere_utils
-
 from cosmo_tester.framework.handlers import BaseHandler, BaseCloudifyInputsConfigReader
-import random
 from cosmo_tester.framework.testenv import CLOUDIFY_TEST_NO_CLEANUP
 
-__author__ = 'boris'
 
 def get_vsphere_state(env):
-    #vms = vsphere_utils.get_all_vms('192.168.30.1', 'administrator@vsphere.local', 'Cloudify1!', '443')
     vms = vsphere_utils.get_all_vms(env.vsphere_url, env.vsphere_username, env.vsphere_password, '443')
     for vm in vms:
         vsphere_utils.print_vm_info(vm)
@@ -34,7 +31,6 @@ class VsphereCleanupContext(BaseHandler.CleanupContext):
     def __init__(self, context_name, env):
         super(VsphereCleanupContext, self).__init__(context_name, env)
         self.vsphere_state_before = get_vsphere_state(env)
-
 
     def cleanup(self):
         super(VsphereCleanupContext, self).cleanup()
@@ -109,11 +105,12 @@ class VsphereHandler(BaseHandler):
     provider = 'vsphere'
     CleanupContext = VsphereCleanupContext
     manager_blueprint = 'manager_blueprint/vsphere.yaml'
-    CloudifyConfigReader = CloudifyVsphereInputsConfigReader
+    CloudifyConfigReader = None
 
     def __init__(self, env):
         super(VsphereHandler, self).__init__(env)
         self._template = None
+        self.CloudifyConfigReader = CloudifyVsphereInputsConfigReader
 
     @property
     def template(self):
