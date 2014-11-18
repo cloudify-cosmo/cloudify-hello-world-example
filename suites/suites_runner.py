@@ -50,7 +50,8 @@ env_variables = {
     'KEYSTONE_AUTH_URL': '',
 
     # branch names
-    'BRANCH_NAME': 'master',
+    'BRANCH_NAME_CORE': '',
+    'BRANCH_NAME_PLUGINS': '',
     'BRANCH_NAME_OPENSTACK_PROVIDER': '',
     'BRANCH_NAME_LIBCLOUD_PROVIDER': '',
     'BRANCH_NAME_SYSTEM_TESTS': '',
