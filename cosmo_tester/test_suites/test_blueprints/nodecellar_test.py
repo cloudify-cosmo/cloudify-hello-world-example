@@ -148,6 +148,9 @@ class NodecellarAppTest(TestCase):
 
     def post_uninstall_assertions(self):
         nodes_instances = self.client.node_instances.list(self.deployment_id)
+        # using "get" calls to avoid ES eventual consistency errors.....
+        nodes_instances = [self.client.node_instances.get(instance.id)
+                           for instance in nodes_instances]
         print nodes_instances
         self.assertFalse(any(node_ins for node_ins in nodes_instances if
                              node_ins.state != 'deleted'))
@@ -160,17 +163,10 @@ class NodecellarAppTest(TestCase):
             pass
 
 
-class OpenStackNodeCellarTest(NodecellarAppTest):
+class OpenStackNodeCellarTestBase(NodecellarAppTest):
 
-    # NOTE: when adding or modifying tests in this class, make sure to also
-    # pay attention to the nova-net nodecellar test class
-    # (OpenStackNovaNetNodeCellarTest) which inherits from this one (and
-    # will therefore run any tests added to this one)
-
-    BLUEPRINT_FILE = 'openstack-blueprint.yaml'
-
-    def test_openstack_nodecellar(self):
-        self._test_nodecellar_impl(self.BLUEPRINT_FILE,
+    def _test_openstack_nodecellar(self, blueprint_file):
+        self._test_nodecellar_impl(blueprint_file,
                                    self.env.ubuntu_image_name,
                                    self.env.flavor_name)
 
@@ -181,3 +177,9 @@ class OpenStackNodeCellarTest(NodecellarAppTest):
                 'image_name': image_name,
                 'flavor_name': flavor_name
             })
+
+
+class OpenStackNodeCellarTest(OpenStackNodeCellarTestBase):
+
+    def test_openstack_nodecellar(self):
+        self._test_openstack_nodecellar('openstack-blueprint.yaml')

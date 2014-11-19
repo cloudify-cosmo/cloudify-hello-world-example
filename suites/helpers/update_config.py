@@ -75,6 +75,13 @@ def main():
         'cosmo_tester.framework.handlers.simple_on_openstack']:
         cloud_specific_properties = openstack_provider_properties \
             if bootstrap_using_providers else openstack_inputs_properties
+    elif handler == 'cosmo_tester.framework.handlers.openstack_nova_net':
+        # openstack_nova_net handler currently has no cloud specific
+        # properties, as the credentials information is simply hardcoded in its
+        # inputs file, and there's no need to override it with quickbuild
+        # data. if such a need arises, there should be separate env vars
+        # for the nova net openstack credentials.
+        cloud_specific_properties = {}
     elif handler == 'cosmo_tester.framework.handlers.ec2':
         cloud_specific_properties = ec2_provider_properties
     else:

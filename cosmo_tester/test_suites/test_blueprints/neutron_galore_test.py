@@ -24,12 +24,6 @@ from cosmo_tester.framework.util import (
     YamlPatcher,
     get_actual_keypath
 )
-from cosmo_tester.framework.handlers.openstack import (
-    openstack_clients,
-    openstack_infra_state,
-    openstack_infra_state_delta
-)
-
 
 PRIVATE_KEY_PATH = '~/.ssh/neutron-test.pem'
 
@@ -181,7 +175,7 @@ class NeutronGaloreTest(TestCase):
         self.assertFalse(self._check_if_private_key_is_on_manager())
 
     def _test_use_external_resource(self, inputs):
-        before_openstack_infra_state = openstack_infra_state(self.env)
+        before_openstack_infra_state = self.env.handler.openstack_infra_state()
 
         self._modify_blueprint_use_external_resource()
 
@@ -225,9 +219,9 @@ class NeutronGaloreTest(TestCase):
         self.assertTrue(self._check_if_private_key_is_on_manager())
 
         # verify there aren't any new resources on Openstack
-        after_openstack_infra_state = openstack_infra_state(self.env)
-        delta = openstack_infra_state_delta(before_openstack_infra_state,
-                                            after_openstack_infra_state)
+        after_openstack_infra_state = self.env.handler.openstack_infra_state()
+        delta = self.env.handler.openstack_infra_state_delta(
+            before_openstack_infra_state, after_openstack_infra_state)
         for delta_resources_of_single_type in delta.values():
             self.assertFalse(delta_resources_of_single_type)
 
@@ -286,7 +280,7 @@ class NeutronGaloreTest(TestCase):
         return node_states
 
     def get_openstack_components(self, states):
-        nova, neutron = openstack_clients(self.env)
+        nova, neutron = self.env.handler.openstack_clients()
         eid = 'external_id'
         sg = 'security_group'
         i = 'floatingip'

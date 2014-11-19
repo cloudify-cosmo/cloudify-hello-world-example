@@ -27,7 +27,7 @@
         "suite_name": "pclab47_devstack_nova_net",
         "tests_to_run": "cosmo_tester/test_suites/test_openstack_nova_net",
         "cloudify_test_config": "inputs-nova-net-devstack.json",
-        "cloudify_test_handler_module": "cosmo_tester.framework.handlers.openstack"
+        "cloudify_test_handler_module": "cosmo_tester.framework.handlers.openstack_nova_net"
     },
     {
         "suite_name": "hp_openstack_all_providers",
