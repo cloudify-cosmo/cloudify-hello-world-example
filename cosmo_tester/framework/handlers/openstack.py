@@ -40,7 +40,6 @@ logging.getLogger('novaclient.client').setLevel(logging.INFO)
 CLOUDIFY_TEST_NO_CLEANUP = 'CLOUDIFY_TEST_NO_CLEANUP'
 
 
-
 class OpenstackCleanupContext(BaseHandler.CleanupContext):
 
     def __init__(self, context_name, env):
@@ -306,7 +305,8 @@ class OpenstackHandler(BaseHandler):
     def openstack_infra_state(self):
         """
         @retry decorator is used because this error sometimes occur:
-        ConnectionFailed: Connection to neutron failed: Maximum attempts reached
+        ConnectionFailed: Connection to neutron failed: Maximum
+        attempts reached
         """
         nova, neutron = self.openstack_clients()
         prefix = self.env.resources_prefix
@@ -400,14 +400,14 @@ class OpenstackHandler(BaseHandler):
         for floatingip in floatingips:
             if floatingip['id'] in resources_to_remove['floatingips']:
                 with self._handled_exception(floatingip['id'], failed,
-                                        'floatingips'):
+                                             'floatingips'):
                     neutron.delete_floatingip(floatingip['id'])
         for security_group in security_groups:
             if security_group['name'] == 'default':
                 continue
             if security_group['id'] in resources_to_remove['security_groups']:
                 with self._handled_exception(security_group['id'],
-                                        failed, 'security_groups'):
+                                             failed, 'security_groups'):
                     neutron.delete_security_group(security_group['id'])
 
         return failed
