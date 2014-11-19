@@ -28,7 +28,6 @@ class OpenstackNovaNetHandler(OpenstackHandler):
     flavor_name = 'm1.small'
     ubuntu_image_id = '7a19daad-8eb0-44a4-8b48-cd403abd5cc2'
     small_flavor_id = 3
-    has_neutron_service = False
 
     # there's no support for nova net providers anymore
     provider = None
