@@ -19,9 +19,6 @@ import urllib
 from cosmo_tester.framework.testenv import TestCase
 
 
-__author__ = 'boris'
-
-
 class HelloVsphereTest(TestCase):
     """Tests vSphere with basic blueprint
        To run this tests locally you should have VSPHERE_PLUGIN_TOKEN and
@@ -32,7 +29,9 @@ class HelloVsphereTest(TestCase):
         self.token_env_variable = 'VSPHERE_PLUGIN_TOKEN'
         self.cloudify_automation_token_place_holder = '{CLOUDIFY_AUTOMATION_TOKEN}'
         self.cloudify_automation_token_env_variable = 'CLOUDIFY_AUTOMATION_TOKEN'
-        self.base_url='https://raw.githubusercontent.com/Gigaspaces/cloudify-vsphere-plugin/master/plugin.yaml'
+        self.branch = os.environ.get('BRANCH_NAME_VSPHERE_PLUGIN', 'master')
+        self.base_url = 'https://raw.githubusercontent.com/Gigaspaces/cloudify-vsphere-plugin/'\
+                        + self.branch + '/plugin.yaml'
         blueprint_path = self.copy_blueprint('hello-vsphere')
         self.blueprint_yaml = blueprint_path / 'blueprint.yaml'
         self.download_and_modify_plugin(blueprint_path)

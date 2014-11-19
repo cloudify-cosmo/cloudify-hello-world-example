@@ -30,6 +30,7 @@ def get_vsphere_state(env):
 class VsphereCleanupContext(BaseHandler.CleanupContext):
     def __init__(self, context_name, env):
         super(VsphereCleanupContext, self).__init__(context_name, env)
+        self.enviro = env
         self.vsphere_state_before = get_vsphere_state(env)
 
     def cleanup(self):
@@ -37,16 +38,8 @@ class VsphereCleanupContext(BaseHandler.CleanupContext):
         if os.environ.get(CLOUDIFY_TEST_NO_CLEANUP):
             self.logger.warn('SKIPPING cleanup: of the resources')
             return
-        vsphere_state_after = get_vsphere_state(self.config)
-        diff = self.calc_diff(self.vsphere_state_before, vsphere_state_after)
-        for vm in diff:
-            #TODO call terminate here
-            #vsphere_utils.terminate_vm(self.config)
-            vsphere_utils.print_vm_info(vm)
-
-    #TODO test this method
-    def calc_diff(self, vms_before, vms_after):
-        return list(set(vms_after) - set(vms_before))
+        prefix = self.enviro.resources_prefix
+        #TODO: clean up VMS using our prefix and kill mgr if needed
 
 
 class CloudifyVsphereInputsConfigReader(BaseCloudifyInputsConfigReader):
