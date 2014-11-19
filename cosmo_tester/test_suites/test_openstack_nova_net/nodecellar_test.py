@@ -15,9 +15,10 @@
 
 
 from cosmo_tester.test_suites.test_blueprints.nodecellar_test import \
-    OpenStackNodeCellarTest
+    OpenStackNodeCellarTestBase
 
 
-class OpenStackNovaNetNodeCellarTest(OpenStackNodeCellarTest):
+class OpenStackNovaNetNodeCellarTest(OpenStackNodeCellarTestBase):
 
-    BLUEPRINT_FILE = 'openstack-nova-net-blueprint.yaml'
+    def test_openstack_nodecellar(self):
+        self._test_openstack_nodecellar('openstack-nova-net-blueprint.yaml')

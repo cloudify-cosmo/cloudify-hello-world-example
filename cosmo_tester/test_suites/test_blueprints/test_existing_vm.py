@@ -23,7 +23,6 @@ from path import path
 
 from cosmo_tester.framework.util import get_actual_keypath
 from cosmo_tester.framework.testenv import TestCase
-from cosmo_tester.framework.handlers.openstack import openstack_clients
 
 
 class ExistingVMTest(TestCase):
@@ -54,7 +53,7 @@ class ExistingVMTest(TestCase):
             management_network_name = '{}{}'.format(
                 prefix, self.env.management_network_name)
 
-        nova_client, _ = openstack_clients(self.env)
+        nova_client, _ = self.env.handler.openstack_clients()
         self.create_keypair_and_copy_to_manager(
             nova_client=nova_client,
             remote_key_path=remote_key_path,

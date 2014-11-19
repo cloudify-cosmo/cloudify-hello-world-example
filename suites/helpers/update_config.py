@@ -73,6 +73,11 @@ def main():
     if handler in [
         'cosmo_tester.framework.handlers.openstack',
         'cosmo_tester.framework.handlers.simple_on_openstack']:
+        # note that the openstack_nova_net handler was left out of this on
+        # purpose, as the credentials information is simply hardcoded in its
+        # inputs file, and there's no need to override it with quickbuild
+        # data. if such a need arises, there should be different env vars
+        # for the nova net openstack credentials.
         cloud_specific_properties = openstack_provider_properties \
             if bootstrap_using_providers else openstack_inputs_properties
     elif handler == 'cosmo_tester.framework.handlers.ec2':
