@@ -34,7 +34,7 @@ class OpenstackNovaNetHandler(OpenstackHandler):
 
     # there's currently no centos image on our nova net openstack
     centos_image_name = None
-    centos_image_user = 'root'
+    centos_image_user = None
 
     # using the Config Readers of the regular OpenstackHandler - attempts
     # of reading neutron-related data may fail but shouldn't happen from
