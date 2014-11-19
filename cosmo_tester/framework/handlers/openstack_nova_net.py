@@ -91,7 +91,7 @@ class OpenstackNovaNetHandler(OpenstackHandler):
             if floatingip.id in resources_to_remove['floatingips']:
                 with self._handled_exception(floatingip.id, failed,
                                              'floatingips'):
-                    nova.floatingips.delete(floatingip)
+                    nova.floating_ips.delete(floatingip)
         for security_group in security_groups:
             if security_group['name'] == 'default':
                 continue
