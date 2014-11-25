@@ -37,9 +37,9 @@ setup(
         'path.py==5.1',
         'nose',
         'retrying==1.2.2',
-        'cloudify==3.1ga',
-        'cloudify-openstack-provider==3.1ga',
-        'cloudify-libcloud-provider==3.1ga',
+        'cloudify==3.1',
+        'cloudify-openstack-provider==3.1',
+        'cloudify-libcloud-provider==3.1',
         'boto==2.32.1'
     ]
 )
