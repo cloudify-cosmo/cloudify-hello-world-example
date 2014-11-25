@@ -19,7 +19,7 @@ from setuptools import setup
 
 setup(
     name='cloudify-system-tests',
-    version='3.1ga',
+    version='3.1',
     author='dank',
     author_email='dank@gigaspaces.com',
     packages=['cosmo_tester'],
