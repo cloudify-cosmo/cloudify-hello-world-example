@@ -100,7 +100,7 @@ class HelloWorldBashTest(TestCase):
     def _verify_deployment_installed(self, with_server=True):
         (floatingip_node, security_group_node, server_node) = self._instances()
 
-        nova, neutron = self.env.handler.openstack_clients()
+        nova, neutron, _ = self.env.handler.openstack_clients()
 
         server_id = None
         if with_server:
