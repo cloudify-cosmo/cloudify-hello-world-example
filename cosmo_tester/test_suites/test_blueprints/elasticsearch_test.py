@@ -15,19 +15,19 @@
 
 import re
 import time
+import socket
 
 from elasticsearch import Elasticsearch
 from neutronclient.common.exceptions import NeutronClientException
 
 from cosmo_tester.framework.testenv import TestCase
-from cosmo_tester.framework.git_helper import clone
-from cosmo_tester.framework.util import YamlPatcher
 from cosmo_tester.framework.handlers.openstack import OpenstackHandler
 
-DEFAULT_EXECUTE_TIMEOUT = 1800
+ELASTICSEARCH_PORT = 9200
 
-NODECELLAR_URL = "https://github.com/cloudify-cosmo/" \
-                 "cloudify-nodecellar-example.git"
+TIMESTAMP_PATTERN = '\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{3}'
+
+DEFAULT_EXECUTE_TIMEOUT = 1800
 
 
 class ElasticsearchTimestampFormatTest(TestCase):
@@ -40,7 +40,7 @@ class ElasticsearchTimestampFormatTest(TestCase):
     Timestamp Format of the events to a regular expression.
 
     This test requires access to the management on port 9200 (elastic search",
-    The rule is added by create_elasticsearch_rule
+    The rule is added by _create_elasticsearch_rule
     """
     def _create_elasticsearch_rule(self):
         os_handler = OpenstackHandler(self.env)
@@ -48,8 +48,8 @@ class ElasticsearchTimestampFormatTest(TestCase):
         sgr = {
             'direction': 'ingress',
             'ethertype': 'IPv4',
-            'port_range_max': '9200',
-            'port_range_min': '9200',
+            'port_range_max': str(ELASTICSEARCH_PORT),
+            'port_range_min': str(ELASTICSEARCH_PORT),
             'protocol': 'tcp',
             'remote_group_id': None,
             'remote_ip_prefix': '0.0.0.0/0',
@@ -63,12 +63,18 @@ class ElasticsearchTimestampFormatTest(TestCase):
         sg_id = mng_sec_grp['id']
         sgr['security_group_id'] = sg_id
         try:
-            self.elasticsearch_rule = neutron_client.create_security_group_rule
-            ({'security_group_rule': sgr})['security_group_rule']['id']
-            time.sleep(20)  # allow rule to be created
+            self.elasticsearch_rule = neutron_client.\
+                create_security_group_rule(
+                    {'security_group_rule': sgr})['security_group_rule']['id']
+            if not self._wait_for_open_port(self.env.management_ip,
+                                            ELASTICSEARCH_PORT,
+                                            60):
+                raise Exception('Couldn\'t open elasticsearch port')
+
         except NeutronClientException as e:
             self.elasticsearch_rule = None
-            print "Got NeutronClientException({0}). Resuming".format(str(e))
+            self.logger.warning("Got NeutronClientException({0}). Resuming"
+                                .format(e))
             pass
 
     def setUp(self):
@@ -82,53 +88,48 @@ class ElasticsearchTimestampFormatTest(TestCase):
             neutron_client.delete_security_group_rule(self.elasticsearch_rule)
 
     def tearDown(self):
+        self.execute_uninstall()
         self._delete_elasticsearch_rule()
         super(ElasticsearchTimestampFormatTest, self).tearDown()
 
-    def test_events_timestamp_format(self):
+    def _check_port(self, ip, port):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        result = sock.connect_ex((ip, port))
+        return result == 0
 
-        self.repo_dir = clone(NODECELLAR_URL, self.workdir)
-        self.blueprint_yaml = self.repo_dir / 'openstack-blueprint.yaml'
-        self.modify_blueprint()
-        try:
-            self.cfy.upload_blueprint(self.test_id, self.blueprint_yaml, False)
-        except Exception:
-            self.fail('failed to upload the blueprint')
-        time.sleep(5)
-        try:
-            self.cfy.create_deployment(blueprint_id=self.test_id,
-                                       deployment_id=self.test_id)
-        except Exception:
-            self.fail('failed to create a deployment')
-        time.sleep(5)
+    def _wait_for_open_port(self, ip, port, timeout):
+        timeout = time.time() + timeout
+        is_open = False
+        while not is_open:
+            if time.time() > timeout:
+                break
+            is_open = self._check_port(ip, port)
+        return is_open
+
+    def test_events_timestamp_format(self):
+        self.blueprint_path = self.copy_blueprint('mocks')
+        self.blueprint_yaml = self.blueprint_path / 'empty-bp.yaml'
+
+        deployment_id = self.test_id
+        self.upload_deploy_and_execute_install(deployment_id=deployment_id)
 
         #  connect to Elastic search
-        try:
-            es = Elasticsearch(self.env.management_ip + ':9200')
-        except Exception:
-            self.fail('failed to connect Elasticsearch')
-        #  get events from events index
+
+        es = Elasticsearch(self.env.management_ip +
+                           ':' + str(ELASTICSEARCH_PORT))
+
         res = es.search(index="cloudify_events",
-                        body={"query": {"match_all": {}}})
-        print("res Got %d Hits:" % res['hits']['total'])
+                        body={"query": {"match":
+                                        {"deployment_id": deployment_id}}})
+        self.logger.info("Got %d Hits:" % res['hits']['total'])
         #  check if events were created
-        if(0 == (res['hits']['total'])):
-            self.fail('there are no events with '
-                      'timestamp in index cloudify_events')
+        self.assertNotEqual(0, res['hits']['total'],
+                            'There are no events in for '
+                            'deployment ' + deployment_id)
+
         #  loop over all the events and compare timestamp to regular expression
         for hit in res['hits']['hits']:
-            if not (re.match('\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{3}',
-                             (str("%(timestamp)s" % hit["_source"])))):
+            if not (re.match(TIMESTAMP_PATTERN, hit["_source"]['timestamp'])):
                 self.fail('Got {0}. Does not match format '
                           'YYYY-MM-DD HH:MM:SS.***'
-                          .format((str("%(timestamp)s" % hit["_source"]))))
-        return
-
-    def modify_blueprint(self):
-        with YamlPatcher(self.blueprint_yaml) as patch:
-            vm_type_path = 'node_types.vm_host.properties'
-            patch.merge_obj('{0}.server.default'.format(vm_type_path), {
-                'image_name': self.env.ubuntu_image_name,
-                'flavor_name': self.env.flavor_name
-            })
-        return
+                          .format(hit["_source"]['timestamp']))
