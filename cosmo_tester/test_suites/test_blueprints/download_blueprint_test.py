@@ -28,6 +28,7 @@ from cosmo_tester.framework.testenv import TestCase
 class DownloadBlueprintTest(TestCase):
     """
     CFY-196: Tests downloading of a previously uploaded blueprint.
+    CFY-995" Added a large (50MB) file to the blueprint
     """
 
     def setUp(self):
@@ -46,6 +47,7 @@ class DownloadBlueprintTest(TestCase):
 
     def download_blueprint_test(self):
         blueprint_path = self.copy_blueprint('mocks')
+        self._create_file("50M", "just_a_large_file.img", blueprint_path)
         blueprint_yaml = blueprint_path / 'single-node.yaml'
         self.cfy.upload_blueprint(self.blueprint_id, blueprint_yaml)
         self.cfy.download_blueprint(self.blueprint_id)
@@ -60,3 +62,7 @@ class DownloadBlueprintTest(TestCase):
         with tarfile.open(self.downloaded_archive_path) as tar:
             for item in tar:
                 tar.extract(item, self.download_path)
+
+    def _create_file(self, fileSize, fileName, path):
+        os.system("fallocate -l " + fileSize +
+                  " " + path + "/" + fileName)
