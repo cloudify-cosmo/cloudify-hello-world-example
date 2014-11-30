@@ -40,6 +40,7 @@ setup(
         'cloudify==3.1',
         'cloudify-openstack-provider==1.1',
         'cloudify-libcloud-provider==1.1',
-        'boto==2.32.1'
+        'boto==2.32.1',
+        'elasticsearch'
     ]
 )

@@ -13,19 +13,6 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
-__author__ = 'hagai'
-
-'''
-CFY-54
-this test checks Elasticsearch Timestamp Format.
-it creates events by uploading a blueprint and creating deployment.
-after creating events the test connects to Elasticsearch and compares
-Timestamp Format of the events to a regular expression.
-
-This test requires access to the management on port 9200 (elastic search",
-The rule is added by create_elasticsearch_rule
-'''
-
 import re
 import time
 
@@ -45,7 +32,17 @@ NODECELLAR_URL = "https://github.com/cloudify-cosmo/" \
 
 class ElasticsearchTimestampFormatTest(TestCase):
 
-    def create_elasticsearch_rule(self):
+    """
+    CFY-54
+    this test checks Elasticsearch Timestamp Format.
+    it creates events by uploading a blueprint and creating deployment.
+    after creating events the test connects to Elasticsearch and compares
+    Timestamp Format of the events to a regular expression.
+
+    This test requires access to the management on port 9200 (elastic search",
+    The rule is added by create_elasticsearch_rule
+    """
+    def _create_elasticsearch_rule(self):
         os_handler = OpenstackHandler(self.env)
         neutron_client = os_handler.openstack_clients()[1]
         sgr = {
@@ -65,24 +62,30 @@ class ElasticsearchTimestampFormatTest(TestCase):
 
         sg_id = mng_sec_grp['id']
         sgr['security_group_id'] = sg_id
-        rule_id = neutron_client.create_security_group_rule(
-            {'security_group_rule': sgr})['security_group_rule']['id']
-        return rule_id
-
-    def delete_elasticsearch_rule(self, rule):
-        os_handler = OpenstackHandler(self.env)
-        neutron_client = os_handler.openstack_clients()[1]
-        neutron_client.delete_security_group_rule(rule)
-
-    def test_events_timestamp_format(self):
         try:
-            print "Creating elastic-search security rule"
-            rule = self.create_elasticsearch_rule()
+            self.elasticsearch_rule = neutron_client.create_security_group_rule
+            ({'security_group_rule': sgr})['security_group_rule']['id']
             time.sleep(20)  # allow rule to be created
         except NeutronClientException as e:
-            rule = None
-            print "NeutronClientException({0}). Resuming".format(str(e))
+            self.elasticsearch_rule = None
+            print "Got NeutronClientException({0}). Resuming".format(str(e))
             pass
+
+    def setUp(self):
+        super(ElasticsearchTimestampFormatTest, self).setUp()
+        self._create_elasticsearch_rule()
+
+    def _delete_elasticsearch_rule(self):
+        if self.elasticsearch_rule is not None:
+            os_handler = OpenstackHandler(self.env)
+            neutron_client = os_handler.openstack_clients()[1]
+            neutron_client.delete_security_group_rule(self.elasticsearch_rule)
+
+    def tearDown(self):
+        self._delete_elasticsearch_rule()
+        super(ElasticsearchTimestampFormatTest, self).tearDown()
+
+    def test_events_timestamp_format(self):
 
         self.repo_dir = clone(NODECELLAR_URL, self.workdir)
         self.blueprint_yaml = self.repo_dir / 'openstack-blueprint.yaml'
@@ -93,7 +96,8 @@ class ElasticsearchTimestampFormatTest(TestCase):
             self.fail('failed to upload the blueprint')
         time.sleep(5)
         try:
-            self.cfy.create_deployment(blueprint_id=self.test_id, deployment_id=self.test_id)
+            self.cfy.create_deployment(blueprint_id=self.test_id,
+                                       deployment_id=self.test_id)
         except Exception:
             self.fail('failed to create a deployment')
         time.sleep(5)
@@ -118,11 +122,6 @@ class ElasticsearchTimestampFormatTest(TestCase):
                 self.fail('Got {0}. Does not match format '
                           'YYYY-MM-DD HH:MM:SS.***'
                           .format((str("%(timestamp)s" % hit["_source"]))))
-
-        if rule is not None:
-            print "Deleting elastic-search rule"
-            self.delete_elasticsearch_rule(rule)
-
         return
 
     def modify_blueprint(self):
