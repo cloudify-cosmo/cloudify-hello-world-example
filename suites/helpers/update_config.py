@@ -77,7 +77,7 @@ def main():
     bootstrap_using_providers = \
         os.environ['BOOTSTRAP_USING_PROVIDERS'] == 'true'
     bootstrap_using_docker = \
-        os.environ['BOOTSTRAP_USING_DOCKER'] == 'true'
+        os.environ.get('BOOTSTRAP_USING_DOCKER', 'false') == 'true'
 
     handler = os.environ.get('CLOUDIFY_TEST_HANDLER_MODULE')
     if handler in [
