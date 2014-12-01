@@ -31,6 +31,7 @@ setup(
         'python-novaclient==2.17.0',
         'python-keystoneclient==0.7.1',
         'python-neutronclient==2.3.9',
+        'python-cinderclient==1.0.9',
         'PyYAML==3.10',
         'requests==2.2.1',
         'sh==1.09',
