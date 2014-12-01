@@ -53,7 +53,7 @@ class ExistingVMTest(TestCase):
             management_network_name = '{}{}'.format(
                 prefix, self.env.management_network_name)
 
-        nova_client, _ = self.env.handler.openstack_clients()
+        nova_client, _, _ = self.env.handler.openstack_clients()
         self.create_keypair_and_copy_to_manager(
             nova_client=nova_client,
             remote_key_path=remote_key_path,

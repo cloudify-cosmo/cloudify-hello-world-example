@@ -23,6 +23,7 @@ import time
 import copy
 from contextlib import contextmanager
 
+from cinderclient.v1 import client as cinderclient
 import novaclient.v1_1.client as nvclient
 import neutronclient.v2_0.client as neclient
 from retrying import retry
@@ -299,7 +300,8 @@ class OpenstackHandler(BaseHandler):
                                 password=creds['api_key'],
                                 tenant_name=creds['project_id'],
                                 region_name=creds['region_name'],
-                                auth_url=creds['auth_url']))
+                                auth_url=creds['auth_url']),
+                cinderclient.Client(**creds))
 
     @retry(stop_max_attempt_number=5, wait_fixed=20000)
     def openstack_infra_state(self):
@@ -308,7 +310,7 @@ class OpenstackHandler(BaseHandler):
         ConnectionFailed: Connection to neutron failed: Maximum
         attempts reached
         """
-        nova, neutron = self.openstack_clients()
+        nova, neutron, cinder = self.openstack_clients()
         prefix = self.env.resources_prefix
         return {
             'networks': dict(self._networks(neutron, prefix)),
@@ -318,7 +320,8 @@ class OpenstackHandler(BaseHandler):
             'servers': dict(self._servers(nova, prefix)),
             'key_pairs': dict(self._key_pairs(nova, prefix)),
             'floatingips': dict(self._floatingips(neutron, prefix)),
-            'ports': dict(self._ports(neutron, prefix))
+            'ports': dict(self._ports(neutron, prefix)),
+            'volumes': dict(self._volumes(cinder, prefix))
         }
 
     def openstack_infra_state_delta(self, before, after):
@@ -343,7 +346,7 @@ class OpenstackHandler(BaseHandler):
         return resources_to_remove
 
     def _remove_openstack_resources_impl(self, resources_to_remove):
-        nova, neutron = self.openstack_clients()
+        nova, neutron, cinder = self.openstack_clients()
 
         servers = nova.servers.list()
         ports = neutron.list_ports()['ports']
@@ -353,6 +356,7 @@ class OpenstackHandler(BaseHandler):
         keypairs = nova.keypairs.list()
         floatingips = neutron.list_floatingips()['floatingips']
         security_groups = neutron.list_security_groups()['security_groups']
+        volumes = cinder.volumes.list()
 
         failed = {
             'servers': {},
@@ -409,6 +413,10 @@ class OpenstackHandler(BaseHandler):
                 with self._handled_exception(security_group['id'],
                                              failed, 'security_groups'):
                     neutron.delete_security_group(security_group['id'])
+        for volume in volumes:
+            if volume.id in resources_to_remove['volumes']:
+                with self._handled_exception(volume.id, failed, 'volumes'):
+                    cinder.volumes.delete(volumes)
 
         return failed
 
@@ -459,6 +467,10 @@ class OpenstackHandler(BaseHandler):
         return [(p['id'], p['name'])
                 for p in neutron.list_ports()['ports']
                 if self._check_prefix(p['name'], prefix)]
+
+    def _volumes(self, cinder, prefix):
+        return [(v.id, v.display_name) for v in cinder.volumes.list()
+                if self._check_prefix(v.display_name, prefix)]
 
     def _check_prefix(self, name, prefix):
         return name.startswith(prefix)
