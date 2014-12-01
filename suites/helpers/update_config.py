@@ -63,11 +63,21 @@ shared_manager_blueprint_properties = {
         'node_templates.manager.properties.cloudify.workflows.task_retries',
 }
 
+docker_manager_blueprint_properties = {
+    'DOCKER_IMAGE_URL':
+        'node_templates.manager.properties.cloudify_packages.docker'
+        '.docker_url',
+    'DOCKER_DATA_URL':
+        'node_templates.manager.properties.cloudify_packages.docker'
+        '.docker_data_url',
+}
 
 def main():
     config_path = sys.argv[1]
     bootstrap_using_providers = \
         os.environ['BOOTSTRAP_USING_PROVIDERS'] == 'true'
+    bootstrap_using_docker = \
+        os.environ['BOOTSTRAP_USING_DOCKER'] == 'true'
 
     handler = os.environ.get('CLOUDIFY_TEST_HANDLER_MODULE')
     if handler in [
@@ -104,6 +114,15 @@ def main():
                 manager_blueprints_base_dir):
             _patch_properties(manager_blueprint,
                               shared_manager_blueprint_properties)
+            if bootstrap_using_docker:
+                _patch_properties(manager_blueprint,
+                                  docker_manager_blueprint_properties)
+                with YamlPatcher() as patch:
+                    patch.set_value('node_templates.manager.interfaces'
+                                    '.cloudify.interfaces.lifecycle.start'
+                                    '.inputs.task_mapping',
+                                    'cloudify_cli.bootstrap'
+                                    '.tasks.bootstrap_docker')
 
 
 def _patch_properties(path, properties, is_json=False):

@@ -12,6 +12,13 @@
         "cloudify_test_handler_module": "cosmo_tester.framework.handlers.openstack"
     },
     {
+        "suite_name": "docker_ubuntu_on_openstack",
+        "tests_to_run": "cosmo_tester/test_suites/test_docker_ubuntu_env",
+        "cloudify_test_config": "inputs-openstack.json",
+        "cloudify_test_handler_module": "cosmo_tester.framework.handlers.openstack",
+        "bootstrap_using_docker": true
+    },
+    {
         "suite_name": "hp_openstack_manager_status",
         "tests_to_run": "cosmo_tester/test_suites/test_manager_status",
         "cloudify_test_config": "inputs-openstack.json",
