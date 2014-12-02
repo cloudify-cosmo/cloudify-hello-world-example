@@ -21,10 +21,10 @@ class DockerNodeCellarTest(nodecellar_test.NodecellarAppTest):
 
     def test_docker_and_nodecellar(self):
         self._test_nodecellar_impl('openstack-blueprint.yaml',
-                                   self.env.ubuntu_agent_ami,
-                                   self.env.medium_instance_type)
+                                   self.env.ubuntu_image_id,
+                                   self.env.flavor_name)
 
-    def modify_blueprint(self, image_name, flavor_name):
+    def modify_blueprint(self):
         with YamlPatcher(self.blueprint_yaml) as patch:
             vm_props_path = 'node_types.vm_host.properties'
             patch.merge_obj('{0}.cloudify_agent.default'
@@ -32,6 +32,6 @@ class DockerNodeCellarTest(nodecellar_test.NodecellarAppTest):
                                 'home_dir': '/home/ubuntu'
                             })
             # use ubuntu trusty 14.04 as agent machine
-            patch.merge_obj('{0}.server.default'.format(vm_props_path), {
-                'image': '8ca068c5-6fde-4701-bab8-322b3e7c8d81'
-            })
+            # patch.merge_obj('{0}.server.default'.format(vm_props_path), {
+            #     'image': '8ca068c5-6fde-4701-bab8-322b3e7c8d81'
+            # })
