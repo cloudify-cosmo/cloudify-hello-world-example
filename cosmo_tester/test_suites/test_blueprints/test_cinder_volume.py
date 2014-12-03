@@ -14,7 +14,6 @@
 #    * limitations under the License.
 
 import cosmo_tester.framework.util as framework_util
-import os
 import time
 from cinderclient import exceptions as cinder_exc
 
