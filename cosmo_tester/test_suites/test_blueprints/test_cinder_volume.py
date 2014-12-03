@@ -29,9 +29,10 @@ class CinderVolumeTestBase(TestCase):
     def setUp(self):
         super(CinderVolumeTestBase, self).setUp()
         _, _, self.cinderclient = self.env.handler.openstack_clients()
-        self.blueprint_yaml = os.path.join(
-            framework_util.get_blueprint_path('openstack-cinder'),
-            'blueprint.yaml')
+
+        blueprint_path = self.copy_blueprint('openstack-cinder')
+        self.blueprint_yaml = blueprint_path / 'blueprint.yaml'
+
         self._modify_blueprint_add_image_and_flavor()
         self._modify_blueprint_add_volume_size()
         self._modify_blueprint_add_device_name()
