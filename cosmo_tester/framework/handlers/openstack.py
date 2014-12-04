@@ -366,7 +366,8 @@ class OpenstackHandler(BaseHandler):
             'networks': {},
             'key_pairs': {},
             'floatingips': {},
-            'security_groups': {}
+            'security_groups': {},
+            'volumes': {}
         }
 
         for server in servers:
