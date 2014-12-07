@@ -92,7 +92,7 @@ class NodecellarAppTest(TestCase):
 
         self.public_ip = None
         for key, value in nodes_state.items():
-            if '_vm' in key:
+            if '_host' in key:
                 self.assertTrue('ip' in value['runtime_properties'],
                                 'Missing ip in runtime_properties: {0}'
                                 .format(nodes_state))
@@ -102,12 +102,12 @@ class NodecellarAppTest(TestCase):
                 self.assertEqual(value['state'], 'started',
                                  'vm node should be started: {0}'
                                  .format(nodes_state))
-            elif key.startswith('floatingip'):
+            elif key.startswith('nodecellar_floatingip'):
                 self.public_ip = value['runtime_properties'][
                     'floating_ip_address']
 
         self.assertIsNotNone(self.public_ip,
-                             'Could not find the "floatingip" node for '
+                             'Could not find the "nodecellar_floatingip" node for '
                              'retrieving the public IP')
 
         events, total_events = self.client.events.get(execution_by_id.id)
@@ -171,11 +171,18 @@ class OpenStackNodeCellarTestBase(NodecellarAppTest):
                                    self.env.flavor_name)
 
     def modify_blueprint(self, image_name, flavor_name):
+
         with YamlPatcher(self.blueprint_yaml) as patch:
-            vm_type_path = 'node_types.vm_host.properties'
-            patch.merge_obj('{0}.server.default'.format(vm_type_path), {
-                'image_name': image_name,
-                'flavor_name': flavor_name
+            mongod_host_properties_path = 'node_templates.mongod_host.properties'
+            patch.merge_obj('{0}.server'.format(mongod_host_properties_path), {
+                'image': image_name,
+                'flavor': flavor_name
+            })
+
+            nodejs_host_properties_path = 'node_templates.nodejs_host.properties'
+            patch.merge_obj('{0}.server'.format(nodejs_host_properties_path), {
+                'image': image_name,
+                'size': flavor_name
             })
 
 

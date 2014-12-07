@@ -13,7 +13,6 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
-from cosmo_tester.framework.util import YamlPatcher
 from cosmo_tester.test_suites.test_blueprints import nodecellar_test
 
 
@@ -23,11 +22,3 @@ class EC2NodeCellarTest(nodecellar_test.NodecellarAppTest):
         self._test_nodecellar_impl('ec2-blueprint.yaml',
                                    self.env.ubuntu_agent_ami,
                                    self.env.medium_instance_type)
-
-    def modify_blueprint(self, image_name, flavor_name):
-        with YamlPatcher(self.blueprint_yaml) as patch:
-            vm_type_path = 'node_types.vm_host.properties'
-            patch.merge_obj('{0}.server.default'.format(vm_type_path), {
-                'image_name': image_name,
-                'size_name': flavor_name
-            })
