@@ -28,7 +28,8 @@ NODECELLAR_URL = "https://github.com/cloudify-cosmo/" \
 class NodecellarAppTest(TestCase):
 
     def _test_nodecellar_impl(self, blueprint_file, image_id, flavor_id):
-        self.repo_dir = clone(NODECELLAR_URL, self.workdir, branch='CFY-1746-nodecellar-upgrade')
+        self.repo_dir = clone(NODECELLAR_URL, self.workdir,
+                              branch='CFY-1746-nodecellar-upgrade')
         self.blueprint_yaml = self.repo_dir / blueprint_file
 
         self.modify_blueprint(image_id, flavor_id)
@@ -111,7 +112,8 @@ class NodecellarAppTest(TestCase):
                     'floating_ip_address']
 
         self.assertIsNotNone(self.public_ip,
-                             'Could not find the "nodecellar_floatingip" node for '
+                             'Could not find the '
+                             '"nodecellar_floatingip" node for '
                              'retrieving the public IP')
 
         events, total_events = self.client.events.get(execution_by_id.id)
