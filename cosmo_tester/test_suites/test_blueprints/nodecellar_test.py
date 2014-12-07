@@ -29,7 +29,7 @@ class NodecellarAppTest(TestCase):
 
     def _test_nodecellar_impl(self, blueprint_file, image_id, flavor_id):
         self.repo_dir = clone(NODECELLAR_URL, self.workdir,
-                              branch='master')
+                              branch='CFY-1746-nodecellar-upgrade')
         self.blueprint_yaml = self.repo_dir / blueprint_file
 
         self.modify_blueprint(image_id, flavor_id)
