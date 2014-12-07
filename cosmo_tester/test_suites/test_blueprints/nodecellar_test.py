@@ -34,7 +34,9 @@ class NodecellarAppTest(TestCase):
 
         self.modify_blueprint(image_name, flavor_name)
 
-        before, after = self.upload_deploy_and_execute_install()
+        before, after = self.upload_deploy_and_execute_install(
+            inputs=self.get_inputs(image_name, flavor_name)
+        )
 
         self.post_install_assertions(before, after)
 
@@ -43,6 +45,9 @@ class NodecellarAppTest(TestCase):
         self.post_uninstall_assertions()
 
     def modify_blueprint(self, image_name, flavor_name):
+        pass
+
+    def get_inputs(self, image_name, flavor_name):
         pass
 
     def post_install_assertions(self, before_state, after_state):
@@ -170,23 +175,16 @@ class OpenStackNodeCellarTestBase(NodecellarAppTest):
                                    self.env.ubuntu_image_name,
                                    self.env.flavor_name)
 
-    def modify_blueprint(self, image_name, flavor_name):
-
-        with YamlPatcher(self.blueprint_yaml) as patch:
-            mongod_host_properties_path = 'node_templates.mongod_host.properties'
-            patch.merge_obj('{0}.server'.format(mongod_host_properties_path), {
-                'image': image_name,
-                'flavor': flavor_name
-            })
-
-            nodejs_host_properties_path = 'node_templates.nodejs_host.properties'
-            patch.merge_obj('{0}.server'.format(nodejs_host_properties_path), {
-                'image': image_name,
-                'size': flavor_name
-            })
-
 
 class OpenStackNodeCellarTest(OpenStackNodeCellarTestBase):
 
     def test_openstack_nodecellar(self):
         self._test_openstack_nodecellar('openstack-blueprint.yaml')
+
+    def get_inputs(self, image_name, flavor_name):
+
+        return {
+            'image': image_name,
+            'flavor': flavor_name,
+            'agent_user': 'ubuntu'
+        }

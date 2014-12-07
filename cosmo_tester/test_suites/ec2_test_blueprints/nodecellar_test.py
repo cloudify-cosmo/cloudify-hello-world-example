@@ -22,3 +22,11 @@ class EC2NodeCellarTest(nodecellar_test.NodecellarAppTest):
         self._test_nodecellar_impl('ec2-blueprint.yaml',
                                    self.env.ubuntu_agent_ami,
                                    self.env.medium_instance_type)
+
+    def get_inputs(self, image_name, flavor_name):
+
+        return {
+            'image': image_name,
+            'size': flavor_name,
+            'agent_user': 'ubuntu'
+        }

@@ -31,18 +31,18 @@ class DockerNodeCellarTest(nodecellar_test.NodecellarAppTest):
 
     def modify_blueprint(self, image_name, flavor_name):
         with YamlPatcher(self.blueprint_yaml) as patch:
-            vm_props_path = 'node_types.vm_host.properties'
+            monitored_server_properties_path = \
+                'node_types.nodecellar.nodes.MonitoredServer.properties'
             # Add required docker param. See CFY-816
             patch.merge_obj('{0}.cloudify_agent.default'
-                            .format(vm_props_path), {
+                            .format(monitored_server_properties_path), {
                                 'home_dir': '/home/ubuntu'
                             })
-            vm_type_path = 'node_types.vm_host.properties'
-            patch.merge_obj('{0}.server.default'.format(vm_type_path), {
-                'image_name': image_name,
-                'flavor_name': flavor_name
-            })
-            # Use ubuntu trusty 14.04 as agent machine
-            patch.merge_obj('{0}.server.default'.format(vm_props_path), {
-                'image': self.UNBUNTU_TRUSTY_IMAGE_ID
-            })
+
+    def get_inputs(self, image_name, flavor_name):
+
+        return {
+            'image': image_name,
+            'size': flavor_name,
+            'agent_user': 'ubuntu'
+        }
