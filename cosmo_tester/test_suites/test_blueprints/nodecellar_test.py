@@ -47,7 +47,7 @@ class NodecellarAppTest(TestCase):
     def modify_blueprint(self, image_name, flavor_name):
         pass
 
-    def get_inputs(self, image_name, flavor_name):
+    def get_inputs(self, image_id, flavor_id):
         pass
 
     def post_install_assertions(self, before_state, after_state):
@@ -172,8 +172,8 @@ class OpenStackNodeCellarTestBase(NodecellarAppTest):
 
     def _test_openstack_nodecellar(self, blueprint_file):
         self._test_nodecellar_impl(blueprint_file,
-                                   self.env.ubuntu_image_name,
-                                   self.env.flavor_name)
+                                   self.env.ubuntu_image_id,
+                                   self.env.small_flavor_id)
 
 
 class OpenStackNodeCellarTest(OpenStackNodeCellarTestBase):
@@ -181,10 +181,10 @@ class OpenStackNodeCellarTest(OpenStackNodeCellarTestBase):
     def test_openstack_nodecellar(self):
         self._test_openstack_nodecellar('openstack-blueprint.yaml')
 
-    def get_inputs(self, image_name, flavor_name):
+    def get_inputs(self, image_id, flavor_id):
 
         return {
-            'image': image_name,
-            'flavor': flavor_name,
+            'image': image_id,
+            'flavor': flavor_id,
             'agent_user': 'ubuntu'
         }

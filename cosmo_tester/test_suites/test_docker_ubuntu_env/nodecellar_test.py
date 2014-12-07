@@ -26,8 +26,8 @@ class DockerNodeCellarTest(nodecellar_test.NodecellarAppTest):
 
     def test_docker_and_nodecellar(self):
         self._test_nodecellar_impl('openstack-blueprint.yaml',
-                                   self.UBUNTU_TRUSTY_IMAGE_MANE,
-                                   self.env.flavor_name)
+                                   self.UNBUNTU_TRUSTY_IMAGE_ID,
+                                   self.env.small_flavor_id)
 
     def modify_blueprint(self, image_name, flavor_name):
         with YamlPatcher(self.blueprint_yaml) as patch:
@@ -38,11 +38,3 @@ class DockerNodeCellarTest(nodecellar_test.NodecellarAppTest):
                             .format(monitored_server_properties_path), {
                                 'home_dir': '/home/ubuntu'
                             })
-
-    def get_inputs(self, image_name, flavor_name):
-
-        return {
-            'image': image_name,
-            'size': flavor_name,
-            'agent_user': 'ubuntu'
-        }

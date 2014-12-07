@@ -23,10 +23,10 @@ class EC2NodeCellarTest(nodecellar_test.NodecellarAppTest):
                                    self.env.ubuntu_agent_ami,
                                    self.env.medium_instance_type)
 
-    def get_inputs(self, image_name, flavor_name):
+    def get_inputs(self, image_id, flavor_id):
 
         return {
-            'image': image_name,
-            'size': flavor_name,
+            'image': image_id,
+            'size': flavor_id,
             'agent_user': 'ubuntu'
         }
