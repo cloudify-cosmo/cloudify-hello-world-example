@@ -87,7 +87,7 @@ class NodecellarAppTest(TestCase):
         self.assertEqual(len(delta['node_state']), 1,
                          'node_state: {0}'.format(delta))
 
-        self.assertEqual(len(delta['nodes']), 7,
+        self.assertEqual(len(delta['nodes']), 8,
                          'nodes: {0}'.format(delta))
 
         nodes_state = delta['node_state'].values()[0]
