@@ -48,7 +48,7 @@ class NodecellarAppTest(TestCase):
         pass
 
     def get_inputs(self):
-        pass
+        raise RuntimeError('Must be implemented by Subclasses')
 
     def post_install_assertions(self, before_state, after_state):
         delta = self.get_manager_state_delta(before_state, after_state)
