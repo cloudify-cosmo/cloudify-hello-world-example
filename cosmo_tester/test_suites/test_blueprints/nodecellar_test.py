@@ -19,7 +19,6 @@ import json
 from requests.exceptions import ConnectionError
 
 from cosmo_tester.framework.testenv import TestCase
-from cosmo_tester.framework.util import YamlPatcher
 from cosmo_tester.framework.git_helper import clone
 
 NODECELLAR_URL = "https://github.com/cloudify-cosmo/" \
@@ -29,7 +28,7 @@ NODECELLAR_URL = "https://github.com/cloudify-cosmo/" \
 class NodecellarAppTest(TestCase):
 
     def _test_nodecellar_impl(self, blueprint_file, image_id, flavor_id):
-        self.repo_dir = clone(NODECELLAR_URL, self.workdir)
+        self.repo_dir = clone(NODECELLAR_URL, self.workdir, branch='CFY-1746-nodecellar-upgrade')
         self.blueprint_yaml = self.repo_dir / blueprint_file
 
         self.modify_blueprint(image_id, flavor_id)
