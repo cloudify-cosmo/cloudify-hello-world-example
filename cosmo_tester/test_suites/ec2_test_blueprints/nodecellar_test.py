@@ -19,14 +19,12 @@ from cosmo_tester.test_suites.test_blueprints import nodecellar_test
 class EC2NodeCellarTest(nodecellar_test.NodecellarAppTest):
 
     def test_ec2_nodecellar(self):
-        self._test_nodecellar_impl('ec2-blueprint.yaml',
-                                   self.env.ubuntu_agent_ami,
-                                   self.env.medium_instance_type)
+        self._test_nodecellar_impl('ec2-blueprint.yaml')
 
-    def get_inputs(self, image_id, flavor_id):
+    def get_inputs(self):
 
         return {
-            'image': image_id,
-            'size': flavor_id,
+            'image': self.env.ubuntu_agent_ami,
+            'size': self.env.medium_instance_type,
             'agent_user': 'ubuntu'
         }

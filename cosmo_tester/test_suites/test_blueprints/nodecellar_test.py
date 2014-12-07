@@ -27,15 +27,15 @@ NODECELLAR_URL = "https://github.com/cloudify-cosmo/" \
 
 class NodecellarAppTest(TestCase):
 
-    def _test_nodecellar_impl(self, blueprint_file, image_id, flavor_id):
+    def _test_nodecellar_impl(self, blueprint_file):
         self.repo_dir = clone(NODECELLAR_URL, self.workdir,
                               branch='CFY-1746-nodecellar-upgrade')
         self.blueprint_yaml = self.repo_dir / blueprint_file
 
-        self.modify_blueprint(image_id, flavor_id)
+        self.modify_blueprint()
 
         before, after = self.upload_deploy_and_execute_install(
-            inputs=self.get_inputs(image_id, flavor_id)
+            inputs=self.get_inputs()
         )
 
         self.post_install_assertions(before, after)
@@ -44,10 +44,10 @@ class NodecellarAppTest(TestCase):
 
         self.post_uninstall_assertions()
 
-    def modify_blueprint(self, image_name, flavor_name):
+    def modify_blueprint(self):
         pass
 
-    def get_inputs(self, image_id, flavor_id):
+    def get_inputs(self):
         pass
 
     def post_install_assertions(self, before_state, after_state):
@@ -172,9 +172,7 @@ class NodecellarAppTest(TestCase):
 class OpenStackNodeCellarTestBase(NodecellarAppTest):
 
     def _test_openstack_nodecellar(self, blueprint_file):
-        self._test_nodecellar_impl(blueprint_file,
-                                   self.env.ubuntu_image_id,
-                                   self.env.small_flavor_id)
+        self._test_nodecellar_impl(blueprint_file)
 
 
 class OpenStackNodeCellarTest(OpenStackNodeCellarTestBase):
@@ -182,10 +180,10 @@ class OpenStackNodeCellarTest(OpenStackNodeCellarTestBase):
     def test_openstack_nodecellar(self):
         self._test_openstack_nodecellar('openstack-blueprint.yaml')
 
-    def get_inputs(self, image_id, flavor_id):
+    def get_inputs(self):
 
         return {
-            'image': image_id,
-            'flavor': flavor_id,
+            'image': self.env.ubuntu_image_id,
+            'flavor': self.env.small_flavor_id,
             'agent_user': 'ubuntu'
         }
