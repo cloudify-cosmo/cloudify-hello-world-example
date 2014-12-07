@@ -28,14 +28,14 @@ NODECELLAR_URL = "https://github.com/cloudify-cosmo/" \
 
 class NodecellarAppTest(TestCase):
 
-    def _test_nodecellar_impl(self, blueprint_file, image_name, flavor_name):
+    def _test_nodecellar_impl(self, blueprint_file, image_id, flavor_id):
         self.repo_dir = clone(NODECELLAR_URL, self.workdir)
         self.blueprint_yaml = self.repo_dir / blueprint_file
 
-        self.modify_blueprint(image_name, flavor_name)
+        self.modify_blueprint(image_id, flavor_id)
 
         before, after = self.upload_deploy_and_execute_install(
-            inputs=self.get_inputs(image_name, flavor_name)
+            inputs=self.get_inputs(image_id, flavor_id)
         )
 
         self.post_install_assertions(before, after)
