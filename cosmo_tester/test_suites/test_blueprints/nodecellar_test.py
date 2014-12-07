@@ -29,7 +29,7 @@ class NodecellarAppTest(TestCase):
 
     def _test_nodecellar_impl(self, blueprint_file, image_id, flavor_id):
         self.repo_dir = clone(NODECELLAR_URL, self.workdir,
-                              branch='CFY-1746-nodecellar-upgrade')
+                              branch='master')
         self.blueprint_yaml = self.repo_dir / blueprint_file
 
         self.modify_blueprint(image_id, flavor_id)
@@ -92,7 +92,7 @@ class NodecellarAppTest(TestCase):
                          'nodes: {0}'.format(delta))
 
         nodes_state = delta['node_state'].values()[0]
-        self.assertEqual(len(nodes_state), 7,
+        self.assertEqual(len(nodes_state), 8,
                          'nodes_state: {0}'.format(nodes_state))
 
         self.public_ip = None
