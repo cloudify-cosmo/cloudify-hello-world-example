@@ -118,11 +118,15 @@ def main():
                 _patch_properties(manager_blueprint,
                                   docker_manager_blueprint_properties)
                 with YamlPatcher(manager_blueprint) as patch:
+                    # change bootstrap task mapping
                     patch.set_value('node_templates.manager.interfaces'
                                     '.cloudify.interfaces.lifecycle.start'
                                     '.inputs.task_mapping',
                                     'cloudify_cli.bootstrap'
                                     '.tasks.bootstrap_docker')
+                    # remove server property from cloudify packages
+                    patch.delete_property('node_templates.manager.properties'
+                                          '.cloudify_packages.server')
 
 
 def _patch_properties(path, properties, is_json=False):
