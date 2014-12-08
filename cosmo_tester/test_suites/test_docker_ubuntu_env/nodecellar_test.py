@@ -20,10 +20,6 @@ from cosmo_tester.test_suites.test_blueprints import nodecellar_test
 
 class DockerNodeCellarTest(nodecellar_test.NodecellarAppTest):
 
-    UBUNTU_TRUSTY_IMAGE_MANE = 'Ubuntu Server 14.04.1 LTS (amd64 20140927)'
-    ' - Partner Image'
-    UNBUNTU_TRUSTY_IMAGE_ID = 'bec3cab5-4722-40b9-a78a-3489218e22fe'
-
     def test_docker_and_nodecellar(self):
         self._test_nodecellar_impl('openstack-blueprint.yaml')
 
@@ -40,7 +36,7 @@ class DockerNodeCellarTest(nodecellar_test.NodecellarAppTest):
     def get_inputs(self):
 
         return {
-            'image': self.UNBUNTU_TRUSTY_IMAGE_ID,
+            'image': self.env.ubuntu_trusty_image_id,
             'flavor': self.env.small_flavor_id,
             'agent_user': 'ubuntu'
         }
