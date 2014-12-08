@@ -25,9 +25,6 @@ import urllib
 
 
 class DockerNodeCellarTest(nodecellar_test.NodecellarAppTest):
-    UBUNTU_TRUSTY_IMAGE_MANE = 'Ubuntu Server 14.04.1 LTS (amd64 20140927)' \
-                               ' - Partner Image'
-    UNBUNTU_TRUSTY_IMAGE_ID = 'bec3cab5-4722-40b9-a78a-3489218e22fe'
 
     def test_docker_persistence_nodecellar(self):
         self.init_fabric()
@@ -36,7 +33,7 @@ class DockerNodeCellarTest(nodecellar_test.NodecellarAppTest):
             raise AssertionError('Failed restarting container. Test failed.')
 
         self._test_nodecellar_impl('openstack-blueprint.yaml',
-                                   self.UBUNTU_TRUSTY_IMAGE_MANE,
+                                   self.env.ubuntu_trusty_image_name,
                                    self.env.flavor_name)
 
     def modify_blueprint(self, image_name, flavor_name):
@@ -54,7 +51,7 @@ class DockerNodeCellarTest(nodecellar_test.NodecellarAppTest):
             })
             # Use ubuntu trusty 14.04 as agent machine
             patch.merge_obj('{0}.server.default'.format(vm_props_path), {
-                'image': self.UNBUNTU_TRUSTY_IMAGE_ID
+                'image': self.env.ubuntu_trusty_image_id
             })
 
     def init_fabric(self):
