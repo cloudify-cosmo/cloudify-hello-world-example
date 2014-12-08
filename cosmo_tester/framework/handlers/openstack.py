@@ -251,10 +251,14 @@ class OpenstackHandler(BaseHandler):
 
     ubuntu_image_name = \
         'Ubuntu Server 12.04.2 LTS (amd64 20130318) - Partner Image'
+    ubuntu_trusty_image_name = \
+        'Ubuntu Server 14.04.1 LTS (amd64 20140927) - Partner Image'
     centos_image_name = 'CentOS 6.3 Server 64-bit 20130116'
     centos_image_user = 'root'
     flavor_name = 'standard.small'
     ubuntu_image_id = '261844b3-479c-5446-a2c4-1ea95d53b668'
+    ubuntu_trusty_image_id = 'bec3cab5-4722-40b9-a78a-3489218e22fe'
+
     small_flavor_id = 101
 
     def __init__(self, env):
