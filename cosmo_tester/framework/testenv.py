@@ -392,12 +392,13 @@ class TestCase(unittest.TestCase):
         raise AssertionError('Execution "{}" timed out'.format(execution.id))
 
     def repetitive(self, func, timeout=10, exception_class=Exception,
-                   **kwargs):
+                   args=None, kwargs=None):
+        args = args or []
+        kwargs = kwargs or {}
         deadline = time.time() + timeout
         while True:
             try:
-                func(**kwargs)
-                break
+                return func(*args, **kwargs)
             except exception_class:
                 if time.time() > deadline:
                     raise
