@@ -25,24 +25,22 @@ class DockerNodeCellarTest(nodecellar_test.NodecellarAppTest):
     UNBUNTU_TRUSTY_IMAGE_ID = 'bec3cab5-4722-40b9-a78a-3489218e22fe'
 
     def test_docker_and_nodecellar(self):
-        self._test_nodecellar_impl('openstack-blueprint.yaml',
-                                   self.UBUNTU_TRUSTY_IMAGE_MANE,
-                                   self.env.flavor_name)
+        self._test_nodecellar_impl('openstack-blueprint.yaml')
 
-    def modify_blueprint(self, image_name, flavor_name):
+    def modify_blueprint(self):
         with YamlPatcher(self.blueprint_yaml) as patch:
-            vm_props_path = 'node_types.vm_host.properties'
+            monitored_server_properties_path = \
+                'node_types.nodecellar.nodes.MonitoredServer.properties'
             # Add required docker param. See CFY-816
             patch.merge_obj('{0}.cloudify_agent.default'
-                            .format(vm_props_path), {
+                            .format(monitored_server_properties_path), {
                                 'home_dir': '/home/ubuntu'
                             })
-            vm_type_path = 'node_types.vm_host.properties'
-            patch.merge_obj('{0}.server.default'.format(vm_type_path), {
-                'image_name': image_name,
-                'flavor_name': flavor_name
-            })
-            # Use ubuntu trusty 14.04 as agent machine
-            patch.merge_obj('{0}.server.default'.format(vm_props_path), {
-                'image': self.UNBUNTU_TRUSTY_IMAGE_ID
-            })
+
+    def get_inputs(self):
+
+        return {
+            'image': self.UNBUNTU_TRUSTY_IMAGE_ID,
+            'flavor': self.env.small_flavor_id,
+            'agent_user': 'ubuntu'
+        }
