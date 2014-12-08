@@ -6,7 +6,7 @@
     "region": "region-b.geo-1",
     "manager_public_key_name": "systemt-tests-manager",
     "agent_public_key_name": "systemt-tests-agent",
-    "image_id": "8ca068c5-6fde-4701-bab8-322b3e7c8d81",
+    "image_id": "bec3cab5-4722-40b9-a78a-3489218e22fe",
     "flavor_id": "102",
     "external_network_name": "Ext-Net",
 
