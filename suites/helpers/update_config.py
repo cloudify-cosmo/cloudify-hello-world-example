@@ -117,7 +117,7 @@ def main():
             if bootstrap_using_docker:
                 _patch_properties(manager_blueprint,
                                   docker_manager_blueprint_properties)
-                with YamlPatcher() as patch:
+                with YamlPatcher(manager_blueprint) as patch:
                     patch.set_value('node_templates.manager.interfaces'
                                     '.cloudify.interfaces.lifecycle.start'
                                     '.inputs.task_mapping',
