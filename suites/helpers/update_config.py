@@ -130,7 +130,10 @@ def main():
 
         with open (manager_blueprint, "r") as myfile:
             data=myfile.read().replace('\n', '')
-        raise RuntimeError('the blueprint is: {0}'.format(data))
+        raise RuntimeError('the blueprint is: {0} \n data url:{1} \n '
+                           'main url: {2}'.format(data,
+                            os.environ.get('DOCKER_DATA_URL')
+                            ,os.environ.get('DOCKER_IMAGE_URL')))
 
 
 def _patch_properties(path, properties, is_json=False):
