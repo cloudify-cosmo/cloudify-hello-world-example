@@ -106,10 +106,7 @@ class YamlPatcher(object):
 
     def _get_object_by_path(self, prop_path):
         current = self.obj
-        # for paths that contain '.' we use '\' escape char
-        prop_path = prop_path.replace('\\.', '\\')
         for prop_segment in prop_path.split('.'):
-            prop_segment = prop_segment.replace('\\', '.')
             match = self.pattern.match(prop_segment)
             if match:
                 index = int(match.group(2))
