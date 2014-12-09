@@ -173,12 +173,6 @@ class OpenStackNodeCellarTestBase(NodecellarAppTest):
     def _test_openstack_nodecellar(self, blueprint_file):
         self._test_nodecellar_impl(blueprint_file)
 
-
-class OpenStackNodeCellarTest(OpenStackNodeCellarTestBase):
-
-    def test_openstack_nodecellar(self):
-        self._test_openstack_nodecellar('openstack-blueprint.yaml')
-
     def get_inputs(self):
 
         return {
@@ -186,3 +180,9 @@ class OpenStackNodeCellarTest(OpenStackNodeCellarTestBase):
             'flavor': self.env.small_flavor_id,
             'agent_user': 'ubuntu'
         }
+
+
+class OpenStackNodeCellarTest(OpenStackNodeCellarTestBase):
+
+    def test_openstack_nodecellar(self):
+        self._test_openstack_nodecellar('openstack-blueprint.yaml')
