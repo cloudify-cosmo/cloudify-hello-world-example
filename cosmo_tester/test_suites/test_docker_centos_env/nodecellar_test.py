@@ -27,7 +27,7 @@ class DockerNodeCellarTest(nodecellar_test.NodecellarAppTest):
             vm_props_path = 'node_types.vm_host.properties'
             patch.merge_obj('{0}.cloudify_agent.default'
                             .format(vm_props_path), {
-                                'home_dir': '/home/centos'
+                                'home_dir': '/home/ubuntu'
                             })
 
     def get_inputs(self):
