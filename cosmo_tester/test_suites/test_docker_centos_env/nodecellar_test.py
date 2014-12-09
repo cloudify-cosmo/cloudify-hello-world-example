@@ -31,7 +31,3 @@ class DockerNodeCellarTest(nodecellar_test.NodecellarAppTest):
                             .format(vm_props_path), {
                                 'home_dir': '/home/ubuntu'
                             })
-            # # use ubuntu trusty 14.04
-            # patch.merge_obj('{0}.server.default'.format(vm_props_path), {
-            #     'image': '8ca068c5-6fde-4701-bab8-322b3e7c8d81'
-            # })
