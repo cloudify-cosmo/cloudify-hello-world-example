@@ -109,3 +109,11 @@ class DockerNodeCellarTest(nodecellar_test.NodecellarAppTest):
             sleep(5)
 
         return False
+
+    def get_inputs(self):
+
+        return {
+            'image': self.env.ubuntu_image_id,
+            'flavor': self.env.small_flavor_id,
+            'agent_user': 'ubuntu'
+        }
