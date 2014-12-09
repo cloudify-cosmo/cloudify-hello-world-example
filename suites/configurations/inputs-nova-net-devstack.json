@@ -1,0 +1,22 @@
+{
+  "keystone_username": "demo",
+  "keystone_password": "password",
+  "keystone_tenant_name": "demo",
+  "keystone_url": "http://192.168.9.67:5000/v2.0",
+  "region": "RegionOne",
+  "internal_cidr": "10.0.0.0/24",
+  "manager_public_key_name": "systemt-tests-manager",
+  "agent_public_key_name": "systemt-tests-agent",
+  "image_id": "7a19daad-8eb0-44a4-8b48-cd403abd5cc2",
+  "flavor_id": "3",
+
+  "use_existing_manager_keypair": false,
+  "use_existing_agent_keypair": false,
+  "manager_server_name": "systemt-cloudify-manager",
+  "manager_server_user": "ubuntu",
+  "manager_server_user_home": "/home/ubuntu",
+  "manager_private_key_path": "~/.ssh/systemt-tests-manager.pem",
+  "agent_private_key_path": "~/.ssh/systemt-tests-agent.pem",
+  "agents_user": "ubuntu",
+  "resources_prefix": ""
+}

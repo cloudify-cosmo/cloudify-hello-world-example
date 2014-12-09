@@ -19,7 +19,6 @@ import json
 from requests.exceptions import ConnectionError
 
 from cosmo_tester.framework.testenv import TestCase
-from cosmo_tester.framework.util import YamlPatcher
 from cosmo_tester.framework.git_helper import clone
 
 NODECELLAR_URL = "https://github.com/cloudify-cosmo/" \
@@ -28,13 +27,15 @@ NODECELLAR_URL = "https://github.com/cloudify-cosmo/" \
 
 class NodecellarAppTest(TestCase):
 
-    def _test_nodecellar_impl(self, blueprint_file, image_name, flavor_name):
+    def _test_nodecellar_impl(self, blueprint_file):
         self.repo_dir = clone(NODECELLAR_URL, self.workdir)
         self.blueprint_yaml = self.repo_dir / blueprint_file
 
-        self.modify_blueprint(image_name, flavor_name)
+        self.modify_blueprint()
 
-        before, after = self.upload_deploy_and_execute_install()
+        before, after = self.upload_deploy_and_execute_install(
+            inputs=self.get_inputs()
+        )
 
         self.post_install_assertions(before, after)
 
@@ -42,8 +43,11 @@ class NodecellarAppTest(TestCase):
 
         self.post_uninstall_assertions()
 
-    def modify_blueprint(self, image_name, flavor_name):
+    def modify_blueprint(self):
         pass
+
+    def get_inputs(self):
+        raise RuntimeError('Must be implemented by Subclasses')
 
     def post_install_assertions(self, before_state, after_state):
         delta = self.get_manager_state_delta(before_state, after_state)
@@ -83,16 +87,16 @@ class NodecellarAppTest(TestCase):
         self.assertEqual(len(delta['node_state']), 1,
                          'node_state: {0}'.format(delta))
 
-        self.assertEqual(len(delta['nodes']), 7,
+        self.assertEqual(len(delta['nodes']), 8,
                          'nodes: {0}'.format(delta))
 
         nodes_state = delta['node_state'].values()[0]
-        self.assertEqual(len(nodes_state), 7,
+        self.assertEqual(len(nodes_state), 8,
                          'nodes_state: {0}'.format(nodes_state))
 
         self.public_ip = None
         for key, value in nodes_state.items():
-            if '_vm' in key:
+            if '_host' in key:
                 self.assertTrue('ip' in value['runtime_properties'],
                                 'Missing ip in runtime_properties: {0}'
                                 .format(nodes_state))
@@ -102,12 +106,13 @@ class NodecellarAppTest(TestCase):
                 self.assertEqual(value['state'], 'started',
                                  'vm node should be started: {0}'
                                  .format(nodes_state))
-            elif key.startswith('floatingip'):
+            elif key.startswith('nodecellar_floatingip'):
                 self.public_ip = value['runtime_properties'][
                     'floating_ip_address']
 
         self.assertIsNotNone(self.public_ip,
-                             'Could not find the "floatingip" node for '
+                             'Could not find the '
+                             '"nodecellar_floatingip" node for '
                              'retrieving the public IP')
 
         events, total_events = self.client.events.get(execution_by_id.id)
@@ -148,6 +153,9 @@ class NodecellarAppTest(TestCase):
 
     def post_uninstall_assertions(self):
         nodes_instances = self.client.node_instances.list(self.deployment_id)
+        # using "get" calls to avoid ES eventual consistency errors.....
+        nodes_instances = [self.client.node_instances.get(instance.id)
+                           for instance in nodes_instances]
         print nodes_instances
         self.assertFalse(any(node_ins for node_ins in nodes_instances if
                              node_ins.state != 'deleted'))
@@ -160,17 +168,21 @@ class NodecellarAppTest(TestCase):
             pass
 
 
-class OpenStackNodeCellarTest(NodecellarAppTest):
+class OpenStackNodeCellarTestBase(NodecellarAppTest):
+
+    def _test_openstack_nodecellar(self, blueprint_file):
+        self._test_nodecellar_impl(blueprint_file)
+
+    def get_inputs(self):
+
+        return {
+            'image': self.env.ubuntu_image_id,
+            'flavor': self.env.small_flavor_id,
+            'agent_user': 'ubuntu'
+        }
+
+
+class OpenStackNodeCellarTest(OpenStackNodeCellarTestBase):
 
     def test_openstack_nodecellar(self):
-        self._test_nodecellar_impl('openstack-blueprint.yaml',
-                                   self.env.ubuntu_image_name,
-                                   self.env.flavor_name)
-
-    def modify_blueprint(self, image_name, flavor_name):
-        with YamlPatcher(self.blueprint_yaml) as patch:
-            vm_type_path = 'node_types.vm_host.properties'
-            patch.merge_obj('{0}.server.default'.format(vm_type_path), {
-                'image_name': image_name,
-                'flavor_name': flavor_name
-            })
+        self._test_openstack_nodecellar('openstack-blueprint.yaml')

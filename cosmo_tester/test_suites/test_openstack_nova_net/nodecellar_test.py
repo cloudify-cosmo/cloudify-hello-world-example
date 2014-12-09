@@ -13,18 +13,12 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
-from cosmo_tester.test_suites.test_blueprints import nodecellar_test
+
+from cosmo_tester.test_suites.test_blueprints.nodecellar_test import \
+    OpenStackNodeCellarTestBase
 
 
-class EC2NodeCellarTest(nodecellar_test.NodecellarAppTest):
+class OpenStackNovaNetNodeCellarTest(OpenStackNodeCellarTestBase):
 
-    def test_ec2_nodecellar(self):
-        self._test_nodecellar_impl('ec2-blueprint.yaml')
-
-    def get_inputs(self):
-
-        return {
-            'image': self.env.ubuntu_agent_ami,
-            'size': self.env.medium_instance_type,
-            'agent_user': 'ubuntu'
-        }
+    def test_openstack_nodecellar(self):
+        self._test_openstack_nodecellar('openstack-nova-net-blueprint.yaml')

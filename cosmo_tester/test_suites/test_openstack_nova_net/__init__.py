@@ -13,18 +13,12 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
-from cosmo_tester.test_suites.test_blueprints import nodecellar_test
+from cosmo_tester.framework.testenv import bootstrap, teardown
 
 
-class EC2NodeCellarTest(nodecellar_test.NodecellarAppTest):
+def setUp():
+    bootstrap()
 
-    def test_ec2_nodecellar(self):
-        self._test_nodecellar_impl('ec2-blueprint.yaml')
 
-    def get_inputs(self):
-
-        return {
-            'image': self.env.ubuntu_agent_ami,
-            'size': self.env.medium_instance_type,
-            'agent_user': 'ubuntu'
-        }
+def tearDown():
+    teardown()

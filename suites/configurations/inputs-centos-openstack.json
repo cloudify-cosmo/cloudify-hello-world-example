@@ -1,0 +1,22 @@
+{
+    "keystone_username": "",
+    "keystone_password": "",
+    "keystone_tenant_name": "",
+    "keystone_url": "",
+    "region": "region-b.geo-1",
+    "manager_public_key_name": "systemt-tests-manager",
+    "agent_public_key_name": "systemt-tests-agent",
+    "image_id": "b301da9f-6144-47fe-aa87-e6bcb185a1df",
+    "flavor_id": "102",
+    "external_network_name": "Ext-Net",
+
+    "use_existing_manager_keypair": false,
+    "use_existing_agent_keypair": false,
+    "manager_server_name": "systemt-cloudify-manager",
+    "manager_server_user": "centos",
+    "manager_server_user_home": "/home/ubuntu",
+    "manager_private_key_path": "~/.ssh/systemt-tests-manager.pem",
+    "agent_private_key_path": "~/.ssh/systemt-tests-agent.pem",
+    "agents_user": "ubuntu",
+    "resources_prefix": ""
+}

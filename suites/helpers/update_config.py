@@ -70,11 +70,21 @@ shared_manager_blueprint_properties = {
         'node_templates.manager.properties.cloudify.workflows.task_retries',
 }
 
+docker_manager_blueprint_properties = {
+    'DOCKER_IMAGE_URL':
+        'node_templates.manager.properties.cloudify_packages.docker'
+        '.docker_url',
+    'DOCKER_DATA_URL':
+        'node_templates.manager.properties.cloudify_packages.docker'
+        '.docker_data_url',
+}
 
 def main():
     config_path = sys.argv[1]
     bootstrap_using_providers = \
         os.environ['BOOTSTRAP_USING_PROVIDERS'] == 'true'
+    bootstrap_using_docker = \
+        os.environ.get('BOOTSTRAP_USING_DOCKER', 'false') == 'true'
 
     handler = os.environ.get('CLOUDIFY_TEST_HANDLER_MODULE')
     if handler in [
@@ -82,6 +92,13 @@ def main():
         'cosmo_tester.framework.handlers.simple_on_openstack']:
         cloud_specific_properties = openstack_provider_properties \
             if bootstrap_using_providers else openstack_inputs_properties
+    elif handler == 'cosmo_tester.framework.handlers.openstack_nova_net':
+        # openstack_nova_net handler currently has no cloud specific
+        # properties, as the credentials information is simply hardcoded in its
+        # inputs file, and there's no need to override it with quickbuild
+        # data. if such a need arises, there should be separate env vars
+        # for the nova net openstack credentials.
+        cloud_specific_properties = {}
     elif handler == 'cosmo_tester.framework.handlers.ec2':
         cloud_specific_properties = ec2_provider_properties
     elif handler == 'cosmo_tester.framework.handlers.vsphere':
@@ -106,6 +123,19 @@ def main():
                 manager_blueprints_base_dir):
             _patch_properties(manager_blueprint,
                               shared_manager_blueprint_properties)
+            if bootstrap_using_docker:
+                _patch_properties(manager_blueprint,
+                                  docker_manager_blueprint_properties)
+                with YamlPatcher(manager_blueprint) as patch:
+                    # change bootstrap task mapping
+                    patch.set_value('node_templates.manager.interfaces'
+                                    '.cloudify.interfaces.lifecycle.start'
+                                    '.inputs.task_mapping',
+                                    'cloudify_cli.bootstrap'
+                                    '.tasks.bootstrap_docker')
+                    # remove server property from cloudify packages
+                    patch.delete_property('node_templates.manager.properties'
+                                          '.cloudify_packages.server')
 
 
 def _patch_properties(path, properties, is_json=False):

@@ -122,6 +122,10 @@ class YamlPatcher(object):
                 current = current[prop_segment]
         return current
 
+    def delete_property(self, prop_path):
+        obj, prop_name = self._get_parent_obj_prop_name_by_path(prop_path)
+        obj.pop(prop_name)
+
     def _get_parent_obj_prop_name_by_path(self, prop_path):
         split = prop_path.split('.')
         if len(split) == 1:
