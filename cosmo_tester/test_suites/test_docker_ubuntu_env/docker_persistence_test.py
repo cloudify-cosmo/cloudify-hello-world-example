@@ -32,13 +32,12 @@ class DockerNodeCellarTest(nodecellar_test.NodecellarAppTest):
         if not restarted:
             raise AssertionError('Failed restarting container. Test failed.')
 
-        self._test_nodecellar_impl('openstack-blueprint.yaml',
-                                   self.env.ubuntu_trusty_image_name,
-                                   self.env.flavor_name)
+        self._test_nodecellar_impl('openstack-blueprint.yaml')
 
-    def modify_blueprint(self, image_name, flavor_name):
+    def modify_blueprint(self):
         with YamlPatcher(self.blueprint_yaml) as patch:
-            vm_props_path = 'node_types.vm_host.properties'
+            vm_props_path = 'node_types.nodecellar\.nodes\.MonitoredServer' \
+                            '.properties'
             # Add required docker param. See CFY-816
             patch.merge_obj('{0}.cloudify_agent.default'
                             .format(vm_props_path), {
@@ -46,8 +45,8 @@ class DockerNodeCellarTest(nodecellar_test.NodecellarAppTest):
                             })
             vm_type_path = 'node_types.vm_host.properties'
             patch.merge_obj('{0}.server.default'.format(vm_type_path), {
-                'image_name': image_name,
-                'flavor_name': flavor_name
+                'image_name': self.env.ubuntu_trusty_image_name,
+                'flavor_name': self.env.flavor_name
             })
             # Use ubuntu trusty 14.04 as agent machine
             patch.merge_obj('{0}.server.default'.format(vm_props_path), {
