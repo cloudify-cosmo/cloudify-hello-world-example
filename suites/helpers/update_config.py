@@ -120,7 +120,7 @@ def main():
                 with YamlPatcher(manager_blueprint) as patch:
                     # change bootstrap task mapping
                     patch.set_value('node_templates.manager.interfaces'
-                                    '.cloudify.interfaces.lifecycle.start'
+                                    '.cloudify\.interfaces\.lifecycle.start'
                                     '.inputs.task_mapping',
                                     'cloudify_cli.bootstrap'
                                     '.tasks.bootstrap_docker')
