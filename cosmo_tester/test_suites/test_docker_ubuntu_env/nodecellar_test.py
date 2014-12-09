@@ -26,7 +26,7 @@ class DockerNodeCellarTest(nodecellar_test.NodecellarAppTest):
     def modify_blueprint(self):
         with YamlPatcher(self.blueprint_yaml) as patch:
             monitored_server_properties_path = \
-                'node_types.nodecellar.nodes.MonitoredServer.properties'
+                'node_types.nodecellar\.nodes\.MonitoredServer.properties'
             # Add required docker param. See CFY-816
             patch.merge_obj('{0}.cloudify_agent.default'
                             .format(monitored_server_properties_path), {
