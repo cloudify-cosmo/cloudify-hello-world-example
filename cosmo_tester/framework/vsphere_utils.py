@@ -13,12 +13,12 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
-__author__ = 'boris'
 
 from pyVim import connect
 import atexit
 from pyVmomi import vmodl
 from pyVmomi import vim
+import time
 
 
 def print_vm_info(vm, depth=1, max_depth=10):
@@ -54,20 +54,31 @@ def print_vm_info(vm, depth=1, max_depth=10):
     print ""
 
 
-#def terminate_vm(host, user, pwd, port, vm_name):
- #   possible_vms = get_vm_by_name(vm_name)
-  #  if possible_vms.count() > 0:
-   #     for vm in possible_vms:
-    #       #TODO STOPPED HERE - how to terminate
-     #      vm.terminate
+def is_vm_poweredon(vm):
+    return vm.summary.runtime.powerState.lower() == "poweredon"
 
+
+def wait_for_task(task):
+    while task.info.state == vim.TaskInfo.State.running:
+        time.sleep(15)
+    if not task.info.state == vim.TaskInfo.State.success:
+        raise task.info.error
+
+
+#TODO check if before poweroff should connect
+def terminate_vm(vm):
+    if is_vm_poweredon(vm):
+        task = vm.PowerOff()
+        wait_for_task(task)
+        task = vm.Destroy()
+        wait_for_task(task)
 
 
 def get_all_vms(host, user, pwd, port):
     return get_vm_by_name(host, user, pwd, port, '')
 
 
-def get_vm_by_name(host, user, pwd, port, vm_name):
+def get_vms_by_prefix(host, user, pwd, port, vm_name, prefix_enabled):
     vms = []
     try:
         service_instance = connect.SmartConnect(host=host,
@@ -76,11 +87,14 @@ def get_vm_by_name(host, user, pwd, port, vm_name):
                                                 port=int(port))
         atexit.register(connect.Disconnect, service_instance)
         content = service_instance.RetrieveContent()
-        object_view = content.viewManager.CreateContainerView(content.rootFolder,
-            [], True)
+        object_view = content.viewManager. \
+            CreateContainerView(content.rootFolder, [], True)
         for obj in object_view.view:
             if isinstance(obj, vim.VirtualMachine):
-                if obj.summary.config.name == vm_name or vm_name == '':
+                if obj.summary.config.name == vm_name \
+                        or vm_name == '' \
+                        or (prefix_enabled and
+                            obj.summary.config.name.startswith(vm_name)):
                     vms.append(obj)
     except vmodl.MethodFault as error:
         print "Caught vmodl fault : " + error.msg
@@ -88,3 +102,7 @@ def get_vm_by_name(host, user, pwd, port, vm_name):
 
     object_view.Destroy()
     return vms
+
+
+def get_vm_by_name(host, user, pwd, port, vm_name):
+    return get_vms_by_prefix(host, user, pwd, port, vm_name, False)

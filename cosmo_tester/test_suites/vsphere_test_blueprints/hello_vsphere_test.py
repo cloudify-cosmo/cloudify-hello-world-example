@@ -22,15 +22,17 @@ from cosmo_tester.framework.testenv import TestCase
 class HelloVsphereTest(TestCase):
     """Tests vSphere with basic blueprint
        To run this tests locally you should have VSPHERE_PLUGIN_TOKEN and
-       CLOUDIFY_AUTOMATION_TOKEN env variables set (see quickbuild's vars for the values)
+       CLOUDIFY_AUTOMATION_TOKEN env variables set
+       (see quickbuild's vars for the values)
     """
     def test_hello(self):
         self.token_place_holder = '{VSPHERE_PLUGIN_TOKEN}'
         self.token_env_variable = 'VSPHERE_PLUGIN_TOKEN'
-        self.cloudify_automation_token_place_holder = '{CLOUDIFY_AUTOMATION_TOKEN}'
-        self.cloudify_automation_token_env_variable = 'CLOUDIFY_AUTOMATION_TOKEN'
+        self.cloudify_automation_token_ph = '{CLOUDIFY_AUTOMATION_TOKEN}'
+        self.cloudify_automation_token_var = 'CLOUDIFY_AUTOMATION_TOKEN'
         self.branch = os.environ.get('BRANCH_NAME_VSPHERE_PLUGIN', 'master')
-        self.base_url = 'https://raw.githubusercontent.com/Gigaspaces/cloudify-vsphere-plugin/'\
+        self.base_url = 'https://raw.githubusercontent.com' \
+                        '/Gigaspaces/cloudify-vsphere-plugin/'\
                         + self.branch + '/plugin.yaml'
         blueprint_path = self.copy_blueprint('hello-vsphere')
         self.blueprint_yaml = blueprint_path / 'blueprint.yaml'
@@ -67,8 +69,10 @@ class HelloVsphereTest(TestCase):
         with open(file_path, 'r') as f:
             newlines = []
             for line in f.readlines():
-                newlines.append(line.replace(self.cloudify_automation_token_place_holder,
-                                             os.environ.get(self.cloudify_automation_token_env_variable)))
+                newlines.append(line.replace
+                                (self.cloudify_automation_token_ph,
+                                    os.environ.get
+                                    (self.cloudify_automation_token_var)))
         with open(file_path, 'w') as f:
             for line in newlines:
                 f.write(line)

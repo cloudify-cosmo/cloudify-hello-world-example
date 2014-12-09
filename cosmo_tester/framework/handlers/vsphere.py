@@ -16,14 +16,32 @@ import os
 import random
 
 from cosmo_tester.framework import vsphere_utils
-from cosmo_tester.framework.handlers import BaseHandler, BaseCloudifyInputsConfigReader
+from cosmo_tester.framework.handlers import \
+    BaseHandler, BaseCloudifyInputsConfigReader
 from cosmo_tester.framework.testenv import CLOUDIFY_TEST_NO_CLEANUP
 
 
 def get_vsphere_state(env):
-    vms = vsphere_utils.get_all_vms(env.vsphere_url, env.vsphere_username, env.vsphere_password, '443')
+    vms = vsphere_utils.get_all_vms(env.vsphere_url,
+                                    env.vsphere_username,
+                                    env.vsphere_password,
+                                    '443')
     for vm in vms:
         vsphere_utils.print_vm_info(vm)
+    return vms
+
+
+def clean_vsphere_vms_by_prefix(env, prefix, logger):
+    vms = vsphere_utils.get_vms_by_prefix(env.vsphere_url,
+                                          env.vsphere_username,
+                                          env.vsphere_password,
+                                          '443',
+                                          prefix,
+                                          True)
+    for vm in vms:
+        logger.warn('{0} was not deleted during the test!'
+                    .format(vm.summary.config.name))
+        vsphere_utils.terminate_vm(vm)
     return vms
 
 
@@ -39,7 +57,8 @@ class VsphereCleanupContext(BaseHandler.CleanupContext):
             self.logger.warn('SKIPPING cleanup: of the resources')
             return
         prefix = self.enviro.resources_prefix
-        #TODO: clean up VMS using our prefix and kill mgr if needed
+        #TODO check the next line
+        clean_vsphere_vms_by_prefix(self.enviro, prefix, self.logger)
 
 
 class CloudifyVsphereInputsConfigReader(BaseCloudifyInputsConfigReader):
@@ -64,10 +83,6 @@ class CloudifyVsphereInputsConfigReader(BaseCloudifyInputsConfigReader):
     @property
     def management_key_path(self):
         return self.config['manager_private_key_path']
-
-    @property
-    def external_network_name(self):
-        return self.config['external_network_name']
 
     @property
     def vsphere_username(self):
@@ -95,7 +110,6 @@ class CloudifyVsphereInputsConfigReader(BaseCloudifyInputsConfigReader):
 
 
 class VsphereHandler(BaseHandler):
-    provider = 'vsphere'
     CleanupContext = VsphereCleanupContext
     manager_blueprint = 'manager_blueprint/vsphere.yaml'
     CloudifyConfigReader = None
