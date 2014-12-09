@@ -128,6 +128,10 @@ def main():
                     patch.delete_property('node_templates.manager.properties'
                                           '.cloudify_packages.server')
 
+        with open (manager_blueprint, "r") as myfile:
+            data=myfile.read().replace('\n', '')
+        raise RuntimeError('the blueprint is: {0}'.format(data))
+
 
 def _patch_properties(path, properties, is_json=False):
     with YamlPatcher(path, is_json) as patch:
