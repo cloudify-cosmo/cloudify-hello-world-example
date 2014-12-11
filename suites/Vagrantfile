@@ -50,6 +50,7 @@ def build_env(test_config)
     end
     if test_config[:bootstrap_using_docker]
             cloudify_env['BOOTSTRAP_USING_DOCKER'] = test_config[:bootstrap_using_docker]
+            cloudify_env['USE_EXTERNAL_AGENT_PACKAGES'] = test_config[:use_external_agent_packages]
     end
     cloudify_env
 end
