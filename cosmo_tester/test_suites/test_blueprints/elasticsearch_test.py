@@ -14,7 +14,6 @@
 #    * limitations under the License.
 
 import re
-import socket
 
 from elasticsearch import Elasticsearch
 from neutronclient.common.exceptions import NeutronClientException
