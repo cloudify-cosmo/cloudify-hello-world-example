@@ -14,12 +14,12 @@
 #    * limitations under the License.
 
 import re
-import time
 import socket
 
 from elasticsearch import Elasticsearch
 from neutronclient.common.exceptions import NeutronClientException
 
+from cosmo_tester.framework import util
 from cosmo_tester.framework.testenv import TestCase
 from cosmo_tester.framework.handlers.openstack import OpenstackHandler
 
@@ -66,16 +66,14 @@ class ElasticsearchTimestampFormatTest(TestCase):
             self.elasticsearch_rule = neutron_client. \
                 create_security_group_rule(
                     {'security_group_rule': sgr})['security_group_rule']['id']
-            if not self._wait_for_open_port(self.env.management_ip,
-                                            ELASTICSEARCH_PORT,
-                                            60):
-                raise Exception('Couldn\'t open elasticsearch port')
+            if not util.wait_for_open_port(self.env.management_ip,
+                                           ELASTICSEARCH_PORT, 60):
+                raise Exception('Could not open elasticsearch port')
 
         except NeutronClientException as e:
             self.elasticsearch_rule = None
             self.logger.warning("Got NeutronClientException({0}). Resuming"
                                 .format(e))
-            pass
 
     def setUp(self):
         super(ElasticsearchTimestampFormatTest, self).setUp()
@@ -97,16 +95,6 @@ class ElasticsearchTimestampFormatTest(TestCase):
         result = sock.connect_ex((ip, port))
         return result == 0
 
-    def _wait_for_open_port(self, ip, port, timeout):
-        timeout = time.time() + timeout
-        is_open = False
-        while not is_open:
-            if time.time() > timeout:
-                break
-            time.sleep(1)
-            is_open = self._check_port(ip, port)
-        return is_open
-
     def test_events_timestamp_format(self):
         self.blueprint_path = self.copy_blueprint('mocks')
         self.blueprint_yaml = self.blueprint_path / 'empty-bp.yaml'
@@ -116,8 +104,8 @@ class ElasticsearchTimestampFormatTest(TestCase):
 
         #  connect to Elastic search
 
-        es = Elasticsearch(self.env.management_ip +
-                           ':' + str(ELASTICSEARCH_PORT))
+        es = Elasticsearch("{0}:{1}".format(self.env.management_ip,
+                           str(ELASTICSEARCH_PORT)))
 
         res = es.search(index="cloudify_events",
                         body={"query": {"match":
