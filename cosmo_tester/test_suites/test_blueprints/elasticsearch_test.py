@@ -5,7 +5,7 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#        http://www.apache.org/licenses/LICENSE-2.0
+# http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -31,7 +31,6 @@ DEFAULT_EXECUTE_TIMEOUT = 1800
 
 
 class ElasticsearchTimestampFormatTest(TestCase):
-
     """
     CFY-54
     this test checks Elasticsearch Timestamp Format.
@@ -42,6 +41,7 @@ class ElasticsearchTimestampFormatTest(TestCase):
     This test requires access to the management on port 9200 (elastic search",
     The rule is added by _create_elasticsearch_rule
     """
+
     def _create_elasticsearch_rule(self):
         os_handler = OpenstackHandler(self.env)
         neutron_client = os_handler.openstack_clients()[1]
@@ -53,7 +53,7 @@ class ElasticsearchTimestampFormatTest(TestCase):
             'protocol': 'tcp',
             'remote_group_id': None,
             'remote_ip_prefix': '0.0.0.0/0',
-            }
+        }
 
         mng_sec_grp_name = self.env.management_security_group
 
@@ -63,7 +63,7 @@ class ElasticsearchTimestampFormatTest(TestCase):
         sg_id = mng_sec_grp['id']
         sgr['security_group_id'] = sg_id
         try:
-            self.elasticsearch_rule = neutron_client.\
+            self.elasticsearch_rule = neutron_client. \
                 create_security_group_rule(
                     {'security_group_rule': sgr})['security_group_rule']['id']
             if not self._wait_for_open_port(self.env.management_ip,
@@ -103,6 +103,7 @@ class ElasticsearchTimestampFormatTest(TestCase):
         while not is_open:
             if time.time() > timeout:
                 break
+            time.sleep(1)
             is_open = self._check_port(ip, port)
         return is_open
 
