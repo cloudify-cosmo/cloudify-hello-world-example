@@ -90,11 +90,6 @@ class ElasticsearchTimestampFormatTest(TestCase):
         self._delete_elasticsearch_rule()
         super(ElasticsearchTimestampFormatTest, self).tearDown()
 
-    def _check_port(self, ip, port):
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        result = sock.connect_ex((ip, port))
-        return result == 0
-
     def test_events_timestamp_format(self):
         self.blueprint_path = self.copy_blueprint('mocks')
         self.blueprint_yaml = self.blueprint_path / 'empty-bp.yaml'
