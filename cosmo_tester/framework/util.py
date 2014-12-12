@@ -104,9 +104,14 @@ class YamlPatcher(object):
         obj, prop_name = self._get_parent_obj_prop_name_by_path(prop_path)
         obj[prop_name] = obj[prop_name] + value
 
+    def _split_path(self, path):
+        # allow escaping '.' with '\.'
+        parts = re.split('(?<![^\\\\]\\\\)\.', path)
+        return [p.replace('\.', '.').replace('\\\\', '\\') for p in parts]
+
     def _get_object_by_path(self, prop_path):
         current = self.obj
-        for prop_segment in prop_path.split('.'):
+        for prop_segment in self._split_path(prop_path):
             match = self.pattern.match(prop_segment)
             if match:
                 index = int(match.group(2))
@@ -127,10 +132,10 @@ class YamlPatcher(object):
         obj.pop(prop_name)
 
     def _get_parent_obj_prop_name_by_path(self, prop_path):
-        split = prop_path.split('.')
+        split = self._split_path(prop_path)
         if len(split) == 1:
             return self.obj, prop_path
-        parent_path = '.'.join(split[:-1])
+        parent_path = '.'.join(p.replace('.', '\.') for p in split[:-1])
         parent_obj = self._get_object_by_path(parent_path)
         prop_name = split[-1]
         return parent_obj, prop_name
