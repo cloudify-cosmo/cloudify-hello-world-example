@@ -119,7 +119,7 @@ class OpenStackAutohealNodeCellarTest(OpenStackNodeCellarTestBase):
             autoheal_execution = self.get_autoheal_execution()
             if autoheal_execution is not None:
                 break
-            sleep(10)
+            time.sleep(10)
 
         self.assertIsNotNone(autoheal_execution, msg="Timed out waiting "
                                                      "for auto-heal workflow")
