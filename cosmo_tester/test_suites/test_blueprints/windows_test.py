@@ -34,7 +34,8 @@ class WindowsAgentTest(TestCase):
 
         # check that our host plugin task was executed
         # see 'tasks.task' in the windows blueprint plugin
-        self.assertTrue(outputs['task_execution']['executed'])
+        self.assertTrue(outputs['task_execution']['executed'],
+                        'No host plugin task was executed')
 
         self.execute_uninstall()
 
