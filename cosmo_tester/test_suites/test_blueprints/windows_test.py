@@ -13,9 +13,10 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
-""" Assumes fabric environment already set up """
+"""
+Assumes Windows image with WinRM and python.
+"""
 
-__author__ = 'elip'
 
 from cosmo_tester.framework.testenv import TestCase
 
@@ -38,5 +39,3 @@ class WindowsAgentTest(TestCase):
                         'No host plugin task was executed')
 
         self.execute_uninstall()
-
-
