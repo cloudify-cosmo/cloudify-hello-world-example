@@ -16,6 +16,7 @@
 from cloudify.decorators import operation
 from cloudify import ctx
 
+
 @operation
 def task(**kwargs):
     ctx.logger.info('Executing task {0}'.format(ctx.task_name))
