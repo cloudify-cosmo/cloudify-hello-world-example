@@ -4,28 +4,35 @@ imports:
     - http://www.getcloudify.org/spec/cloudify/3.1/types.yaml
     - http://www.getcloudify.org/spec/openstack-plugin/1.1/plugin.yaml
 
-node_templates:
-    vm:
-        type: cloudify.openstack.nodes.WindowsServer
-        properties:
-            server:
-                name: windows-agent-vm
-                image_name: windows-agent-machine
-                flavor: 102
-            cloudify_agent:
-                service:
-                    successful_consecutive_status_queries_count: 10
-                    status_transition_sleep_interval: 5
-                    start_timeout: 240
-                    stop_timeout: 240
-                user: Administrator
-                password: 1408Rokk
+plugins:
+  windows_host_plugin:
+    source: windows-host-plugin
+    executor: host_agent
 
-    app:
-        type: cloudify.nodes.ApplicationModule
-        interfaces:
-            cloudify.interfaces.lifecycle:
-                start: scripts/hello.py
-        relationships:
-            -   type: cloudify.relationships.contained_in
-                target: vm
+node_templates:
+
+  vm:
+    type: cloudify.openstack.nodes.WindowsServer
+    properties:
+      server:
+        name: windows-agent-vm
+        image_name: windows-agent-machine
+        flavor: 102
+      cloudify_agent:
+         service:
+           successful_consecutive_status_queries_count: 10
+           status_transition_sleep_interval: 5
+           start_timeout: 240
+           stop_timeout: 240
+           user: Administrator
+           password: 1408Rokk
+
+  app:
+    type: cloudify.nodes.ApplicationModule
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create: windows_host_plugin.windows_host_plugin.tasks.task
+        start: scripts/hello.py
+    relationships:
+      -  type: cloudify.relationships.contained_in
+         target: vm
