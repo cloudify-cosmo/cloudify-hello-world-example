@@ -36,3 +36,9 @@ node_templates:
     relationships:
       -  type: cloudify.relationships.contained_in
          target: vm
+
+outputs:
+  task_execution:
+    value:
+      executed: { get_attribute: [app, windows_host_plugin.tasks.task] }
+
