@@ -22,15 +22,21 @@ from cosmo_tester.test_suites.test_blueprints import nodecellar_test
 import fabric.api
 from time import sleep, time
 import urllib
+import json
 
 
-class DockerNodeCellarTest(nodecellar_test.NodecellarAppTest):
+class DockerPersistenceTest(nodecellar_test.NodecellarAppTest):
 
     def test_docker_persistence_nodecellar(self):
+        provider_context = self.get_provider_context()
         self.init_fabric()
         restarted = self.restart_container()
         if not restarted:
             raise AssertionError('Failed restarting container. Test failed.')
+        self.assertEqual(json.load(provider_context),
+                         json.load(self.get_provider_context()),
+                         msg='Provider context should be identical to what it '
+                             'was prior to reboot.')
 
         self._test_nodecellar_impl('openstack-blueprint.yaml')
 
