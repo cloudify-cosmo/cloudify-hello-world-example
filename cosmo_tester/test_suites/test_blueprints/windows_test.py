@@ -13,9 +13,10 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
-""" Assumes fabric environment already set up """
+"""
+Assumes Windows image with WinRM and python.
+"""
 
-__author__ = 'elip'
 
 from cosmo_tester.framework.testenv import TestCase
 
@@ -28,4 +29,13 @@ class WindowsAgentTest(TestCase):
         self.blueprint_yaml = blueprint_path / 'blueprint.yaml'
 
         self.upload_deploy_and_execute_install()
+
+        # self.test_id is the default deployment id
+        outputs = self.client.deployments.outputs.get(self.test_id)
+
+        # check that our host plugin task was executed
+        # see 'tasks.task' in the windows blueprint plugin
+        self.assertTrue(outputs['task_execution']['executed'],
+                        'No host plugin task was executed')
+
         self.execute_uninstall()
