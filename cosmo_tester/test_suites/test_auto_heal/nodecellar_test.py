@@ -42,6 +42,9 @@ class OpenStackAutohealNodeCellarTest(OpenStackNodeCellarTestBase):
             'policies': {
                 'simple_autoheal_policy': {
                     'type': 'cloudify.policies.types.host_failure',
+                    'properties':
+                        service:
+                            - example
                     'triggers': {
                         'auto_heal_trigger': {
                             'type':
@@ -140,9 +143,7 @@ class OpenStackAutohealNodeCellarTest(OpenStackNodeCellarTestBase):
         with YamlPatcher(self.blueprint_yaml) as patch:
             patch.merge_obj('workflows', self.AUTOHEAL_WORKFLOW_YAML)
             patch.merge_obj('groups', self.AUTOHEAL_GROUP_YAML)
-            # FIXME: this is a workaround for multiple collectors starting
-            # multiple auto-heal workflows
-            patch.set_value("node_types.nodecellar\\.nodes\\.MonitoredServer."
+            patch.merge_obj("node_types.nodecellar\\.nodes\\.MonitoredServer."
                             'interfaces.cloudify\\.interfaces\\.monitoring.'
                             'start.inputs.collectors_config.default',
                             {'ExampleCollector': {}})
