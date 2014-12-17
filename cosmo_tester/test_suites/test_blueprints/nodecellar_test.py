@@ -49,6 +49,37 @@ class NodecellarAppTest(TestCase):
     def get_inputs(self):
         raise RuntimeError('Must be implemented by Subclasses')
 
+    def assert_nodecellar_working(self, public_ip):
+        nodejs_server_page_response = requests.get('http://{0}:8080'
+                                                   .format(self.public_ip))
+        self.assertEqual(200, nodejs_server_page_response.status_code,
+                         'Failed to get home page of nodecellar app')
+        page_title = 'Node Cellar'
+        self.assertTrue(page_title in nodejs_server_page_response.text,
+                        'Expected to find {0} in web server response: {1}'
+                        .format(page_title, nodejs_server_page_response))
+
+        wines_page_response = requests.get('http://{0}:8080/wines'.format(
+            self.public_ip))
+        self.assertEqual(200, wines_page_response.status_code,
+                         'Failed to get the wines page on nodecellar app ('
+                         'probably means a problem with the connection to '
+                         'MongoDB)')
+
+        try:
+            wines_json = json.loads(wines_page_response.text)
+            if type(wines_json) != list:
+                self.fail('Response from wines page is not a JSON list: {0}'
+                          .format(wines_page_response.text))
+
+            self.assertGreater(len(wines_json), 0,
+                               'Expected at least 1 wine data in nodecellar '
+                               'app; json returned on wines page is: {0}'
+                               .format(wines_page_response.text))
+        except BaseException:
+            self.fail('Response from wines page is not a valid JSON: {0}'
+                      .format(wines_page_response.text))
+
     def post_install_assertions(self, before_state, after_state):
         delta = self.get_manager_state_delta(before_state, after_state)
 
@@ -121,35 +152,7 @@ class NodecellarAppTest(TestCase):
                            'Expected at least 1 event for execution id: {0}'
                            .format(execution_by_id.id))
 
-        nodejs_server_page_response = requests.get('http://{0}:8080'
-                                                   .format(self.public_ip))
-        self.assertEqual(200, nodejs_server_page_response.status_code,
-                         'Failed to get home page of nodecellar app')
-        page_title = 'Node Cellar'
-        self.assertTrue(page_title in nodejs_server_page_response.text,
-                        'Expected to find {0} in web server response: {1}'
-                        .format(page_title, nodejs_server_page_response))
-
-        wines_page_response = requests.get('http://{0}:8080/wines'.format(
-            self.public_ip))
-        self.assertEqual(200, wines_page_response.status_code,
-                         'Failed to get the wines page on nodecellar app ('
-                         'probably means a problem with the connection to '
-                         'MongoDB)')
-
-        try:
-            wines_json = json.loads(wines_page_response.text)
-            if type(wines_json) != list:
-                self.fail('Response from wines page is not a JSON list: {0}'
-                          .format(wines_page_response.text))
-
-            self.assertGreater(len(wines_json), 0,
-                               'Expected at least 1 wine data in nodecellar '
-                               'app; json returned on wines page is: {0}'
-                               .format(wines_page_response.text))
-        except BaseException:
-            self.fail('Response from wines page is not a valid JSON: {0}'
-                      .format(wines_page_response.text))
+        self.assert_nodecellar_working(self.public_ip)
 
     def post_uninstall_assertions(self):
         nodes_instances = self.client.node_instances.list(self.deployment_id)
