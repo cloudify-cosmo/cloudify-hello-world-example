@@ -61,7 +61,6 @@ setenv()
 	export BOOTSTRAP_USING_PROVIDERS=${BOOTSTRAP_USING_PROVIDERS}
 	export WORKFLOW_TASK_RETRIES=${WORKFLOW_TASK_RETRIES=20}
 	export CLOUDIFY_AUTOMATION_TOKEN=${CLOUDIFY_AUTOMATION_TOKEN}
-	export VSPHERE_PLUGIN_TOKEN=${VSPHERE_PLUGIN_TOKEN}
 	# If handler is vsphere set the manager dir to the plugin's directory
 	if [[ "${CLOUDIFY_TEST_HANDLER_MODULE}" = "cosmo_tester.framework.handlers.vsphere" ]]
     	then

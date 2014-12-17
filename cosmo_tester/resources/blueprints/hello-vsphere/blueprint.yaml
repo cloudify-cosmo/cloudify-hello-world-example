@@ -1,15 +1,15 @@
 tosca_definitions_version: cloudify_dsl_1_0
 
 imports:
-    - http://www.getcloudify.org/spec/cloudify/3.1rc2/types.yaml
+    - http://www.getcloudify.org/spec/cloudify/3.1/types.yaml
     - plugin.yaml
 
 node_templates:
     example_server:
-        type: cloudify.vsphere.nodes.server
+        type: cloudify.vsphere.nodes.Server
         properties:
             networking:
-                connected_networks:
+                connect_networks:
                     -
                         name: Management
                         management: true

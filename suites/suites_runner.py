@@ -31,7 +31,6 @@ env_variables = {
     'OPENCM_GIT_PWD': '',
     #tokens used to access private repos
     'CLOUDIFY_AUTOMATION_TOKEN': '',
-    'VSPHERE_PLUGIN_TOKEN': '',
 
     #vSphere creds
     'VSPHERE_USERNAME': '',

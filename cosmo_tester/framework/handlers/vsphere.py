@@ -31,24 +31,11 @@ def get_vsphere_state(env):
     return vms
 
 
-def clean_vsphere_vms_by_prefix(env, prefix, logger):
-    vms = vsphere_utils.get_vms_by_prefix(env.vsphere_url,
-                                          env.vsphere_username,
-                                          env.vsphere_password,
-                                          '443',
-                                          prefix,
-                                          True)
-    for vm in vms:
-        logger.warn('{0} was not deleted during the test!'
-                    .format(vm.summary.config.name))
-        vsphere_utils.terminate_vm(vm)
-    return vms
-
-
 class VsphereCleanupContext(BaseHandler.CleanupContext):
     def __init__(self, context_name, env):
         super(VsphereCleanupContext, self).__init__(context_name, env)
         self.enviro = env
+        self.prefix = env.handler.prefix
         self.vsphere_state_before = get_vsphere_state(env)
 
     def cleanup(self):
@@ -56,9 +43,7 @@ class VsphereCleanupContext(BaseHandler.CleanupContext):
         if os.environ.get(CLOUDIFY_TEST_NO_CLEANUP):
             self.logger.warn('SKIPPING cleanup: of the resources')
             return
-        prefix = self.enviro.resources_prefix
-        #TODO check the next line
-        clean_vsphere_vms_by_prefix(self.enviro, prefix, self.logger)
+        get_vsphere_state(self.enviro)
 
 
 class CloudifyVsphereInputsConfigReader(BaseCloudifyInputsConfigReader):
@@ -118,6 +103,7 @@ class VsphereHandler(BaseHandler):
         super(VsphereHandler, self).__init__(env)
         self._template = None
         self.CloudifyConfigReader = CloudifyVsphereInputsConfigReader
+        self.prefix = self.CloudifyConfigReader.resources_prefix
 
     @property
     def template(self):
@@ -128,10 +114,9 @@ class VsphereHandler(BaseHandler):
         with self.update_cloudify_config() as patch:
             suffix = '-%06x' % random.randrange(16 ** 6)
             patch.append_value('manager_server_name', suffix)
-        print "before bs"
 
     def after_teardown(self):
-        print "after teardown stuff"
+        pass
 
 
 handler = VsphereHandler

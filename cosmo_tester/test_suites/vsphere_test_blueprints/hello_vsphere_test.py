@@ -21,13 +21,10 @@ from cosmo_tester.framework.testenv import TestCase
 
 class HelloVsphereTest(TestCase):
     """Tests vSphere with basic blueprint
-       To run this tests locally you should have VSPHERE_PLUGIN_TOKEN and
-       CLOUDIFY_AUTOMATION_TOKEN env variables set
-       (see quickbuild's vars for the values)
+       To run this tests locally you should have CLOUDIFY_AUTOMATION_TOKEN
+       env variable set (see quickbuild's vars for the values)
     """
     def test_hello(self):
-        self.token_place_holder = '{VSPHERE_PLUGIN_TOKEN}'
-        self.token_env_variable = 'VSPHERE_PLUGIN_TOKEN'
         self.cloudify_automation_token_ph = '{CLOUDIFY_AUTOMATION_TOKEN}'
         self.cloudify_automation_token_var = 'CLOUDIFY_AUTOMATION_TOKEN'
         self.branch = os.environ.get('BRANCH_NAME_VSPHERE_PLUGIN', 'master')
@@ -45,24 +42,29 @@ class HelloVsphereTest(TestCase):
             blueprint_id=self.test_id,
             deployment_id=self.test_id)
 
-        deployment_env_creation_execution = \
-            self.client.executions.list(
-                deployment_id=self.test_id)[0]
+        deployment_env_creation_execution = self.repetitive(
+            lambda: self.client.executions.list(deployment_id=self.test_id)[0],
+            exception_class=IndexError)
+
         self.logger.info('Waiting for create_deployment_environment workflow '
                          'execution to terminate')
         self.wait_for_execution(deployment_env_creation_execution, timeout=240)
+        self.execute_workflow('install', 720)
+        self.execute_workflow('uninstall', 600)
 
+    def execute_workflow(self, exec_type, timeout_seconds):
         execution = self.client.executions.start(deployment_id=self.test_id,
-                                                 workflow_id='install')
-        self.logger.info('Waiting for install workflow to terminate')
+                                                 workflow_id=exec_type)
+        self.logger.info('Waiting for workflow {} to terminate'
+                         .format(exec_type))
         start = time.time()
-        self.wait_for_execution(execution, timeout=600)
-        self.logger.info('All done! execution took {} seconds'
-                         .format(time.time() - start))
+        self.wait_for_execution(execution, timeout=timeout_seconds)
+        self.logger.info('workflow {} done! execution took {} seconds'
+                         .format(exec_type, time.time() - start))
 
     def download_and_modify_plugin(self, blueprint_path):
-        url = '{0}?token={1}'.format(self.base_url,
-                                     os.environ.get(self.token_env_variable))
+        url = 'http://getcloudify.org.s3.amazonaws.com' \
+              '/spec/vsphere-plugin/1.1/plugin.yaml'
         plugin = urllib.URLopener()
         file_path = blueprint_path+"/plugin.yaml"
         plugin.retrieve(url, file_path)
