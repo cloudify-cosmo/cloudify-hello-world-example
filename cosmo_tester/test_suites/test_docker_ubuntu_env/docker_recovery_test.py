@@ -16,7 +16,6 @@
 # a test for container management and recovery. The docker container is managed
 # by docker and should be restarted automatically upon failure.
 
-from cosmo_tester.framework.util import YamlPatcher
 from cosmo_tester.test_suites.test_blueprints import nodecellar_test
 import fabric.api
 from time import sleep, time
