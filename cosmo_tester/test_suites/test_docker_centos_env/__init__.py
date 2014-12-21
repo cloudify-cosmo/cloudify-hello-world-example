@@ -13,20 +13,13 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
-"""
-Assumes Windows image with WinRM and python.
-"""
+
+from cosmo_tester.framework.testenv import bootstrap, teardown
 
 
-from cosmo_tester.framework.testenv import TestCase
+def setUp():
+    bootstrap()
 
 
-class WindowsAgentTest(TestCase):
-
-    def test_windows(self):
-
-        blueprint_path = self.copy_blueprint('windows')
-        self.blueprint_yaml = blueprint_path / 'blueprint.yaml'
-
-        self.upload_deploy_and_execute_install()
-        self.execute_uninstall()
+def tearDown():
+    teardown()

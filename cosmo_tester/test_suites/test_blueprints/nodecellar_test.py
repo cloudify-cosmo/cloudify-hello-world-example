@@ -19,7 +19,6 @@ import json
 from requests.exceptions import ConnectionError
 
 from cosmo_tester.framework.testenv import TestCase
-from cosmo_tester.framework.util import YamlPatcher
 from cosmo_tester.framework.git_helper import clone
 
 NODECELLAR_URL = "https://github.com/cloudify-cosmo/" \
@@ -28,13 +27,15 @@ NODECELLAR_URL = "https://github.com/cloudify-cosmo/" \
 
 class NodecellarAppTest(TestCase):
 
-    def _test_nodecellar_impl(self, blueprint_file, image_name, flavor_name):
+    def _test_nodecellar_impl(self, blueprint_file):
         self.repo_dir = clone(NODECELLAR_URL, self.workdir)
         self.blueprint_yaml = self.repo_dir / blueprint_file
 
-        self.modify_blueprint(image_name, flavor_name)
+        self.modify_blueprint()
 
-        before, after = self.upload_deploy_and_execute_install()
+        before, after = self.upload_deploy_and_execute_install(
+            inputs=self.get_inputs()
+        )
 
         self.post_install_assertions(before, after)
 
@@ -42,8 +43,42 @@ class NodecellarAppTest(TestCase):
 
         self.post_uninstall_assertions()
 
-    def modify_blueprint(self, image_name, flavor_name):
+    def modify_blueprint(self):
         pass
+
+    def get_inputs(self):
+        raise RuntimeError('Must be implemented by Subclasses')
+
+    def assert_nodecellar_working(self, public_ip):
+        nodejs_server_page_response = requests.get('http://{0}:8080'
+                                                   .format(self.public_ip))
+        self.assertEqual(200, nodejs_server_page_response.status_code,
+                         'Failed to get home page of nodecellar app')
+        page_title = 'Node Cellar'
+        self.assertTrue(page_title in nodejs_server_page_response.text,
+                        'Expected to find {0} in web server response: {1}'
+                        .format(page_title, nodejs_server_page_response))
+
+        wines_page_response = requests.get('http://{0}:8080/wines'.format(
+            self.public_ip))
+        self.assertEqual(200, wines_page_response.status_code,
+                         'Failed to get the wines page on nodecellar app ('
+                         'probably means a problem with the connection to '
+                         'MongoDB)')
+
+        try:
+            wines_json = json.loads(wines_page_response.text)
+            if type(wines_json) != list:
+                self.fail('Response from wines page is not a JSON list: {0}'
+                          .format(wines_page_response.text))
+
+            self.assertGreater(len(wines_json), 0,
+                               'Expected at least 1 wine data in nodecellar '
+                               'app; json returned on wines page is: {0}'
+                               .format(wines_page_response.text))
+        except BaseException:
+            self.fail('Response from wines page is not a valid JSON: {0}'
+                      .format(wines_page_response.text))
 
     def post_install_assertions(self, before_state, after_state):
         delta = self.get_manager_state_delta(before_state, after_state)
@@ -83,16 +118,16 @@ class NodecellarAppTest(TestCase):
         self.assertEqual(len(delta['node_state']), 1,
                          'node_state: {0}'.format(delta))
 
-        self.assertEqual(len(delta['nodes']), 7,
+        self.assertEqual(len(delta['nodes']), 8,
                          'nodes: {0}'.format(delta))
 
         nodes_state = delta['node_state'].values()[0]
-        self.assertEqual(len(nodes_state), 7,
+        self.assertEqual(len(nodes_state), 8,
                          'nodes_state: {0}'.format(nodes_state))
 
         self.public_ip = None
         for key, value in nodes_state.items():
-            if '_vm' in key:
+            if '_host' in key:
                 self.assertTrue('ip' in value['runtime_properties'],
                                 'Missing ip in runtime_properties: {0}'
                                 .format(nodes_state))
@@ -102,12 +137,13 @@ class NodecellarAppTest(TestCase):
                 self.assertEqual(value['state'], 'started',
                                  'vm node should be started: {0}'
                                  .format(nodes_state))
-            elif key.startswith('floatingip'):
+            elif key.startswith('nodecellar_floatingip'):
                 self.public_ip = value['runtime_properties'][
                     'floating_ip_address']
 
         self.assertIsNotNone(self.public_ip,
-                             'Could not find the "floatingip" node for '
+                             'Could not find the '
+                             '"nodecellar_floatingip" node for '
                              'retrieving the public IP')
 
         events, total_events = self.client.events.get(execution_by_id.id)
@@ -116,35 +152,7 @@ class NodecellarAppTest(TestCase):
                            'Expected at least 1 event for execution id: {0}'
                            .format(execution_by_id.id))
 
-        nodejs_server_page_response = requests.get('http://{0}:8080'
-                                                   .format(self.public_ip))
-        self.assertEqual(200, nodejs_server_page_response.status_code,
-                         'Failed to get home page of nodecellar app')
-        page_title = 'Node Cellar'
-        self.assertTrue(page_title in nodejs_server_page_response.text,
-                        'Expected to find {0} in web server response: {1}'
-                        .format(page_title, nodejs_server_page_response))
-
-        wines_page_response = requests.get('http://{0}:8080/wines'.format(
-            self.public_ip))
-        self.assertEqual(200, wines_page_response.status_code,
-                         'Failed to get the wines page on nodecellar app ('
-                         'probably means a problem with the connection to '
-                         'MongoDB)')
-
-        try:
-            wines_json = json.loads(wines_page_response.text)
-            if type(wines_json) != list:
-                self.fail('Response from wines page is not a JSON list: {0}'
-                          .format(wines_page_response.text))
-
-            self.assertGreater(len(wines_json), 0,
-                               'Expected at least 1 wine data in nodecellar '
-                               'app; json returned on wines page is: {0}'
-                               .format(wines_page_response.text))
-        except BaseException:
-            self.fail('Response from wines page is not a valid JSON: {0}'
-                      .format(wines_page_response.text))
+        self.assert_nodecellar_working(self.public_ip)
 
     def post_uninstall_assertions(self):
         nodes_instances = self.client.node_instances.list(self.deployment_id)
@@ -166,17 +174,15 @@ class NodecellarAppTest(TestCase):
 class OpenStackNodeCellarTestBase(NodecellarAppTest):
 
     def _test_openstack_nodecellar(self, blueprint_file):
-        self._test_nodecellar_impl(blueprint_file,
-                                   self.env.ubuntu_image_name,
-                                   self.env.flavor_name)
+        self._test_nodecellar_impl(blueprint_file)
 
-    def modify_blueprint(self, image_name, flavor_name):
-        with YamlPatcher(self.blueprint_yaml) as patch:
-            vm_type_path = 'node_types.vm_host.properties'
-            patch.merge_obj('{0}.server.default'.format(vm_type_path), {
-                'image_name': image_name,
-                'flavor_name': flavor_name
-            })
+    def get_inputs(self):
+
+        return {
+            'image': self.env.ubuntu_image_id,
+            'flavor': self.env.small_flavor_id,
+            'agent_user': 'ubuntu'
+        }
 
 
 class OpenStackNodeCellarTest(OpenStackNodeCellarTestBase):

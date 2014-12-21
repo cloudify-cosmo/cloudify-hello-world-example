@@ -1,5 +1,5 @@
 ########
-# Copyright (c) 2014 GigaSpaces Technologies Ltd. All rights reserved
+# Copyright (c) 2013 GigaSpaces Technologies Ltd. All rights reserved
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,21 +12,3 @@
 #    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
-
-"""
-Assumes Windows image with WinRM and python.
-"""
-
-
-from cosmo_tester.framework.testenv import TestCase
-
-
-class WindowsAgentTest(TestCase):
-
-    def test_windows(self):
-
-        blueprint_path = self.copy_blueprint('windows')
-        self.blueprint_yaml = blueprint_path / 'blueprint.yaml'
-
-        self.upload_deploy_and_execute_install()
-        self.execute_uninstall()

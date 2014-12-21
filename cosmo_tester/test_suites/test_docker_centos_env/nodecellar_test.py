@@ -13,18 +13,27 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
+from cosmo_tester.framework.util import YamlPatcher
 from cosmo_tester.test_suites.test_blueprints import nodecellar_test
 
 
-class EC2NodeCellarTest(nodecellar_test.NodecellarAppTest):
+class DockerNodeCellarTest(nodecellar_test.NodecellarAppTest):
 
-    def test_ec2_nodecellar(self):
-        self._test_nodecellar_impl('ec2-blueprint.yaml')
+    def test_docker_and_nodecellar(self):
+        self._test_nodecellar_impl('openstack-blueprint.yaml')
+
+    def modify_blueprint(self, image_name, flavor_name):
+        with YamlPatcher(self.blueprint_yaml) as patch:
+            vm_props_path = 'node_types.vm_host.properties'
+            patch.merge_obj('{0}.cloudify_agent.default'
+                            .format(vm_props_path), {
+                                'home_dir': '/home/ubuntu'
+                            })
 
     def get_inputs(self):
 
         return {
-            'image': self.env.ubuntu_agent_ami,
-            'size': self.env.medium_instance_type,
+            'image': self.env.ubuntu_image_id,
+            'flavor': self.env.small_flavor_id,
             'agent_user': 'ubuntu'
         }

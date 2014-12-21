@@ -35,9 +35,12 @@ class ManyInstancesTest(TestCase):
             blueprint_id=self.test_id,
             deployment_id=self.test_id)
 
-        deployment_env_creation_execution = \
-            self.client.executions.list(
-                deployment_id=self.test_id)[0]
+        # elasticsearch takes its time, so it might initially fail
+        # with IndexError
+        deployment_env_creation_execution = self.repetitive(
+            lambda: self.client.executions.list(deployment_id=self.test_id)[0],
+            exception_class=IndexError)
+
         self.logger.info('Waiting for create_deployment_environment workflow '
                          'execution to terminate')
         self.wait_for_execution(deployment_env_creation_execution, timeout=240)
