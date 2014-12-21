@@ -122,7 +122,7 @@ def main():
                 with YamlPatcher(manager_blueprint) as patch:
                     # change bootstrap task mapping
                     patch.set_value('node_templates.manager.interfaces'
-                                    '.cloudify.interfaces.lifecycle.start'
+                                    '.cloudify\.interfaces\.lifecycle.start'
                                     '.inputs.task_mapping',
                                     'cloudify_cli.bootstrap'
                                     '.tasks.bootstrap_docker')
@@ -134,25 +134,6 @@ def main():
                     # remove server property from cloudify packages
                     patch.delete_property('node_templates.manager.properties'
                                           '.cloudify_packages.server')
-                    patch.set_value('node_templates.manager.properties'
-                                    '.cloudify_packages.docker.docker_url',
-                                    'http://gigaspaces-repository-eu.s3'
-                                    '.amazonaws.com/org/cloudify3/3.1.0'
-                                    '/ga-RELEASE/coudify-docker_3.1.0-ga'
-                                    '-b85.tar')
-                    patch.set_value('node_templates.manager.properties'
-                                    '.cloudify_packages.docker.docker_data_url',
-                                    'http://gigaspaces-repository-eu.s3.'
-                                    'amazonaws.com/org/cloudify3/3.1.0/'
-                                    'ga-RELEASE/cloudify-docker-data_3.1.0'
-                                    '-ga-b85.tar')
-
-        # with open (manager_blueprint, "r") as myfile:
-        #     data=myfile.read().replace('\n', '')
-        # raise RuntimeError('the blueprint is: {0} \n data url:{1} \n '
-        #                    'main url: {2}'.format(data,
-        #                     os.environ.get('DOCKER_DATA_URL')
-        #                     ,os.environ.get('DOCKER_IMAGE_URL')))
 
 
 def _patch_properties(path, properties, is_json=False):
