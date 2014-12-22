@@ -65,7 +65,7 @@ def wait_for_task(task):
         raise task.info.error
 
 
-#TODO check if before poweroff should connect
+# TODO check if before poweroff should connect
 def terminate_vm(vm):
     if is_vm_poweredon(vm):
         task = vm.PowerOff()
