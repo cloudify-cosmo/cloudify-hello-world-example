@@ -124,15 +124,22 @@ def main():
             _patch_properties(manager_blueprint,
                               shared_manager_blueprint_properties)
             if bootstrap_using_docker:
+                use_ext_agent_packages = \
+                    os.environ['USE_EXTERNAL_AGENT_PACKAGES'] == 'true'
                 _patch_properties(manager_blueprint,
                                   docker_manager_blueprint_properties)
                 with YamlPatcher(manager_blueprint) as patch:
                     # change bootstrap task mapping
                     patch.set_value('node_templates.manager.interfaces'
-                                    '.cloudify.interfaces.lifecycle.start'
+                                    '.cloudify\.interfaces\.lifecycle.start'
                                     '.inputs.task_mapping',
                                     'cloudify_cli.bootstrap'
                                     '.tasks.bootstrap_docker')
+                    # used for centos tests since we don't have rpm packages.
+                    if not use_ext_agent_packages:
+                        patch.delete_property(
+                            'node_templates.manager.properties. '
+                            'cloudify_packages.agents')
                     # remove server property from cloudify packages
                     patch.delete_property('node_templates.manager.properties'
                                           '.cloudify_packages.server')
