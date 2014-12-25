@@ -4,6 +4,10 @@ imports:
     - http://www.getcloudify.org/spec/cloudify/3.1/types.yaml
     - plugin.yaml
 
+inputs:
+    template_name:
+        description: the template that will be used for the server
+
 node_templates:
     example_server:
         type: cloudify.vsphere.nodes.Server
@@ -26,7 +30,7 @@ node_templates:
 
             server:
                 name: vsphere_test_server
-                template: ubuntu-configured-template
+                template: { get_input: template_name }
                 cpus: 2
                 memory: 3096
 

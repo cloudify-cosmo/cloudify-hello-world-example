@@ -35,10 +35,14 @@ class VsphereCleanupContext(BaseHandler.CleanupContext):
     def __init__(self, context_name, env):
         super(VsphereCleanupContext, self).__init__(context_name, env)
         self.enviro = env
-        self.prefix = env.handler.prefix
         get_vsphere_state(env)
 
     def cleanup(self):
+        """
+        Cleans resources by prefix in order to allow working
+        on vsphere env while testing - need to add clean by prefix
+        using the vsphere_utils once CFY-1827 is fixed.
+        """
         super(VsphereCleanupContext, self).cleanup()
         if os.environ.get(CLOUDIFY_TEST_NO_CLEANUP):
             self.logger.warn('SKIPPING cleanup: of the resources')
@@ -103,7 +107,9 @@ class VsphereHandler(BaseHandler):
         super(VsphereHandler, self).__init__(env)
         self._template = None
         self.CloudifyConfigReader = CloudifyVsphereInputsConfigReader
-        self.prefix = self.CloudifyConfigReader.resources_prefix
+        # plugins_branch should be set manually when running locally!
+        self.plugins_branch = os.environ.get('BRANCH_NAME_PLUGINS', '1.1')
+        self.env = env
 
     @property
     def template(self):
@@ -117,6 +123,16 @@ class VsphereHandler(BaseHandler):
 
     def after_teardown(self):
         pass
+
+    def get_vm(self, name):
+        vms = vsphere_utils.get_vm_by_name(self.env.vsphere_url,
+                                           self.env.vsphere_username,
+                                           self.env.vsphere_password,
+                                           '443',
+                                           name)
+        for vm in vms:
+            vsphere_utils.print_vm_info(vm)
+        return vms
 
 
 handler = VsphereHandler
