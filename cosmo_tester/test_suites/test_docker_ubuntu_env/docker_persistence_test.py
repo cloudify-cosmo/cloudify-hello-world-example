@@ -40,6 +40,11 @@ class DockerPersistenceTest(nodecellar_test.NodecellarAppTest):
 
         self._test_nodecellar_impl('openstack-blueprint.yaml')
 
+    def get_provider_context(self):
+        context_url = 'http://{0}/provider/context' \
+            .format(self.env.management_ip)
+        return urllib.urlopen(context_url)
+
     def modify_blueprint(self):
         with YamlPatcher(self.blueprint_yaml) as patch:
             vm_props_path = 'node_types.nodecellar\.nodes\.MonitoredServer' \
