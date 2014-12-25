@@ -27,10 +27,6 @@ class HelloVsphereTest(TestCase):
     def test_hello(self):
         self.cloudify_automation_token_ph = '{CLOUDIFY_AUTOMATION_TOKEN}'
         self.cloudify_automation_token_var = 'CLOUDIFY_AUTOMATION_TOKEN'
-        self.branch = os.environ.get('BRANCH_NAME_VSPHERE_PLUGIN', 'master')
-        self.base_url = 'https://raw.githubusercontent.com' \
-                        '/Gigaspaces/cloudify-vsphere-plugin/'\
-                        + self.branch + '/plugin.yaml'
         blueprint_path = self.copy_blueprint('hello-vsphere')
         self.blueprint_yaml = blueprint_path / 'blueprint.yaml'
         self.download_and_modify_plugin(blueprint_path)

@@ -36,7 +36,7 @@ class VsphereCleanupContext(BaseHandler.CleanupContext):
         super(VsphereCleanupContext, self).__init__(context_name, env)
         self.enviro = env
         self.prefix = env.handler.prefix
-        self.vsphere_state_before = get_vsphere_state(env)
+        get_vsphere_state(env)
 
     def cleanup(self):
         super(VsphereCleanupContext, self).cleanup()
