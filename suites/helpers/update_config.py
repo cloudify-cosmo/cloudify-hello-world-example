@@ -137,7 +137,7 @@ def main():
                     # used for centos tests since we don't have rpm packages.
                     patch.delete_property(
                         'node_templates.manager.properties. '
-                        'cloudify_packages.agents')
+                        'cloudify_packages.agents', False)
 
 
 def _patch_properties(path, properties, is_json=False):
