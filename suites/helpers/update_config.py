@@ -123,19 +123,21 @@ def main():
                 bootstrap_using_docker else
                 packages_manager_blueprint_properties.items()))
 
+        if bootstrap_using_docker:
+            use_ext_agent_packages = \
+                os.environ['USE_EXTERNAL_AGENT_PACKAGES'] == 'true'
+
         for manager_blueprint in _get_manager_blueprints(
                 manager_blueprints_base_dir):
             _patch_properties(manager_blueprint,
                               manager_blueprints_for_patching)
-            # if bootstrap_using_docker:
-                # use_ext_agent_packages = \
-                #     os.environ['USE_EXTERNAL_AGENT_PACKAGES'] == 'true'
-                # with YamlPatcher(manager_blueprint) as patch:
+
+            if bootstrap_using_docker and not use_ext_agent_packages:
+                with YamlPatcher(manager_blueprint) as patch:
                     # used for centos tests since we don't have rpm packages.
-                    # if not use_ext_agent_packages:
-                    #     patch.delete_property(
-                    #         'node_templates.manager.properties. '
-                    #         'cloudify_packages.agents')
+                    patch.delete_property(
+                        'node_templates.manager.properties. '
+                        'cloudify_packages.agents')
 
 
 def _patch_properties(path, properties, is_json=False):

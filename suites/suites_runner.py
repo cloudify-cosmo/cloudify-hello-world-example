@@ -47,13 +47,19 @@ env_variables = {
     'BRANCH_NAME_CLI': '',
     'BRANCH_NAME_MANAGER_BLUEPRINTS': '',
 
-    # packages
+    # manager packages
     'COMPONENTS_PACKAGE_URL': '',
     'CORE_PACKAGE_URL': '',
+    'UI_PACKAGE_URL': '',
+
+    # agent packages
     'UBUNTU_PACKAGE_URL': '',
     'CENTOS_PACKAGE_URL': '',
     'WINDOWS_PACKAGE_URL': '',
-    'UI_PACKAGE_URL': ''
+
+    # docker packages
+    'DOCKER_IMAGE_URL': '',
+    'DOCKER_DATA_URL': '',
 }
 
 def list_containers():
