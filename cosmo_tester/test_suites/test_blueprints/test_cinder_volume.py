@@ -13,8 +13,8 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
-import cosmo_tester.framework.util as framework_util
 import time
+
 from cinderclient import exceptions as cinder_exc
 
 from cosmo_tester.framework.testenv import TestCase
@@ -29,58 +29,24 @@ class CinderVolumeTestBase(TestCase):
         super(CinderVolumeTestBase, self).setUp()
         _, _, self.cinderclient = self.env.handler.openstack_clients()
 
-        blueprint_path = self.copy_blueprint('openstack-cinder')
-        self.blueprint_yaml = blueprint_path / 'blueprint.yaml'
-
-        self._modify_blueprint_add_image_and_flavor()
-        self._modify_blueprint_add_volume_size()
-        self._modify_blueprint_add_device_name()
-
-    def _modify_blueprint_add_image_and_flavor(self):
-        with framework_util.YamlPatcher(self.blueprint_yaml) as patch:
-            patch.merge_obj(
-                'inputs',
-                {
-                    'image_name':
-                    {
-                        'default': self.env.ubuntu_image_name
-                    },
-                    'flavor_name':
-                    {
-                        'default': self.env.flavor_name
-                    }
-                })
-
-    def _modify_blueprint_add_volume_size(self):
-        with framework_util.YamlPatcher(self.blueprint_yaml) as patch:
-            patch.merge_obj(
-                'node_templates.test_volume.properties.volume',
-                {
-                    'size': self.VOLUME_SIZE
-                })
-
-    def _modify_blueprint_add_device_name(self):
-        with framework_util.YamlPatcher(self.blueprint_yaml) as patch:
-            patch.merge_obj(
-                'node_templates.test_volume.properties',
-                {
-                    'device_name': self.DEVICE_NAME
-                })
-
 
 class CinderVolumeTest(CinderVolumeTestBase):
 
-    def _modify_blueprint_use_existing_volume(self, volume_id):
-        with framework_util.YamlPatcher(self.blueprint_yaml) as patch:
-            patch.merge_obj(
-                'node_templates.test_volume.properties',
-                {
-                    'use_external_resource': True,
-                    'resource_id': volume_id
-                })
-
     def test_volume_create_new(self):
-        before, after = self.upload_deploy_and_execute_install()
+
+        blueprint_path = self.copy_blueprint('openstack-cinder')
+        self.blueprint_yaml = blueprint_path / 'create-new-volume-blueprint.yaml'
+
+        inputs = {
+            'image_name': self.env.ubuntu_image_name,
+            'flavor_name': self.env.flavor_name,
+            'volume_size': self.VOLUME_SIZE,
+            'device_name': self.DEVICE_NAME
+        }
+
+        before, after = self.upload_deploy_and_execute_install(
+            inputs=inputs
+        )
 
         self._post_install_assertions(before, after)
 
@@ -89,6 +55,10 @@ class CinderVolumeTest(CinderVolumeTestBase):
         self._post_uninstall_assertions()
 
     def test_volume_use_existing(self):
+
+        blueprint_path = self.copy_blueprint('openstack-cinder')
+        self.blueprint_yaml = blueprint_path / 'use-existing-volume-blueprint.yaml'
+
         volume_name = 'volume-system-test'
 
         volume = self.cinderclient.volumes.create(size=self.VOLUME_SIZE,
@@ -97,9 +67,16 @@ class CinderVolumeTest(CinderVolumeTestBase):
 
         self._wait_for_volume_available(volume)
 
-        self._modify_blueprint_use_existing_volume(volume.id)
+        inputs = {
+            'image_name': self.env.ubuntu_image_name,
+            'flavor_name': self.env.flavor_name,
+            'existing_volume_id': volume.id,
+            'device_name': self.DEVICE_NAME
+        }
 
-        before, after = self.upload_deploy_and_execute_install()
+        before, after = self.upload_deploy_and_execute_install(
+            inputs=inputs
+        )
 
         self._post_install_assertions(before, after)
 
@@ -205,46 +182,23 @@ class CinderVolumeFSTest(CinderVolumeTestBase):
     FS_TYPE = 'ext4'
     FS_MOUNT_PATH = '/test-mount'
 
-    def _modify_blueprint_add_file_system_node(self):
-        with framework_util.YamlPatcher(self.blueprint_yaml) as patch:
-            patch.merge_obj(
-                'node_templates',
-                {
-                    'volume_fs':
-                    {
-                        'type': 'cloudify.nodes.DiskFileSystem',
-                        'properties':
-                        {
-                            'device_name': self.DEVICE_NAME,
-                            'fs_type': self.FS_TYPE,
-                            'fs_mount_path': self.FS_MOUNT_PATH
-                        },
-                        'interfaces':
-                            {
-                                'cloudify.interfaces.lifecycle':
-                                    {
-                                        'create': 'scripts/fs/create.sh',
-                                        'delete': 'scripts/fs/delete.sh'
-                                    }
-                            },
-                        'relationships':
-                            [
-                                {
-                                    'target': 'test_volume',
-                                    'type': 'cloudify.relationships.depends_on'
-                                },
-                                {
-                                    'target': 'test_vm',
-                                    'type':
-                                    'cloudify.relationships.contained_in'
-                                }
-                            ]
-                    }
-                })
-
     def test_volume_file_system(self):
-        self._modify_blueprint_add_file_system_node()
-        before, after = self.upload_deploy_and_execute_install()
+
+        blueprint_path = self.copy_blueprint('openstack-cinder')
+        self.blueprint_yaml = blueprint_path / 'file-system-blueprint.yaml'
+
+        inputs = {
+            'image_name': self.env.ubuntu_image_name,
+            'flavor_name': self.env.flavor_name,
+            'volume_size': self.VOLUME_SIZE,
+            'device_name': self.DEVICE_NAME,
+            'fs_type': self.FS_TYPE,
+            'fs_mount_path': self.FS_MOUNT_PATH
+        }
+
+        before, after = self.upload_deploy_and_execute_install(
+            inputs=inputs
+        )
 
         self._post_install_assertions(before, after)
 

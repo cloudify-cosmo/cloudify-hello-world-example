@@ -1,0 +1,61 @@
+tosca_definitions_version: cloudify_dsl_1_0
+
+imports:
+  - https://raw.githubusercontent.com/cloudify-cosmo/cloudify-manager/CFY-1761-add-fs-type/resources/rest-service/cloudify/types/types.yaml
+  - http://www.getcloudify.org/spec/openstack-plugin/1.2m1/plugin.yaml
+
+inputs:
+
+  image_name:
+    description: >
+      Image to be used when launching agent VM's.
+
+  flavor_name:
+    description: >
+      Flavor of the agent VM's.
+
+  volume_size:
+    description: >
+      Size of the volume to be created.
+
+  device_name:
+    description: >
+      Device name of the volume.
+
+  fs_type:
+    description: >
+      The File system type to use.
+
+  fs_mount_path:
+    description: >
+      The mount point.
+
+node_templates:
+
+  test_vm:
+    type: cloudify.openstack.nodes.Server
+    properties:
+      server:
+        image_name: { get_input: image_name }
+        flavor_name: { get_input: flavor_name }
+
+  test_volume:
+    type: cloudify.openstack.nodes.Volume
+    properties:
+      volume:
+        size: { get_input: volume_size }
+      device_name: { get_input: device_name }
+    relationships:
+      - target: test_vm
+        type: cloudify.openstack.volume_attached_to_server
+
+  volume_fs:
+    type: cloudify.nodes.FileSystem
+    properties:
+      fs_type: { get_input: fs_type }
+      fs_mount_path: { get_input: fs_mount_path }
+    relationships:
+      - target: test_volume
+        type: cloudify.relationships.depends_on
+      - target: test_vm
+        type: cloudify.relationships.contained_in
