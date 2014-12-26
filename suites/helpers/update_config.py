@@ -136,7 +136,7 @@ def main():
                 with YamlPatcher(manager_blueprint) as patch:
                     # used for centos tests since we don't have rpm packages.
                     patch.delete_property(
-                        'node_templates.manager.properties. '
+                        'node_templates.manager.properties.'
                         'cloudify_packages.agents', False)
 
 
