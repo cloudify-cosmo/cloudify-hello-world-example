@@ -14,19 +14,19 @@ setenv()
 	export BRANCH_NAME_PLUGINS=${BRANCH_NAME_PLUGINS='1.2m1'}
 	BRANCH_NAME_OPENSTACK_PROVIDER=${BRANCH_NAME_OPENSTACK_PROVIDER=${BRANCH_NAME_PLUGINS}}
 	BRANCH_NAME_LIBCLOUD_PROVIDER=${BRANCH_NAME_LIBCLOUD_PROVIDER=${BRANCH_NAME_PLUGINS}}
+	BRANCH_NAME_VSPHERE_PLUGIN=${BRANCH_NAME_VSPHERE_PLUGIN=${BRANCH_NAME_PLUGINS}}
 	BRANCH_NAME_CLI=${BRANCH_NAME_CLI=${BRANCH_NAME_CORE}}
 	BRANCH_NAME_MANAGER_BLUEPRINTS=${BRANCH_NAME_MANAGER_BLUEPRINTS=${BRANCH_NAME_CORE}}
 
 	# injected by quickbuild
 	BRANCH_NAME_SYSTEM_TESTS=${BRANCH_NAME_SYSTEM_TESTS=${BRANCH_NAME_CORE}}
 	NOSETESTS_TO_RUN=${NOSETESTS_TO_RUN='cosmo_tester/test_suites'}
-	BRANCH_NAME_VSPHERE_PLUGIN=${BRANCH_NAME_VSPHERE_PLUGIN='master'}
-    OPENCM_GIT_PWD=${OPENCM_GIT_PWD}
+	OPENCM_GIT_PWD=${OPENCM_GIT_PWD}
 
 	# for documentation purposes, injected by quickbuild, used by `update_config.py`
 	# KEYSTONE_PASSWORD=
-    # KEYSTONE_USERNAME=
-    # KEYSTONE_TENTANT=
+	# KEYSTONE_USERNAME=
+	# KEYSTONE_TENTANT=
    	# KEYSTONE_AUTH_URL=
 	# RESOURCE_PREFIX=
 	# COMPONENTS_PACKAGE_URL=
@@ -35,9 +35,9 @@ setenv()
 	# CENTOS_PACKAGE_URL=
 	# WINDOWS_PACKAGE_URL=
 	# UI_PACKAGE_URL=
-
-    BOOTSTRAP_USING_PROVIDERS=${BOOTSTRAP_USING_PROVIDERS=false}
-    CLOUDIFY_CONFIG_SUFFIX=$([ "${BOOTSTRAP_USING_PROVIDERS}" == "false" ] && echo "json" || echo "yaml")
+	
+	BOOTSTRAP_USING_PROVIDERS=${BOOTSTRAP_USING_PROVIDERS=false}
+	CLOUDIFY_CONFIG_SUFFIX=$([ "${BOOTSTRAP_USING_PROVIDERS}" == "false" ] && echo "json" || echo "yaml")
 
 	# vagrant synched folder
 	SUITE_NAME=${SUITE_NAME='default-suite'}
@@ -62,11 +62,10 @@ setenv()
 	export WORKFLOW_TASK_RETRIES=${WORKFLOW_TASK_RETRIES=20}
 	export CLOUDIFY_AUTOMATION_TOKEN=${CLOUDIFY_AUTOMATION_TOKEN}
 	# If handler is vsphere set the manager dir to the plugin's directory
-	if [[ "${CLOUDIFY_TEST_HANDLER_MODULE}" = "cosmo_tester.framework.handlers.vsphere" ]]
-    	then
-    		export MANAGER_BLUEPRINTS_DIR="${BASE_DIR}/cloudify-vsphere-plugin"
+	if [[ "${CLOUDIFY_TEST_HANDLER_MODULE}" = "cosmo_tester.framework.handlers.vsphere" ]]; then
+		export MANAGER_BLUEPRINTS_DIR="${BASE_DIR}/cloudify-vsphere-plugin"
     	else
-	        export MANAGER_BLUEPRINTS_DIR="${BASE_DIR}/cloudify-manager-blueprints"
+		export MANAGER_BLUEPRINTS_DIR="${BASE_DIR}/cloudify-manager-blueprints"
 	fi
 }
 
@@ -119,10 +118,9 @@ generate_config()
 	cp ${ORIGINAL_CLOUDIFY_TEST_CONFIG_PATH} ${GENERATED_CLOUDIFY_TEST_CONFIG_PATH}
 	"${BASE_HOST_DIR}/helpers/update_config.py" ${GENERATED_CLOUDIFY_TEST_CONFIG_PATH}
 	# replace place holders in vsphere repo in order to access private resources
-	if [[ "${CLOUDIFY_TEST_HANDLER_MODULE}" = "cosmo_tester.framework.handlers.vsphere" ]]
-        then
-     		"${BASE_HOST_DIR}/helpers/update_vsphere_config.py" ${MANAGER_BLUEPRINTS_DIR}
-    fi
+	if [[ "${CLOUDIFY_TEST_HANDLER_MODULE}" = "cosmo_tester.framework.handlers.vsphere" ]]; then
+		"${BASE_HOST_DIR}/helpers/update_vsphere_config.py" ${MANAGER_BLUEPRINTS_DIR}
+	fi
 }
 
 run_nose()
