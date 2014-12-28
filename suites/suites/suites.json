@@ -34,7 +34,7 @@
         "suite_name": "docker_ubuntu_on_openstack",
         "tests_to_run": "cosmo_tester/test_suites/test_docker_ubuntu_env",
         "cloudify_test_config": "inputs-ubuntu-trusty-openstack.json",
-        "cloudify_test_handler_module": "cosmo_tester.framework.handlers.openstack",
+        "cloudify_test_handler_module": "cosmo_tester.framework.handlers.openstack_docker",
         "bootstrap_using_docker": true,
         "use_external_agent_packages": true
     },
@@ -42,7 +42,7 @@
         "suite_name": "docker_centos_on_openstack",
         "tests_to_run": "cosmo_tester/test_suites/test_docker_centos_env",
         "cloudify_test_config": "inputs-centos-openstack.json",
-        "cloudify_test_handler_module": "cosmo_tester.framework.handlers.openstack",
+        "cloudify_test_handler_module": "cosmo_tester.framework.handlers.openstack_docker",
         "bootstrap_using_docker": true,
         "use_external_agent_packages": false
     },
@@ -74,5 +74,11 @@
         "cloudify_test_config": "cloudify-config-ec2.yaml",
         "cloudify_test_handler_module": "cosmo_tester.framework.handlers.ec2",
         "bootstrap_using_providers": true
+    },
+    {
+        "suite_name": "vsphere_env",
+        "tests_to_run": "cosmo_tester/test_suites/vsphere_test_blueprints",
+        "cloudify_test_config": "inputs-vsphere.json",
+        "cloudify_test_handler_module": "cosmo_tester.framework.handlers.vsphere"
     }
 ]

@@ -12,6 +12,8 @@
 #    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
+import socket
+import time
 
 
 __author__ = 'dan'
@@ -73,6 +75,23 @@ def get_actual_keypath(env, keypath, raise_on_missing=True):
     return keypath
 
 
+def wait_for_open_port(ip, port, timeout):
+    timeout = time.time() + timeout
+    is_open = False
+    while not is_open:
+        if time.time() > timeout:
+            break
+        time.sleep(1)
+        is_open = check_port(ip, port)
+    return is_open
+
+
+def check_port(ip, port):
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    result = sock.connect_ex((ip, port))
+    return result == 0
+
+
 class YamlPatcher(object):
 
     pattern = re.compile("(.+)\[(\d+)\]")
@@ -127,9 +146,13 @@ class YamlPatcher(object):
                 current = current[prop_segment]
         return current
 
-    def delete_property(self, prop_path):
+    def delete_property(self, prop_path, raise_if_missing=True):
         obj, prop_name = self._get_parent_obj_prop_name_by_path(prop_path)
-        obj.pop(prop_name)
+        if prop_name in obj:
+            obj.pop(prop_name)
+        elif raise_if_missing:
+            raise KeyError('cannot delete property {0} as its not a key in '
+                           'object {1}'.format(prop_name, obj))
 
     def _get_parent_obj_prop_name_by_path(self, prop_path):
         split = self._split_path(prop_path)
