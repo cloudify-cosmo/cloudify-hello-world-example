@@ -40,6 +40,13 @@ openstack_inputs_properties = {
     'KEYSTONE_AUTH_URL'     : 'keystone_url'
 }
 
+vsphere_inputs_properties = {
+    'VSPHERE_USERNAME'     : 'vsphere_username',
+    'VSPHERE_PASSWORD'     : 'vsphere_password',
+    'VSPHERE_URL'          : 'vsphere_url',
+    'VCENTER_NAME'         : 'vsphere_datacenter_name'
+}
+
 shared_manager_blueprint_properties = {
     'COMPONENTS_PACKAGE_URL':
         'node_templates.manager.properties.cloudify_packages.server'
@@ -94,6 +101,8 @@ def main():
         cloud_specific_properties = {}
     elif handler == 'cosmo_tester.framework.handlers.ec2':
         cloud_specific_properties = ec2_provider_properties
+    elif handler == 'cosmo_tester.framework.handlers.vsphere':
+        cloud_specific_properties = vsphere_inputs_properties
     else:
         raise RuntimeError('Unsupported handler: {}'.format(handler))
 
