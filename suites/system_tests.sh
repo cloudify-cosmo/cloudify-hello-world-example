@@ -34,7 +34,7 @@ setenv()
 	# WINDOWS_PACKAGE_URL=
 	# UI_PACKAGE_URL=
 	# DOCKER_IMAGE_URL=
-    # DOCKER_DATA_URL=
+	# DOCKER_DATA_URL=
 
     BOOTSTRAP_USING_PROVIDERS=${BOOTSTRAP_USING_PROVIDERS=false}
     CLOUDIFY_CONFIG_SUFFIX=$([ "${BOOTSTRAP_USING_PROVIDERS}" == "false" ] && echo "json" || echo "yaml")
@@ -73,7 +73,7 @@ clone_and_install_system_tests()
 	clone_and_checkout cloudify-cli ${BRANCH_NAME_CLI}
 	clone_and_checkout cloudify-openstack-provider ${BRANCH_NAME_OPENSTACK_PROVIDER}
 	clone_and_checkout cloudify-libcloud-provider ${BRANCH_NAME_LIBCLOUD_PROVIDER}
-	clone_and_checkout cloudify-manager-blueprints CFY-1844-create-separate-docker-based-openstack-manager-blueprint
+	clone_and_checkout cloudify-manager-blueprints ${BRANCH_NAME_MANAGER_BLUEPRINTS}
 
 	echo "### Installing system tests dependencies"
 	pip install ./cloudify-cli -r cloudify-cli/dev-requirements.txt
