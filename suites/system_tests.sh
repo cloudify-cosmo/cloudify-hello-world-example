@@ -100,16 +100,16 @@ clone_and_checkout()
 	fi
 	echo "### Cloning '${repo_name}' and checking out '${branch_name}' branch from organization '${organization}'"
 	if [ "$4" = "private" ]; then
-	   git clone "https://opencm:${OPENCM_GIT_PWD}@github.com/${organization}/${repo_name}" --depth 1
+		git clone "https://opencm:${OPENCM_GIT_PWD}@github.com/${organization}/${repo_name}" --depth 1
 	else
-        git clone "${base_repo_url}${organization}/${repo_name}" --depth 1
-    fi
-    pushd ${repo_name}
-    # We checkout the branch explicitly and not using the -b flag during clone,
-    # because if the branch is missing, it only issues a warning and exits with exit code 0,
-    # which is not what we want
-    git checkout ${branch_name}
-    popd
+		git clone "${base_repo_url}${organization}/${repo_name}" --depth 1
+	fi
+	pushd ${repo_name}
+	# We checkout the branch explicitly and not using the -b flag during clone,
+	# because if the branch is missing, it only issues a warning and exits with exit code 0,
+	# which is not what we want
+	git checkout ${branch_name}
+	popd
 }
 
 generate_config()
