@@ -12,6 +12,8 @@
 #    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
+import socket
+import time
 
 
 __author__ = 'dan'
@@ -71,6 +73,23 @@ def get_actual_keypath(env, keypath, raise_on_missing=True):
         else:
             return None
     return keypath
+
+
+def wait_for_open_port(ip, port, timeout):
+    timeout = time.time() + timeout
+    is_open = False
+    while not is_open:
+        if time.time() > timeout:
+            break
+        time.sleep(1)
+        is_open = check_port(ip, port)
+    return is_open
+
+
+def check_port(ip, port):
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    result = sock.connect_ex((ip, port))
+    return result == 0
 
 
 class YamlPatcher(object):

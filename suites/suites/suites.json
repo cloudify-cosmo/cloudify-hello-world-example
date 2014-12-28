@@ -74,5 +74,11 @@
         "cloudify_test_config": "cloudify-config-ec2.yaml",
         "cloudify_test_handler_module": "cosmo_tester.framework.handlers.ec2",
         "bootstrap_using_providers": true
+    },
+    {
+        "suite_name": "vsphere_env",
+        "tests_to_run": "cosmo_tester/test_suites/vsphere_test_blueprints",
+        "cloudify_test_config": "inputs-vsphere.json",
+        "cloudify_test_handler_module": "cosmo_tester.framework.handlers.vsphere"
     }
 ]
