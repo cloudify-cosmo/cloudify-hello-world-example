@@ -35,6 +35,8 @@ setenv()
 	# CENTOS_PACKAGE_URL=
 	# WINDOWS_PACKAGE_URL=
 	# UI_PACKAGE_URL=
+	# DOCKER_IMAGE_URL=
+	# DOCKER_DATA_URL=
 	
 	BOOTSTRAP_USING_PROVIDERS=${BOOTSTRAP_USING_PROVIDERS=false}
 	CLOUDIFY_CONFIG_SUFFIX=$([ "${BOOTSTRAP_USING_PROVIDERS}" == "false" ] && echo "json" || echo "yaml")
@@ -67,6 +69,9 @@ setenv()
     	else
 		export MANAGER_BLUEPRINTS_DIR="${BASE_DIR}/cloudify-manager-blueprints"
 	fi
+	
+	export BOOTSTRAP_USING_DOCKER=${BOOTSTRAP_USING_DOCKER=false}
+    export USE_EXTERNAL_AGENT_PACKAGES=${USE_EXTERNAL_AGENT_PACKAGES=true}
 }
 
 clone_and_install_system_tests()

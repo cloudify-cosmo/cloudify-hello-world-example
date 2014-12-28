@@ -146,9 +146,13 @@ class YamlPatcher(object):
                 current = current[prop_segment]
         return current
 
-    def delete_property(self, prop_path):
+    def delete_property(self, prop_path, raise_if_missing=True):
         obj, prop_name = self._get_parent_obj_prop_name_by_path(prop_path)
-        obj.pop(prop_name)
+        if prop_name in obj:
+            obj.pop(prop_name)
+        elif raise_if_missing:
+            raise KeyError('cannot delete property {0} as its not a key in '
+                           'object {1}'.format(prop_name, obj))
 
     def _get_parent_obj_prop_name_by_path(self, prop_path):
         split = self._split_path(prop_path)
