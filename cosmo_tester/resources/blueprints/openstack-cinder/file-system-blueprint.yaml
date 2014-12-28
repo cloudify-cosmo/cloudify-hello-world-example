@@ -55,7 +55,7 @@ node_templates:
       fs_type: { get_input: fs_type }
       fs_mount_path: { get_input: fs_mount_path }
     relationships:
-      - target: test_volume
-        type: cloudify.relationships.depends_on
-      - target: test_vm
-        type: cloudify.relationships.contained_in
+      - type: cloudify.relationships.depends_on
+        target: test_volume
+      - type: cloudify.relationships.contained_in
+        target: test_vm
