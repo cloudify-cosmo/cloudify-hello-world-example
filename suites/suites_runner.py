@@ -27,6 +27,16 @@ reports_dir = path(os.path.dirname(__file__)) / 'xunit-reports'
 
 env_variables = {
     'TEST_SUITES_PATH': '',
+    #opencm creds for private repos
+    'OPENCM_GIT_PWD': '',
+    #tokens used to access private repos
+    'CLOUDIFY_AUTOMATION_TOKEN': '',
+
+    #vSphere creds
+    'VSPHERE_USERNAME': '',
+    'VSPHERE_PASSWORD': '',
+    'VSPHERE_URL': '',
+    'VSPHERE_DATACENTER_NAME': '',
 
     # ec2 creds
     'AWS_ACCESS_ID': '',
@@ -46,14 +56,21 @@ env_variables = {
     'BRANCH_NAME_SYSTEM_TESTS': '',
     'BRANCH_NAME_CLI': '',
     'BRANCH_NAME_MANAGER_BLUEPRINTS': '',
+    'BRANCH_NAME_VSPHERE_PLUGIN': '',
 
-    # packages
+    # manager packages
     'COMPONENTS_PACKAGE_URL': '',
     'CORE_PACKAGE_URL': '',
+    'UI_PACKAGE_URL': '',
+
+    # agent packages
     'UBUNTU_PACKAGE_URL': '',
     'CENTOS_PACKAGE_URL': '',
     'WINDOWS_PACKAGE_URL': '',
-    'UI_PACKAGE_URL': ''
+
+    # docker packages
+    'DOCKER_IMAGE_URL': '',
+    'DOCKER_DATA_URL': '',
 }
 
 def list_containers():

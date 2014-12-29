@@ -13,15 +13,16 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
-# Test docker bootstrap and installation of nodecellar on Ubuntu 14.04
+
 from cosmo_tester.framework.util import YamlPatcher
-from cosmo_tester.test_suites.test_blueprints import nodecellar_test
+from cosmo_tester.test_suites.test_blueprints.nodecellar_test import \
+    OpenStackNodeCellarTestBase
 
 
-class DockerNodeCellarTest(nodecellar_test.NodecellarAppTest):
+class DockerNodeCellarTest(OpenStackNodeCellarTestBase):
 
-    def test_docker_and_nodecellar(self):
-        self._test_nodecellar_impl('openstack-blueprint.yaml')
+    def test_openstack_docker_nodecellar(self):
+        self._test_openstack_nodecellar('openstack-blueprint.yaml')
 
     def modify_blueprint(self):
         with YamlPatcher(self.blueprint_yaml) as patch:
@@ -32,11 +33,3 @@ class DockerNodeCellarTest(nodecellar_test.NodecellarAppTest):
                             .format(monitored_server_properties_path), {
                                 'home_dir': '/home/ubuntu'
                             })
-
-    def get_inputs(self):
-
-        return {
-            'image': self.env.ubuntu_image_id,
-            'flavor': self.env.small_flavor_id,
-            'agent_user': 'ubuntu'
-        }

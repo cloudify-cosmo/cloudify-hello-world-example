@@ -14,7 +14,7 @@
     "use_existing_agent_keypair": false,
     "manager_server_name": "systemt-cloudify-manager",
     "manager_server_user": "centos",
-    "manager_server_user_home": "/home/ubuntu",
+    "manager_server_user_home": "/home/centos",
     "manager_private_key_path": "~/.ssh/systemt-tests-manager.pem",
     "agent_private_key_path": "~/.ssh/systemt-tests-agent.pem",
     "agents_user": "ubuntu",

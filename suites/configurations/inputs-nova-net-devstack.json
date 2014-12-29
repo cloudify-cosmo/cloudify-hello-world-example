@@ -7,7 +7,7 @@
   "internal_cidr": "10.0.0.0/24",
   "manager_public_key_name": "systemt-tests-manager",
   "agent_public_key_name": "systemt-tests-agent",
-  "image_id": "7a19daad-8eb0-44a4-8b48-cd403abd5cc2",
+  "image_id": "eada2fe8-894a-4b26-ac8d-cedab010f185",
   "flavor_id": "3",
 
   "use_existing_manager_keypair": false,
