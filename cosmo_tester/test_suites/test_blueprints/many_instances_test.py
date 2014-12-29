@@ -13,10 +13,6 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
-
-__author__ = 'dan'
-
-
 import time
 
 from cosmo_tester.framework.testenv import TestCase

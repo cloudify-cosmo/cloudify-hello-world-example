@@ -13,10 +13,11 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
-import cosmo_tester.framework.util as framework_util
 import time
+
 from cinderclient import exceptions as cinder_exc
 
+import cosmo_tester.framework.util as framework_util
 from cosmo_tester.framework.testenv import TestCase
 
 

@@ -13,9 +13,10 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
+from fabric.api import env, reboot
+
 from cosmo_tester.framework.testenv import TestCase
 from cosmo_tester.framework.util import get_actual_keypath
-from fabric.api import env, reboot
 
 
 class RebootManagerTest(TestCase):

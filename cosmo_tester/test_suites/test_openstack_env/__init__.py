@@ -14,8 +14,6 @@
 #    * limitations under the License.
 
 
-__author__ = 'barakme'
-
 from cosmo_tester.framework.testenv import (initialize_without_bootstrap,
                                             clear_environment)
 

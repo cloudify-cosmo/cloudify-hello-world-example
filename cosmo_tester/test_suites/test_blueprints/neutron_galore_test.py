@@ -14,8 +14,6 @@
 #    * limitations under the License.
 
 
-__author__ = 'dan'
-
 import fabric.api
 import fabric.contrib.files
 

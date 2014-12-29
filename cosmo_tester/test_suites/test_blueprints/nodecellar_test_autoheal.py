@@ -13,8 +13,9 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
-import requests
 import time
+
+import requests
 
 from cosmo_tester.framework.git_helper import clone
 from cosmo_tester.framework.util import YamlPatcher

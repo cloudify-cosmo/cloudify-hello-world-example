@@ -24,12 +24,12 @@ import copy
 import os
 import importlib
 import json
-
 from StringIO import StringIO
 
 import yaml
 from fabric import api as fabric_api
 from path import path
+
 from cloudify_rest_client import CloudifyClient
 
 from cosmo_tester.framework.cfy_helper import CfyHelper
