@@ -87,15 +87,13 @@ docker_manager_blueprint_properties = {
 def main():
     config_path = sys.argv[1]
     bootstrap_using_providers = \
-        os.environ['BOOTSTRAP_USING_PROVIDERS'] == 'true'
+        os.environ.get('BOOTSTRAP_USING_PROVIDERS', 'false') == 'true'
     bootstrap_using_docker = \
         os.environ.get('BOOTSTRAP_USING_DOCKER', 'false') == 'true'
 
     handler = os.environ.get('CLOUDIFY_TEST_HANDLER_MODULE')
-    if handler in [
-        'cosmo_tester.framework.handlers.openstack',
-        'cosmo_tester.framework.handlers.openstack_docker',
-        'cosmo_tester.framework.handlers.simple_on_openstack']:
+    if handler in ['cosmo_tester.framework.handlers.openstack',
+                   'cosmo_tester.framework.handlers.openstack_docker']:
         cloud_specific_properties = openstack_provider_properties \
             if bootstrap_using_providers else openstack_inputs_properties
     elif handler == 'cosmo_tester.framework.handlers.openstack_nova_net':
@@ -120,33 +118,35 @@ def main():
     properties.update(cloud_specific_properties)
     _patch_properties(config_path, properties)
 
-    if not bootstrap_using_providers:
-        # in manager blueprints mode, we also need to update the blueprints
-        # themselves for some configuration parameters which are not exposed
-        # as inputs
-        manager_blueprints_base_dir = os.environ['MANAGER_BLUEPRINTS_DIR']
+    if bootstrap_using_providers:
+        return
 
-        manager_blueprints_for_patching = dict(
-            shared_manager_blueprint_properties.items() +
-            (docker_manager_blueprint_properties.items() if
-                bootstrap_using_docker else
-                packages_manager_blueprint_properties.items()))
+    # in manager blueprints mode, we also need to update the blueprints
+    # themselves for some configuration parameters which are not exposed
+    # as inputs
+    manager_blueprints_base_dir = os.environ['MANAGER_BLUEPRINTS_DIR']
 
-        if bootstrap_using_docker:
-            use_ext_agent_packages = \
-                os.environ['USE_EXTERNAL_AGENT_PACKAGES'] == 'true'
+    manager_blueprints_for_patching = dict(
+        shared_manager_blueprint_properties.items() +
+        (docker_manager_blueprint_properties.items() if
+            bootstrap_using_docker else
+            packages_manager_blueprint_properties.items()))
 
-        for manager_blueprint in _get_manager_blueprints(
-                manager_blueprints_base_dir):
-            _patch_properties(manager_blueprint,
-                              manager_blueprints_for_patching)
+    if bootstrap_using_docker:
+        use_ext_agent_packages = \
+            os.environ['USE_EXTERNAL_AGENT_PACKAGES'] == 'true'
 
-            if bootstrap_using_docker and not use_ext_agent_packages:
-                with YamlPatcher(manager_blueprint) as patch:
-                    # used for centos tests since we don't have rpm packages.
-                    patch.delete_property(
-                        'node_templates.manager.properties.'
-                        'cloudify_packages.agents', False)
+    for manager_blueprint in _get_manager_blueprints(
+            manager_blueprints_base_dir):
+        _patch_properties(manager_blueprint,
+                          manager_blueprints_for_patching)
+
+        if bootstrap_using_docker and not use_ext_agent_packages:
+            with YamlPatcher(manager_blueprint) as patch:
+                # used for centos tests since we don't have rpm packages.
+                patch.delete_property(
+                    'node_templates.manager.properties.'
+                    'cloudify_packages.agents', False)
 
 
 def _patch_properties(path, properties, is_json=False):
