@@ -42,6 +42,7 @@ setup(
         'cloudify-openstack-provider==1.2a1',
         'cloudify-libcloud-provider==1.2a1',
         'boto==2.32.1',
-        'elasticsearch'
+        'elasticsearch',
+        'pyvmomi'
     ]
 )

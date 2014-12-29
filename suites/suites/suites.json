@@ -23,7 +23,6 @@
         "cloudify_test_config": "inputs-openstack.json",
         "cloudify_test_handler_module": "cosmo_tester.framework.handlers.openstack"
     },
-
     {
         "suite_name": "pclab47_devstack_nova_net",
         "tests_to_run": "cosmo_tester/test_suites/test_openstack_nova_net",
