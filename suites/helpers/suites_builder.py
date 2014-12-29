@@ -1,12 +1,12 @@
 #! /usr/bin/env python
 # flake8: NOQA
 
-import sys
 import os
 import json
 import tempfile
 import logging
 
+import yaml
 
 logger = logging.getLogger('suites_builder')
 logger.setLevel(logging.INFO)
@@ -70,10 +70,12 @@ def build_suites_json(all_suites_json_path):
         }]
     else:
         with open(all_suites_json_path) as f:
-            all_suites = json.loads(f.read())
+            suites_file = yaml.load(f.read())
+        all_suites = suites_file['suites']
         suites = []
-        for suite in all_suites:
-            if suite['suite_name'] in tests_suites:
+        for suite_name, suite in all_suites.items():
+            if suite_name in tests_suites:
+                suite['suite_name'] = suite_name
                 suites.append(suite)
 
     with open(suites_json_path, 'w') as f:

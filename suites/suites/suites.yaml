@@ -1,0 +1,69 @@
+suites:
+
+  hp_openstack_all:
+    tests_to_run: cosmo_tester/test_suites/test_blueprints cosmo_tester/test_suites/test_manager_status
+    cloudify_test_config: inputs-openstack.json
+    cloudify_test_handler_module: cosmo_tester.framework.handlers.openstack
+
+  hp_openstack_blueprints:
+    tests_to_run: cosmo_tester/test_suites/test_blueprints
+    cloudify_test_config: inputs-openstack.json
+    cloudify_test_handler_module: cosmo_tester.framework.handlers.openstack
+
+  hp_openstack_manager_status:
+    tests_to_run: cosmo_tester/test_suites/test_manager_status
+    cloudify_test_config: inputs-openstack.json
+    cloudify_test_handler_module: cosmo_tester.framework.handlers.openstack
+
+  hp_openstack_plugin_tests:
+    tests_to_run: cosmo_tester/test_suites/test_openstack_plugin
+    cloudify_test_config: inputs-openstack.json
+    cloudify_test_handler_module: cosmo_tester.framework.handlers.openstack
+
+  pclab47_devstack_nova_net:
+    tests_to_run: cosmo_tester/test_suites/test_openstack_nova_net
+    cloudify_test_config: inputs-nova-net-devstack.json
+    cloudify_test_handler_module: cosmo_tester.framework.handlers.openstack_nova_net
+
+  docker_ubuntu_on_openstack:
+    tests_to_run: cosmo_tester/test_suites/test_docker_ubuntu_env
+    cloudify_test_config: inputs-ubuntu-trusty-openstack.json
+    cloudify_test_handler_module: cosmo_tester.framework.handlers.openstack_docker
+    bootstrap_using_docker: true
+    use_external_agent_packages: true
+
+  docker_centos_on_openstack:
+    tests_to_run: cosmo_tester/test_suites/test_docker_centos_env
+    cloudify_test_config: inputs-centos-openstack.json
+    cloudify_test_handler_module: cosmo_tester.framework.handlers.openstack_docker
+    bootstrap_using_docker: true
+    use_external_agent_packages: false
+
+  hp_openstack_all_providers:
+    tests_to_run: cosmo_tester/test_suites/test_blueprints cosmo_tester/test_suites/test_manager_status cosmo_tester/test_suites/test_openstack_env
+    cloudify_test_config: cloudify-config-openstack-on-hp.yaml
+    cloudify_test_handler_module: cosmo_tester.framework.handlers.openstack
+    bootstrap_using_providers: true
+
+  hp_openstack_blueprints_providers:
+    tests_to_run: cosmo_tester/test_suites/test_blueprints
+    cloudify_test_config: cloudify-config-openstack-on-hp.yaml
+    cloudify_test_handler_module: cosmo_tester.framework.handlers.openstack
+    bootstrap_using_providers: true
+
+  hp_openstack_env:
+    tests_to_run: cosmo_tester/test_suites/test_openstack_env
+    cloudify_test_config: cloudify-config-openstack-on-hp.yaml
+    cloudify_test_handler_module: cosmo_tester.framework.handlers.openstack
+    bootstrap_using_providers: true
+
+  aws_ec2_env:
+    tests_to_run: cosmo_tester/test_suites/ec2_test_blueprints
+    cloudify_test_config: cloudify-config-ec2.yaml
+    cloudify_test_handler_module: cosmo_tester.framework.handlers.ec2
+    bootstrap_using_providers: true
+
+  vsphere_env:
+    tests_to_run: cosmo_tester/test_suites/vsphere_test_blueprints
+    cloudify_test_config: inputs-vsphere.json
+    cloudify_test_handler_module: cosmo_tester.framework.handlers.vsphere

@@ -131,7 +131,7 @@ def setenv():
     cloudify_enviroment_varaible_names = ':'.join(env_variables.keys())
     os.environ['CLOUDIFY_ENVIRONMENT_VARIABLE_NAMES'] = cloudify_enviroment_varaible_names
     if not os.environ.get('TEST_SUITES_PATH'):
-        suite_json_path = build_suites_json('suites/suites.json')
+        suite_json_path = build_suites_json('suites/suites.yaml')
         os.environ['TEST_SUITES_PATH'] = suite_json_path
 
 def setup_reports_dir():
