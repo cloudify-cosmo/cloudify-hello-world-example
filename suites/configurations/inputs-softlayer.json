@@ -3,7 +3,7 @@
   "api_key":  "",
   "endpoint_url": "",
   "location": "352494",
-  "domain": "manager.cloudify.org",
+  "domain": "cloudify.org",
   "ram": 864,
   "cpu": 859,
   "disk": 1178,
