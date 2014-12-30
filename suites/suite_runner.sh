@@ -1,53 +1,33 @@
 #!/bin/bash -e
 
-create_activate_and_cd_virtualenv()
-{
-	echo "### Creating virtualenv"
-	virtualenv env
-	source env/bin/activate
-	cd env
-}
-
 setenv()
 {
+	# So that we get to see output faster from docker-logs
+	export PYTHONUNBUFFERED="true"
+
 	export BRANCH_NAME_CORE=${BRANCH_NAME_CORE='3.2m1'}
 	export BRANCH_NAME_PLUGINS=${BRANCH_NAME_PLUGINS='1.2m1'}
+
 	BRANCH_NAME_CLI=${BRANCH_NAME_CLI=${BRANCH_NAME_CORE}}
 	BRANCH_NAME_MANAGER_BLUEPRINTS=${BRANCH_NAME_MANAGER_BLUEPRINTS=${BRANCH_NAME_CORE}}
-
-	BRANCH_NAME_OPENSTACK_PROVIDER=${BRANCH_NAME_OPENSTACK_PROVIDER=${BRANCH_NAME_PLUGINS}}
-	BRANCH_NAME_LIBCLOUD_PROVIDER=${BRANCH_NAME_LIBCLOUD_PROVIDER=${BRANCH_NAME_PLUGINS}}
-	BRANCH_NAME_VSPHERE_PLUGIN=${BRANCH_NAME_VSPHERE_PLUGIN=${BRANCH_NAME_PLUGINS}}
-
-	# injected by quickbuild
 	BRANCH_NAME_SYSTEM_TESTS=${BRANCH_NAME_SYSTEM_TESTS=${BRANCH_NAME_CORE}}
-	NOSETESTS_TO_RUN=${NOSETESTS_TO_RUN='cosmo_tester/test_suites'}
-	OPENCM_GIT_PWD=${OPENCM_GIT_PWD}
-
-	BOOTSTRAP_USING_PROVIDERS=${BOOTSTRAP_USING_PROVIDERS=false}
-	CLOUDIFY_CONFIG_SUFFIX=$([ "${BOOTSTRAP_USING_PROVIDERS}" == "false" ] && echo "json" || echo "yaml")
 
 	# vagrant synched folder
-	SUITE_NAME=${SUITE_NAME='default-suite'}
+	TEST_SUITE_NAME=${TEST_SUITE_NAME='default-suite'}
 	BASE_HOST_DIR="/vagrant"
 	BASE_CONFIG_DIR="${BASE_HOST_DIR}/configurations"
-	REPORT_FILE="${BASE_HOST_DIR}/xunit-reports/${SUITE_NAME}-report.xml"
-	CLOUDIFY_TEST_CONFIG=${CLOUDIFY_TEST_CONFIG='cloudify-config-openstack-on-hp.yaml'}
-	ORIGINAL_CLOUDIFY_TEST_CONFIG_PATH="${BASE_CONFIG_DIR}/${CLOUDIFY_TEST_CONFIG}"
+	REPORT_FILE="${BASE_HOST_DIR}/xunit-reports/${TEST_SUITE_NAME}-report.xml"
 
 	# base dir is the virtualenv directory
 	BASE_DIR=$PWD
 	SYSTEM_TESTS_DIR="${BASE_DIR}/cloudify-system-tests"
-	GENERATED_CLOUDIFY_TEST_CONFIG_PATH="${BASE_DIR}/generated-cloudify-config.${CLOUDIFY_CONFIG_SUFFIX}"
-
-	# So that we get to see output faster from docker-logs
-	export PYTHONUNBUFFERED="true"
 
 	# export system tests related variables
 	export CLOUDIFY_TEST_CONFIG_PATH=${GENERATED_CLOUDIFY_TEST_CONFIG_PATH}
 	export CLOUDIFY_TEST_HANDLER_MODULE=${CLOUDIFY_TEST_HANDLER_MODULE='cosmo_tester.framework.handlers.openstack'}
 	export BOOTSTRAP_USING_PROVIDERS=${BOOTSTRAP_USING_PROVIDERS}
 	export BOOTSTRAP_USING_DOCKER=${BOOTSTRAP_USING_DOCKER=false}
+
 	export WORKFLOW_TASK_RETRIES=${WORKFLOW_TASK_RETRIES=20}
 	export CLOUDIFY_AUTOMATION_TOKEN=${CLOUDIFY_AUTOMATION_TOKEN}
 	# If handler is vsphere set the manager dir to the plugin's directory
@@ -57,6 +37,16 @@ setenv()
 		export MANAGER_BLUEPRINTS_DIR="${BASE_DIR}/cloudify-manager-blueprints"
 	fi
 }
+
+create_activate_and_cd_virtualenv()
+{
+	echo "### Creating virtualenv"
+	virtualenv env
+	source env/bin/activate
+	pip install -r ${BASE_HOST_DIR}/requirements.txt
+	cd env
+}
+
 
 clone_and_install_system_tests()
 {
@@ -124,11 +114,19 @@ run_nose()
 	popd
 }
 
+suite_runner()
+{
+	echo "### Executing suites_runner.py"
+	python "${BASE_HOST_DIR}/suite_runner.py"
+}
+
 main()
 {
 	echo "### Preparing And running Cloudify system tests environment"
-	create_activate_and_cd_virtualenv
 	setenv
+	create_activate_and_cd_virtualenv
+	suite_runner
+
 	clone_and_install_system_tests
 	generate_config
 	run_nose

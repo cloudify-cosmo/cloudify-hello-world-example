@@ -18,7 +18,7 @@ create_virtualenv_if_needed_and_source()
     fi
 }
 
-run_system_tests()
+suites_runner()
 {
     ./suites_runner.py
 }
@@ -27,7 +27,7 @@ main()
 {
     setenv
     create_virtualenv_if_needed_and_source
-    run_system_tests
+    suites_runner
 }
 
 main

@@ -3,18 +3,19 @@
 
 import os
 import sys
-import json
 import logging
 
+import yaml
 import sh
 from path import path
 
-from helpers.suites_builder import build_suites_json
+from helpers.suites_builder import build_suites_yaml
 
 logging.basicConfig()
 
 logger = logging.getLogger('suites_runner')
 logger.setLevel(logging.INFO)
+
 
 def sh_bake(command):
     return command.bake(_out=lambda line: sys.stdout.write(line),
@@ -73,11 +74,14 @@ env_variables = {
     'DOCKER_DATA_URL': '',
 }
 
+
 def list_containers():
     return sh.docker.ps(a=True).strip()
 
+
 def container_exit_code(container_name):
     return int(sh.docker.wait(container_name).strip())
+
 
 def container_kill(container_name, ignore_errors=False):
     try:
@@ -89,12 +93,15 @@ def container_kill(container_name, ignore_errors=False):
         else:
             raise
 
+
 def test_logs():
     vagrant('docker-logs', f=True).wait()
+
 
 def test_start():
     setup_reports_dir()
     vagrant.up().wait()
+
 
 def test_run():
     logger.info('Current containers:\n{0}'
@@ -118,6 +125,7 @@ def test_run():
             logger.info('\t{}: exit code: {}'.format(c, exit_code))
         sys.exit(1)
 
+
 def setenv():
     if 'Docker version 1.1.2' not in sh.docker(version=True):
         raise RuntimeError('Tested with docker 1.1.2 only. If you know this will work with other versions, '
@@ -131,8 +139,9 @@ def setenv():
     cloudify_environment_variable_names = ':'.join(env_variables.keys())
     os.environ['CLOUDIFY_ENVIRONMENT_VARIABLE_NAMES'] = cloudify_environment_variable_names
     if not os.environ.get('TEST_SUITES_PATH'):
-        suite_json_path = build_suites_json('suites/suites.yaml')
+        suite_json_path = build_suites_yaml('suites/suites.yaml')
         os.environ['TEST_SUITES_PATH'] = suite_json_path
+
 
 def setup_reports_dir():
     if not reports_dir.exists():
@@ -140,10 +149,12 @@ def setup_reports_dir():
     for report in reports_dir.files():
         report.remove()
 
+
 def get_containers_names():
     with open(os.environ['TEST_SUITES_PATH']) as f:
-        suites = json.loads(f.read())
-    return [s['suite_name'] for s in suites]
+        suites = yaml.load(f.read())['test_suites'].keys()
+    return [s for s in suites]
+
 
 def main():
     setenv()
