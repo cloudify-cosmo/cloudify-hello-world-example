@@ -14,7 +14,6 @@
 #    * limitations under the License.
 
 import SoftLayer
-import random
 import os
 from cosmo_tester.framework.handlers import (
     BaseHandler,
@@ -22,6 +21,7 @@ from cosmo_tester.framework.handlers import (
 
 CLOUDIFY_TEST_NO_CLEANUP = 'CLOUDIFY_TEST_NO_CLEANUP'
 MANAGER_BLUEPRINT = 'softlayer/softlayer.yaml'
+
 
 class SoftLayerCleanupContext(BaseHandler.CleanupContext):
 
