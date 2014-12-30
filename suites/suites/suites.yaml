@@ -1,69 +1,189 @@
-suites:
+handler_configurations:
 
-  hp_openstack_all:
-    tests_to_run: cosmo_tester/test_suites/test_blueprints cosmo_tester/test_suites/test_manager_status
-    cloudify_test_config: inputs-openstack.json
+  hp_openstack:
+    cloudify_test_config: inputs-hp-openstack.json
     cloudify_test_handler_module: cosmo_tester.framework.handlers.openstack
+    manager_blueprint: openstack/openstack.yaml
+    properties:
+      ubuntu_image_name: Ubuntu Server 12.04.2 LTS (amd64 20130318) - Partner Image
+      ubuntu_trusty_image_name: Ubuntu Server 14.04.1 LTS (amd64 20140927) - Partner Image
+      centos_image_name: CentOS 6.3 Server 64-bit 20130116
+      centos_image_user: centos
+      flavor_name: standard.small
+      ubuntu_image_id: 261844b3-479c-5446-a2c4-1ea95d53b668
+      ubuntu_trusty_image_id: 9d25fe2d-cf31-4b05-8c58-f238ec78e633
+      small_flavor_id: 101
 
-  hp_openstack_blueprints:
-    tests_to_run: cosmo_tester/test_suites/test_blueprints
-    cloudify_test_config: inputs-openstack.json
+  hp_openstack_docker_ubuntu_trusty:
+    cloudify_test_config: inputs-hp-openstack.json
     cloudify_test_handler_module: cosmo_tester.framework.handlers.openstack
+    manager_blueprint: openstack-docker/openstack-docker.yaml
+    bootstrap_using_docker: true
+    properties:
+      ubuntu_image_name: Ubuntu Server 12.04.2 LTS (amd64 20130318) - Partner Image
+      ubuntu_trusty_image_name: Ubuntu Server 14.04.1 LTS (amd64 20140927) - Partner Image
+      centos_image_name: CentOS 6.3 Server 64-bit 20130116
+      centos_image_user: centos
+      flavor_name: standard.small
+      ubuntu_image_id: 261844b3-479c-5446-a2c4-1ea95d53b668
+      ubuntu_trusty_image_id: 9d25fe2d-cf31-4b05-8c58-f238ec78e633
+      small_flavor_id: 101
+    inputs_override:
+      image_id: 9d25fe2d-cf31-4b05-8c58-f238ec78e633
 
-  hp_openstack_manager_status:
-    tests_to_run: cosmo_tester/test_suites/test_manager_status
-    cloudify_test_config: inputs-openstack.json
+  hp_openstack_docker_centos:
+    cloudify_test_config: inputs-hp-openstack.json
     cloudify_test_handler_module: cosmo_tester.framework.handlers.openstack
+    manager_blueprint: openstack-docker/openstack-docker.yaml
+    bootstrap_using_docker: true
+    properties:
+      ubuntu_image_name: Ubuntu Server 12.04.2 LTS (amd64 20130318) - Partner Image
+      ubuntu_trusty_image_name: Ubuntu Server 14.04.1 LTS (amd64 20140927) - Partner Image
+      centos_image_name: CentOS 6.3 Server 64-bit 20130116
+      centos_image_user: centos
+      flavor_name: standard.small
+      ubuntu_image_id: 261844b3-479c-5446-a2c4-1ea95d53b668
+      ubuntu_trusty_image_id: 9d25fe2d-cf31-4b05-8c58-f238ec78e633
+      small_flavor_id: 101
+    inputs_override:
+      image_id: 25bfd0c1-8f20-4e8f-a5cf-36ca825305f2
+      manager_server_user: centos
+      manager_server_user_home: /home/centos
 
-  hp_openstack_plugin_tests:
-    tests_to_run: cosmo_tester/test_suites/test_openstack_plugin
-    cloudify_test_config: inputs-openstack.json
-    cloudify_test_handler_module: cosmo_tester.framework.handlers.openstack
 
   pclab47_devstack_nova_net:
-    tests_to_run: cosmo_tester/test_suites/test_openstack_nova_net
     cloudify_test_config: inputs-nova-net-devstack.json
     cloudify_test_handler_module: cosmo_tester.framework.handlers.openstack_nova_net
+    manager_blueprint: openstack-nova-net/openstack.yaml
+    properties:
+      ubuntu_image_name: ubuntu
+      ubuntu_trusty_image_name: null
+      centos_image_name: null
+      centos_image_user: null
+      flavor_name: m1.small
+      ubuntu_image_id: eada2fe8-894a-4b26-ac8d-cedab010f185
+      ubuntu_trusty_image_id: null
+      small_flavor_id: 3
 
-  docker_ubuntu_on_openstack:
-    tests_to_run: cosmo_tester/test_suites/test_docker_ubuntu_env
-    cloudify_test_config: inputs-ubuntu-trusty-openstack.json
-    cloudify_test_handler_module: cosmo_tester.framework.handlers.openstack_docker
-    bootstrap_using_docker: true
-    use_external_agent_packages: true
-
-  docker_centos_on_openstack:
-    tests_to_run: cosmo_tester/test_suites/test_docker_centos_env
-    cloudify_test_config: inputs-centos-openstack.json
-    cloudify_test_handler_module: cosmo_tester.framework.handlers.openstack_docker
-    bootstrap_using_docker: true
-    use_external_agent_packages: false
-
-  hp_openstack_all_providers:
-    tests_to_run: cosmo_tester/test_suites/test_blueprints cosmo_tester/test_suites/test_manager_status cosmo_tester/test_suites/test_openstack_env
+  hp_openstack_provider:
     cloudify_test_config: cloudify-config-openstack-on-hp.yaml
     cloudify_test_handler_module: cosmo_tester.framework.handlers.openstack
     bootstrap_using_providers: true
+    properties:
+      ubuntu_image_name: Ubuntu Server 12.04.2 LTS (amd64 20130318) - Partner Image
+      ubuntu_trusty_image_name: Ubuntu Server 14.04.1 LTS (amd64 20140927) - Partner Image
+      centos_image_name: CentOS 6.3 Server 64-bit 20130116
+      centos_image_user: centos
+      flavor_name: standard.small
+      ubuntu_image_id: 261844b3-479c-5446-a2c4-1ea95d53b668
+      ubuntu_trusty_image_id: 9d25fe2d-cf31-4b05-8c58-f238ec78e633
+      small_flavor_id: 101
 
-  hp_openstack_blueprints_providers:
-    tests_to_run: cosmo_tester/test_suites/test_blueprints
-    cloudify_test_config: cloudify-config-openstack-on-hp.yaml
-    cloudify_test_handler_module: cosmo_tester.framework.handlers.openstack
-    bootstrap_using_providers: true
-
-  hp_openstack_env:
-    tests_to_run: cosmo_tester/test_suites/test_openstack_env
-    cloudify_test_config: cloudify-config-openstack-on-hp.yaml
-    cloudify_test_handler_module: cosmo_tester.framework.handlers.openstack
-    bootstrap_using_providers: true
-
-  aws_ec2_env:
-    tests_to_run: cosmo_tester/test_suites/ec2_test_blueprints
+  aws_ec2:
     cloudify_test_config: cloudify-config-ec2.yaml
     cloudify_test_handler_module: cosmo_tester.framework.handlers.ec2
     bootstrap_using_providers: true
+    properties:
+      medium_instance_type: m1.medium
+      ubuntu_agent_ami: ami-a73264ce
 
-  vsphere_env:
-    tests_to_run: cosmo_tester/test_suites/vsphere_test_blueprints
+  vsphere:
     cloudify_test_config: inputs-vsphere.json
     cloudify_test_handler_module: cosmo_tester.framework.handlers.vsphere
+    manager_blueprint: manager_blueprint/vsphere.yaml
+    properties:
+      template: ubuntu-configured-template
+
+tests:
+
+  openstack_blueprints:
+    - cosmo_tester/test_suites/test_blueprints
+
+  manager_status:
+    - cosmo_tester/test_suites/test_manager_status
+
+  openstack_plugin:
+    - cosmo_tester/test_suites/test_openstack_plugin
+
+  openstack_nova_net:
+    - cosmo_tester/test_suites/test_openstack_nova_net
+
+  docker_ubuntu:
+    - cosmo_tester/test_suites/test_docker_ubuntu_env
+
+  docker_centos:
+    - cosmo_tester/test_suites/test_docker_centos_env
+
+  openstack_provider_openstack_env:
+    - cosmo_tester/test_suites/test_openstack_env
+
+  ec2_blueprints:
+    - cosmo_tester/test_suites/ec2_test_blueprints
+
+  vsphere:
+    - cosmo_tester/test_suites/vsphere_test_blueprints
+
+test_suites:
+
+  hp_openstack_all:
+    handler_configuration: hp_openstack
+    tests:
+      - openstack_blueprints
+      - manager_status
+
+  hp_openstack_blueprints:
+    handler_configuration: hp_openstack
+    tests:
+      - openstack_blueprints
+
+  hp_openstack_manager_status:
+    handler_configuration: hp_openstack
+    tests:
+      - manager_status
+
+  hp_openstack_plugin_tests:
+    handler_configuration: hp_openstack
+    tests:
+      - openstack_plugin
+
+  pclab47_devstack_nova_net:
+    handler_configuration: pclab47_devstack_nova_net
+    tests:
+      - openstack_nova_net
+
+  docker_ubuntu_on_openstack:
+    handler_configuration: hp_openstack_docker_ubuntu
+    tests:
+      - docker_ubuntu
+
+  docker_centos_on_openstack:
+    handler_configuration: hp_openstack_docker_centos
+    tests:
+      - docker_centos
+
+  hp_openstack_all_providers:
+    handler_configuration: hp_openstack_provider
+    tests:
+      - openstack_blueprints
+      - manager_status
+      - openstack_provider_openstack_env
+
+  hp_openstack_blueprints_providers:
+    handler_configuration: hp_openstack_provider
+    tests:
+      - openstack_blueprints
+
+  hp_openstack_env:
+    handler_configuration: hp_openstack_provider
+    tests:
+      - openstack_provider_openstack_env
+
+  aws_ec2_env:
+    handler_configuration: aws_ec2
+    tests:
+      - ec2_blueprints
+
+  vsphere_env:
+    handler_configuration: vsphere
+    tests:
+      - vsphere

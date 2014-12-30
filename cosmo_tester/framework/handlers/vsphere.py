@@ -113,10 +113,6 @@ class VsphereHandler(BaseHandler):
     CleanupContext = VsphereCleanupContext
     CloudifyConfigReader = CloudifyVsphereInputsConfigReader
 
-    manager_blueprint = 'manager_blueprint/vsphere.yaml'
-
-    template = 'ubuntu-configured-template'
-
     def __init__(self, env):
         super(VsphereHandler, self).__init__(env)
         # plugins_branch should be set manually when running locally!

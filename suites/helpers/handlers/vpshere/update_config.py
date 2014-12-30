@@ -1,8 +1,11 @@
-#! /usr/bin/env python
-# flake8: NOQA
-
-import sys
 import os
+
+inputs_properties = {
+    'VSPHERE_USERNAME': 'vsphere_username',
+    'VSPHERE_PASSWORD': 'vsphere_password',
+    'VSPHERE_URL': 'vsphere_url',
+    'VCENTER_NAME': 'vsphere_datacenter_name'
+}
 
 
 def replace_string_in_file(file_name, old_string, new_string):
@@ -15,14 +18,10 @@ def replace_string_in_file(file_name, old_string, new_string):
             f.write(line)
 
 
-def main():
-    base_dir = sys.argv[1]
+def update_config(manager_blueprints_dir):
     cloudify_automation_token_place_holder = '{CLOUDIFY_AUTOMATION_TOKEN}'
     cloudify_automation_token = os.environ.get('CLOUDIFY_AUTOMATION_TOKEN')
-    plugin_path = base_dir + '/plugin.yaml'
+    plugin_path = manager_blueprints_dir + '/plugin.yaml'
     replace_string_in_file(plugin_path,
-                           cloudify_automation_token_place_holder, cloudify_automation_token)
-
-
-if __name__ == '__main__':
-    main()
+                           cloudify_automation_token_place_holder,
+                           cloudify_automation_token)

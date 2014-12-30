@@ -128,8 +128,8 @@ def setenv():
     for env_var, default_value in env_variables.items():
         if default_value and not os.environ.get(env_var):
             os.environ[env_var] = default_value
-    cloudify_enviroment_varaible_names = ':'.join(env_variables.keys())
-    os.environ['CLOUDIFY_ENVIRONMENT_VARIABLE_NAMES'] = cloudify_enviroment_varaible_names
+    cloudify_environment_variable_names = ':'.join(env_variables.keys())
+    os.environ['CLOUDIFY_ENVIRONMENT_VARIABLE_NAMES'] = cloudify_environment_variable_names
     if not os.environ.get('TEST_SUITES_PATH'):
         suite_json_path = build_suites_json('suites/suites.yaml')
         os.environ['TEST_SUITES_PATH'] = suite_json_path

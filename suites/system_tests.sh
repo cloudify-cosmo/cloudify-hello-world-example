@@ -12,32 +12,18 @@ setenv()
 {
 	export BRANCH_NAME_CORE=${BRANCH_NAME_CORE='3.2m1'}
 	export BRANCH_NAME_PLUGINS=${BRANCH_NAME_PLUGINS='1.2m1'}
+	BRANCH_NAME_CLI=${BRANCH_NAME_CLI=${BRANCH_NAME_CORE}}
+	BRANCH_NAME_MANAGER_BLUEPRINTS=${BRANCH_NAME_MANAGER_BLUEPRINTS=${BRANCH_NAME_CORE}}
+
 	BRANCH_NAME_OPENSTACK_PROVIDER=${BRANCH_NAME_OPENSTACK_PROVIDER=${BRANCH_NAME_PLUGINS}}
 	BRANCH_NAME_LIBCLOUD_PROVIDER=${BRANCH_NAME_LIBCLOUD_PROVIDER=${BRANCH_NAME_PLUGINS}}
 	BRANCH_NAME_VSPHERE_PLUGIN=${BRANCH_NAME_VSPHERE_PLUGIN=${BRANCH_NAME_PLUGINS}}
-	BRANCH_NAME_CLI=${BRANCH_NAME_CLI=${BRANCH_NAME_CORE}}
-	BRANCH_NAME_MANAGER_BLUEPRINTS=${BRANCH_NAME_MANAGER_BLUEPRINTS=${BRANCH_NAME_CORE}}
 
 	# injected by quickbuild
 	BRANCH_NAME_SYSTEM_TESTS=${BRANCH_NAME_SYSTEM_TESTS=${BRANCH_NAME_CORE}}
 	NOSETESTS_TO_RUN=${NOSETESTS_TO_RUN='cosmo_tester/test_suites'}
 	OPENCM_GIT_PWD=${OPENCM_GIT_PWD}
 
-	# for documentation purposes, injected by quickbuild, used by `update_config.py`
-	# KEYSTONE_PASSWORD=
-	# KEYSTONE_USERNAME=
-	# KEYSTONE_TENTANT=
-   	# KEYSTONE_AUTH_URL=
-	# RESOURCE_PREFIX=
-	# COMPONENTS_PACKAGE_URL=
-	# CORE_PACKAGE_URL=
-	# UBUNTU_PACKAGE_URL=
-	# CENTOS_PACKAGE_URL=
-	# WINDOWS_PACKAGE_URL=
-	# UI_PACKAGE_URL=
-	# DOCKER_IMAGE_URL=
-	# DOCKER_DATA_URL=
-	
 	BOOTSTRAP_USING_PROVIDERS=${BOOTSTRAP_USING_PROVIDERS=false}
 	CLOUDIFY_CONFIG_SUFFIX=$([ "${BOOTSTRAP_USING_PROVIDERS}" == "false" ] && echo "json" || echo "yaml")
 
@@ -61,6 +47,7 @@ setenv()
 	export CLOUDIFY_TEST_CONFIG_PATH=${GENERATED_CLOUDIFY_TEST_CONFIG_PATH}
 	export CLOUDIFY_TEST_HANDLER_MODULE=${CLOUDIFY_TEST_HANDLER_MODULE='cosmo_tester.framework.handlers.openstack'}
 	export BOOTSTRAP_USING_PROVIDERS=${BOOTSTRAP_USING_PROVIDERS}
+	export BOOTSTRAP_USING_DOCKER=${BOOTSTRAP_USING_DOCKER=false}
 	export WORKFLOW_TASK_RETRIES=${WORKFLOW_TASK_RETRIES=20}
 	export CLOUDIFY_AUTOMATION_TOKEN=${CLOUDIFY_AUTOMATION_TOKEN}
 	# If handler is vsphere set the manager dir to the plugin's directory
@@ -69,9 +56,6 @@ setenv()
     	else
 		export MANAGER_BLUEPRINTS_DIR="${BASE_DIR}/cloudify-manager-blueprints"
 	fi
-	
-	export BOOTSTRAP_USING_DOCKER=${BOOTSTRAP_USING_DOCKER=false}
-    export USE_EXTERNAL_AGENT_PACKAGES=${USE_EXTERNAL_AGENT_PACKAGES=true}
 }
 
 clone_and_install_system_tests()
@@ -79,24 +63,25 @@ clone_and_install_system_tests()
 	echo "### Cloning system tests repository and dependencies"
 	clone_and_checkout cloudify-system-tests ${BRANCH_NAME_SYSTEM_TESTS}
 	clone_and_checkout cloudify-cli ${BRANCH_NAME_CLI}
+	clone_and_checkout cloudify-manager-blueprints ${BRANCH_NAME_MANAGER_BLUEPRINTS}
+
 	clone_and_checkout cloudify-openstack-provider ${BRANCH_NAME_OPENSTACK_PROVIDER}
 	clone_and_checkout cloudify-libcloud-provider ${BRANCH_NAME_LIBCLOUD_PROVIDER}
-	clone_and_checkout cloudify-manager-blueprints ${BRANCH_NAME_MANAGER_BLUEPRINTS}
 	clone_and_checkout cloudify-vsphere-plugin ${BRANCH_NAME_VSPHERE_PLUGIN} Gigaspaces private
 
 	echo "### Installing system tests dependencies"
 	pip install ./cloudify-cli -r cloudify-cli/dev-requirements.txt
+	pip install -e ./cloudify-system-tests
+
 	pip install ./cloudify-openstack-provider
 	pip install ./cloudify-libcloud-provider
 	pip install ./cloudify-vsphere-plugin
-	pip install -e ./cloudify-system-tests
 }
 
 clone_and_checkout()
 {
 	local repo_name=$1
 	local branch_name=$2
-	local base_repo_url="https://github.com/"
 	local organization="cloudify-cosmo"
 	local custom_organization=$3
 	if [[ -n "$3" ]]
@@ -107,7 +92,7 @@ clone_and_checkout()
 	if [ "$4" = "private" ]; then
 		git clone "https://opencm:${OPENCM_GIT_PWD}@github.com/${organization}/${repo_name}" --depth 1
 	else
-		git clone "${base_repo_url}${organization}/${repo_name}" --depth 1
+		git clone "https://github.com/${organization}/${repo_name}" --depth 1
 	fi
 	pushd ${repo_name}
 	# We checkout the branch explicitly and not using the -b flag during clone,
@@ -122,10 +107,6 @@ generate_config()
 	echo "### Generating config file for test suite"
 	cp ${ORIGINAL_CLOUDIFY_TEST_CONFIG_PATH} ${GENERATED_CLOUDIFY_TEST_CONFIG_PATH}
 	"${BASE_HOST_DIR}/helpers/update_config.py" ${GENERATED_CLOUDIFY_TEST_CONFIG_PATH}
-	# replace place holders in vsphere repo in order to access private resources
-	if [[ "${CLOUDIFY_TEST_HANDLER_MODULE}" = "cosmo_tester.framework.handlers.vsphere" ]]; then
-		"${BASE_HOST_DIR}/helpers/update_vsphere_config.py" ${MANAGER_BLUEPRINTS_DIR}
-	fi
 }
 
 run_nose()
