@@ -241,10 +241,11 @@ class CloudifyOpenstackInputsConfigReader(BaseCloudifyInputsConfigReader):
 
 class OpenstackHandler(BaseHandler):
 
-    provider = 'openstack'
-    manager_blueprint = 'openstack/openstack.yaml'
     CleanupContext = OpenstackCleanupContext
     CloudifyConfigReader = None
+
+    manager_blueprint = 'openstack/openstack.yaml'
+    provider = 'openstack'
 
     ubuntu_image_name = \
         'Ubuntu Server 12.04.2 LTS (amd64 20130318) - Partner Image'

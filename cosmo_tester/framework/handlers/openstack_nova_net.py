@@ -20,24 +20,24 @@ from cosmo_tester.framework.handlers.openstack import OpenstackHandler
 
 class OpenstackNovaNetHandler(OpenstackHandler):
 
+    # using the Config Readers of the regular OpenstackHandler - attempts
+    # of reading neutron-related data may fail but shouldn't happen from
+    # nova-net tests in the first place
+    # CloudifyConfigReader = None
+
     manager_blueprint = 'openstack-nova-net/openstack.yaml'
+
+    # there's no support for nova net providers anymore
+    provider = None
 
     ubuntu_image_name = 'ubuntu'
     flavor_name = 'm1.small'
     ubuntu_image_id = 'eada2fe8-894a-4b26-ac8d-cedab010f185'
     small_flavor_id = 3
 
-    # there's no support for nova net providers anymore
-    provider = None
-
     # there's currently no centos image on our nova net openstack
     centos_image_name = None
     centos_image_user = None
-
-    # using the Config Readers of the regular OpenstackHandler - attempts
-    # of reading neutron-related data may fail but shouldn't happen from
-    # nova-net tests in the first place
-    # CloudifyConfigReader = None
 
     def openstack_clients(self):
         creds = self._client_creds()

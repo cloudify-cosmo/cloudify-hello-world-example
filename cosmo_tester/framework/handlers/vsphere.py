@@ -109,22 +109,19 @@ class CloudifyVsphereInputsConfigReader(BaseCloudifyInputsConfigReader):
 
 
 class VsphereHandler(BaseHandler):
+
     CleanupContext = VsphereCleanupContext
+    CloudifyConfigReader = CloudifyVsphereInputsConfigReader
+
     manager_blueprint = 'manager_blueprint/vsphere.yaml'
-    CloudifyConfigReader = None
+
+    template = 'ubuntu-configured-template'
 
     def __init__(self, env):
         super(VsphereHandler, self).__init__(env)
-        self._template = None
-        self.CloudifyConfigReader = CloudifyVsphereInputsConfigReader
         # plugins_branch should be set manually when running locally!
         self.plugins_branch = os.environ.get('BRANCH_NAME_PLUGINS', '1.1')
         self.env = env
-
-    @property
-    def template(self):
-        self._template = 'ubuntu-configured-template'
-        return self._template
 
     def before_bootstrap(self):
         with self.update_cloudify_config() as patch:
