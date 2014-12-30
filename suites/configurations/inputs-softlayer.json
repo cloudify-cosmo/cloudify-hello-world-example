@@ -1,0 +1,23 @@
+{
+  "username": "",
+  "api_key":  "",
+  "endpoint_url": "",
+  "location": "352494",
+  "domain": "manager.cloudify.org",
+  "ram": 864,
+  "cpu": 859,
+  "disk": 1178,
+  "os": 4174,
+  "image_template_global_id": "",
+  "image_template_id": "",
+
+  "private_network_only": false,
+  "port_speed": 187,
+  "private_vlan": "",
+  "public_vlan": "",
+  "provision_scripts": [],
+  "ssh_keys": [121388],
+  "agents_user": "root",
+  "ssh_key_filename": "~/.ssh/id_rsa",
+  "resources_prefix": "systest"
+}
