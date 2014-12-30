@@ -21,7 +21,7 @@ from cosmo_tester.framework.handlers import (
     BaseCloudifyInputsConfigReader)
 
 CLOUDIFY_TEST_NO_CLEANUP = 'CLOUDIFY_TEST_NO_CLEANUP'
-
+MANAGER_BLUEPRINT = 'softlayer/softlayer.yaml'
 
 class SoftLayerCleanupContext(BaseHandler.CleanupContext):
 
@@ -57,8 +57,68 @@ class CloudifySoftLayerInputsConfigReader(BaseCloudifyInputsConfigReader):
             **kwargs)
 
     @property
+    def username(self):
+        return self.config['username']
+
+    @property
+    def api_key(self):
+        return self.config['api_key']
+
+    @property
+    def endpoint_url(self):
+        return self.config['endpoint_url']
+
+    @property
+    def location(self):
+        return self.config['location']
+
+    @property
     def domain(self):
         return self.config['domain']
+
+    @property
+    def ram(self):
+        return self.config['ram']
+
+    @property
+    def cpu(self):
+        return self.config['cpu']
+
+    @property
+    def disk(self):
+        return self.config['disk']
+
+    @property
+    def os(self):
+        return self.config['os']
+
+    @property
+    def image_template_global_id(self):
+        return self.config['image_template_global_id']
+
+    @property
+    def image_template_id(self):
+        return self.config['image_template_id']
+
+    @property
+    def private_network_only(self):
+        return self.config['private_network_only']
+
+    @property
+    def port_speed(self):
+        return self.config['port_speed']
+
+    @property
+    def private_vlan(self):
+        return self.config['private_vlan']
+
+    @property
+    def public_vlan(self):
+        return self.config['public_vlan']
+
+    @property
+    def resources_prefix(self):
+        return self.config['resources_prefix']
 
 
 class SoftLayerHandler(BaseHandler):
@@ -66,8 +126,7 @@ class SoftLayerHandler(BaseHandler):
     manager_blueprint = 'softlayer/softlayer.yaml'
     CleanupContext = SoftLayerCleanupContext
     CloudifyConfigReader = None
-
-    small_flavor_id = 101
+    _softrlayer_client = None
 
     def __init__(self, env):
         super(SoftLayerHandler, self).__init__(env)
@@ -87,16 +146,20 @@ class SoftLayerHandler(BaseHandler):
 
     def _client_creds(self):
         return {
-            'username': self.env.keystone_username,
-            'api_key': self.env.keystone_password,
-            'endpoint_url': self.env.keystone_url
+            'username': self.env.username,
+            'api_key': self.env.api_key,
+            'endpoint_url': self.env.endpoint_url
         }
 
-    def softlayer_clients(self):
-        creds = self._client_creds()
-        return SoftLayer.Client(**creds)
+    @property
+    def softlayer_client(self):
+        if self._softrlayer_client is None:
+            creds = self._client_creds()
+            self._softrlayer_client = SoftLayer.Client(**creds)
+        return self._softrlayer_client
 
     def remove_softlayer_resources(self, resources_to_remove):
+        # TODO remove resources
         pass
 
 
