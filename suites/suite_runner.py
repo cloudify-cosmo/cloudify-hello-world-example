@@ -42,7 +42,7 @@ class SuiteRunner(object):
         self.bootstrap_using_providers = self.handler_configuration.get(
             'bootstrap_using_providers', False)
         self.bootstrap_using_docker = self.handler_configuration.get(
-            'bootstrap_using_docker', False)
+            'bootstrap_using_docker', True)
 
         inputs = self.handler_configuration['inputs']
         self.original_inputs_path = os.path.join(self.base_dir,

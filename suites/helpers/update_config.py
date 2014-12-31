@@ -48,10 +48,7 @@ packages_manager_blueprint_properties = {
 docker_manager_blueprint_properties = {
     'DOCKER_IMAGE_URL':
         'node_templates.manager.properties.cloudify_packages.docker'
-        '.docker_url',
-    'DOCKER_DATA_URL':
-        'node_templates.manager.properties.cloudify_packages.docker'
-        '.docker_data_url',
+        '.docker_url'
 }
 
 
