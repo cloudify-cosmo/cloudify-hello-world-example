@@ -191,7 +191,6 @@ class CinderVolumeFSTest(CinderVolumeTestBase):
             'image_name': self.env.ubuntu_image_name,
             'flavor_name': self.env.flavor_name,
             'volume_size': self.VOLUME_SIZE,
-            'device_name': self.DEVICE_NAME,
             'fs_type': self.FS_TYPE,
             'fs_mount_path': self.FS_MOUNT_PATH
         }
@@ -218,7 +217,7 @@ class CinderVolumeFSTest(CinderVolumeTestBase):
         self._check_deployment(delta)
 
         nodes_state = delta['node_state'].values()[0]
-        self.assertEqual(len(nodes_state), 3)
+        self.assertEqual(len(nodes_state), 4)
 
     def _post_uninstall_assertions(self):
         nodes_instances = self.client.node_instances.list(self.deployment_id)
@@ -226,10 +225,10 @@ class CinderVolumeFSTest(CinderVolumeTestBase):
                               node_ins.state != 'deleted']), 0)
 
     def _check_nodes(self, delta):
-        self.assertEqual(len(delta['nodes']), 3)
+        self.assertEqual(len(delta['nodes']), 4)
         deployment = delta['deployments'].values()[0]
         nodes = self.client.nodes.list(deployment.id)
-        self.assertEqual(len(nodes), 3)
+        self.assertEqual(len(nodes), 4)
 
     def _check_blueprint(self, delta):
         self.assertEqual(len(delta['blueprints']), 1)

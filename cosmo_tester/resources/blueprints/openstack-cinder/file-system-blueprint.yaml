@@ -2,7 +2,7 @@ tosca_definitions_version: cloudify_dsl_1_0
 
 imports:
   - https://raw.githubusercontent.com/cloudify-cosmo/cloudify-manager/CFY-1761-add-fs-type/resources/rest-service/cloudify/types/types.yaml
-  - http://www.getcloudify.org/spec/openstack-plugin/1.2m1/plugin.yaml
+  - https://raw.githubusercontent.com/cloudify-cosmo/cloudify-openstack-plugin/CFY-1761-add-fs-type/plugin.yaml
 
 inputs:
 
@@ -17,10 +17,6 @@ inputs:
   volume_size:
     description: >
       Size of the volume to be created.
-
-  device_name:
-    description: >
-      Device name of the volume.
 
   fs_type:
     description: >
@@ -44,7 +40,6 @@ node_templates:
     properties:
       volume:
         size: { get_input: volume_size }
-      device_name: { get_input: device_name }
     relationships:
       - target: test_vm
         type: cloudify.openstack.volume_attached_to_server
@@ -55,7 +50,23 @@ node_templates:
       fs_type: { get_input: fs_type }
       fs_mount_path: { get_input: fs_mount_path }
     relationships:
-      - type: cloudify.relationships.depends_on
+      - type: cloudify.relationships.file_system_depends_on_volume
         target: test_volume
+      - type: cloudify.relationships.file_system_contained_in_compute
+        target: test_vm
+
+  volume_tester:
+    type: cloudify.nodes.Root
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        start:
+          implementation: scripts/write-to-volume.sh
+          inputs:
+            process:
+              env:
+                MOUNT_POINT: { get_property: [volume_fs, fs_mount_path] }
+    relationships:
+      - type: cloudify.relationships.depends_on
+        target: volume_fs
       - type: cloudify.relationships.contained_in
         target: test_vm
