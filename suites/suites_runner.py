@@ -9,17 +9,13 @@ import yaml
 import sh
 from path import path
 
+from helpers import sh_bake
 from helpers.suites_builder import build_suites_yaml
 
 logging.basicConfig()
 
 logger = logging.getLogger('suites_runner')
 logger.setLevel(logging.INFO)
-
-
-def sh_bake(command):
-    return command.bake(_out=lambda line: sys.stdout.write(line),
-                        _err=lambda line: sys.stderr.write(line))
 
 docker = sh_bake(sh.docker)
 vagrant = sh_bake(sh.vagrant)

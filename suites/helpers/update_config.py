@@ -1,7 +1,3 @@
-#! /usr/bin/env python
-# flake8: NOQA
-
-import sys
 import os
 import importlib
 
@@ -58,17 +54,13 @@ docker_manager_blueprint_properties = {
 }
 
 
-def main():
-    config_path = sys.argv[1]
-    bootstrap_using_providers = \
-        os.environ.get('BOOTSTRAP_USING_PROVIDERS', 'false') == 'true'
-    bootstrap_using_docker = \
-        os.environ.get('BOOTSTRAP_USING_DOCKER', 'false') == 'true'
-
-    handler = os.environ.get('CLOUDIFY_TEST_HANDLER_MODULE')
-    handler_name = handler.split['.'][-1]
+def update_config(config_path,
+                  bootstrap_using_providers,
+                  bootstrap_using_docker,
+                  simple_handler_name,
+                  manager_blueprints_dir):
     handler_update_config = importlib.import_module(
-        'handlers.{0}.update_config'.format(handler_name))
+        'helpers.handlers.{0}.update_config'.format(simple_handler_name))
 
     if bootstrap_using_providers:
         patch_provider_properties(config_path, provider_properties)
@@ -87,8 +79,6 @@ def main():
     # in manager blueprints mode, we also need to update the blueprints
     # themselves for some configuration parameters which are not exposed
     # as inputs
-    manager_blueprints_dir = os.environ['MANAGER_BLUEPRINTS_DIR']
-
     manager_blueprints_for_patching = dict(
         manager_blueprint_properties.items() +
         (docker_manager_blueprint_properties.items() if
@@ -146,7 +136,3 @@ def _get_manager_blueprints(manager_blueprints_dir):
         manager_blueprints_paths.append(yaml_files[0])
 
     return manager_blueprints_paths
-
-
-if __name__ == '__main__':
-    main()

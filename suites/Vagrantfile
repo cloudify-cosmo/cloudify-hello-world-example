@@ -10,12 +10,11 @@ def vagrant_configure
       d.build_args = ['-t', 'cloudify/test:env']
       d.cmd = ['/vagrant/system_tests.sh']
     end
-    full_suites_yaml = load_suites_yaml()
-    full_suites_yaml['test_suites'].each do |suite_name, suite|
+    load_suites_yaml()['test_suites'].each do |suite_name, suite|
       config.vm.define suite_name do |container|
         container.vm.provider 'docker' do |d|
           d.name = suite_name
-          d.env = build_env(full_suites_yaml, suite_name, suite)
+          d.env = build_env(suite_name, suite)
         end
       end
     end
@@ -27,7 +26,7 @@ def load_suites_yaml
   YAML.load_file(suites_path)
 end
 
-def build_env(full_suites_yaml, suite_name, suite)
+def build_env(suite_name, suite)
     env_variable_names = ENV['CLOUDIFY_ENVIRONMENT_VARIABLE_NAMES'] || ''
     env_variable_names = env_variable_names.split(':')
     cloudify_env = {}
@@ -36,7 +35,6 @@ def build_env(full_suites_yaml, suite_name, suite)
             cloudify_env[name] = ENV[name]
         end
     end
-    cloudify_env['TEST_SUITES_YAML'] = full_suites_yaml.to_json
     cloudify_env['TEST_SUITE_NAME'] = suite_name
     cloudify_env['TEST_SUITE'] = suite.to_json
     cloudify_env
