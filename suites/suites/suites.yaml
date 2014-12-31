@@ -93,7 +93,6 @@ handler_configurations:
     inputs_override:
       image_id: 25bfd0c1-8f20-4e8f-a5cf-36ca825305f2
       manager_server_user: centos
-      manager_server_user_home: /home/centos
       keystone_tenant_name: cloudify-cosmo-system-tests
       region: region-b.geo-1
 
