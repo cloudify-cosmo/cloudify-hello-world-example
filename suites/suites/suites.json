@@ -47,13 +47,6 @@
         "bootstrap_using_docker": false
     },
     {
-        "suite_name": "docker_ubuntu_on_openstack",
-        "tests_to_run": "cosmo_tester/test_suites/test_docker_ubuntu_env",
-        "cloudify_test_config": "inputs-ubuntu-trusty-openstack.json",
-        "cloudify_test_handler_module": "cosmo_tester.framework.handlers.openstack_docker",
-        "use_external_agent_packages": true
-    },
-    {
         "suite_name": "docker_centos_on_openstack",
         "tests_to_run": "cosmo_tester/test_suites/test_docker_centos_env",
         "cloudify_test_config": "inputs-centos-openstack.json",
