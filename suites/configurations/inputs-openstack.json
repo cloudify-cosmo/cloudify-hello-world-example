@@ -18,5 +18,10 @@
     "manager_private_key_path": "~/.ssh/systemt-tests-manager.pem",
     "agent_private_key_path": "~/.ssh/systemt-tests-agent.pem",
     "agents_user": "ubuntu",
+    "management_network_name": "systemt-cloudify-management-network",
+    "management_subnet_name": "systemt-cloudify-management-network-subnet",
+    "management_router": "systemt-cloudify-management-router",
+    "manager_security_group_name": "systemt-cloudify-sg-manager",
+    "agents_security_group_name": "systemt-cloudify-sg-agents",
     "resources_prefix": ""
 }
