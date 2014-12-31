@@ -23,13 +23,15 @@ vagrant = sh_bake(sh.vagrant)
 reports_dir = path(os.path.dirname(__file__)) / 'xunit-reports'
 
 env_variables = {
+    'SYSTEM_TESTS_MANAGER_KEY': '',
+    'SYSTEM_TESTS_AGENT_KEY': '',
     'TEST_SUITES_PATH': '',
-    #opencm creds for private repos
+    # opencm creds for private repos
     'OPENCM_GIT_PWD': '',
-    #tokens used to access private repos
+    # tokens used to access private repos
     'CLOUDIFY_AUTOMATION_TOKEN': '',
 
-    #vSphere creds
+    # vSphere creds
     'VSPHERE_USERNAME': '',
     'VSPHERE_PASSWORD': '',
     'VSPHERE_URL': '',

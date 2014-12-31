@@ -3,6 +3,11 @@ import importlib
 
 from cosmo_tester.framework.util import YamlPatcher
 
+ssh_keys = {
+    'SYSTEM_TESTS_MANAGER_KEY': '~/.ssh/shared-systemt-tests-manager.pem',
+    'SYSTEM_TESTS_AGENT_KEY': '~/.ssh/shared-systemt-tests-agent.pem'
+}
+
 provider_properties = {
     'RESOURCE_PREFIX': 'cloudify.resources_prefix',
     'COMPONENTS_PACKAGE_URL':
@@ -89,6 +94,16 @@ def update_config(config_path,
 
     if hasattr(handler_update_config, 'update_config'):
         handler_update_config.update_config(manager_blueprints_dir)
+
+    for ssh_key_env_var, ssh_key_path in ssh_keys.items():
+        ssh_key = os.environ[ssh_key_env_var]
+        ssh_key_path = os.path.expanduser(ssh_key_path)
+        ssh_key_dir = os.path.dirname(ssh_key_path)
+        if not os.path.isdir(ssh_key_dir):
+            os.makedirs(ssh_key_dir)
+        with open(ssh_key_path, 'w') as f:
+            f.write(ssh_key)
+        os.chmod(ssh_key_path, 0600)
 
 
 def patch_inputs_properties(path, properties):
