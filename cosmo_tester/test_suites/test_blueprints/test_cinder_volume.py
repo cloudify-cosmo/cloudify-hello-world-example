@@ -35,7 +35,8 @@ class CinderVolumeTest(CinderVolumeTestBase):
     def test_volume_create_new(self):
 
         blueprint_path = self.copy_blueprint('openstack-cinder')
-        self.blueprint_yaml = blueprint_path / 'create-new-volume-blueprint.yaml'
+        self.blueprint_yaml = \
+            blueprint_path / 'create-new-volume-blueprint.yaml'
 
         inputs = {
             'image_name': self.env.ubuntu_image_name,
@@ -57,7 +58,8 @@ class CinderVolumeTest(CinderVolumeTestBase):
     def test_volume_use_existing(self):
 
         blueprint_path = self.copy_blueprint('openstack-cinder')
-        self.blueprint_yaml = blueprint_path / 'use-existing-volume-blueprint.yaml'
+        self.blueprint_yaml = \
+            blueprint_path / 'use-existing-volume-blueprint.yaml'
 
         volume_name = 'volume-system-test'
 
