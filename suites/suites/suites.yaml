@@ -3,7 +3,7 @@ handler_configurations:
   playing_around:
     inputs: inputs-hp-openstack.json
     handler_module: cosmo_tester.framework.handlers.openstack
-    test_no_cleanup: true
+    skip_cleanup: true
     manager_ip: 10.0.0.1
     manager_blueprints_dir: ~/dev/cloudify/cloudify-manager-blueprints
     manager_blueprint: openstack-docker/openstack-docker.yaml

@@ -24,14 +24,12 @@ from pyVmomi import vim
 
 from cosmo_tester.framework.handlers import (BaseHandler,
                                              BaseCloudifyInputsConfigReader)
-from cosmo_tester.framework.testenv import CLOUDIFY_TEST_NO_CLEANUP
 
 
 class VsphereCleanupContext(BaseHandler.CleanupContext):
 
     def __init__(self, context_name, env):
         super(VsphereCleanupContext, self).__init__(context_name, env)
-        self.env = env
         self.get_vsphere_state()
 
     def cleanup(self):
@@ -45,7 +43,7 @@ class VsphereCleanupContext(BaseHandler.CleanupContext):
         manually
         """
         super(VsphereCleanupContext, self).cleanup()
-        if os.environ.get(CLOUDIFY_TEST_NO_CLEANUP):
+        if self.skip_cleanup:
             self.logger.warn('SKIPPING cleanup: of the resources')
             return
         self.get_vsphere_state()

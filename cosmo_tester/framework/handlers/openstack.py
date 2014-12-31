@@ -35,8 +35,6 @@ from cosmo_tester.framework.util import get_actual_keypath
 logging.getLogger('neutronclient.client').setLevel(logging.INFO)
 logging.getLogger('novaclient.client').setLevel(logging.INFO)
 
-CLOUDIFY_TEST_NO_CLEANUP = 'CLOUDIFY_TEST_NO_CLEANUP'
-
 
 class OpenstackCleanupContext(BaseHandler.CleanupContext):
 
@@ -47,7 +45,7 @@ class OpenstackCleanupContext(BaseHandler.CleanupContext):
     def cleanup(self):
         super(OpenstackCleanupContext, self).cleanup()
         resources_to_teardown = self.get_resources_to_teardown()
-        if os.environ.get(CLOUDIFY_TEST_NO_CLEANUP):
+        if self.skip_cleanup:
             self.logger.warn('[{0}] SKIPPING cleanup: of the resources: {1}'
                              .format(self.context_name, resources_to_teardown))
             return

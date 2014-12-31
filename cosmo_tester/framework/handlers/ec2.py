@@ -17,7 +17,6 @@
 import random
 import os
 import copy
-import logging
 from time import sleep
 from contextlib import contextmanager
 
@@ -28,7 +27,6 @@ from cosmo_tester.framework.handlers import (
     BaseCloudifyProviderConfigReader
 )
 from cosmo_tester.framework.util import get_actual_keypath
-from cosmo_tester.framework.testenv import CLOUDIFY_TEST_NO_CLEANUP
 
 
 def boto_client(libcloud_provider_name, access_id=None, secret_key=None):
@@ -180,12 +178,11 @@ class Ec2CleanupContext(BaseHandler.CleanupContext):
         super(Ec2CleanupContext, self).__init__(context_name,
                                                 env)
         self.before_run = ec2_infra_state(env.cloudify_config)
-        self.logger = logging.getLogger('Ec2CleanupContext')
 
     def cleanup(self):
         super(Ec2CleanupContext, self).cleanup()
         resources_to_teardown = self.get_resources_to_teardown()
-        if os.environ.get(CLOUDIFY_TEST_NO_CLEANUP):
+        if self.skip_cleanup:
             self.logger.warn('[{0}] SKIPPING cleanup: of the resources: {1}'
                              .format(self.context_name, resources_to_teardown))
             return

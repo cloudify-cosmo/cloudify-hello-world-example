@@ -29,6 +29,8 @@ class BaseCleanupContext(object):
         self.env = env
         self.logger = logging.getLogger('CleanupContext')
         self.logger.setLevel(logging.DEBUG)
+        self.skip_cleanup = self.env.handler_configuration.get(
+            'skip_cleanup', False)
 
     def cleanup(self):
         pass
@@ -79,6 +81,9 @@ class BaseHandler(object):
         self.env = env
         self.CloudifyConfigReader = BaseCloudifyProviderConfigReader if \
             env.is_provider_bootstrap else BaseCloudifyInputsConfigReader
+        for attr_name, attr_value in env.hanlder_configuration.get(
+                'properties', {}).items():
+            setattr(self, attr_name, attr_value)
 
     @contextmanager
     def update_cloudify_config(self):
