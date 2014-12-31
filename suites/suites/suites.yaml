@@ -1,14 +1,14 @@
 handler_configurations:
 
-  playing_around:
-    inputs: inputs-hp-openstack.json
+  my_config:
+    inputs: ~/work/cfy/managerbp/openstack/inputs.json
     handler_module: cosmo_tester.framework.handlers.openstack
-    skip_cleanup: true
-    manager_ip: 10.0.0.1
+#    skip_cleanup: true
+#    manager_ip: 10.0.0.1
     manager_blueprints_dir: ~/dev/cloudify/cloudify-manager-blueprints
-    manager_blueprint: openstack-docker/openstack-docker.yaml
+    manager_blueprint: openstack/openstack.yaml
     bootstrap_using_docker: false
-    bootstrap_using_providers: true
+    bootstrap_using_providers: false
     install_manager_blueprint_dependencies: false
 
     properties:
@@ -22,7 +22,7 @@ handler_configurations:
       small_flavor_id: 101
 
     inputs_override:
-      image_id: 9d25fe2d-cf31-4b05-8c58-f238ec78e633
+      agents_security_group_name: dank-cloudify-sg-agents-override
 
   hp_openstack:
     cloudify_test_config: inputs-hp-openstack.json

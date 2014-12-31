@@ -105,11 +105,13 @@ class TestEnvironment(object):
             SUITES_YAML_PATH,
             path(__file__).dirname().dirname().dirname() / 'suites' / 'suites'
                                                          / 'suites.yaml')
-        suites_yaml = yaml.load(suites_yaml_path)
+        with open(suites_yaml_path) as f:
+            suites_yaml = yaml.load(f.read())
         self.handler_configuration = suites_yaml['handler_configurations'][
             handler_configuration_name]
 
-        self.cloudify_config_path = self.handler_configuration['inputs']
+        self.cloudify_config_path = path(os.path.expanduser(
+            self.handler_configuration['inputs']))
 
         if not self.cloudify_config_path.isfile():
             raise RuntimeError('config file configured in handler '
@@ -139,8 +141,8 @@ class TestEnvironment(object):
         self.handler = handler_class(self)
 
         if not self.is_provider_bootstrap:
-            manager_blueprints_base_dir = self.handler_configuration[
-                'manager_blueprints_dir']
+            manager_blueprints_base_dir = os.path.expanduser(
+                self.handler_configuration['manager_blueprints_dir'])
             manager_blueprint = self.handler_configuration['manager_blueprint']
             self._manager_blueprint_path = \
                 os.path.join(manager_blueprints_base_dir, manager_blueprint)
