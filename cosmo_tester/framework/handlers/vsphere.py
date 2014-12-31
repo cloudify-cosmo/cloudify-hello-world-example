@@ -120,12 +120,10 @@ class VsphereHandler(BaseHandler):
         self.env = env
 
     def before_bootstrap(self):
+        super(VsphereHandler, self).before_bootstrap()
         with self.update_cloudify_config() as patch:
             suffix = '-%06x' % random.randrange(16 ** 6)
             patch.append_value('manager_server_name', suffix)
-
-    def after_teardown(self):
-        pass
 
     def get_vm(self, name):
         vms = self.get_vm_by_name(self.env.vsphere_url,

@@ -48,17 +48,11 @@ for logging_handler in root.handlers:
     root.removeHandler(logging_handler)
 
 root.addHandler(ch)
-logger = logging.getLogger("TESTENV")
+logger = logging.getLogger('TESTENV')
 logger.setLevel(logging.DEBUG)
 
-CLOUDIFY_TEST_MANAGEMENT_IP = 'CLOUDIFY_TEST_MANAGEMENT_IP'
-CLOUDIFY_TEST_CONFIG_PATH = 'CLOUDIFY_TEST_CONFIG_PATH'
-CLOUDIFY_TEST_NO_CLEANUP = 'CLOUDIFY_TEST_NO_CLEANUP'
-CLOUDIFY_TEST_HANDLER_MODULE = 'CLOUDIFY_TEST_HANDLER_MODULE'
-MANAGER_BLUEPRINTS_DIR = 'MANAGER_BLUEPRINTS_DIR'
-BOOTSTRAP_USING_PROVIDERS = 'BOOTSTRAP_USING_PROVIDERS'
-INSTALL_MANAGER_BLUEPRINT_DEPENDENCIES = \
-    'INSTALL_MANAGER_BLUEPRINT_DEPENDENCIES'
+HANDLER_CONFIGURATION = 'HANDLER_CONFIGURATION'
+SUITES_YAML_PATH = 'SUITES_YAML_PATH'
 
 test_environment = None
 
@@ -103,31 +97,41 @@ class TestEnvironment(object):
         self._manager_blueprint_path = None
         self._workdir = tempfile.mkdtemp(prefix='cloudify-testenv-')
 
-        if CLOUDIFY_TEST_CONFIG_PATH not in os.environ:
-            raise RuntimeError('a path to config must be configured '
-                               'in "CLOUDIFY_TEST_CONFIG_PATH" env variable')
-        self.cloudify_config_path = path(os.environ[CLOUDIFY_TEST_CONFIG_PATH])
+        if HANDLER_CONFIGURATION not in os.environ:
+            raise RuntimeError('handler configuration name must be configured '
+                               'in "HANDLER_CONFIGURATION" env variable')
+        handler_configuration_name = os.environ[HANDLER_CONFIGURATION]
+        suites_yaml_path = os.environ.get(
+            SUITES_YAML_PATH,
+            path(__file__).dirname().dirname().dirname() / 'suites' / 'suites'
+                                                         / 'suites.yaml')
+        suites_yaml = yaml.load(suites_yaml_path)
+        self.handler_configuration = suites_yaml['handler_configurations'][
+            handler_configuration_name]
+
+        self.cloudify_config_path = self.handler_configuration['inputs']
 
         if not self.cloudify_config_path.isfile():
-            raise RuntimeError('config file configured in env variable'
-                               ' {0} does not seem to exist'
+            raise RuntimeError('config file configured in handler '
+                               'configuration does not seem to exist'
                                .format(self.cloudify_config_path))
 
-        self.is_provider_bootstrap = \
-            self._get_boolean_env_var(BOOTSTRAP_USING_PROVIDERS, False)
+        self.is_provider_bootstrap = self.handler_configuration.get(
+            'bootstrap_using_providers', False)
 
-        if not self.is_provider_bootstrap and MANAGER_BLUEPRINTS_DIR not in \
-                os.environ:
-                raise RuntimeError(
-                    'manager blueprints dir must be configured in '
-                    '"MANAGER_BLUEPRINTS_DIR" env variable in order to '
-                    'run non-provider bootstraps')
+        if not self.is_provider_bootstrap and not (
+                'manager_blueprints_dir' in self.handler_configuration and
+                'manager_blueprint' in self.handler_configuration):
+            raise RuntimeError(
+                'manager blueprint and manager blueprints dir must be '
+                'configured in handler configuration env variable in '
+                'order to run non-provider bootstraps')
 
         # make a temp config file so handlers can modify it at will
         self._generate_unique_config()
 
-        if CLOUDIFY_TEST_HANDLER_MODULE in os.environ:
-            handler_module_name = os.environ[CLOUDIFY_TEST_HANDLER_MODULE]
+        if 'handler_module' in self.handler_configuration:
+            handler_module_name = self.handler_configuration['handler_module']
         else:
             handler_module_name = 'cosmo_tester.framework.handlers.openstack'
         handler_module = importlib.import_module(handler_module_name)
@@ -135,18 +139,22 @@ class TestEnvironment(object):
         self.handler = handler_class(self)
 
         if not self.is_provider_bootstrap:
-            manager_blueprints_base_dir = os.environ[MANAGER_BLUEPRINTS_DIR]
+            manager_blueprints_base_dir = self.handler_configuration[
+                'manager_blueprints_dir']
+            manager_blueprint = self.handler_configuration['manager_blueprint']
             self._manager_blueprint_path = \
-                os.path.join(manager_blueprints_base_dir,
-                             self.handler.manager_blueprint)
+                os.path.join(manager_blueprints_base_dir, manager_blueprint)
 
-        if CLOUDIFY_TEST_MANAGEMENT_IP in os.environ:
-            self._running_env_setup(os.environ[CLOUDIFY_TEST_MANAGEMENT_IP])
+        if 'manager_ip' in self.handler_configuration:
+            self._running_env_setup(self.handler_configuration['manager_ip'])
 
         self.cloudify_config = yaml.load(self.cloudify_config_path.text())
         self._config_reader = self.handler.CloudifyConfigReader(
             self.cloudify_config,
             manager_blueprint_path=self._manager_blueprint_path)
+        if not self.is_provider_bootstrap:
+            with self.handler.update_cloudify_config() as patch:
+                patch.obj.update(self.handler_configuration['inputs_override'])
 
         global test_environment
         test_environment = self
@@ -181,8 +189,8 @@ class TestEnvironment(object):
                 dev_mode=False)
         else:
 
-            install_plugins = self._get_boolean_env_var(
-                INSTALL_MANAGER_BLUEPRINT_DEPENDENCIES, True)
+            install_plugins = self.handler_configuration.get(
+                'install_manager_blueprint_dependencies', True)
 
             cfy.bootstrap(
                 self._manager_blueprint_path,
@@ -211,10 +219,6 @@ class TestEnvironment(object):
             self.handler.after_teardown()
             if os.path.exists(self._workdir):
                 shutil.rmtree(self._workdir)
-
-    def _get_boolean_env_var(self, env_var_name, default_value):
-        return os.environ.get(
-            env_var_name, str(default_value).lower()) == 'true'
 
     def _running_env_setup(self, management_ip):
         self.management_ip = management_ip

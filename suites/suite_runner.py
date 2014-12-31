@@ -24,55 +24,49 @@ class SuiteRunner(object):
         self.branch_name_system_tests = os.environ['BRANCH_NAME_SYSTEM_TESTS']
         self.opencm_git_pwd = os.environ['OPENCM_GIT_PWD']
 
-        test_suite = json.loads(os.environ['TEST_SUITE'])
+        test_suite_name = os.environ['TEST_SUITE_NAME']
 
-        with open(os.path.join(self.base_dir, 'suites',
-                               'suites.yaml')) as f:
+        self.test_suite = json.loads(os.environ['TEST_SUITE'])
+        with open(os.path.join(self.base_dir, 'suites', 'suites.yaml')) as f:
             suites_yaml = yaml.load(f.read())
-
-        test_suite['suite_name'] = os.environ['TEST_SUITE_NAME']
-        test_suite['handler_configuration'] = suites_yaml[
-            'handler_configurations'][test_suite['handler_configuration']]
         tests = []
-        for test in test_suite['tests']:
+        for test in self.test_suite['tests']:
             if test in suites_yaml['tests']:
                 tests += suites_yaml['tests']
             else:
                 tests.append(test)
-        test_suite['tests'] = ' '.join(tests)
-        self.test_suite = test_suite
-        handler_configuration = test_suite['handler_configuration']
-        self.bootstrap_using_providers = handler_configuration.get(
+        self.tests_to_run = ' '.join(tests)
+
+        self.handler_configuration = suites_yaml[
+            'handler_configurations'][self.test_suite['handler_configuration']]
+        self.bootstrap_using_providers = self.handler_configuration.get(
             'bootstrap_using_providers', False)
-        self.bootstrap_using_docker = handler_configuration.get(
+        self.bootstrap_using_docker = self.handler_configuration.get(
             'bootstrap_using_docker', False)
-        self.cloudify_test_config = handler_configuration[
-            'cloudify_test_config']
-        self.original_cloudify_test_config_path = \
-            os.path.join(self.base_dir, 'configurations',
-                         self.cloudify_test_config)
-        self.generated_cloudify_test_config_path = \
-            os.path.join(
-                self.work_dir,
-                'generated-config.{0}'.format(
-                    'yaml' if self.bootstrap_using_providers else 'json'))
+
+        inputs = self.handler_configuration['inputs']
+        self.original_inputs_path = os.path.join(self.base_dir,
+                                                 'configurations', inputs)
+        self.generated_inputs_path = os.path.join(
+            self.work_dir, 'generated-config.{0}'.format(
+                'yaml' if self.bootstrap_using_providers else 'json'))
+        self.generated_suites_yaml_path = os.path.join(
+            self.work_dir, 'generated-suites.yaml')
         self.manager_blueprints_dir = os.path.join(
             self.work_dir, 'cloudify-manager-blueprints')
         self.report_file = os.path.join(
             self.base_dir, 'xunit-reports',
-            '{0}-report.xml'.format(self.test_suite['suite_name']))
-        self.cloudify_test_handler_module = handler_configuration[
-            'cloudify_test_handler_module']
-        self.simple_handler_name = \
-            self.cloudify_test_handler_module.split('.')[-1]
+            '{0}-report.xml'.format(test_suite_name))
 
-    def setenv(self):
+        handler_module = self.handler_configuration['handler_module']
+        self.simple_handler_name = handler_module.split('.')[-1]
+
+    def set_env_variables(self):
         os.environ['WORKFLOW_TASK_RETRIES'] = os.environ.get(
-            'WORKFLOW_TASK_RETRIES', 20)
-        os.environ['CLOUDIFY_TEST_CONFIG_PATH'] = \
-            self.generated_cloudify_test_config_path
-        os.environ['CLOUDIFY_TEST_HANDLER_MODULE'] = \
-            self.cloudify_test_handler_module
+            'WORKFLOW_TASK_RETRIES', '20')
+        os.environ['HANDLER_CONFIGURATION'] = self.test_suite[
+            'handler_configuration']
+        os.environ['SUITES_YAML_PATH'] = self.generated_suites_yaml_path
 
     def clone_and_install_packages(self):
         with path(self.work_dir):
@@ -129,19 +123,29 @@ class SuiteRunner(object):
             git.checkout(branch).wait()
 
     def generate_config(self):
-        with open(self.original_cloudify_test_config_path) as rf:
-            with open(self.generated_cloudify_test_config_path, 'w') as wf:
+        with open(self.original_inputs_path) as rf:
+            with open(self.generated_inputs_path, 'w') as wf:
                 wf.write(rf.read())
         update_config.update_config(
-            config_path=self.generated_cloudify_test_config_path,
+            config_path=self.generated_inputs_path,
             bootstrap_using_providers=self.bootstrap_using_providers,
             bootstrap_using_docker=self.bootstrap_using_docker,
             simple_handler_name=self.simple_handler_name,
             manager_blueprints_dir=self.manager_blueprints_dir)
 
+        self.handler_configuration['manager_blueprints_dir'] = \
+            self.manager_blueprints_dir
+        self.handler_configuration['inputs'] = self.generated_inputs_path
+        with open(self.generated_suites_yaml_path, 'w') as f:
+            f.write(yaml.dump({
+                'handler_configurations': {
+                    self.test_suite['handler_configuration']:
+                        self.handler_configuration
+                }}))
+
     def run_nose(self):
         with path(self.work_dir) / 'cloudify-system-tests':
-            nosetests(self.test_suite['tests'],
+            nosetests(self.tests_to_run,
                       verbose=True,
                       nocapture=True,
                       nologcapture=True,
@@ -151,9 +155,14 @@ class SuiteRunner(object):
 
 def main():
     suite_runner = SuiteRunner()
-    suite_runner.setenv()
+    # called once before generate config (which uses some variables
+    # internally)
+    suite_runner.set_env_variables()
     suite_runner.clone_and_install_packages()
     suite_runner.generate_config()
+    # called once again before running node because manager blueprints dir
+    # may have changed in a previous step
+    suite_runner.set_env_variables()
     suite_runner.run_nose()
 
 if __name__ == '__main__':

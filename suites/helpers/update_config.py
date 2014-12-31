@@ -5,7 +5,8 @@ from cosmo_tester.framework.util import YamlPatcher
 
 provider_properties = {
     'RESOURCE_PREFIX': 'cloudify.resources_prefix',
-    'COMPONENTS_PACKAGE_URL': 'cloudify.server.packages.components_package_url',
+    'COMPONENTS_PACKAGE_URL':
+        'cloudify.server.packages.components_package_url',
     'CORE_PACKAGE_URL': 'cloudify.server.packages.core_package_url',
     'UI_PACKAGE_URL': 'cloudify.server.packages.ui_package_url',
     'UBUNTU_PACKAGE_URL': 'cloudify.agents.packages.ubuntu_agent_url',
@@ -69,9 +70,8 @@ def update_config(config_path,
             handler_update_config.provider_properties)
     else:
         patch_inputs_properties(config_path, provider_properties)
-        patch_inputs_properties(
-            config_path,
-            handler_update_config.inputs_properties)
+        patch_inputs_properties(config_path,
+                                handler_update_config.inputs_properties)
 
     if bootstrap_using_providers:
         return
@@ -130,8 +130,8 @@ def _get_manager_blueprints(manager_blueprints_dir):
                       file.endswith('.yaml')]
         if len(yaml_files) != 1:
             raise RuntimeError(
-                'Expected exactly one .yaml file at {0}, but found {1}'.format(
-                manager_blueprint_dir, len(yaml_files)))
+                'Expected exactly one .yaml file at {0}, but found {1}'
+                .format(manager_blueprint_dir, len(yaml_files)))
 
         manager_blueprints_paths.append(yaml_files[0])
 

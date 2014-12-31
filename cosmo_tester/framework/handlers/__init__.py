@@ -83,7 +83,7 @@ class BaseHandler(object):
     @contextmanager
     def update_cloudify_config(self):
         with YamlPatcher(self.env.cloudify_config_path,
-                         not self.env.is_provider_bootstrap) as patch:
+                         is_json=not self.env.is_provider_bootstrap) as patch:
             yield patch
         self.env.cloudify_config = yaml.load(
             self.env.cloudify_config_path.text())

@@ -252,6 +252,7 @@ class OpenstackHandler(BaseHandler):
             env.is_provider_bootstrap else CloudifyOpenstackInputsConfigReader
 
     def before_bootstrap(self):
+        super(OpenstackHandler, self).before_bootstrap()
         with self.update_cloudify_config() as patch:
             suffix = '-%06x' % random.randrange(16 ** 6)
             server_name_prop_path = \
@@ -260,6 +261,7 @@ class OpenstackHandler(BaseHandler):
             patch.append_value(server_name_prop_path, suffix)
 
     def after_bootstrap(self, provider_context):
+        super(OpenstackHandler, self).after_bootstrap(provider_context)
         resources = provider_context['resources']
         agent_keypair = resources['agents_keypair']
         management_keypair = resources['management_keypair']
@@ -268,6 +270,7 @@ class OpenstackHandler(BaseHandler):
             management_keypair['external_resource'] is False
 
     def after_teardown(self):
+        super(OpenstackHandler, self).after_teardown()
         if self.remove_agent_keypair:
             agent_key_path = get_actual_keypath(self.env,
                                                 self.env.agent_key_path,
