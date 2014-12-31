@@ -1,8 +1,8 @@
 {
     "keystone_username": "",
     "keystone_password": "",
-    "keystone_tenant_name": "",
-    "keystone_url": "",
+    "keystone_tenant_name": "cloudify-cosmo-system-tests",
+    "keystone_url": "https://region-a.geo-1.identity.hpcloudsvc.com:35357/v2.0/",
     "region": "region-b.geo-1",
     "manager_public_key_name": "systemt-tests-manager",
     "agent_public_key_name": "systemt-tests-agent",

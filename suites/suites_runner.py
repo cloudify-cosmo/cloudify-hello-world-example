@@ -42,8 +42,6 @@ env_variables = {
     # keystone
     'KEYSTONE_PASSWORD': '',
     'KEYSTONE_USERNAME': '',
-    'KEYSTONE_TENANT': '',
-    'KEYSTONE_AUTH_URL': '',
 
     # branch names
     'BRANCH_NAME_CORE': '',
