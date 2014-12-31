@@ -1,6 +1,6 @@
 templates:
 
-  t1: &hp_openstack_properties
+  - &hp_openstack_properties
     ubuntu_image_name: Ubuntu Server 12.04.2 LTS (amd64 20130318) - Partner Image
     ubuntu_trusty_image_name: Ubuntu Server 14.04.1 LTS (amd64 20140927) - Partner Image
     centos_image_name: CentOS 6.3 Server 64-bit 20130116
@@ -12,40 +12,40 @@ templates:
 
   #######################################################
 
-  t2: &hp_openstack_system_tests_region_a_inputs
+  - &hp_openstack_system_tests_region_a_inputs
     keystone_tenant_name: cloudify-cosmo-system-tests
     region: region-a.geo-1
 
-  t3: &hp_openstack_system_tests_region_b_inputs
+  - &hp_openstack_system_tests_region_b_inputs
     keystone_tenant_name: cloudify-cosmo-system-tests
     region: region-b.geo-1
 
-  t4: &hp_openstack_system_tests2_region_a_inputs
+  - &hp_openstack_system_tests2_region_a_inputs
     keystone_tenant_name: cloudify-cosmo-system-tests2
     region: region-a.geo-1
 
-  t5: &hp_openstack_system_tests2_region_b_inputs
+  - &hp_openstack_system_tests2_region_b_inputs
     keystone_tenant_name: cloudify-cosmo-system-tests2
     region: region-b.geo-1
 
   #######################################################
 
-  t6: &hp_openstack_dockerless_system_tests_region_a_inputs
+  - &hp_openstack_dockerless_system_tests_region_a_inputs
     image_id: 75d47d10-fef8-473b-9dd1-fe2f7649cb41
     keystone_tenant_name: cloudify-cosmo-system-tests
     region: region-a.geo-1
 
-  t7: &hp_openstack_dockerless_system_tests_region_b_inputs
+  - &hp_openstack_dockerless_system_tests_region_b_inputs
     image_id: 75d47d10-fef8-473b-9dd1-fe2f7649cb41
     keystone_tenant_name: cloudify-cosmo-system-tests
     region: region-b.geo-1
 
-  t8: &hp_openstack_dockerless_system_tests2_region_a_inputs
+  - &hp_openstack_dockerless_system_tests2_region_a_inputs
     image_id: 75d47d10-fef8-473b-9dd1-fe2f7649cb41
     keystone_tenant_name: cloudify-cosmo-system-tests2
     region: region-a.geo-1
 
-  t9: &hp_openstack_dockerless_system_tests2_region_b_inputs
+  - &hp_openstack_dockerless_system_tests2_region_b_inputs
     image_id: 75d47d10-fef8-473b-9dd1-fe2f7649cb41
     keystone_tenant_name: cloudify-cosmo-system-tests2
     region: region-b.geo-1
