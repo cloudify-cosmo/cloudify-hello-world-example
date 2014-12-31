@@ -68,6 +68,14 @@ class CloudifySoftLayerInputsConfigReader(BaseCloudifyInputsConfigReader):
     def endpoint_url(self):
         return self.config['endpoint_url']
 
+    @property
+    def management_user_name(self):
+        return self.config['agents_user']
+
+    @property
+    def management_key_path(self):
+        return self.config['ssh_key_filename']
+
 
 class SoftLayerHandler(BaseHandler):
 
