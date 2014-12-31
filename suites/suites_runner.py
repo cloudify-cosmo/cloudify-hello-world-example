@@ -71,23 +71,23 @@ env_variables = {
 }
 
 
-def list_containers():
-    return sh.docker.ps(a=True).strip()
+def list_containers(quiet=False):
+    return sh.docker.ps(a=True, q=quiet).strip()
+
+
+def kill_containers():
+    containers = list_containers(quiet=True)
+    logger.info('Killing containers: {0}'.format(containers))
+    docker.rm('-f', containers).wait()
 
 
 def container_exit_code(container_name):
     return int(sh.docker.wait(container_name).strip())
 
 
-def container_kill(container_name, ignore_errors=False):
-    try:
-        logger.info('Killing container: {0}'.format(container_name))
-        docker.rm('-f', container_name).wait()
-    except Exception:
-        if ignore_errors:
-            pass
-        else:
-            raise
+def container_kill(container_name):
+    logger.info('Killing container: {0}'.format(container_name))
+    docker.rm('-f', container_name).wait()
 
 
 def test_logs():
@@ -102,12 +102,11 @@ def test_start():
 def test_run():
     logger.info('Current containers:\n{0}'
                 .format(list_containers()))
-    containers = get_containers_names()
-    for c in containers:
-        container_kill(c, ignore_errors=True)
+    kill_containers()
     test_start()
     test_logs()
     logger.info('wait for containers exit status codes')
+    containers = get_containers_names()
     exit_codes = [(c, container_exit_code(c)) for c in containers]
     logger.info('removing containers')
     for c in containers:
