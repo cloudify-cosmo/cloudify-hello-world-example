@@ -267,19 +267,19 @@ test_suites:
 
   ######################################################################
 
-  hp_openstack_all_providers:
+  provider_hp_openstack_all:
     handler_configuration: hp_openstack_provider
     tests:
       - openstack_blueprints
       - manager_status
       - openstack_provider_openstack_env
 
-  hp_openstack_blueprints_providers:
+  provider_hp_openstack_blueprints_providers:
     handler_configuration: hp_openstack_provider
     tests:
       - openstack_blueprints
 
-  hp_openstack_env:
+  provider_hp_openstack_env:
     handler_configuration: hp_openstack_provider
     tests:
       - openstack_provider_openstack_env
