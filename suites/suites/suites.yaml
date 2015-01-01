@@ -274,7 +274,7 @@ test_suites:
       - manager_status
       - openstack_provider_openstack_env
 
-  provider_hp_openstack_blueprints_providers:
+  provider_hp_openstack_blueprints:
     handler_configuration: hp_openstack_provider
     tests:
       - openstack_blueprints
