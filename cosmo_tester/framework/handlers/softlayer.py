@@ -30,22 +30,22 @@ class SoftLayerCleanupContext(BaseHandler.CleanupContext):
 
     def cleanup(self):
         super(SoftLayerCleanupContext, self).cleanup()
-        resources_to_teardown = self.get_resources_to_teardown()
+        resources_to_delete = self.get_resources_to_delete()
         if os.environ.get(CLOUDIFY_TEST_NO_CLEANUP):
             self.logger.warn('[{0}] SKIPPING cleanup: of the resources: {1}'
-                             .format(self.context_name, resources_to_teardown))
+                             .format(self.context_name, resources_to_delete))
             return
         self.logger.info('[{0}] Performing cleanup: will try removing these '
                          'resources: {1}'
-                         .format(self.context_name, resources_to_teardown))
+                         .format(self.context_name, resources_to_delete))
 
         leftovers = self.env.handler.remove_softlayer_resources(
-            resources_to_teardown)
+            resources_to_delete)
         self.logger.info('[{0}] Leftover resources after cleanup: {1}'
                          .format(self.context_name, leftovers))
 
-    def get_resources_to_teardown(self):
-        # TODO get softlayer resources to teardown
+    def get_resources_to_delete(self):
+        # TODO get softlayer resources to delete
         pass
 
 
@@ -79,7 +79,7 @@ class CloudifySoftLayerInputsConfigReader(BaseCloudifyInputsConfigReader):
 
 class SoftLayerHandler(BaseHandler):
 
-    manager_blueprint = 'softlayer/softlayer.yaml'
+    manager_blueprint = MANAGER_BLUEPRINT
     CleanupContext = SoftLayerCleanupContext
     CloudifyConfigReader = None
     _softrlayer_client = None
@@ -87,18 +87,6 @@ class SoftLayerHandler(BaseHandler):
     def __init__(self, env):
         super(SoftLayerHandler, self).__init__(env)
         self.CloudifyConfigReader = CloudifySoftLayerInputsConfigReader
-
-    def before_bootstrap(self):
-        # TODO before bootstrap content
-        pass
-
-    def after_bootstrap(self, provider_context):
-        # TODO after bootstrap content
-        pass
-
-    def after_teardown(self):
-        # TODO after teardown content
-        pass
 
     def _client_creds(self):
         return {
