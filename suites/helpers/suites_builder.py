@@ -45,10 +45,11 @@ def build_suites_yaml(all_suites_yaml_path):
 
 def parse_custom_descriptor(custom_descriptor):
     result = {}
-    suite_descriptors = custom_descriptor.split('#')
+    suite_descriptors = [s.strip() for s in custom_descriptor.split('#')]
     for i, suite_descriptor in enumerate(suite_descriptors, start=1):
         tests, handler_configuration = suite_descriptor.split('@')
-        tests = tests.split(',')
+        tests = [s.strip() for s in tests.split(',')]
+        handler_configuration = handler_configuration.strip()
         result['{0}{1}'.format(handler_configuration, i)] = {
             'handler_configuration': handler_configuration,
             'tests': tests
