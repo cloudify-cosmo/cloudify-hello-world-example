@@ -286,14 +286,14 @@ test_suites:
 
   #######################################################################
 
-  aws_ec2_env:
+  aws_ec2:
     handler_configuration: aws_ec2
     tests:
       - ec2_blueprints
 
   ########################################################################
 
-  vsphere_env:
+  vsphere:
     handler_configuration: vsphere
     tests:
       - vsphere
