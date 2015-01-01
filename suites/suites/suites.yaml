@@ -54,31 +54,38 @@ templates:
 
 handler_configurations:
 
+  my_conf:
+    inputs: ~/work/cfy/managerbp/openstack/inputs.json
+    handler: openstack
+    manager_blueprints_dir: ~/dev/cloudify/cloudify-manager-blueprints
+    manager_blueprint: openstack/openstack.yaml
+    properties: *hp_openstack_properties
+
   # hp openstack system tests tenant/region matrix
   hp_openstack_system_tests_region_a:
-    cloudify_test_config: inputs-hp-openstack.json
-    cloudify_test_handler_module: cosmo_tester.framework.handlers.openstack
+    inputs: inputs-hp-openstack.json
+    handler: openstack
     manager_blueprint: openstack-docker/openstack-docker.yaml
     properties: *hp_openstack_properties
     inputs_override: *hp_openstack_system_tests_region_a_inputs
 
   hp_openstack_system_tests_region_b:
-    cloudify_test_config: inputs-hp-openstack.json
-    cloudify_test_handler_module: cosmo_tester.framework.handlers.openstack
+    inputs: inputs-hp-openstack.json
+    handler: openstack
     manager_blueprint: openstack-docker/openstack-docker.yaml
     properties: *hp_openstack_properties
     inputs_override: *hp_openstack_system_tests_region_b_inputs
 
   hp_openstack_system_tests2_region_a:
-    cloudify_test_config: inputs-hp-openstack.json
-    cloudify_test_handler_module: cosmo_tester.framework.handlers.openstack
+    inputs: inputs-hp-openstack.json
+    handler: openstack
     manager_blueprint: openstack-docker/openstack-docker.yaml
     properties: *hp_openstack_properties
     inputs_override: *hp_openstack_system_tests2_region_a_inputs
 
   hp_openstack_system_tests2_region_b:
-    cloudify_test_config: inputs-hp-openstack.json
-    cloudify_test_handler_module: cosmo_tester.framework.handlers.openstack
+    inputs: inputs-hp-openstack.json
+    handler: openstack
     manager_blueprint: openstack-docker/openstack-docker.yaml
     properties: *hp_openstack_properties
     inputs_override: *hp_openstack_system_tests2_region_b_inputs
@@ -86,8 +93,8 @@ handler_configurations:
   ############################################################################
 
   hp_openstack_centos_system_tests_region_b:
-    cloudify_test_config: inputs-hp-openstack.json
-    cloudify_test_handler_module: cosmo_tester.framework.handlers.openstack
+    inputs: inputs-hp-openstack.json
+    handler: openstack
     manager_blueprint: openstack-docker/openstack-docker.yaml
     properties: *hp_openstack_properties
     inputs_override:
@@ -99,32 +106,32 @@ handler_configurations:
   ############################################################################
 
   hp_openstack_dockerless_system_tests_region_a:
-    cloudify_test_config: inputs-hp-openstack.json
-    cloudify_test_handler_module: cosmo_tester.framework.handlers.openstack
+    inputs: inputs-hp-openstack.json
+    handler: openstack
     manager_blueprint: openstack/openstack.yaml
     bootstrap_using_docker: false
     properties: *hp_openstack_properties
     inputs_override: *hp_openstack_dockerless_system_tests_region_a_inputs
 
   hp_openstack_dockerless_system_tests_region_b:
-    cloudify_test_config: inputs-hp-openstack.json
-    cloudify_test_handler_module: cosmo_tester.framework.handlers.openstack
+    inputs: inputs-hp-openstack.json
+    handler: openstack
     manager_blueprint: openstack/openstack.yaml
     bootstrap_using_docker: false
     properties: *hp_openstack_properties
     inputs_override: *hp_openstack_dockerless_system_tests_region_b_inputs
 
   hp_openstack_dockerless_system_tests2_region_a:
-    cloudify_test_config: inputs-hp-openstack.json
-    cloudify_test_handler_module: cosmo_tester.framework.handlers.openstack
+    inputs: inputs-hp-openstack.json
+    handler: openstack
     manager_blueprint: openstack/openstack.yaml
     bootstrap_using_docker: false
     properties: *hp_openstack_properties
     inputs_override: *hp_openstack_dockerless_system_tests2_region_a_inputs
 
   hp_openstack_dockerless_system_tests2_region_b:
-    cloudify_test_config: inputs-hp-openstack.json
-    cloudify_test_handler_module: cosmo_tester.framework.handlers.openstack
+    inputs: inputs-hp-openstack.json
+    handler: openstack
     manager_blueprint: openstack/openstack.yaml
     bootstrap_using_docker: false
     properties: *hp_openstack_properties
@@ -133,8 +140,8 @@ handler_configurations:
   #############################################################################
 
   hp_openstack_provider:
-    cloudify_test_config: cloudify-config-openstack-on-hp.yaml
-    cloudify_test_handler_module: cosmo_tester.framework.handlers.openstack
+    inputs: cloudify-config-openstack-on-hp.yaml
+    handler: openstack
     bootstrap_using_providers: true
     bootstrap_using_docker: false
     properties: *hp_openstack_properties
@@ -142,8 +149,8 @@ handler_configurations:
   #############################################################################
 
   pclab47_devstack_nova_net:
-    cloudify_test_config: inputs-nova-net-devstack.json
-    cloudify_test_handler_module: cosmo_tester.framework.handlers.openstack_nova_net
+    inputs: inputs-nova-net-devstack.json
+    handler: openstack_nova_net
     manager_blueprint: openstack-nova-net/openstack.yaml
     bootstrap_using_docker: false
     properties:
@@ -155,8 +162,8 @@ handler_configurations:
   ###############################################################################
 
   aws_ec2:
-    cloudify_test_config: cloudify-config-ec2.yaml
-    cloudify_test_handler_module: cosmo_tester.framework.handlers.ec2
+    inputs: cloudify-config-ec2.yaml
+    handler: ec2
     bootstrap_using_providers: true
     bootstrap_using_docker: false
     properties:
@@ -166,8 +173,8 @@ handler_configurations:
   ################################################################################
 
   vsphere:
-    cloudify_test_config: inputs-vsphere.json
-    cloudify_test_handler_module: cosmo_tester.framework.handlers.vsphere
+    inputs: inputs-vsphere.json
+    handler: vsphere
     manager_blueprint: manager_blueprint/vsphere.yaml
     bootstrap_using_docker: false
     properties:

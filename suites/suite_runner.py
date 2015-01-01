@@ -58,8 +58,7 @@ class SuiteRunner(object):
             self.base_dir, 'xunit-reports',
             '{0}-report.xml'.format(test_suite_name))
 
-        handler_module = self.handler_configuration['handler_module']
-        self.simple_handler_name = handler_module.split('.')[-1]
+        self.handler = self.handler_configuration['handler']
 
     def set_env_variables(self):
         os.environ['WORKFLOW_TASK_RETRIES'] = os.environ.get(
@@ -82,10 +81,10 @@ class SuiteRunner(object):
 
             handler_requirements_txt = os.path.join(
                 os.path.dirname(__file__), 'helpers', 'handlers',
-                self.simple_handler_name, 'requirements.txt')
+                self.handler, 'requirements.txt')
 
             handler_init = importlib.import_module(
-                'helpers.handlers.{0}'.format(self.simple_handler_name))
+                'helpers.handlers.{0}'.format(self.handler))
 
             pip.install('-r', handler_requirements_txt).wait()
 
@@ -130,7 +129,7 @@ class SuiteRunner(object):
             config_path=self.generated_inputs_path,
             bootstrap_using_providers=self.bootstrap_using_providers,
             bootstrap_using_docker=self.bootstrap_using_docker,
-            simple_handler_name=self.simple_handler_name,
+            handler=self.handler,
             manager_blueprints_dir=self.manager_blueprints_dir)
 
         self.handler_configuration['manager_blueprints_dir'] = \

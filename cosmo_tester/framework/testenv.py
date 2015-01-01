@@ -57,6 +57,9 @@ SUITES_YAML_PATH = 'SUITES_YAML_PATH'
 test_environment = None
 
 
+os.environ[HANDLER_CONFIGURATION] = 'my_conf'
+
+
 def initialize_without_bootstrap():
     global test_environment
     if not test_environment:
@@ -132,11 +135,12 @@ class TestEnvironment(object):
         # make a temp config file so handlers can modify it at will
         self._generate_unique_config()
 
-        if 'handler_module' in self.handler_configuration:
-            handler_module_name = self.handler_configuration['handler_module']
+        if 'handler' in self.handler_configuration:
+            handler = self.handler_configuration['handler']
         else:
-            handler_module_name = 'cosmo_tester.framework.handlers.openstack'
-        handler_module = importlib.import_module(handler_module_name)
+            handler = 'openstack'
+        handler_module = importlib.import_module(
+            'suites.helpers.handlers.{0}.handler'.format(handler))
         handler_class = getattr(handler_module, 'handler')
         self.handler = handler_class(self)
 

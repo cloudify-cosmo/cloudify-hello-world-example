@@ -60,10 +60,10 @@ docker_manager_blueprint_properties = {
 def update_config(config_path,
                   bootstrap_using_providers,
                   bootstrap_using_docker,
-                  simple_handler_name,
+                  handler,
                   manager_blueprints_dir):
     handler_update_config = importlib.import_module(
-        'helpers.handlers.{0}.update_config'.format(simple_handler_name))
+        'helpers.handlers.{0}.update_config'.format(handler))
 
     if bootstrap_using_providers:
         patch_provider_properties(config_path, provider_properties)
