@@ -49,11 +49,6 @@ class DockerPersistenceTest(nodecellar_test.NodecellarAppTest):
         with YamlPatcher(self.blueprint_yaml) as patch:
             vm_props_path = 'node_types.nodecellar\.nodes\.MonitoredServer' \
                             '.properties'
-            # Add required docker param. See CFY-816
-            patch.merge_obj('{0}.cloudify_agent.default'
-                            .format(vm_props_path), {
-                                'home_dir': '/home/ubuntu'
-                            })
             vm_type_path = 'node_types.vm_host.properties'
             patch.merge_obj('{0}.server.default'.format(vm_type_path), {
                 'image_name': self.env.ubuntu_trusty_image_name,

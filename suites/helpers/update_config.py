@@ -79,17 +79,15 @@ docker_manager_blueprint_properties = {
     'DOCKER_IMAGE_URL':
         'node_templates.manager.properties.cloudify_packages.docker'
         '.docker_url',
-    'DOCKER_DATA_URL':
-        'node_templates.manager.properties.cloudify_packages.docker'
-        '.docker_data_url',
 }
+
 
 def main():
     config_path = sys.argv[1]
     bootstrap_using_providers = \
         os.environ['BOOTSTRAP_USING_PROVIDERS'] == 'true'
     bootstrap_using_docker = \
-        os.environ.get('BOOTSTRAP_USING_DOCKER', 'false') == 'true'
+        os.environ.get('BOOTSTRAP_USING_DOCKER', 'true') == 'true'
 
     handler = os.environ.get('CLOUDIFY_TEST_HANDLER_MODULE')
     if handler in [
