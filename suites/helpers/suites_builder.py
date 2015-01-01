@@ -47,8 +47,8 @@ def parse_custom_descriptor(custom_descriptor):
     result = {}
     suite_descriptors = custom_descriptor.split('#')
     for i, suite_descriptor in enumerate(suite_descriptors, start=1):
-        handler_configuration, tests = suite_descriptor.split('@')
-        tests = tests.split(' ')
+        tests, handler_configuration = suite_descriptor.split('@')
+        tests = tests.split(',')
         result['{0}{1}'.format(handler_configuration, i)] = {
             'handler_configuration': handler_configuration,
             'tests': tests
