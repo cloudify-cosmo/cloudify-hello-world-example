@@ -16,8 +16,12 @@ templates:
     keystone_username: '{{HP_KEYSTONE_USERNAME}}'
     keystone_password: '{{HP_KEYSTONE_PASSWORD}}'
 
+  #######################################################
+
   - &hp_openstack_dockerless_inputs
     image_id: 75d47d10-fef8-473b-9dd1-fe2f7649cb41
+
+  #######################################################
 
   - &hp_openstack_system_tests_region_a_inputs
     <<: *hp_openstack_credentials_inputs
@@ -56,6 +60,8 @@ templates:
   - &hp_openstack_dockerless_system_tests2_region_b_inputs
     <<: *hp_openstack_system_tests2_region_b_inputs
     <<: *hp_openstack_dockerless_inputs
+
+  #######################################################
 
   - &hp_openstack_handler_configuration
     inputs: inputs-hp-openstack.json
@@ -129,7 +135,6 @@ handler_configurations:
     inputs_override:
       keystone.username: '{{HP_KEYSTONE_USERNAME}}'
       keystone.password: '{{HP_KEYSTONE_PASSWORD}}'
-
 
   #############################################################################
 
@@ -321,6 +326,8 @@ test_suites:
     handler_configuration: vsphere
     tests:
       - vsphere_blueprints
+
+  ########################################################################
 
   softlayer:
     handler_configuration: softlayer
