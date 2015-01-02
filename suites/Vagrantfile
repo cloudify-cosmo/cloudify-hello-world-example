@@ -8,7 +8,7 @@ def vagrant_configure
     config.vm.provider 'docker' do |d|
       d.build_dir = '.'
       d.build_args = ['-t', 'cloudify/test:env']
-      d.cmd = ['/vagrant/system_tests.sh']
+      d.cmd = ['/vagrant/suite_runner.sh']
     end
     load_suites_yaml()['test_suites'].each do |suite_name, suite|
       config.vm.define suite_name do |container|
