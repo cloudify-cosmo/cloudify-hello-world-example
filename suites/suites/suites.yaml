@@ -178,14 +178,13 @@ handler_configurations:
       vsphere_url: '{{VSPHERE_URL}}'
       vsphere_datacenter_name: '{{VCENTER_NAME}}'
 
-  my_conf:
-    inputs: inputs-softlayer.json
-    handler: softlayer_plugin.softlayer
+  hp_openstack_external_handler:
+    <<: *hp_openstack_handler_configuration
+    handler: openstack_plugin_common.openstack
     external:
-      repo: cloudify-softlayer-plugin
-    manager_blueprint: softlayer/softlayer.yaml
-    properties:
-      ...
+      repo: cloudify-openstack-plugin
+      branch: CFY-1850-suites-breakup
+    inputs_override: *hp_openstack_system_tests2_region_a_inputs
 
 #####################################################################################
 
