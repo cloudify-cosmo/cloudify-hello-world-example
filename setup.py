@@ -36,6 +36,6 @@ setup(
         'retrying==1.2.2',
         'cloudify==3.2a2',
         'elasticsearch',
-        'Jinja2==2.7.3'
+        'Jinja2==2.7.2'
     ]
 )
