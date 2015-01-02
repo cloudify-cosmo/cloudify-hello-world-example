@@ -1,1 +1,1 @@
-provider_repo = 'cloudify-libcloud-provider'
+provider_repo = 'cloudify-openstack-provider'
