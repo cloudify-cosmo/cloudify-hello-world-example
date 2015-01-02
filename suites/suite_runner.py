@@ -95,7 +95,7 @@ class SuiteRunner(object):
             self._clone_and_checkout_repo(repo='cloudify-manager-blueprints',
                                           branch=self.branch_name_core)
             pip.install('./cloudify-cli',
-                        '-r', './cloudify-cli/requirements.txt').wait()
+                        '-r', './cloudify-cli/dev-requirements.txt').wait()
             pip.install('-e', './{0}'.format(CLOUDIFY_SYSTEM_TESTS)).wait()
 
             if 'external' in self.handler_configuration:
