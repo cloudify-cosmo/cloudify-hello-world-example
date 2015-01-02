@@ -54,13 +54,6 @@ templates:
 
 handler_configurations:
 
-  my_conf:
-    inputs: ~/work/cfy/managerbp/openstack/inputs.json
-    handler: openstack
-    manager_blueprints_dir: ~/dev/cloudify/cloudify-manager-blueprints
-    manager_blueprint: openstack/openstack.yaml
-    properties: *hp_openstack_properties
-
   # hp openstack system tests tenant/region matrix
   hp_openstack_system_tests_region_a:
     inputs: inputs-hp-openstack.json
@@ -140,7 +133,7 @@ handler_configurations:
   #############################################################################
 
   hp_openstack_provider:
-    inputs: cloudify-config-openstack-on-hp.yaml
+    inputs: cloudify-config-hp-openstack.yaml
     handler: openstack
     bootstrap_using_providers: true
     bootstrap_using_docker: false
@@ -180,37 +173,60 @@ handler_configurations:
     properties:
       template: ubuntu-configured-template
 
+  my_conf:
+    inputs: inputs-softlayer.json
+    handler: softlayer_plugin.softlayer
+    external:
+      repo: cloudify-softlayer-plugin
+    manager_blueprint: softlayer/softlayer.yaml
+    properties:
+      ...
+
 #####################################################################################
 
 tests:
 
   openstack_blueprints:
-    - cosmo_tester/test_suites/test_blueprints
+    tests:
+      - cosmo_tester/test_suites/test_blueprints
 
   openstack_blueprints_without_chef_puppet:
     - cosmo_tester/test_suites/test_blueprints -e puppet -e chef
 
   openstack_chef_puppet_blueprints:
-    - cosmo_tester/test_suites/test_blueprints/chef_plugin_test.py
-    - cosmo_tester/test_suites/test_blueprints/puppet_plugin_test.py
+    tests:
+      - cosmo_tester/test_suites/test_blueprints/chef_plugin_test.py
+      - cosmo_tester/test_suites/test_blueprints/puppet_plugin_test.py
 
   manager_status:
-    - cosmo_tester/test_suites/test_manager_status
+    tests:
+      - cosmo_tester/test_suites/test_manager_status
 
   openstack_plugin:
-    - cosmo_tester/test_suites/test_openstack_plugin
+    tests:
+      - cosmo_tester/test_suites/test_openstack_plugin
 
   docker_centos:
-    - cosmo_tester/test_suites/test_docker_centos_env
+    tests:
+      - cosmo_tester/test_suites/test_docker_centos_env
 
   openstack_provider_openstack_env:
-    - cosmo_tester/test_suites/test_openstack_env
+    tests:
+      - cosmo_tester/test_suites/test_openstack_env
 
   ec2_blueprints:
-    - cosmo_tester/test_suites/ec2_test_blueprints
+    tests:
+      - cosmo_tester/test_suites/ec2_test_blueprints
 
   vsphere_blueprints:
-    - cosmo_tester/test_suites/vsphere_test_blueprints
+    tests:
+      - cosmo_tester/test_suites/vsphere_test_blueprints
+
+  softlayer_blueprints:
+    external: https://github.com/cloudify-cosmo/cloudify-softlayer-plugin.git
+    tests:
+      - softlayer_plugin/system_tests/manager
+      - softlayer_plugin/system_tests/local
 
 #####################################################################################
 
@@ -303,4 +319,15 @@ test_suites:
   vsphere:
     handler_configuration: vsphere
     tests:
-      - vsphere
+      - vsphere_blueprints
+
+  softlayer:
+    handler_configuration: softlayer
+    tests:
+      - softlayer_blueprints
+      - cosmo_tester/.../
+      - external: git/fdafdsa
+        tests:
+          - fdaf
+          - fdafds
+          - fdafads

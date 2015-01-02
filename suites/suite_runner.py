@@ -14,6 +14,30 @@ pip = sh_bake(sh.pip)
 nosetests = sh_bake(sh.nosetests)
 
 
+class HandlerPackage(object):
+
+    def __init__(self, handler, external, directory=None):
+        if not external:
+            self.init = importlib.import_module(
+                'helpers.handlers.{0}'.format(handler))
+            self.requirements_path = os.path.join(
+                os.path.dirname(__file__), 'helpers', 'handlers',
+                handler, 'requirements.txt')
+            self.update_config = importlib.import_module(
+                'helpers.handlers.{0}.update_config'.format(handler))
+        else:
+            main_package, handler_name = handler.split('.')
+            self.init = importlib.import_module(
+                '{0}.system_tests.handlers.{1}'.format(main_package,
+                                                       handler_name))
+            self.requirements_path = os.path.join(
+                directory, main_package, 'system_tests', 'handlers',
+                handler_name, 'requirements.txt')
+            self.update_config = importlib.import_module(
+                '{0}.system_tests.handlers.{1}.update_config'.format(
+                    main_package, handler_name))
+
+
 class SuiteRunner(object):
 
     def __init__(self):
@@ -28,16 +52,9 @@ class SuiteRunner(object):
 
         self.test_suite = json.loads(os.environ['TEST_SUITE'])
         with open(os.path.join(self.base_dir, 'suites', 'suites.yaml')) as f:
-            suites_yaml = yaml.load(f.read())
-        tests = []
-        for test in self.test_suite['tests']:
-            if test in suites_yaml['tests']:
-                tests += suites_yaml['tests']
-            else:
-                tests.append(test)
-        self.tests_to_run = ' '.join(tests)
+            self.suites_yaml = yaml.load(f.read())
 
-        self.handler_configuration = suites_yaml[
+        self.handler_configuration = self.suites_yaml[
             'handler_configurations'][self.test_suite['handler_configuration']]
         self.bootstrap_using_providers = self.handler_configuration.get(
             'bootstrap_using_providers', False)
@@ -59,6 +76,7 @@ class SuiteRunner(object):
             '{0}-report.xml'.format(test_suite_name))
 
         self.handler = self.handler_configuration['handler']
+        self.handler_package = None
 
     def set_env_variables(self):
         os.environ['WORKFLOW_TASK_RETRIES'] = os.environ.get(
@@ -79,21 +97,36 @@ class SuiteRunner(object):
                         '-r', './cloudify-cli/requirements.txt').wait()
             pip.install('-e', './cloudify-system-tests').wait()
 
-            handler_requirements_txt = os.path.join(
-                os.path.dirname(__file__), 'helpers', 'handlers',
-                self.handler, 'requirements.txt')
+            if 'external' in self.handler_configuration:
+                external = self.handler_configuration['external']
+                repo = external['repo']
+                branch = external.get('branch', self.branch_name_plugins)
+                organization = external.get('organization', 'cloudify-cosmo')
+                self._clone_and_checkout_repo(repo=repo,
+                                              branch=branch,
+                                              organization=organization)
+                pip.install('-e', './{0}'.format(repo)).wait()
 
-            handler_init = importlib.import_module(
-                'helpers.handlers.{0}'.format(self.handler))
+                self.handler_package = HandlerPackage(
+                    self.handler,
+                    external=True,
+                    directory=os.path.join(self.work_dir, repo))
+            else:
+                self.handler_package = HandlerPackage(self.handler,
+                                                      external=False)
 
-            pip.install('-r', handler_requirements_txt).wait()
+            pip.install('-r', self.handler_package.requirements_path).wait()
 
+            handler_init = self.handler_package.init
             if self.bootstrap_using_providers:
                 provider_repo = handler_init.provider_repo
                 self._clone_and_checkout_repo(repo=provider_repo,
                                               branch=self.branch_name_plugins)
                 pip.install('./{0}'.format(provider_repo)).wait()
 
+            # TODO: this logic only exists for the vpshere handler
+            # move handler into plugin code and install it like any
+            # other external handler
             if hasattr(handler_init, 'plugin_repo'):
                 plugin_repo = handler_init.plugin_repo
                 private_repo = getattr(handler_init, 'private', False)
@@ -110,16 +143,17 @@ class SuiteRunner(object):
                                  branch,
                                  organization='cloudify-cosmo',
                                  private_repo=False):
-        if private_repo:
-            git.clone('https://opencm:{0}@github.com/{1}/{2}'
-                      .format(self.opencm_git_pwd, organization, repo),
-                      depth=1).wait()
-        else:
-            git.clone('https://github.com/{0}/{1}'
-                      .format(organization, repo), depth=1).wait()
+        with path(self.work_dir):
+            if private_repo:
+                git.clone('https://opencm:{0}@github.com/{1}/{2}'
+                          .format(self.opencm_git_pwd, organization, repo),
+                          depth=1).wait()
+            else:
+                git.clone('https://github.com/{0}/{1}'
+                          .format(organization, repo), depth=1).wait()
 
-        with path(repo):
-            git.checkout(branch).wait()
+            with path(repo):
+                git.checkout(branch).wait()
 
     def generate_config(self):
         with open(self.original_inputs_path) as rf:
@@ -129,7 +163,7 @@ class SuiteRunner(object):
             config_path=self.generated_inputs_path,
             bootstrap_using_providers=self.bootstrap_using_providers,
             bootstrap_using_docker=self.bootstrap_using_docker,
-            handler=self.handler,
+            handler_update_config=self.handler_package.update_config,
             manager_blueprints_dir=self.manager_blueprints_dir)
 
         self.handler_configuration['manager_blueprints_dir'] = \

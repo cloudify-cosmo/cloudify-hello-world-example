@@ -135,12 +135,14 @@ class TestEnvironment(object):
         # make a temp config file so handlers can modify it at will
         self._generate_unique_config()
 
-        if 'handler' in self.handler_configuration:
-            handler = self.handler_configuration['handler']
+        handler = self.handler_configuration['handler']
+        if 'external' in self.handler_configuration:
+            main_package, handler_name = handler.split('.')
+            module_path = '{0}.system_tests.handlers.{0}.handler'\
+                          .format(main_package, handler_name)
         else:
-            handler = 'openstack'
-        handler_module = importlib.import_module(
-            'suites.helpers.handlers.{0}.handler'.format(handler))
+            module_path = 'suites.helpers.handlers.{0}.handler'.format(handler)
+        handler_module = importlib.import_module(module_path)
         handler_class = getattr(handler_module, 'handler')
         self.handler = handler_class(self)
 
