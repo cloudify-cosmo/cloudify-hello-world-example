@@ -14,6 +14,9 @@ pip = sh_bake(sh.pip)
 nosetests = sh_bake(sh.nosetests)
 
 
+CLOUDIFY_SYSTEM_TESTS = 'cloudify-system-tests'
+
+
 class HandlerPackage(object):
 
     def __init__(self, handler, external, directory=None):
@@ -48,8 +51,7 @@ class SuiteRunner(object):
         self.branch_name_system_tests = os.environ['BRANCH_NAME_SYSTEM_TESTS']
         self.opencm_git_pwd = os.environ['OPENCM_GIT_PWD']
 
-        test_suite_name = os.environ['TEST_SUITE_NAME']
-
+        self.test_suite_name = os.environ['TEST_SUITE_NAME']
         self.test_suite = json.loads(os.environ['TEST_SUITE'])
         with open(os.path.join(self.base_dir, 'suites', 'suites.yaml')) as f:
             self.suites_yaml = yaml.load(f.read())
@@ -71,9 +73,6 @@ class SuiteRunner(object):
             self.work_dir, 'generated-suites.yaml')
         self.manager_blueprints_dir = os.path.join(
             self.work_dir, 'cloudify-manager-blueprints')
-        self.report_file = os.path.join(
-            self.base_dir, 'xunit-reports',
-            '{0}-report.xml'.format(test_suite_name))
 
         self.handler = self.handler_configuration['handler']
         self.handler_package = None
@@ -87,7 +86,7 @@ class SuiteRunner(object):
 
     def clone_and_install_packages(self):
         with path(self.work_dir):
-            self._clone_and_checkout_repo(repo='cloudify-system-tests',
+            self._clone_and_checkout_repo(repo=CLOUDIFY_SYSTEM_TESTS,
                                           branch=self.branch_name_system_tests)
             self._clone_and_checkout_repo(repo='cloudify-cli',
                                           branch=self.branch_name_core)
@@ -95,7 +94,7 @@ class SuiteRunner(object):
                                           branch=self.branch_name_core)
             pip.install('./cloudify-cli',
                         '-r', './cloudify-cli/requirements.txt').wait()
-            pip.install('-e', './cloudify-system-tests').wait()
+            pip.install('-e', './{0}'.format(CLOUDIFY_SYSTEM_TESTS)).wait()
 
             if 'external' in self.handler_configuration:
                 external = self.handler_configuration['external']
@@ -177,13 +176,54 @@ class SuiteRunner(object):
                 }}))
 
     def run_nose(self):
-        with path(self.work_dir) / 'cloudify-system-tests':
-            nosetests(self.tests_to_run,
-                      verbose=True,
-                      nocapture=True,
-                      nologcapture=True,
-                      with_xunit=True,
-                      xunit_file=self.report_file).wait()
+
+        test_groups = {}
+        for test in self.test_suite['tests']:
+            if test in self.suites_yaml:
+                test = self.suites_yaml[test]
+            elif isinstance(test, basestring):
+                test = {'tests': [test]}
+
+            if 'external' in test:
+                repo = test['external']['repo']
+                if not (path(self.work_dir) / repo).isdir():
+                    self._clone_and_checkout_repo(
+                        repo=repo,
+                        branch=test['external'].get('branch',
+                                                    self.branch_name_plugins),
+                        organization=test['external'].get('organization',
+                                                          'cloudify-cosmo'))
+                test_group = repo
+            else:
+                test_group = CLOUDIFY_SYSTEM_TESTS
+
+            if test_group not in test_groups:
+                test_groups[test_group] = []
+            test_groups[test_group] += test['tests']
+
+        failed_groups = []
+
+        for test_group, tests in test_groups.items():
+            tests_dir = test_group
+            report_file = os.path.join(
+                self.base_dir, 'xunit-reports',
+                '{0}-{1}-report.xml'.format(self.test_suite_name,
+                                            tests_dir))
+            tests = ' '.join(tests)
+            with path(self.work_dir) / tests_dir:
+                try:
+                    nosetests(tests,
+                              verbose=True,
+                              nocapture=True,
+                              nologcapture=True,
+                              with_xunit=True,
+                              xunit_file=report_file).wait()
+                except sh.ErrorReturnCode:
+                    failed_groups.append(test_group)
+
+        if failed_groups:
+            raise AssertionError('Failed test groups: {}'.format(
+                failed_groups))
 
 
 def main():
