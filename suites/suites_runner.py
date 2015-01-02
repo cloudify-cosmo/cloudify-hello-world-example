@@ -1,4 +1,3 @@
-#! /usr/bin/env python
 # flake8: NOQA
 
 import os

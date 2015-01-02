@@ -20,7 +20,7 @@ create_virtualenv_if_needed_and_source()
 
 suites_runner()
 {
-    ./suites_runner.py
+    python suites_runner.py
 }
 
 main()
