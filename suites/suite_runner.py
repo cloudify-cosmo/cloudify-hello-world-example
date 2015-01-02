@@ -7,7 +7,9 @@ import yaml
 from path import path
 
 from helpers import sh_bake
-from helpers import update_config
+# don't put imports that may include system tests code here
+# put them inside functions that use them only after cloudify-system-tests
+# have been installed
 
 git = sh_bake(sh.git)
 pip = sh_bake(sh.pip)
@@ -155,6 +157,7 @@ class SuiteRunner(object):
                 git.checkout(branch).wait()
 
     def generate_config(self):
+        from helpers import update_config
         with open(self.original_inputs_path) as rf:
             with open(self.generated_inputs_path, 'w') as wf:
                 wf.write(rf.read())
