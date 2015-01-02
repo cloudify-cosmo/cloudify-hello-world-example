@@ -1,3 +1,4 @@
 sh
 path.py
 PyYAML==3.10
+nose
