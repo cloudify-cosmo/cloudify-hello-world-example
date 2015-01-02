@@ -77,8 +77,9 @@ def list_containers(quiet=False):
 
 def kill_containers():
     containers = list_containers(quiet=True)
-    logger.info('Killing containers: {0}'.format(containers))
-    docker.rm('-f', containers).wait()
+    if containers:
+        logger.info('Killing containers: {0}'.format(containers))
+        docker.rm('-f', containers).wait()
 
 
 def container_exit_code(container_name):
