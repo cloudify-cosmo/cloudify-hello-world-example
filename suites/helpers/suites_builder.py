@@ -33,7 +33,7 @@ def build_suites_yaml(all_suites_yaml_path):
         test_suites = parse_custom_descriptor(env_custom_descriptor)
     else:
         test_suites = {suite_name: suite for suite_name, suite
-                       in suites_yaml['test_suites']
+                       in suites_yaml['test_suites'].items()
                        if suite_name in tests_suites_names}
 
     suites_yaml['test_suites'] = test_suites
