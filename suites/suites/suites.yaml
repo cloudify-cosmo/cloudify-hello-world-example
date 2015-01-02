@@ -223,7 +223,8 @@ tests:
       - cosmo_tester/test_suites/vsphere_test_blueprints
 
   softlayer_blueprints:
-    external: https://github.com/cloudify-cosmo/cloudify-softlayer-plugin.git
+    external:
+      repo: cloudify-softlayer-plugin
     tests:
       - softlayer_plugin/system_tests/manager
       - softlayer_plugin/system_tests/local
