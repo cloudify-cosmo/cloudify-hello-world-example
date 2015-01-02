@@ -42,8 +42,8 @@ env_variables = {
     'AWS_SECRET_KEY': '',
 
     # keystone
-    'KEYSTONE_PASSWORD': '',
-    'KEYSTONE_USERNAME': '',
+    'HP_KEYSTONE_PASSWORD': '',
+    'HP_KEYSTONE_USERNAME': '',
 
     # branch names
     'BRANCH_NAME_CORE': '',

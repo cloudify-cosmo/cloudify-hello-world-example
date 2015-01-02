@@ -64,13 +64,8 @@ def update_config(config_path,
 
     if bootstrap_using_providers:
         patch_provider_properties(config_path, provider_properties)
-        patch_provider_properties(
-            config_path,
-            handler_update_config.provider_properties)
     else:
-        patch_inputs_properties(config_path, provider_properties)
-        patch_inputs_properties(config_path,
-                                handler_update_config.inputs_properties)
+        patch_inputs_properties(config_path, inputs_properties)
 
     if bootstrap_using_providers:
         return

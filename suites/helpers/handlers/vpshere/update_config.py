@@ -1,12 +1,5 @@
 import os
 
-inputs_properties = {
-    'VSPHERE_USERNAME': 'vsphere_username',
-    'VSPHERE_PASSWORD': 'vsphere_password',
-    'VSPHERE_URL': 'vsphere_url',
-    'VCENTER_NAME': 'vsphere_datacenter_name'
-}
-
 
 def replace_string_in_file(file_name, old_string, new_string):
     with open(file_name, 'r') as f:

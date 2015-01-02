@@ -35,6 +35,7 @@ setup(
         'nose',
         'retrying==1.2.2',
         'cloudify==3.2a1',
-        'elasticsearch'
+        'elasticsearch',
+        'Jinja2==2.7.3'
     ]
 )

@@ -26,6 +26,7 @@ import importlib
 import json
 from StringIO import StringIO
 
+import jinja2
 import yaml
 from fabric import api as fabric_api
 from path import path
@@ -160,9 +161,8 @@ class TestEnvironment(object):
         self._config_reader = self.handler.CloudifyConfigReader(
             self.cloudify_config,
             manager_blueprint_path=self._manager_blueprint_path)
-        if not self.is_provider_bootstrap:
-            with self.handler.update_cloudify_config() as patch:
-                patch.obj.update(self.handler_configuration['inputs_override'])
+        with self.handler.update_cloudify_config() as patch:
+            self._process_inputs_override(patch)
 
         global test_environment
         test_environment = self
@@ -173,6 +173,14 @@ class TestEnvironment(object):
         unique_config_path = os.path.join(self._workdir, file_name)
         shutil.copy(self.cloudify_config_path, unique_config_path)
         self.cloudify_config_path = path(unique_config_path)
+
+    def _process_inputs_override(self, patch):
+        inputs_override = self.handler_configuration.get('inputs_override', {})
+        raw_inputs_override = yaml.safe_dump(inputs_override)
+        template = jinja2.Template(raw_inputs_override)
+        processed_inputs = template.render(**os.environ.copy())
+        for key, value in processed_inputs:
+            patch.set_value(key, value)
 
     def setup(self):
         os.chdir(self._initial_cwd)

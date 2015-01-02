@@ -12,22 +12,30 @@ templates:
 
   #######################################################
 
+  - &hp_openstack_credentials_inputs
+    keystone_username: '{{HP_KEYSTONE_USERNAME}}'
+    keystone_password: '{{HP_KEYSTONE_PASSWORD}}'
+
   - &hp_openstack_dockerless_inputs
     image_id: 75d47d10-fef8-473b-9dd1-fe2f7649cb41
 
   - &hp_openstack_system_tests_region_a_inputs
+    <<: *hp_openstack_credentials_inputs
     keystone_tenant_name: cloudify-cosmo-system-tests
     region: region-a.geo-1
 
   - &hp_openstack_system_tests_region_b_inputs
+    <<: *hp_openstack_credentials_inputs
     keystone_tenant_name: cloudify-cosmo-system-tests
     region: region-b.geo-1
 
   - &hp_openstack_system_tests2_region_a_inputs
+    <<: *hp_openstack_credentials_inputs
     keystone_tenant_name: cloudify-cosmo-system-tests2
     region: region-a.geo-1
 
   - &hp_openstack_system_tests2_region_b_inputs
+    <<: *hp_openstack_credentials_inputs
     keystone_tenant_name: cloudify-cosmo-system-tests2
     region: region-b.geo-1
 
@@ -118,6 +126,10 @@ handler_configurations:
     bootstrap_using_providers: true
     bootstrap_using_docker: false
     properties: *hp_openstack_properties
+    inputs_override:
+      keystone.username: '{{HP_KEYSTONE_USERNAME}}'
+      keystone.password: '{{HP_KEYSTONE_PASSWORD}}'
+
 
   #############################################################################
 
@@ -142,6 +154,9 @@ handler_configurations:
     properties:
       medium_instance_type: m1.medium
       ubuntu_agent_ami: ami-a73264ce
+    inputs_override:
+      connection.access_id: '{{AWS_ACCESS_ID}}'
+      connection.secret_key: '{{AWS_SECRET_KEY}}'
 
   ################################################################################
 
@@ -152,6 +167,11 @@ handler_configurations:
     bootstrap_using_docker: false
     properties:
       template: ubuntu-configured-template
+    inputs_override:
+      vsphere_username: '{{VSPHERE_USERNAME}}'
+      vsphere_password: '{{VSPHERE_PASSWORD}}'
+      vsphere_url: '{{VSPHERE_URL}}'
+      vsphere_datacenter_name: '{{VCENTER_NAME}}'
 
   my_conf:
     inputs: inputs-softlayer.json
