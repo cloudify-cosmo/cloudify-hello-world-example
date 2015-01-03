@@ -97,6 +97,8 @@ class SuiteRunner(object):
             pip.install('./cloudify-cli',
                         '-r', './cloudify-cli/dev-requirements.txt').wait()
             pip.install('-e', './{0}'.format(CLOUDIFY_SYSTEM_TESTS)).wait()
+            import cosmo_tester.framework.handlers
+            import suites.helpers.handlers.openstack
 
             if 'external' in self.handler_configuration:
                 external = self.handler_configuration['external']
@@ -108,6 +110,7 @@ class SuiteRunner(object):
                                               organization=organization)
                 pip.install('-e', './{0}'.format(repo)).wait()
 
+                import openstack_plugin_common.system_tests.handlers.openstack
                 self.handler_package = HandlerPackage(
                     self.handler,
                     external=True,
