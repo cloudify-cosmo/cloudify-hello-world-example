@@ -206,7 +206,12 @@ handler_configurations:
       vsphere_datacenter_name: '{{VCENTER_NAME}}'
 
   hp_openstack_external_handler:
-    <<: *hp_openstack_system_tests2_region_a
+    <<: *hp_openstack_handler_configuration
+    properties: *hp_openstack_region_a_properties
+    inputs_override:
+      <<: *hp_openstack_credentials_inputs
+      <<: *hp_openstack_region_a_inputs
+      keystone_tenant_name: cloudify-cosmo-system-tests2
     handler: openstack_plugin_common.openstack
     external:
       repo: cloudify-openstack-plugin
