@@ -107,9 +107,9 @@ class TestEnvironment(object):
             path(__file__).dirname().dirname().dirname() / 'suites' / 'suites'
                                                          / 'suites.yaml')
         with open(suites_yaml_path) as f:
-            suites_yaml = yaml.load(f.read())
-        self.handler_configuration = suites_yaml['handler_configurations'][
-            handler_configuration_name]
+            self.suites_yaml = yaml.load(f.read())
+        self.handler_configuration = self.suites_yaml[
+            'handler_configurations'][handler_configuration_name]
 
         self.cloudify_config_path = path(os.path.expanduser(
             self.handler_configuration['inputs']))
@@ -159,7 +159,10 @@ class TestEnvironment(object):
             self.cloudify_config,
             manager_blueprint_path=self._manager_blueprint_path)
         with self.handler.update_cloudify_config() as patch:
-            self._process_inputs_override(patch)
+            processed_inputs = self.process_variables(
+                self.handler_configuration.get('inputs_override', {}))
+            for key, value in processed_inputs.items():
+                patch.set_value(key, value)
 
         global test_environment
         test_environment = self
@@ -171,14 +174,14 @@ class TestEnvironment(object):
         shutil.copy(self.cloudify_config_path, unique_config_path)
         self.cloudify_config_path = path(unique_config_path)
 
-    def _process_inputs_override(self, patch):
-        inputs_override = self.handler_configuration.get('inputs_override', {})
-        raw_inputs_override = yaml.safe_dump(inputs_override)
-        template = jinja2.Template(raw_inputs_override)
-        raw_processed_inputs = template.render(**os.environ.copy())
-        processed_inputs = yaml.load(raw_processed_inputs)
-        for key, value in processed_inputs.items():
-            patch.set_value(key, value)
+    def process_variables(self, unprocessed_dict):
+        raw_dict = yaml.safe_dump(unprocessed_dict)
+        template = jinja2.Template(raw_dict)
+        template_variables = {}
+        template_variables.update(os.environ)
+        template_variables.update(self.suites_yaml.get('variables', {}))
+        raw_processed_dict = template.render(**template_variables)
+        return yaml.load(raw_processed_dict)
 
     def setup(self):
         os.chdir(self._initial_cwd)

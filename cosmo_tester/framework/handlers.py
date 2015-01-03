@@ -81,8 +81,9 @@ class BaseHandler(object):
         self.env = env
         self.CloudifyConfigReader = BaseCloudifyProviderConfigReader if \
             env.is_provider_bootstrap else BaseCloudifyInputsConfigReader
-        for attr_name, attr_value in env.handler_configuration.get(
-                'properties', {}).items():
+        processed_properties = self.env.process_variables(
+            env.handler_configuration.get('properties', {}))
+        for attr_name, attr_value in processed_properties.items():
             setattr(self, attr_name, attr_value)
 
     @contextmanager
