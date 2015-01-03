@@ -164,6 +164,8 @@ class TestEnvironment(object):
             for key, value in processed_inputs.items():
                 patch.set_value(key, value)
 
+        logger.info('### inputs: {0}'.format(self.cloudify_config_path.text()))
+
         global test_environment
         test_environment = self
 
