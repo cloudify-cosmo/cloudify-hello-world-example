@@ -116,7 +116,7 @@ class TestEnvironment(object):
 
         if not self.cloudify_config_path.isfile():
             raise RuntimeError('config file configured in handler '
-                               'configuration does not seem to exist'
+                               'configuration does not seem to exist: {0}'
                                .format(self.cloudify_config_path))
 
         self.is_provider_bootstrap = self.handler_configuration.get(
