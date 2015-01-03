@@ -175,8 +175,9 @@ class TestEnvironment(object):
         inputs_override = self.handler_configuration.get('inputs_override', {})
         raw_inputs_override = yaml.safe_dump(inputs_override)
         template = jinja2.Template(raw_inputs_override)
-        processed_inputs = template.render(**os.environ.copy())
-        for key, value in processed_inputs:
+        raw_processed_inputs = template.render(**os.environ.copy())
+        processed_inputs = yaml.load(raw_processed_inputs)
+        for key, value in processed_inputs.items():
             patch.set_value(key, value)
 
     def setup(self):
