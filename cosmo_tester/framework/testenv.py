@@ -58,9 +58,6 @@ SUITES_YAML_PATH = 'SUITES_YAML_PATH'
 test_environment = None
 
 
-os.environ[HANDLER_CONFIGURATION] = 'my_conf'
-
-
 def initialize_without_bootstrap():
     global test_environment
     if not test_environment:
