@@ -38,22 +38,18 @@ templates:
 
   - &hp_openstack_region_a_inputs
     region: region-a.geo-1
-    # Ubuntu Server 14.04.1 LTS (amd64 20140927) - Partner Image
     image_id: '{{hp_openstack_region_a_ubuntu_trusty}}'
 
   - &hp_openstack_region_b_inputs
     region: region-b.geo-1
-    # Ubuntu Server 14.04.1 LTS (amd64 20140927) - Partner Image
     image_id: '{{hp_openstack_region_a_ubuntu_precise}}'
 
   - &hp_openstack_dockerless_region_a_inputs
     region: region-a.geo-1
-    # Ubuntu Server 12.04.5 LTS (amd64 20140927) - Partner Image
     image_id: '{{hp_openstack_region_b_ubuntu_trusty}}'
 
   - &hp_openstack_dockerless_region_b_inputs
     region: region-b.geo-1
-    # Ubuntu Server 12.04.5 LTS (amd64 20140927) - Partner Image
     image_id: '{{hp_openstack_region_b_ubuntu_precise}}'
 
   #######################################################
