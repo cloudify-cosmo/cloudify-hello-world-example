@@ -92,7 +92,7 @@ class SuiteRunner(object):
             self._clone_and_checkout_repo(repo=CLOUDIFY_SYSTEM_TESTS,
                                           branch=self.branch_name_system_tests)
             self._clone_and_checkout_repo(repo='cloudify-cli',
-                                          branch=self.branch_name_core)
+                                          branch='CFY-1850-suites-breakup')
             self._clone_and_checkout_repo(repo='cloudify-manager-blueprints',
                                           branch=self.branch_name_core)
 
