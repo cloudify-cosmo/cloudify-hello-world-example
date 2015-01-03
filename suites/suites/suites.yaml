@@ -10,6 +10,12 @@ variables:
 
 templates:
 
+  - &openstack_plugin_external
+    repo: cloudify-openstack-plugin
+    branch: CFY-1850-suites-breakup
+
+  #######################################################
+
   - &hp_openstack_properties
     ubuntu_image_name: '{{hp_openstack_ubuntu_precise_image_name}}'
     ubuntu_trusty_image_name: '{{hp_openstack_ubuntu_trusty_image_name}}'
@@ -54,14 +60,18 @@ templates:
 
   #######################################################
 
+  - &openstack_handler_configuration
+    handler: openstack_plugin_common.openstack
+    external: *openstack_plugin_external
+
   - &hp_openstack_handler_configuration
+    <<: *openstack_handler_configuration
     inputs: inputs-hp-openstack.json
-    handler: openstack
     manager_blueprint: openstack-docker/openstack-docker.yaml
 
   - &hp_openstack_dockerless_handler_configuration
+    <<: *openstack_handler_configuration
     inputs: inputs-hp-openstack.json
-    handler: openstack
     manager_blueprint: openstack/openstack.yaml
     bootstrap_using_docker: false
 
@@ -150,8 +160,8 @@ handler_configurations:
   ############################################################################
 
   hp_openstack_provider:
+    <<: *openstack_handler_configuration
     inputs: cloudify-config-hp-openstack.yaml
-    handler: openstack
     bootstrap_using_providers: true
     bootstrap_using_docker: false
     properties: *hp_openstack_region_b_properties
@@ -162,8 +172,9 @@ handler_configurations:
   #############################################################################
 
   pclab47_devstack_nova_net:
+    <<: *openstack_handler_configuration
+    handler: openstack_plugin_common.openstack_nova_net
     inputs: inputs-nova-net-devstack.json
-    handler: openstack_nova_net
     manager_blueprint: openstack-nova-net/openstack.yaml
     bootstrap_using_docker: false
     properties:
@@ -200,18 +211,6 @@ handler_configurations:
       vsphere_password: '{{VSPHERE_PASSWORD}}'
       vsphere_url: '{{VSPHERE_URL}}'
       vsphere_datacenter_name: '{{VCENTER_NAME}}'
-
-  hp_openstack_external_handler:
-    <<: *hp_openstack_handler_configuration
-    properties: *hp_openstack_region_a_properties
-    inputs_override:
-      <<: *hp_openstack_credentials_inputs
-      <<: *hp_openstack_region_a_inputs
-      keystone_tenant_name: cloudify-cosmo-system-tests2
-    handler: openstack_plugin_common.openstack
-    external:
-      repo: cloudify-openstack-plugin
-      branch: CFY-1850-suites-breakup
 
 #####################################################################################
 
@@ -352,16 +351,3 @@ test_suites:
     handler_configuration: vsphere
     tests:
       - vsphere_blueprints
-
-  ########################################################################
-
-  softlayer:
-    handler_configuration: softlayer
-    tests:
-      - softlayer_blueprints
-      - cosmo_tester/.../
-      - external: git/fdafdsa
-        tests:
-          - fdaf
-          - fdafds
-          - fdafads
