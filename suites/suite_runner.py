@@ -24,24 +24,24 @@ class HandlerPackage(object):
 
     def __init__(self, handler, external, directory=None):
         if not external:
-            self.init = importlib.import_module(
-                'helpers.handlers.{0}'.format(handler))
-            self.requirements_path = os.path.join(
+            requirements_path = os.path.join(
                 os.path.dirname(__file__), 'helpers', 'handlers',
                 handler, 'requirements.txt')
-            self.update_config = importlib.import_module(
-                'helpers.handlers.{0}.update_config'.format(handler))
+            self._handler_module = 'helpers.handlers.{0}.handler'.format(
+                handler)
         else:
             main_package, handler_name = handler.split('.')
-            self.init = importlib.import_module(
-                '{0}.system_tests.handlers.{1}'.format(main_package,
-                                                       handler_name))
-            self.requirements_path = os.path.join(
+            requirements_path = os.path.join(
                 directory, main_package, 'system_tests', 'handlers',
                 handler_name, 'requirements.txt')
-            self.update_config = importlib.import_module(
-                '{0}.system_tests.handlers.{1}.update_config'.format(
-                    main_package, handler_name))
+            self._handler_module = ('{0}.system_tests.handlers.{1}.'
+                                    'update_config'.format(main_package,
+                                                           handler_name))
+        self.requirements_path = path(requirements_path)
+
+    @property
+    def handler(self):
+        return importlib.import_module(self._handler_module)
 
 
 class SuiteRunner(object):
@@ -120,12 +120,13 @@ class SuiteRunner(object):
                 self.handler_package = HandlerPackage(self.handler,
                                                       external=False)
 
-            self._pip_install(
-                requirements=self.handler_package.requirements_path)
+            if self.handler_package.requirements_path.exists():
+                self._pip_install(
+                    requirements=self.handler_package.requirements_path)
 
-            handler_init = self.handler_package.init
+            handler = self.handler_package.handler
             if self.bootstrap_using_providers:
-                provider_repo = handler_init.provider_repo
+                provider_repo = handler.provider_repo
                 self._clone_and_checkout_repo(repo=provider_repo,
                                               branch=self.branch_name_plugins)
                 self._pip_install(provider_repo)
@@ -133,14 +134,14 @@ class SuiteRunner(object):
             # TODO: this logic only exists for the vpshere handler
             # move handler into plugin code and install it like any
             # other external handler
-            if hasattr(handler_init, 'plugin_repo'):
-                plugin_repo = handler_init.plugin_repo
-                private_repo = getattr(handler_init, 'private', False)
+            if hasattr(handler, 'plugin_repo'):
+                plugin_repo = handler.plugin_repo
+                private_repo = getattr(handler, 'private', False)
                 self._clone_and_checkout_repo(repo=plugin_repo,
                                               branch=self.branch_name_plugins,
                                               private_repo=private_repo)
                 self._pip_install(plugin_repo)
-                if getattr(handler_init, 'has_manager_blueprint', False):
+                if getattr(handler, 'has_manager_blueprint', False):
                     self.manager_blueprints_dir = os.path.join(
                         self.work_dir, plugin_repo)
 
@@ -185,7 +186,7 @@ class SuiteRunner(object):
             config_path=self.generated_inputs_path,
             bootstrap_using_providers=self.bootstrap_using_providers,
             bootstrap_using_docker=self.bootstrap_using_docker,
-            handler_update_config=self.handler_package.update_config,
+            handler=self.handler_package.handler,
             manager_blueprints_dir=self.manager_blueprints_dir)
 
         self.handler_configuration['manager_blueprints_dir'] = \

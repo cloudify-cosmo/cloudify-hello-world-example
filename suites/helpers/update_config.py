@@ -59,7 +59,7 @@ docker_manager_blueprint_properties = {
 def update_config(config_path,
                   bootstrap_using_providers,
                   bootstrap_using_docker,
-                  handler_update_config,
+                  handler,
                   manager_blueprints_dir):
 
     if bootstrap_using_providers:
@@ -84,8 +84,8 @@ def update_config(config_path,
         patch_manager_blueprint_properties(manager_blueprint,
                                            manager_blueprints_for_patching)
 
-    if hasattr(handler_update_config, 'update_config'):
-        handler_update_config.update_config(manager_blueprints_dir)
+    if hasattr(handler, 'update_config'):
+        handler.update_config(manager_blueprints_dir)
 
     for ssh_key_env_var, ssh_key_path in ssh_keys.items():
         ssh_key = os.environ[ssh_key_env_var]

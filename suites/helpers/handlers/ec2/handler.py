@@ -322,3 +322,4 @@ class LibcloudHandler(BaseHandler):
 
 
 handler = LibcloudHandler
+provider_repo = 'cloudify-libcloud-provider'
