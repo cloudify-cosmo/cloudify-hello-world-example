@@ -191,12 +191,13 @@ class SuiteRunner(object):
         self.handler_configuration['manager_blueprints_dir'] = \
             self.manager_blueprints_dir
         self.handler_configuration['inputs'] = self.generated_inputs_path
+        generated_suites_yaml = self.suites_yaml.copy()
+        handler_configuration_name = self.test_suite['handler_configuration']
+        generated_suites_yaml['handler_configurations'] = {
+            handler_configuration_name: self.handler_configuration
+        }
         with open(self.generated_suites_yaml_path, 'w') as f:
-            f.write(yaml.dump({
-                'handler_configurations': {
-                    self.test_suite['handler_configuration']:
-                        self.handler_configuration
-                }}))
+            f.write(yaml.dump(generated_suites_yaml))
 
     def run_nose(self):
 
