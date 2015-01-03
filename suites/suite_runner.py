@@ -1,6 +1,7 @@
 import importlib
 import os
 import json
+import sys
 
 import sh
 import yaml
@@ -94,17 +95,12 @@ class SuiteRunner(object):
                                           branch=self.branch_name_core)
             self._clone_and_checkout_repo(repo='cloudify-manager-blueprints',
                                           branch=self.branch_name_core)
-            pip.install('./cloudify-cli',
-                        '-r', './cloudify-cli/dev-requirements.txt').wait()
-            pip.install('-e', './{0}'.format(CLOUDIFY_SYSTEM_TESTS)).wait()
-            import logging
-            import sys
-            logging.basicConfig()
-            logging.getLogger().info('prefix: {0}'.format(sys.prefix))
-            logging.getLogger().info('exec_prefix: {0}'.format(sys.exec_prefix))
-            logging.getLogger().info('real_prefix: {0}'.format(sys.real_prefix))
-            import cosmo_tester.framework.handlers
-            import suites.helpers.handlers.openstack
+
+            self._pip_install(
+                'cloudify-cli',
+                requirements=os.path.join(self.work_dir, 'cloudify-cli',
+                                          'dev-requirements.txt'))
+            self._pip_install(CLOUDIFY_SYSTEM_TESTS, editable=True)
 
             if 'external' in self.handler_configuration:
                 external = self.handler_configuration['external']
@@ -114,9 +110,8 @@ class SuiteRunner(object):
                 self._clone_and_checkout_repo(repo=repo,
                                               branch=branch,
                                               organization=organization)
-                pip.install('-e', './{0}'.format(repo)).wait()
+                self._pip_install(repo, editable=True)
 
-                import openstack_plugin_common.system_tests.handlers.openstack
                 self.handler_package = HandlerPackage(
                     self.handler,
                     external=True,
@@ -125,14 +120,15 @@ class SuiteRunner(object):
                 self.handler_package = HandlerPackage(self.handler,
                                                       external=False)
 
-            pip.install('-r', self.handler_package.requirements_path).wait()
+            self._pip_install(
+                requirements=self.handler_package.requirements_path)
 
             handler_init = self.handler_package.init
             if self.bootstrap_using_providers:
                 provider_repo = handler_init.provider_repo
                 self._clone_and_checkout_repo(repo=provider_repo,
                                               branch=self.branch_name_plugins)
-                pip.install('./{0}'.format(provider_repo)).wait()
+                self._pip_install(provider_repo)
 
             # TODO: this logic only exists for the vpshere handler
             # move handler into plugin code and install it like any
@@ -143,7 +139,7 @@ class SuiteRunner(object):
                 self._clone_and_checkout_repo(repo=plugin_repo,
                                               branch=self.branch_name_plugins,
                                               private_repo=private_repo)
-                pip.install('./{0}'.format(plugin_repo)).wait()
+                self._pip_install(plugin_repo)
                 if getattr(handler_init, 'has_manager_blueprint', False):
                     self.manager_blueprints_dir = os.path.join(
                         self.work_dir, plugin_repo)
@@ -164,6 +160,21 @@ class SuiteRunner(object):
 
             with path(repo):
                 git.checkout(branch).wait()
+
+    def _pip_install(self, repo=None, requirements=None, editable=False):
+        install_arguments = []
+        if repo:
+            if editable:
+                install_arguments.append('-e')
+            install_arguments.append('./{0}'.format(repo))
+        if requirements:
+            install_arguments += ['-r', requirements]
+        with path(self.work_dir):
+            pip.install(*install_arguments).wait()
+        if repo and editable:
+            repo_path = os.path.join(self.work_dir, repo)
+            if repo_path not in sys.path:
+                sys.path.append(repo_path)
 
     def generate_config(self):
         from helpers import update_config

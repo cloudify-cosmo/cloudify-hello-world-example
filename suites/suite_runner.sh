@@ -6,7 +6,7 @@ setenv()
 	export PYTHONUNBUFFERED="true"
 
 	export BASE_HOST_DIR="/vagrant"
-	export WORK_DIR=$PWD
+	export WORK_DIR="${PWD}/env"
 
 	export BRANCH_NAME_CORE=${BRANCH_NAME_CORE='3.2m2'}
 	export BRANCH_NAME_PLUGINS=${BRANCH_NAME_PLUGINS='1.2m2'}
