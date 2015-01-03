@@ -97,6 +97,12 @@ class SuiteRunner(object):
             pip.install('./cloudify-cli',
                         '-r', './cloudify-cli/dev-requirements.txt').wait()
             pip.install('-e', './{0}'.format(CLOUDIFY_SYSTEM_TESTS)).wait()
+            import logging
+            import sys
+            logging.basicConfig()
+            logging.getLogger().info('prefix: {0}'.format(sys.prefix))
+            logging.getLogger().info('exec_prefix: {0}'.format(sys.exec_prefix))
+            logging.getLogger().info('real_prefix: {0}'.format(sys.real_prefix))
             import cosmo_tester.framework.handlers
             import suites.helpers.handlers.openstack
 
