@@ -64,9 +64,8 @@ env_variables = {
     'CENTOS_PACKAGE_URL': '',
     'WINDOWS_PACKAGE_URL': '',
 
-    # docker packages
+    # docker images
     'DOCKER_IMAGE_URL': '',
-    'DOCKER_DATA_URL': '',
 }
 
 
