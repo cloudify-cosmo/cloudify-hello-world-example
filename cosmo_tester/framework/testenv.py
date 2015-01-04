@@ -26,7 +26,6 @@ import importlib
 import json
 from StringIO import StringIO
 
-import jinja2
 import yaml
 from fabric import api as fabric_api
 from path import path
@@ -34,7 +33,9 @@ from path import path
 from cloudify_rest_client import CloudifyClient
 
 from cosmo_tester.framework.cfy_helper import CfyHelper
-from cosmo_tester.framework.util import get_blueprint_path, get_actual_keypath
+from cosmo_tester.framework.util import (get_blueprint_path,
+                                         get_actual_keypath,
+                                         process_variables)
 
 root = logging.getLogger()
 ch = logging.StreamHandler(sys.stdout)
@@ -159,7 +160,8 @@ class TestEnvironment(object):
             self.cloudify_config,
             manager_blueprint_path=self._manager_blueprint_path)
         with self.handler.update_cloudify_config() as patch:
-            processed_inputs = self.process_variables(
+            processed_inputs = process_variables(
+                self.suites_yaml,
                 self.handler_configuration.get('inputs_override', {}))
             for key, value in processed_inputs.items():
                 patch.set_value(key, value)
@@ -173,15 +175,6 @@ class TestEnvironment(object):
         unique_config_path = os.path.join(self._workdir, file_name)
         shutil.copy(self.cloudify_config_path, unique_config_path)
         self.cloudify_config_path = path(unique_config_path)
-
-    def process_variables(self, unprocessed_dict):
-        raw_dict = yaml.safe_dump(unprocessed_dict)
-        template = jinja2.Template(raw_dict)
-        template_variables = {}
-        template_variables.update(os.environ)
-        template_variables.update(self.suites_yaml.get('variables', {}))
-        raw_processed_dict = template.render(**template_variables)
-        return yaml.load(raw_processed_dict)
 
     def setup(self):
         os.chdir(self._initial_cwd)

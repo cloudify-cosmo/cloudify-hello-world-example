@@ -19,7 +19,7 @@ from contextlib import contextmanager
 import yaml
 from path import path
 
-from cosmo_tester.framework.util import YamlPatcher
+from cosmo_tester.framework.util import YamlPatcher, process_variables
 
 
 class BaseCleanupContext(object):
@@ -81,7 +81,8 @@ class BaseHandler(object):
         self.env = env
         self.CloudifyConfigReader = BaseCloudifyProviderConfigReader if \
             env.is_provider_bootstrap else BaseCloudifyInputsConfigReader
-        processed_properties = self.env.process_variables(
+        processed_properties = process_variables(
+            env.suites_yaml,
             env.handler_configuration.get('properties', {}))
         for attr_name, attr_value in processed_properties.items():
             setattr(self, attr_name, attr_value)

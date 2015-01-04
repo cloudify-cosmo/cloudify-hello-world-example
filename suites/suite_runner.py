@@ -52,7 +52,6 @@ class SuiteRunner(object):
         self.branch_name_core = os.environ['BRANCH_NAME_CORE']
         self.branch_name_plugins = os.environ['BRANCH_NAME_PLUGINS']
         self.branch_name_system_tests = os.environ['BRANCH_NAME_SYSTEM_TESTS']
-        self.opencm_git_pwd = os.environ['OPENCM_GIT_PWD']
 
         self.test_suite_name = os.environ['TEST_SUITE_NAME']
         self.test_suite = json.loads(os.environ['TEST_SUITE'])
@@ -104,15 +103,26 @@ class SuiteRunner(object):
 
             plugin_repo = None
             if 'external' in self.handler_configuration:
+                # only after cloudify-system-tests is installed
+                from cosmo_tester.framework.util import process_variables
                 external = self.handler_configuration['external']
+                external = process_variables(self.suites_yaml, external)
                 plugin_repo = external['repo']
                 branch = external.get('branch', self.branch_name_plugins)
                 organization = external.get('organization', 'cloudify-cosmo')
                 private = external.get('private', False)
+                if private:
+                    username = external['username']
+                    password = external['password']
+                else:
+                    username = None
+                    password = None
                 self._clone_and_checkout_repo(repo=plugin_repo,
                                               branch=branch,
                                               organization=organization,
-                                              private_repo=private)
+                                              private_repo=private,
+                                              username=username,
+                                              password=password)
                 self._pip_install(plugin_repo, editable=True)
 
                 self.handler_package = HandlerPackage(
@@ -143,11 +153,13 @@ class SuiteRunner(object):
                                  repo,
                                  branch,
                                  organization='cloudify-cosmo',
-                                 private_repo=False):
+                                 private_repo=False,
+                                 username=None,
+                                 password=None):
         with path(self.work_dir):
             if private_repo:
-                git.clone('https://opencm:{0}@github.com/{1}/{2}'
-                          .format(self.opencm_git_pwd, organization, repo),
+                git.clone('https://{0}:{1}@github.com/{2}/{3}'
+                          .format(username, password, organization, repo),
                           depth=1).wait()
             else:
                 git.clone('https://github.com/{0}/{1}'

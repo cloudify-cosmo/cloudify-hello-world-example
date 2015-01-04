@@ -20,10 +20,21 @@ import os
 import re
 import json
 
+import jinja2
 from path import path
 import yaml
 
 from cosmo_tester import resources
+
+
+def process_variables(suites_yaml, unprocessed_dict):
+    raw_dict = yaml.safe_dump(unprocessed_dict)
+    template = jinja2.Template(raw_dict)
+    template_variables = {}
+    template_variables.update(os.environ)
+    template_variables.update(suites_yaml.get('variables', {}))
+    raw_processed_dict = template.render(**template_variables)
+    return yaml.load(raw_processed_dict)
 
 
 def sh_bake(command):

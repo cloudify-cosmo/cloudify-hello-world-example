@@ -18,6 +18,8 @@ templates:
     repo: cloudify-vpshere-plugin
     branch: CFY-1850-suites-breakup
     private: true
+    username: opencm
+    password: '{{OPENCM_GIT_PWD}}'
 
   #######################################################
 
