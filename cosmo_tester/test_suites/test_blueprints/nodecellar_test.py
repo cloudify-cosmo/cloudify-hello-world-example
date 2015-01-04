@@ -118,33 +118,37 @@ class NodecellarAppTest(TestCase):
         self.assertEqual(len(delta['node_state']), 1,
                          'node_state: {0}'.format(delta))
 
-        self.assertEqual(len(delta['nodes']), 8,
+        self.assertEqual(len(delta['nodes']), self.get_expected_nodes_count(),
                          'nodes: {0}'.format(delta))
 
         nodes_state = delta['node_state'].values()[0]
-        self.assertEqual(len(nodes_state), 8,
+        self.assertEqual(len(nodes_state), self.get_expected_nodes_count(),
                          'nodes_state: {0}'.format(nodes_state))
 
         self.public_ip = None
+        entrypoint_node_name = self.get_entrypoint_node_name()
+        entrypoint_runtime_property_name = self.get_entrypoint_property_name()
         for key, value in nodes_state.items():
             if '_host' in key:
-                self.assertTrue('ip' in value['runtime_properties'],
-                                'Missing ip in runtime_properties: {0}'
-                                .format(nodes_state))
-                self.assertTrue('networks' in value['runtime_properties'],
-                                'Missing networks in runtime_properties: {0}'
-                                .format(nodes_state))
+                expected = self.get_host_expected_runtime_properties()
+                for property in expected:
+                    self.assertTrue(property in value['runtime_properties'],
+                                    'Missing {0} in runtime_properties: {1}'
+                                    .format(property, value))
+
                 self.assertEqual(value['state'], 'started',
                                  'vm node should be started: {0}'
                                  .format(nodes_state))
-            elif key.startswith('nodecellar_floatingip'):
+                self.get_entrypoint_node_name()
+            if key.startswith(entrypoint_node_name):
                 self.public_ip = value['runtime_properties'][
-                    'floating_ip_address']
+                    entrypoint_runtime_property_name]
 
         self.assertIsNotNone(self.public_ip,
                              'Could not find the '
-                             '"nodecellar_floatingip" node for '
-                             'retrieving the public IP')
+                             '"{0}" node for '
+                             'retrieving the public IP'
+                             .format(entrypoint_node_name))
 
         events, total_events = self.client.events.get(execution_by_id.id)
 
@@ -165,6 +169,18 @@ class NodecellarAppTest(TestCase):
                       'but no error was raised.')
         except ConnectionError:
             pass
+
+    def get_expected_nodes_count(self):
+        return 8
+
+    def get_host_expected_runtime_properties(self):
+        return ['ip', 'networks']
+
+    def get_entrypoint_node_name(self):
+        return 'nodecellar_floatingip'
+
+    def get_entrypoint_property_name(self):
+        return 'floating_ip_address'
 
 
 class OpenStackNodeCellarTestBase(NodecellarAppTest):
