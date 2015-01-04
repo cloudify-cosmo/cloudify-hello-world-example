@@ -73,12 +73,12 @@ templates:
 
   - &hp_openstack_handler_configuration
     <<: *openstack_handler_configuration
-    inputs: inputs-hp-openstack.json
+    inputs: inputs-hp-openstack.yaml
     manager_blueprint: openstack-docker/openstack-docker.yaml
 
   - &hp_openstack_dockerless_handler_configuration
     <<: *openstack_handler_configuration
-    inputs: inputs-hp-openstack.json
+    inputs: inputs-hp-openstack.yaml
     manager_blueprint: openstack/openstack.yaml
     bootstrap_using_docker: false
 
@@ -169,7 +169,7 @@ handler_configurations:
   pclab47_devstack_nova_net:
     <<: *openstack_handler_configuration
     handler: openstack_plugin_common.openstack_nova_net
-    inputs: inputs-nova-net-devstack.json
+    inputs: inputs-nova-net-devstack.yaml
     manager_blueprint: openstack-nova-net/openstack.yaml
     bootstrap_using_docker: false
     properties:
@@ -195,7 +195,7 @@ handler_configurations:
   ################################################################################
 
   vsphere:
-    inputs: inputs-vsphere.json
+    inputs: inputs-vsphere.yaml
     handler: vsphere_plugin_commmon.vsphere
     external: *vsphere_plugin_external
     manager_blueprint: manager_blueprint/vsphere.yaml
