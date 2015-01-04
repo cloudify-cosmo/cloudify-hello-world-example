@@ -14,6 +14,11 @@ templates:
     repo: cloudify-openstack-plugin
     branch: CFY-1850-suites-breakup
 
+  - &vsphere_plugin_external
+    repo: cloudify-vpshere-plugin
+    branch: CFY-1850-suites-breakup
+    private: true
+
   #######################################################
 
   - &hp_openstack_properties
@@ -201,7 +206,8 @@ handler_configurations:
 
   vsphere:
     inputs: inputs-vsphere.json
-    handler: vsphere
+    handler: vsphere_plugin_commmon.vsphere
+    external: *vsphere_plugin_external
     manager_blueprint: manager_blueprint/vsphere.yaml
     bootstrap_using_docker: false
     properties:

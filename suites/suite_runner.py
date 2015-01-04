@@ -102,20 +102,23 @@ class SuiteRunner(object):
                                           'dev-requirements.txt'))
             self._pip_install(CLOUDIFY_SYSTEM_TESTS, editable=True)
 
+            plugin_repo = None
             if 'external' in self.handler_configuration:
                 external = self.handler_configuration['external']
-                repo = external['repo']
+                plugin_repo = external['repo']
                 branch = external.get('branch', self.branch_name_plugins)
                 organization = external.get('organization', 'cloudify-cosmo')
-                self._clone_and_checkout_repo(repo=repo,
+                private = external.get('private', False)
+                self._clone_and_checkout_repo(repo=plugin_repo,
                                               branch=branch,
-                                              organization=organization)
-                self._pip_install(repo, editable=True)
+                                              organization=organization,
+                                              private_repo=private)
+                self._pip_install(plugin_repo, editable=True)
 
                 self.handler_package = HandlerPackage(
                     self.handler,
                     external=True,
-                    directory=os.path.join(self.work_dir, repo))
+                    directory=os.path.join(self.work_dir, plugin_repo))
             else:
                 self.handler_package = HandlerPackage(self.handler,
                                                       external=False)
@@ -131,19 +134,10 @@ class SuiteRunner(object):
                                               branch=self.branch_name_plugins)
                 self._pip_install(provider_repo)
 
-            # TODO: this logic only exists for the vpshere handler
-            # move handler into plugin code and install it like any
-            # other external handler
-            if hasattr(handler, 'plugin_repo'):
-                plugin_repo = handler.plugin_repo
-                private_repo = getattr(handler, 'private', False)
-                self._clone_and_checkout_repo(repo=plugin_repo,
-                                              branch=self.branch_name_plugins,
-                                              private_repo=private_repo)
-                self._pip_install(plugin_repo)
-                if getattr(handler, 'has_manager_blueprint', False):
-                    self.manager_blueprints_dir = os.path.join(
-                        self.work_dir, plugin_repo)
+            if plugin_repo and getattr(handler, 'has_manager_blueprint',
+                                       False):
+                self.manager_blueprints_dir = os.path.join(
+                    self.work_dir, plugin_repo)
 
     def _clone_and_checkout_repo(self,
                                  repo,
