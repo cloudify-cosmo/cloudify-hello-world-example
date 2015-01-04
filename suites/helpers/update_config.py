@@ -60,12 +60,13 @@ def update_config(config_path,
                   bootstrap_using_providers,
                   bootstrap_using_docker,
                   handler,
-                  manager_blueprints_dir):
+                  manager_blueprints_dir,
+                  manager_blueprint):
 
     if bootstrap_using_providers:
-        patch_provider_properties(config_path, provider_properties)
+        patch_properties(config_path, provider_properties)
     else:
-        patch_inputs_properties(config_path, inputs_properties)
+        patch_properties(config_path, inputs_properties)
 
     if bootstrap_using_providers:
         return
@@ -79,10 +80,9 @@ def update_config(config_path,
             bootstrap_using_docker else
             packages_manager_blueprint_properties.items()))
 
-    for manager_blueprint in _get_manager_blueprints(
-            manager_blueprints_dir):
-        patch_manager_blueprint_properties(manager_blueprint,
-                                           manager_blueprints_for_patching)
+    patch_properties(os.path.join(manager_blueprints_dir,
+                                  manager_blueprint),
+                     manager_blueprints_for_patching)
 
     if hasattr(handler, 'update_config'):
         handler.update_config(manager_blueprints_dir)
@@ -98,45 +98,11 @@ def update_config(config_path,
         os.chmod(ssh_key_path, 0600)
 
 
-def patch_inputs_properties(path, properties):
-    patch_properties(path, properties, is_json=True)
-
-
-def patch_provider_properties(path, properties):
-    patch_properties(path, properties, is_json=False)
-
-
-def patch_manager_blueprint_properties(path, properties):
-    patch_properties(path, properties, is_json=False)
-
-
-def patch_properties(path, properties, is_json):
-    with YamlPatcher(path, is_json) as patch:
+def patch_properties(path, properties):
+    with YamlPatcher(path) as patch:
         for env_var, prop_path in properties.items():
             value = os.environ.get(env_var)
             if value:
                 if env_var is 'WORKFLOW_TASK_RETRIES':
                     value = int(value)
                 patch.set_value(prop_path, value)
-
-
-def _get_manager_blueprints(manager_blueprints_dir):
-    manager_blueprints_paths = []
-
-    manager_blueprints_dirs = \
-        [os.path.join(manager_blueprints_dir, dir) for dir in os.listdir(
-            manager_blueprints_dir) if os.path.isdir(os.path.join(
-                manager_blueprints_dir, dir)) and not dir.startswith('.')]
-
-    for manager_blueprint_dir in manager_blueprints_dirs:
-        yaml_files = [os.path.join(manager_blueprint_dir, file) for file in
-                      os.listdir(manager_blueprint_dir) if
-                      file.endswith('.yaml')]
-        if len(yaml_files) != 1:
-            raise RuntimeError(
-                'Expected exactly one .yaml file at {0}, but found {1}'
-                .format(manager_blueprint_dir, len(yaml_files)))
-
-        manager_blueprints_paths.append(yaml_files[0])
-
-    return manager_blueprints_paths

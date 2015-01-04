@@ -171,7 +171,7 @@ class TestEnvironment(object):
 
     def _generate_unique_config(self):
         file_name = 'config.yaml' if self.is_provider_bootstrap else \
-            'inputs.json'
+            'inputs.yaml'
         unique_config_path = os.path.join(self._workdir, file_name)
         shutil.copy(self.cloudify_config_path, unique_config_path)
         self.cloudify_config_path = path(unique_config_path)

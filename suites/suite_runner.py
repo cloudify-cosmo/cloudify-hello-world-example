@@ -69,8 +69,7 @@ class SuiteRunner(object):
         self.original_inputs_path = os.path.join(self.base_dir,
                                                  'configurations', inputs)
         self.generated_inputs_path = os.path.join(
-            self.work_dir, 'generated-config.{0}'.format(
-                'yaml' if self.bootstrap_using_providers else 'json'))
+            self.work_dir, 'generated-inputs.yaml')
         self.generated_suites_yaml_path = os.path.join(
             self.work_dir, 'generated-suites.yaml')
         self.manager_blueprints_dir = os.path.join(
@@ -111,12 +110,8 @@ class SuiteRunner(object):
                 branch = external.get('branch', self.branch_name_plugins)
                 organization = external.get('organization', 'cloudify-cosmo')
                 private = external.get('private', False)
-                if private:
-                    username = external['username']
-                    password = external['password']
-                else:
-                    username = None
-                    password = None
+                username = external.get('username')
+                password = external.get('password')
                 self._clone_and_checkout_repo(repo=plugin_repo,
                                               branch=branch,
                                               organization=organization,
@@ -193,7 +188,9 @@ class SuiteRunner(object):
             bootstrap_using_providers=self.bootstrap_using_providers,
             bootstrap_using_docker=self.bootstrap_using_docker,
             handler=self.handler_package.handler,
-            manager_blueprints_dir=self.manager_blueprints_dir)
+            manager_blueprints_dir=self.manager_blueprints_dir,
+            manager_blueprint=self.handler_configuration.get(
+                'manager_blueprint'))
 
         self.handler_configuration['manager_blueprints_dir'] = \
             self.manager_blueprints_dir
@@ -216,14 +213,18 @@ class SuiteRunner(object):
                 test = {'tests': [test]}
 
             if 'external' in test:
-                repo = test['external']['repo']
+                external = test['external']
+                repo = external['repo']
                 if not (path(self.work_dir) / repo).isdir():
                     self._clone_and_checkout_repo(
                         repo=repo,
-                        branch=test['external'].get('branch',
-                                                    self.branch_name_plugins),
-                        organization=test['external'].get('organization',
-                                                          'cloudify-cosmo'))
+                        branch=external.get('branch',
+                                            self.branch_name_plugins),
+                        organization=external.get('organization',
+                                                  'cloudify-cosmo'),
+                        private_repo=external.get('private', False),
+                        username=external.get('username'),
+                        password=external.get('password'))
                 test_group = repo
             else:
                 test_group = CLOUDIFY_SYSTEM_TESTS
