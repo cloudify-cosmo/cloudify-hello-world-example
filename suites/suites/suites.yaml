@@ -14,6 +14,9 @@ templates:
     repo: cloudify-openstack-plugin
     branch: CFY-1850-suites-breakup
 
+  - &softlayer_plugin_external
+    repo: cloudify-softlayer-plugin
+
   - &vsphere_plugin_external
     repo: cloudify-vpshere-plugin
     branch: CFY-1850-suites-breakup
@@ -208,6 +211,15 @@ handler_configurations:
       vsphere_url: '{{VSPHERE_URL}}'
       vsphere_datacenter_name: '{{VCENTER_NAME}}'
 
+  ################################################################################
+
+  softlayer:
+    inputs: inputs-softlayer.yaml
+    handler: softlayer_plugin.softlayer
+    external: *softlayer_plugin_external
+    manager_blueprint: softlayer/softlayer.yaml
+    bootstrap_using_docker: false
+
 #####################################################################################
 
 tests:
@@ -245,8 +257,7 @@ tests:
       - cosmo_tester/test_suites/vsphere_test_blueprints
 
   softlayer_blueprints:
-    external:
-      repo: cloudify-softlayer-plugin
+    external: *softlayer_plugin_external
     tests:
       - softlayer_plugin/system_tests/manager
       - softlayer_plugin/system_tests/local
@@ -324,3 +335,10 @@ test_suites:
     handler_configuration: vsphere
     tests:
       - vsphere_blueprints
+
+  ########################################################################
+
+  softlayer:
+    handler_configuration: softlayer
+    tests:
+      - softlayer_blueprints
