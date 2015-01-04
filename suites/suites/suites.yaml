@@ -166,18 +166,6 @@ handler_configurations:
 
   ############################################################################
 
-  hp_openstack_provider:
-    <<: *openstack_handler_configuration
-    inputs: cloudify-config-hp-openstack.yaml
-    bootstrap_using_providers: true
-    bootstrap_using_docker: false
-    properties: *hp_openstack_region_b_properties
-    inputs_override:
-      keystone.username: '{{HP_KEYSTONE_USERNAME}}'
-      keystone.password: '{{HP_KEYSTONE_PASSWORD}}'
-
-  #############################################################################
-
   pclab47_devstack_nova_net:
     <<: *openstack_handler_configuration
     handler: openstack_plugin_common.openstack_nova_net
@@ -247,10 +235,6 @@ tests:
   docker_centos:
     tests:
       - cosmo_tester/test_suites/test_docker_centos_env
-
-  openstack_provider_openstack_env:
-    tests:
-      - cosmo_tester/test_suites/test_openstack_env
 
   ec2_blueprints:
     tests:
@@ -328,25 +312,6 @@ test_suites:
       - cosmo_tester/test_suites/test_docker_centos_env
 
   ######################################################################
-
-  provider_hp_openstack_all:
-    handler_configuration: hp_openstack_provider
-    tests:
-      - openstack_blueprints
-      - manager_status
-      - openstack_provider_openstack_env
-
-  provider_hp_openstack_blueprints:
-    handler_configuration: hp_openstack_provider
-    tests:
-      - openstack_blueprints
-
-  provider_hp_openstack_env:
-    handler_configuration: hp_openstack_provider
-    tests:
-      - openstack_provider_openstack_env
-
-  #######################################################################
 
   aws_ec2:
     handler_configuration: aws_ec2
