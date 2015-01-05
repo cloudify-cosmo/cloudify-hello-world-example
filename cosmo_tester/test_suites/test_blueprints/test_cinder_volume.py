@@ -32,29 +32,6 @@ class CinderVolumeTestBase(TestCase):
 
 class CinderVolumeTest(CinderVolumeTestBase):
 
-    def test_volume_create_new(self):
-
-        blueprint_path = self.copy_blueprint('openstack-cinder')
-        self.blueprint_yaml = \
-            blueprint_path / 'create-new-volume-blueprint.yaml'
-
-        inputs = {
-            'image_name': self.env.ubuntu_image_name,
-            'flavor_name': self.env.flavor_name,
-            'volume_size': self.VOLUME_SIZE,
-            'device_name': self.DEVICE_NAME
-        }
-
-        before, after = self.upload_deploy_and_execute_install(
-            inputs=inputs
-        )
-
-        self._post_install_assertions(before, after)
-
-        self.execute_uninstall()
-
-        self._post_uninstall_assertions()
-
     def test_volume_use_existing(self):
 
         blueprint_path = self.copy_blueprint('openstack-cinder')
