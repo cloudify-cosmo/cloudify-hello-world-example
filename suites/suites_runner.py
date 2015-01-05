@@ -21,38 +21,6 @@ reports_dir = path(os.path.dirname(__file__)) / 'xunit-reports'
 
 TEST_SUITES_PATH = 'TEST_SUITES_PATH'
 
-env_variables = [
-    'BRANCH_NAME_SYSTEM_TESTS',
-    'BRANCH_NAME_CORE',
-    'BRANCH_NAME_PLUGINS',
-    'SYSTEM_TESTS_MANAGER_KEY',
-    'SYSTEM_TESTS_AGENT_KEY',
-    'OPENCM_GIT_PWD',
-    'CLOUDIFY_AUTOMATION_TOKEN',
-
-    'COMPONENTS_PACKAGE_URL',
-    'CORE_PACKAGE_URL',
-    'UI_PACKAGE_URL',
-    'UBUNTU_PACKAGE_URL',
-    'CENTOS_PACKAGE_URL',
-    'WINDOWS_PACKAGE_URL',
-    'DOCKER_IMAGE_URL',
-
-    'VSPHERE_USERNAME',
-    'VSPHERE_PASSWORD',
-    'VSPHERE_URL',
-    'VSPHERE_DATACENTER_NAME',
-
-    'SOFTLAYER_USERNAME',
-    'SOFTLAYER_API_KEY',
-
-    'AWS_ACCESS_ID',
-    'AWS_SECRET_KEY',
-
-    'HP_KEYSTONE_PASSWORD',
-    'HP_KEYSTONE_USERNAME',
-]
-
 
 def list_containers(quiet=False):
     return sh.docker.ps(a=True, q=quiet).strip()
@@ -99,7 +67,6 @@ def test_run():
 
 def setenv():
     setup_reports_dir()
-    os.environ['CLOUDIFY_ENVIRONMENT_VARIABLE_NAMES'] = ':'.join(env_variables)
     os.environ[TEST_SUITES_PATH] = build_suites_yaml('suites/suites.yaml')
 
 
