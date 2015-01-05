@@ -17,7 +17,6 @@
 import tempfile
 import shutil
 import json
-import time
 
 import sh
 from path import path
