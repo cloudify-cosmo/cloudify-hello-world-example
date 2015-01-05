@@ -21,37 +21,37 @@ reports_dir = path(os.path.dirname(__file__)) / 'xunit-reports'
 
 TEST_SUITES_PATH = 'TEST_SUITES_PATH'
 
-env_variables = {
-    'BRANCH_NAME_SYSTEM_TESTS': '',
-    'BRANCH_NAME_CORE': '',
-    'BRANCH_NAME_PLUGINS'
-    'SYSTEM_TESTS_MANAGER_KEY': '',
-    'SYSTEM_TESTS_AGENT_KEY': '',
-    'OPENCM_GIT_PWD': '',
-    'CLOUDIFY_AUTOMATION_TOKEN': '',
+env_variables = [
+    'BRANCH_NAME_SYSTEM_TESTS',
+    'BRANCH_NAME_CORE',
+    'BRANCH_NAME_PLUGINS',
+    'SYSTEM_TESTS_MANAGER_KEY',
+    'SYSTEM_TESTS_AGENT_KEY',
+    'OPENCM_GIT_PWD',
+    'CLOUDIFY_AUTOMATION_TOKEN',
 
-    'COMPONENTS_PACKAGE_URL': '',
-    'CORE_PACKAGE_URL': '',
-    'UI_PACKAGE_URL': '',
-    'UBUNTU_PACKAGE_URL': '',
-    'CENTOS_PACKAGE_URL': '',
-    'WINDOWS_PACKAGE_URL': '',
-    'DOCKER_IMAGE_URL': '',
+    'COMPONENTS_PACKAGE_URL',
+    'CORE_PACKAGE_URL',
+    'UI_PACKAGE_URL',
+    'UBUNTU_PACKAGE_URL',
+    'CENTOS_PACKAGE_URL',
+    'WINDOWS_PACKAGE_URL',
+    'DOCKER_IMAGE_URL',
 
-    'VSPHERE_USERNAME': '',
-    'VSPHERE_PASSWORD': '',
-    'VSPHERE_URL': '',
-    'VSPHERE_DATACENTER_NAME': '',
+    'VSPHERE_USERNAME',
+    'VSPHERE_PASSWORD',
+    'VSPHERE_URL',
+    'VSPHERE_DATACENTER_NAME',
 
-    'SOFTLAYER_USERNAME': '',
-    'SOFTLAYER_API_KEY': '',
+    'SOFTLAYER_USERNAME',
+    'SOFTLAYER_API_KEY',
 
-    'AWS_ACCESS_ID': '',
-    'AWS_SECRET_KEY': '',
+    'AWS_ACCESS_ID',
+    'AWS_SECRET_KEY',
 
-    'HP_KEYSTONE_PASSWORD': '',
-    'HP_KEYSTONE_USERNAME': '',
-}
+    'HP_KEYSTONE_PASSWORD',
+    'HP_KEYSTONE_USERNAME',
+]
 
 
 def list_containers(quiet=False):
@@ -106,22 +106,8 @@ def test_run():
 
 
 def setenv():
-    if 'Docker version 1.1.2' not in sh.docker(version=True):
-        raise RuntimeError(
-            'Tested with docker 1.1.2 only. If you know this will work with '
-            'other versions, Update this code to be more flexible')
-    if 'Vagrant 1.6.3' not in sh.vagrant(version=True):
-        raise RuntimeError(
-            'Tested with vagrant 1.6.3 only. If you know this will work with '
-            'other versions, Update this code to be more flexible')
-    for env_var, default_value in env_variables.items():
-        if default_value and not os.environ.get(env_var):
-            os.environ[env_var] = default_value
-    cloudify_environment_variable_names = ':'.join(env_variables.keys())
-    os.environ['CLOUDIFY_ENVIRONMENT_VARIABLE_NAMES'] = (
-        cloudify_environment_variable_names)
-    suite_json_path = build_suites_yaml('suites/suites.yaml')
-    os.environ[TEST_SUITES_PATH] = suite_json_path
+    os.environ['CLOUDIFY_ENVIRONMENT_VARIABLE_NAMES'] = ':'.join(env_variables)
+    os.environ[TEST_SUITES_PATH] = build_suites_yaml('suites/suites.yaml')
 
 
 def setup_reports_dir():
