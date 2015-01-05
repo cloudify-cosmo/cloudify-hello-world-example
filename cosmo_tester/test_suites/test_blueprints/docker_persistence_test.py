@@ -22,32 +22,37 @@ from cosmo_tester.test_suites.test_blueprints import nodecellar_test
 import fabric.api
 from time import sleep, time
 import urllib
+import json
 
 
-class DockerNodeCellarTest(nodecellar_test.NodecellarAppTest):
+class DockerPersistenceTest(nodecellar_test.NodecellarAppTest):
 
     def test_docker_persistence_nodecellar(self):
+        provider_context = self.get_provider_context()
         self.init_fabric()
         restarted = self.restart_container()
         if not restarted:
             raise AssertionError('Failed restarting container. Test failed.')
+        self.assertEqual(json.load(provider_context),
+                         json.load(self.get_provider_context()),
+                         msg='Provider context should be identical to what it '
+                             'was prior to reboot.')
 
-        self._test_nodecellar_impl('openstack-blueprint.yaml',
-                                   self.env.ubuntu_trusty_image_name,
-                                   self.env.flavor_name)
+        self._test_nodecellar_impl('openstack-blueprint.yaml')
 
-    def modify_blueprint(self, image_name, flavor_name):
+    def get_provider_context(self):
+        context_url = 'http://{0}/provider/context' \
+            .format(self.env.management_ip)
+        return urllib.urlopen(context_url)
+
+    def modify_blueprint(self):
         with YamlPatcher(self.blueprint_yaml) as patch:
-            vm_props_path = 'node_types.vm_host.properties'
-            # Add required docker param. See CFY-816
-            patch.merge_obj('{0}.cloudify_agent.default'
-                            .format(vm_props_path), {
-                                'home_dir': '/home/ubuntu'
-                            })
+            vm_props_path = 'node_types.nodecellar\.nodes\.MonitoredServer' \
+                            '.properties'
             vm_type_path = 'node_types.vm_host.properties'
             patch.merge_obj('{0}.server.default'.format(vm_type_path), {
-                'image_name': image_name,
-                'flavor_name': flavor_name
+                'image_name': self.env.ubuntu_trusty_image_name,
+                'flavor_name': self.env.flavor_name
             })
             # Use ubuntu trusty 14.04 as agent machine
             patch.merge_obj('{0}.server.default'.format(vm_props_path), {
@@ -110,3 +115,11 @@ class DockerNodeCellarTest(nodecellar_test.NodecellarAppTest):
             sleep(5)
 
         return False
+
+    def get_inputs(self):
+
+        return {
+            'image': self.env.ubuntu_image_id,
+            'flavor': self.env.small_flavor_id,
+            'agent_user': 'ubuntu'
+        }

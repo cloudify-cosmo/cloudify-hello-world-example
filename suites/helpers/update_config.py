@@ -29,6 +29,7 @@ openstack_provider_properties = {
     'KEYSTONE_AUTH_URL'     : 'keystone.auth_url',
 }
 
+# shared inputs between manager blueprints of various clouds
 shared_inputs_properties = {
     'RESOURCE_PREFIX'       : 'resources_prefix'
 }
@@ -40,16 +41,15 @@ openstack_inputs_properties = {
     'KEYSTONE_AUTH_URL'     : 'keystone_url'
 }
 
+vsphere_inputs_properties = {
+    'VSPHERE_USERNAME'     : 'vsphere_username',
+    'VSPHERE_PASSWORD'     : 'vsphere_password',
+    'VSPHERE_URL'          : 'vsphere_url',
+    'VCENTER_NAME'         : 'vsphere_datacenter_name'
+}
+
+# shared properties between docker-based and packager-based manager blueprints
 shared_manager_blueprint_properties = {
-    'COMPONENTS_PACKAGE_URL':
-        'node_templates.manager.properties.cloudify_packages.server'
-        '.components_package_url',
-    'CORE_PACKAGE_URL'      :
-        'node_templates.manager.properties.cloudify_packages.server'
-        '.core_package_url',
-    'UI_PACKAGE_URL'        :
-        'node_templates.manager.properties.cloudify_packages.server'
-        '.ui_package_url',
     'UBUNTU_PACKAGE_URL'    :
         'node_templates.manager.properties.cloudify_packages.agents'
         '.ubuntu_agent_url',
@@ -63,25 +63,36 @@ shared_manager_blueprint_properties = {
         'node_templates.manager.properties.cloudify.workflows.task_retries',
 }
 
+packages_manager_blueprint_properties = {
+    'COMPONENTS_PACKAGE_URL':
+        'node_templates.manager.properties.cloudify_packages.server'
+        '.components_package_url',
+    'CORE_PACKAGE_URL'      :
+        'node_templates.manager.properties.cloudify_packages.server'
+        '.core_package_url',
+    'UI_PACKAGE_URL'        :
+        'node_templates.manager.properties.cloudify_packages.server'
+        '.ui_package_url',
+}
+
 docker_manager_blueprint_properties = {
     'DOCKER_IMAGE_URL':
         'node_templates.manager.properties.cloudify_packages.docker'
         '.docker_url',
-    'DOCKER_DATA_URL':
-        'node_templates.manager.properties.cloudify_packages.docker'
-        '.docker_data_url',
 }
+
 
 def main():
     config_path = sys.argv[1]
     bootstrap_using_providers = \
         os.environ['BOOTSTRAP_USING_PROVIDERS'] == 'true'
     bootstrap_using_docker = \
-        os.environ.get('BOOTSTRAP_USING_DOCKER', 'false') == 'true'
+        os.environ.get('BOOTSTRAP_USING_DOCKER', 'true') == 'true'
 
     handler = os.environ.get('CLOUDIFY_TEST_HANDLER_MODULE')
     if handler in [
         'cosmo_tester.framework.handlers.openstack',
+        'cosmo_tester.framework.handlers.openstack_docker',
         'cosmo_tester.framework.handlers.simple_on_openstack']:
         cloud_specific_properties = openstack_provider_properties \
             if bootstrap_using_providers else openstack_inputs_properties
@@ -94,6 +105,8 @@ def main():
         cloud_specific_properties = {}
     elif handler == 'cosmo_tester.framework.handlers.ec2':
         cloud_specific_properties = ec2_provider_properties
+    elif handler == 'cosmo_tester.framework.handlers.vsphere':
+        cloud_specific_properties = vsphere_inputs_properties
     else:
         raise RuntimeError('Unsupported handler: {}'.format(handler))
 
@@ -110,23 +123,28 @@ def main():
         # themselves for some configuration parameters which are not exposed
         # as inputs
         manager_blueprints_base_dir = os.environ['MANAGER_BLUEPRINTS_DIR']
+
+        manager_blueprints_for_patching = dict(
+            shared_manager_blueprint_properties.items() +
+            (docker_manager_blueprint_properties.items() if
+                bootstrap_using_docker else
+                packages_manager_blueprint_properties.items()))
+
+        if bootstrap_using_docker:
+            use_ext_agent_packages = \
+                os.environ['USE_EXTERNAL_AGENT_PACKAGES'] == 'true'
+
         for manager_blueprint in _get_manager_blueprints(
                 manager_blueprints_base_dir):
             _patch_properties(manager_blueprint,
-                              shared_manager_blueprint_properties)
-            if bootstrap_using_docker:
-                _patch_properties(manager_blueprint,
-                                  docker_manager_blueprint_properties)
+                              manager_blueprints_for_patching)
+
+            if bootstrap_using_docker and not use_ext_agent_packages:
                 with YamlPatcher(manager_blueprint) as patch:
-                    # change bootstrap task mapping
-                    patch.set_value('node_templates.manager.interfaces'
-                                    '.cloudify.interfaces.lifecycle.start'
-                                    '.inputs.task_mapping',
-                                    'cloudify_cli.bootstrap'
-                                    '.tasks.bootstrap_docker')
-                    # remove server property from cloudify packages
-                    patch.delete_property('node_templates.manager.properties'
-                                          '.cloudify_packages.server')
+                    # used for centos tests since we don't have rpm packages.
+                    patch.delete_property(
+                        'node_templates.manager.properties.'
+                        'cloudify_packages.agents', False)
 
 
 def _patch_properties(path, properties, is_json=False):

@@ -156,10 +156,6 @@ class NodecellarAppTest(TestCase):
 
     def post_uninstall_assertions(self):
         nodes_instances = self.client.node_instances.list(self.deployment_id)
-        # using "get" calls to avoid ES eventual consistency errors.....
-        nodes_instances = [self.client.node_instances.get(instance.id)
-                           for instance in nodes_instances]
-        print nodes_instances
         self.assertFalse(any(node_ins for node_ins in nodes_instances if
                              node_ins.state != 'deleted'))
         try:

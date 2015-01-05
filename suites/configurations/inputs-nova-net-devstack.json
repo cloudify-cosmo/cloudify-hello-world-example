@@ -7,16 +7,17 @@
   "internal_cidr": "10.0.0.0/24",
   "manager_public_key_name": "systemt-tests-manager",
   "agent_public_key_name": "systemt-tests-agent",
-  "image_id": "7a19daad-8eb0-44a4-8b48-cd403abd5cc2",
+  "image_id": "eada2fe8-894a-4b26-ac8d-cedab010f185",
   "flavor_id": "3",
 
   "use_existing_manager_keypair": false,
   "use_existing_agent_keypair": false,
   "manager_server_name": "systemt-cloudify-manager",
   "manager_server_user": "ubuntu",
-  "manager_server_user_home": "/home/ubuntu",
   "manager_private_key_path": "~/.ssh/systemt-tests-manager.pem",
   "agent_private_key_path": "~/.ssh/systemt-tests-agent.pem",
   "agents_user": "ubuntu",
+  "manager_security_group_name": "systemt-cloudify-sg-manager",
+  "agents_security_group_name": "systemt-cloudify-sg-agents",
   "resources_prefix": ""
 }

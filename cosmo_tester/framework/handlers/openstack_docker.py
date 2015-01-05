@@ -1,5 +1,5 @@
 ########
-# Copyright (c) 2013 GigaSpaces Technologies Ltd. All rights reserved
+# Copyright (c) 2014 GigaSpaces Technologies Ltd. All rights reserved
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,12 +13,12 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
+from cosmo_tester.framework.handlers.openstack import OpenstackHandler
 
-from setuptools import setup
 
-setup(
-    name='windows-host-plugin',
-    version='3.2a2',
-    packages=['windows_host_plugin'],
-    zip_safe=False,
-)
+class OpenstackDockerHandler(OpenstackHandler):
+
+    manager_blueprint = 'openstack-docker/openstack-docker.yaml'
+
+
+handler = OpenstackDockerHandler

@@ -257,7 +257,7 @@ class OpenstackHandler(BaseHandler):
     centos_image_user = 'root'
     flavor_name = 'm1.small'
     ubuntu_image_id = '261844b3-479c-5446-a2c4-1ea95d53b668'
-    ubuntu_trusty_image_id = 'bec3cab5-4722-40b9-a78a-3489218e22fe'
+    ubuntu_trusty_image_id = '9d25fe2d-cf31-4b05-8c58-f238ec78e633'
 
     small_flavor_id = 101
 
