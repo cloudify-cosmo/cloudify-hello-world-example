@@ -74,21 +74,13 @@ def container_kill(container_name):
     docker.rm('-f', container_name).wait()
 
 
-def test_logs():
+def test_start():
+    vagrant.up().wait()
     vagrant('docker-logs', f=True).wait()
 
 
-def test_start():
-    setup_reports_dir()
-    vagrant.up().wait()
-
-
 def test_run():
-    logger.info('Current containers:\n{0}'
-                .format(list_containers()))
-    kill_containers()
     test_start()
-    test_logs()
     logger.info('wait for containers exit status codes')
     containers = get_containers_names()
     exit_codes = [(c, container_exit_code(c)) for c in containers]
@@ -106,8 +98,15 @@ def test_run():
 
 
 def setenv():
+    setup_reports_dir()
     os.environ['CLOUDIFY_ENVIRONMENT_VARIABLE_NAMES'] = ':'.join(env_variables)
     os.environ[TEST_SUITES_PATH] = build_suites_yaml('suites/suites.yaml')
+
+
+def cleanup():
+    logger.info('Current containers:\n{0}'
+                .format(list_containers()))
+    kill_containers()
 
 
 def setup_reports_dir():
@@ -125,6 +124,7 @@ def get_containers_names():
 
 def main():
     setenv()
+    cleanup()
     test_run()
 
 if __name__ == '__main__':
