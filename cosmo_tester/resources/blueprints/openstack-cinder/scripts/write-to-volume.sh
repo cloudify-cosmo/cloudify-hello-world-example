@@ -1,8 +1,8 @@
 #!/bin/bash -e
 
 # injected by blueprint
-fs_mount_path=${MOUNT_POINT}
+mount_point=${mount_point}
 
-ctx logger info "Attempting to write a file in ${fs_mount_path}"
-echo "touched" > ${fs_mount_path}/test.txt
-ctx logger info "Sccesfully wrote a file in ${fs_mount_path}"
+ctx logger info "Attempting to write a file in ${mount_point}"
+echo "touched" > ${mount_point}/test.txt
+ctx logger info "Sccesfully wrote a file in ${mount_point}"

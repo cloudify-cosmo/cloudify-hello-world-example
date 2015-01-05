@@ -2,7 +2,7 @@ tosca_definitions_version: cloudify_dsl_1_0
 
 imports:
   - https://raw.githubusercontent.com/cloudify-cosmo/cloudify-manager/CFY-1761-add-fs-type/resources/rest-service/cloudify/types/types.yaml
-  - https://raw.githubusercontent.com/cloudify-cosmo/cloudify-openstack-plugin/CFY-1761-add-fs-type/plugin.yaml
+  - http://www.getcloudify.org/spec/openstack-plugin/1.2m2/plugin.yaml
 
 inputs:
 
@@ -62,9 +62,7 @@ node_templates:
         start:
           implementation: scripts/write-to-volume.sh
           inputs:
-            process:
-              env:
-                MOUNT_POINT: { get_property: [volume_fs, fs_mount_path] }
+            mount_point: { get_property: [volume_fs, fs_mount_path] }
     relationships:
       - type: cloudify.relationships.depends_on
         target: volume_fs
