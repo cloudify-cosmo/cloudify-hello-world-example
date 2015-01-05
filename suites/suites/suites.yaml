@@ -219,6 +219,9 @@ handler_configurations:
     external: *softlayer_plugin_external
     manager_blueprint: softlayer/softlayer.yaml
     bootstrap_using_docker: false
+    inputs_override:
+      username: '{{SOFTLAYER_USERNAME}}'
+      api_key: '{{SOFTLAYER_API_KEY}}'
 
 #####################################################################################
 

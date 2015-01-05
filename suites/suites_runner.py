@@ -30,11 +30,15 @@ env_variables = {
     # tokens used to access private repos
     'CLOUDIFY_AUTOMATION_TOKEN': '',
 
-    # vSphere creds
+    # vsphere creds
     'VSPHERE_USERNAME': '',
     'VSPHERE_PASSWORD': '',
     'VSPHERE_URL': '',
     'VSPHERE_DATACENTER_NAME': '',
+
+    # softlayer creds
+    'SOFTLAYER_USERNAME': '',
+    'SOFTLAYER_API_KEY': '',
 
     # ec2 creds
     'AWS_ACCESS_ID': '',
