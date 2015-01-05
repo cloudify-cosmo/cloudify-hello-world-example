@@ -17,7 +17,6 @@ import time
 
 from cinderclient import exceptions as cinder_exc
 
-import cosmo_tester.framework.util as framework_util
 from cosmo_tester.framework.testenv import TestCase
 
 
