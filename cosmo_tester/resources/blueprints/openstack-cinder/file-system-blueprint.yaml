@@ -1,0 +1,70 @@
+tosca_definitions_version: cloudify_dsl_1_0
+
+imports:
+  - http://www.getcloudify.org/spec/cloudify/3.2m2/types.yaml
+  - http://www.getcloudify.org/spec/openstack-plugin/1.2m2/plugin.yaml
+
+inputs:
+
+  image_name:
+    description: >
+      Image to be used when launching agent VM's.
+
+  flavor_name:
+    description: >
+      Flavor of the agent VM's.
+
+  volume_size:
+    description: >
+      Size of the volume to be created.
+
+  fs_type:
+    description: >
+      The File system type to use.
+
+  fs_mount_path:
+    description: >
+      The mount point.
+
+node_templates:
+
+  test_vm:
+    type: cloudify.openstack.nodes.Server
+    properties:
+      server:
+        image_name: { get_input: image_name }
+        flavor_name: { get_input: flavor_name }
+
+  test_volume:
+    type: cloudify.openstack.nodes.Volume
+    properties:
+      volume:
+        size: { get_input: volume_size }
+    relationships:
+      - target: test_vm
+        type: cloudify.openstack.volume_attached_to_server
+
+  volume_fs:
+    type: cloudify.nodes.FileSystem
+    properties:
+      fs_type: { get_input: fs_type }
+      fs_mount_path: { get_input: fs_mount_path }
+    relationships:
+      - type: cloudify.relationships.file_system_depends_on_volume
+        target: test_volume
+      - type: cloudify.relationships.file_system_contained_in_compute
+        target: test_vm
+
+  volume_tester:
+    type: cloudify.nodes.Root
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        start:
+          implementation: scripts/write-to-volume.sh
+          inputs:
+            mount_point: { get_property: [volume_fs, fs_mount_path] }
+    relationships:
+      - type: cloudify.relationships.depends_on
+        target: volume_fs
+      - type: cloudify.relationships.contained_in
+        target: test_vm
