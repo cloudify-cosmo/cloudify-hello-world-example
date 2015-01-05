@@ -1,5 +1,3 @@
-# flake8: NOQA
-
 import os
 import sys
 import logging
@@ -21,55 +19,38 @@ vagrant = sh_bake(sh.vagrant)
 
 reports_dir = path(os.path.dirname(__file__)) / 'xunit-reports'
 
+TEST_SUITES_PATH = 'TEST_SUITES_PATH'
+
 env_variables = {
+    'BRANCH_NAME_SYSTEM_TESTS': '',
+    'BRANCH_NAME_CORE': '',
+    'BRANCH_NAME_PLUGINS'
     'SYSTEM_TESTS_MANAGER_KEY': '',
     'SYSTEM_TESTS_AGENT_KEY': '',
-    'TEST_SUITES_PATH': '',
-    # opencm creds for private repos
     'OPENCM_GIT_PWD': '',
-    # tokens used to access private repos
     'CLOUDIFY_AUTOMATION_TOKEN': '',
 
-    # vsphere creds
+    'COMPONENTS_PACKAGE_URL': '',
+    'CORE_PACKAGE_URL': '',
+    'UI_PACKAGE_URL': '',
+    'UBUNTU_PACKAGE_URL': '',
+    'CENTOS_PACKAGE_URL': '',
+    'WINDOWS_PACKAGE_URL': '',
+    'DOCKER_IMAGE_URL': '',
+
     'VSPHERE_USERNAME': '',
     'VSPHERE_PASSWORD': '',
     'VSPHERE_URL': '',
     'VSPHERE_DATACENTER_NAME': '',
 
-    # softlayer creds
     'SOFTLAYER_USERNAME': '',
     'SOFTLAYER_API_KEY': '',
 
-    # ec2 creds
     'AWS_ACCESS_ID': '',
     'AWS_SECRET_KEY': '',
 
-    # keystone
     'HP_KEYSTONE_PASSWORD': '',
     'HP_KEYSTONE_USERNAME': '',
-
-    # branch names
-    'BRANCH_NAME_CORE': '',
-    'BRANCH_NAME_PLUGINS': '',
-    'BRANCH_NAME_OPENSTACK_PROVIDER': '',
-    'BRANCH_NAME_LIBCLOUD_PROVIDER': '',
-    'BRANCH_NAME_SYSTEM_TESTS': '',
-    'BRANCH_NAME_CLI': '',
-    'BRANCH_NAME_MANAGER_BLUEPRINTS': '',
-    'BRANCH_NAME_VSPHERE_PLUGIN': '',
-
-    # manager packages
-    'COMPONENTS_PACKAGE_URL': '',
-    'CORE_PACKAGE_URL': '',
-    'UI_PACKAGE_URL': '',
-
-    # agent packages
-    'UBUNTU_PACKAGE_URL': '',
-    'CENTOS_PACKAGE_URL': '',
-    'WINDOWS_PACKAGE_URL': '',
-
-    # docker images
-    'DOCKER_IMAGE_URL': '',
 }
 
 
@@ -126,19 +107,21 @@ def test_run():
 
 def setenv():
     if 'Docker version 1.1.2' not in sh.docker(version=True):
-        raise RuntimeError('Tested with docker 1.1.2 only. If you know this will work with other versions, '
-                           'Update this code to be more flexible')
+        raise RuntimeError(
+            'Tested with docker 1.1.2 only. If you know this will work with '
+            'other versions, Update this code to be more flexible')
     if 'Vagrant 1.6.3' not in sh.vagrant(version=True):
-        raise RuntimeError('Tested with vagrant 1.6.3 only. If you know this will work with other versions, '
-                           'Update this code to be more flexible')
+        raise RuntimeError(
+            'Tested with vagrant 1.6.3 only. If you know this will work with '
+            'other versions, Update this code to be more flexible')
     for env_var, default_value in env_variables.items():
         if default_value and not os.environ.get(env_var):
             os.environ[env_var] = default_value
     cloudify_environment_variable_names = ':'.join(env_variables.keys())
-    os.environ['CLOUDIFY_ENVIRONMENT_VARIABLE_NAMES'] = cloudify_environment_variable_names
-    if not os.environ.get('TEST_SUITES_PATH'):
-        suite_json_path = build_suites_yaml('suites/suites.yaml')
-        os.environ['TEST_SUITES_PATH'] = suite_json_path
+    os.environ['CLOUDIFY_ENVIRONMENT_VARIABLE_NAMES'] = (
+        cloudify_environment_variable_names)
+    suite_json_path = build_suites_yaml('suites/suites.yaml')
+    os.environ[TEST_SUITES_PATH] = suite_json_path
 
 
 def setup_reports_dir():
@@ -149,7 +132,7 @@ def setup_reports_dir():
 
 
 def get_containers_names():
-    with open(os.environ['TEST_SUITES_PATH']) as f:
+    with open(os.environ[TEST_SUITES_PATH]) as f:
         suites = yaml.load(f.read())['test_suites'].keys()
     return [s for s in suites]
 
