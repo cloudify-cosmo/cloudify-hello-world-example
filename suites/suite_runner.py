@@ -96,10 +96,8 @@ class SuiteRunner(object):
 
             plugin_repo = None
             if 'external' in self.handler_configuration:
-                # only after cloudify-system-tests is installed
-                from cosmo_tester.framework.util import process_variables
                 external = self.handler_configuration['external']
-                external = process_variables(self.suites_yaml, external)
+                external = _process_variables(self.suites_yaml, external)
                 plugin_repo = external['repo']
                 branch = external.get('branch', self.branch_name_plugins)
                 organization = external.get('organization', 'cloudify-cosmo')
@@ -173,13 +171,13 @@ class SuiteRunner(object):
                 sys.path.append(repo_path)
 
     def generate_config(self):
-        from helpers import update_config
         with open(self.original_inputs_path) as rf:
             with open(self.generated_inputs_path, 'w') as wf:
                 wf.write(rf.read())
-        update_config.update_config(
-            handler=self.handler_package.handler,
-            manager_blueprints_dir=self.manager_blueprints_dir)
+
+        handler = self.handler_package.handler
+        if hasattr(handler, 'update_config'):
+            handler.update_config(self.manager_blueprints_dir)
 
         self.handler_configuration['manager_blueprints_dir'] = \
             self.manager_blueprints_dir
@@ -192,8 +190,18 @@ class SuiteRunner(object):
         with open(self.generated_suites_yaml_path, 'w') as f:
             f.write(yaml.dump(generated_suites_yaml))
 
-    def run_nose(self):
+        for _path, desc in self.suites_yaml.get('files', {}).items():
+            processed_desc = _process_variables(self.suites_yaml, desc)
+            _path = os.path.expanduser(_path)
+            _dir = os.path.dirname(_path)
+            if not os.path.isdir(_dir):
+                os.makedirs(_dir)
+            with open(_path, 'w') as f:
+                f.write(processed_desc['content'])
+            if processed_desc.get('chmod'):
+                os.chmod(_path, processed_desc.get('chmod'))
 
+    def run_nose(self):
         test_groups = {}
         for test in self.test_suite['tests']:
             if test in self.suites_yaml:
@@ -203,6 +211,7 @@ class SuiteRunner(object):
 
             if 'external' in test:
                 external = test['external']
+                external = _process_variables(self.suites_yaml, external)
                 repo = external['repo']
                 if not (path(self.work_dir) / repo).isdir():
                     self._clone_and_checkout_repo(
@@ -245,6 +254,11 @@ class SuiteRunner(object):
         if failed_groups:
             raise AssertionError('Failed test groups: {}'.format(
                 failed_groups))
+
+
+def _process_variables(suites_yaml, unprocessed_dict):
+    from cosmo_tester.framework.util import process_variables
+    return process_variables(suites_yaml, unprocessed_dict)
 
 
 def main():

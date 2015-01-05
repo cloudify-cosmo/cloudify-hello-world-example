@@ -8,6 +8,16 @@ variables:
   hp_openstack_region_b_ubuntu_trusty: 9d25fe2d-cf31-4b05-8c58-f238ec78e633
   hp_openstack_region_b_centos_7_0_docker_1_2: 25bfd0c1-8f20-4e8f-a5cf-36ca825305f2
 
+# only applies in quickbuild runs, not when running locally
+files:
+  '~/.ssh/shared-systemt-tests-manager.pem':
+    content: '{{SYSTEM_TESTS_MANAGER_KEY}}'
+    chmod: 0600
+  '~/.ssh/shared-systemt-tests-agent.pem':
+    content: '{{SYSTEM_TESTS_AGENT_KEY}}'
+    chmod: 0600
+
+
 templates:
 
   - &packages_provider_config_inputs
