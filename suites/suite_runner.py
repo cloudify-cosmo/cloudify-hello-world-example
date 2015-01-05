@@ -75,8 +75,6 @@ class SuiteRunner(object):
         self.handler_package = None
 
     def set_env_variables(self):
-        os.environ['WORKFLOW_TASK_RETRIES'] = os.environ.get(
-            'WORKFLOW_TASK_RETRIES', '20')
         os.environ['HANDLER_CONFIGURATION'] = self.test_suite[
             'handler_configuration']
         os.environ['SUITES_YAML_PATH'] = self.generated_suites_yaml_path
@@ -180,13 +178,8 @@ class SuiteRunner(object):
             with open(self.generated_inputs_path, 'w') as wf:
                 wf.write(rf.read())
         update_config.update_config(
-            config_path=self.generated_inputs_path,
-            bootstrap_using_providers=self.bootstrap_using_providers,
-            bootstrap_using_docker=self.bootstrap_using_docker,
             handler=self.handler_package.handler,
-            manager_blueprints_dir=self.manager_blueprints_dir,
-            manager_blueprint=self.handler_configuration.get(
-                'manager_blueprint'))
+            manager_blueprints_dir=self.manager_blueprints_dir)
 
         self.handler_configuration['manager_blueprints_dir'] = \
             self.manager_blueprints_dir
@@ -256,14 +249,9 @@ class SuiteRunner(object):
 
 def main():
     suite_runner = SuiteRunner()
-    # called once before generate config (which uses some variables
-    # internally)
     suite_runner.set_env_variables()
     suite_runner.clone_and_install_packages()
     suite_runner.generate_config()
-    # called once again before running node because manager blueprints dir
-    # may have changed in a previous step
-    suite_runner.set_env_variables()
     suite_runner.run_nose()
 
 if __name__ == '__main__':

@@ -10,6 +10,33 @@ variables:
 
 templates:
 
+  - &packages_provider_config_inputs
+    cloudify.server.packages.components_package_url: '{{COMPONENTS_PACKAGE_URL}}'
+    cloudify.server.packages.core_package_url: '{{CORE_PACKAGE_URL}}'
+    cloudify.server.packages.ui_package_url: '{{UI_PACKAGE_URL}}'
+    cloudify.agents.packages.ubuntu_agent_url: '{{UBUNTU_PACKAGE_URL}}'
+    cloudify.agents.packages.centos_agent_url: '{{CENTOS_PACKAGE_URL}}'
+    cloudify.agents.packages.windows_agent_url: '{{WINDOWS_PACKAGE_URL}}'
+    cloudify.workflows.task_retries: '{{WORKFLOW_TASK_RETRIES}}'
+
+  - &manager_blueprint_override
+    node_templates.manager.properties.cloudify_packages.agents.ubuntu_agent_url: '{{UBUNTU_PACKAGE_URL}}'
+    node_templates.manager.properties.cloudify_packages.agents.centos_agent_url: '{{CENTOS_PACKAGE_URL}}'
+    node_templates.manager.properties.cloudify_packages.agents.windows_agent_url: '{{WINDOWS_PACKAGE_URL}}'
+    node_templates.manager.properties.cloudify.workflows.task_retries: 20
+
+  - &docker_manager_blueprint_override
+    <<: *manager_blueprint_override
+    node_templates.manager.properties.cloudify_packages.docker.docker_url: '{{DOCKER_IMAGE_URL}}'
+
+  - &dockerless_manager_blueprint_override
+    <<: *manager_blueprint_override
+    node_templates.manager.properties.cloudify_packages.server.components_package_url: '{{COMPONENTS_PACKAGE_URL}}'
+    node_templates.manager.properties.cloudify_packages.server.core_package_url: '{{CORE_PACKAGE_URL}}'
+    node_templates.manager.properties.cloudify_packages.server.ui_package_url: '{{UI_PACKAGE_URL}}'
+
+  ######################################################
+
   - &openstack_plugin_external
     repo: cloudify-openstack-plugin
     branch: CFY-1850-suites-breakup
@@ -78,12 +105,14 @@ templates:
     <<: *openstack_handler_configuration
     inputs: inputs-hp-openstack.yaml
     manager_blueprint: openstack-docker/openstack-docker.yaml
+    manager_blueprint_override: *docker_manager_blueprint_override
 
   - &hp_openstack_dockerless_handler_configuration
     <<: *openstack_handler_configuration
     inputs: inputs-hp-openstack.yaml
     manager_blueprint: openstack/openstack.yaml
     bootstrap_using_docker: false
+    manager_blueprint_override: *dockerless_manager_blueprint_override
 
 #####################################################################################
 
@@ -175,6 +204,7 @@ handler_configurations:
     inputs: inputs-nova-net-devstack.yaml
     manager_blueprint: openstack-nova-net/openstack.yaml
     bootstrap_using_docker: false
+    manager_blueprint_override: *dockerless_manager_blueprint_override
     properties:
       ubuntu_image_name: ubuntu
       flavor_name: m1.small
@@ -192,6 +222,7 @@ handler_configurations:
       medium_instance_type: m1.medium
       ubuntu_agent_ami: ami-a73264ce
     inputs_override:
+      <<: *packages_provider_config_inputs
       connection.access_id: '{{AWS_ACCESS_ID}}'
       connection.secret_key: '{{AWS_SECRET_KEY}}'
 
@@ -205,6 +236,7 @@ handler_configurations:
     bootstrap_using_docker: false
     properties:
       template: ubuntu-configured-template
+    manager_blueprint_override: *dockerless_manager_blueprint_override
     inputs_override:
       vsphere_username: '{{VSPHERE_USERNAME}}'
       vsphere_password: '{{VSPHERE_PASSWORD}}'
@@ -219,6 +251,7 @@ handler_configurations:
     external: *softlayer_plugin_external
     manager_blueprint: softlayer/softlayer.yaml
     bootstrap_using_docker: false
+    manager_blueprint_override: *dockerless_manager_blueprint_override
     inputs_override:
       username: '{{SOFTLAYER_USERNAME}}'
       api_key: '{{SOFTLAYER_API_KEY}}'

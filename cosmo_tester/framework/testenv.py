@@ -36,7 +36,8 @@ from cosmo_tester.framework.cfy_helper import (CfyHelper,
                                                DEFAULT_EXECUTE_TIMEOUT)
 from cosmo_tester.framework.util import (get_blueprint_path,
                                          get_actual_keypath,
-                                         process_variables)
+                                         process_variables,
+                                         YamlPatcher)
 
 root = logging.getLogger()
 ch = logging.StreamHandler(sys.stdout)
@@ -132,8 +133,24 @@ class TestEnvironment(object):
                 'configured in handler configuration env variable in '
                 'order to run non-provider bootstraps')
 
-        # make a temp config file so handlers can modify it at will
-        self._generate_unique_config()
+        if not self.is_provider_bootstrap:
+            manager_blueprints_base_dir = os.path.expanduser(
+                self.handler_configuration['manager_blueprints_dir'])
+            manager_blueprint = self.handler_configuration['manager_blueprint']
+            self._manager_blueprint_path = \
+                os.path.join(manager_blueprints_base_dir, manager_blueprint)
+
+        # make a temp config files than can be modified freely
+        self._generate_unique_configurations()
+
+        if not self.is_provider_bootstrap:
+            with YamlPatcher(self._manager_blueprint_path) as patch:
+                manager_blueprint_override = process_variables(
+                    self.suites_yaml,
+                    self.handler_configuration.get(
+                        'manager_blueprint_override', {}))
+                for key, value in manager_blueprint_override.items():
+                    patch.set_value(key, value)
 
         handler = self.handler_configuration['handler']
         if 'external' in self.handler_configuration:
@@ -143,13 +160,6 @@ class TestEnvironment(object):
         handler_module = importlib.import_module(module_path)
         handler_class = getattr(handler_module, 'handler')
         self.handler = handler_class(self)
-
-        if not self.is_provider_bootstrap:
-            manager_blueprints_base_dir = os.path.expanduser(
-                self.handler_configuration['manager_blueprints_dir'])
-            manager_blueprint = self.handler_configuration['manager_blueprint']
-            self._manager_blueprint_path = \
-                os.path.join(manager_blueprints_base_dir, manager_blueprint)
 
         if 'manager_ip' in self.handler_configuration:
             self._running_env_setup(self.handler_configuration['manager_ip'])
@@ -168,12 +178,22 @@ class TestEnvironment(object):
         global test_environment
         test_environment = self
 
-    def _generate_unique_config(self):
-        file_name = 'config.yaml' if self.is_provider_bootstrap else \
-            'inputs.yaml'
-        unique_config_path = os.path.join(self._workdir, file_name)
-        shutil.copy(self.cloudify_config_path, unique_config_path)
-        self.cloudify_config_path = path(unique_config_path)
+    def _generate_unique_configurations(self):
+        inputs_path = os.path.join(self._workdir, 'inputs.yaml')
+        shutil.copy(self.cloudify_config_path, inputs_path)
+        self.cloudify_config_path = path(inputs_path)
+        if not self.is_provider_bootstrap:
+            manager_blueprint_base = os.path.basename(
+                self._manager_blueprint_path)
+            source_manager_blueprint_dir = os.path.dirname(
+                self._manager_blueprint_path)
+            target_manager_blueprint_dir = os.path.join(self._workdir,
+                                                        'manager-blueprint')
+            shutil.copytree(source_manager_blueprint_dir,
+                            target_manager_blueprint_dir)
+            self._manager_blueprint_path = path(
+                os.path.join(target_manager_blueprint_dir,
+                             manager_blueprint_base))
 
     def setup(self):
         os.chdir(self._initial_cwd)
