@@ -32,7 +32,8 @@ from fabric import api as fabric_api
 from path import path
 from cloudify_rest_client import CloudifyClient
 
-from cosmo_tester.framework.cfy_helper import CfyHelper
+from cosmo_tester.framework.cfy_helper import CfyHelper, \
+    DEFAULT_EXECUTE_TIMEOUT
 from cosmo_tester.framework.util import get_blueprint_path, get_actual_keypath
 
 root = logging.getLogger()
@@ -340,10 +341,13 @@ class TestCase(unittest.TestCase):
             fetch_state,
             deployment_id=deployment_id)
 
-    def upload_deploy_and_execute_install(self, blueprint_id=None,
-                                          deployment_id=None,
-                                          fetch_state=True,
-                                          inputs=None):
+    def upload_deploy_and_execute_install(
+            self,
+            blueprint_id=None,
+            deployment_id=None,
+            fetch_state=True,
+            execute_timeout=DEFAULT_EXECUTE_TIMEOUT,
+            inputs=None):
 
         return self._make_operation_with_before_after_states(
             self.cfy.upload_deploy_and_execute_install,
@@ -351,6 +355,7 @@ class TestCase(unittest.TestCase):
             str(self.blueprint_yaml),
             blueprint_id=blueprint_id or self.test_id,
             deployment_id=deployment_id or self.test_id,
+            execute_timeout=execute_timeout,
             inputs=inputs)
 
     def _make_operation_with_before_after_states(self, operation, fetch_state,
