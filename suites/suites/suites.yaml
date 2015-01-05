@@ -71,7 +71,7 @@ templates:
   #######################################################
 
   - &openstack_handler_configuration
-    handler: openstack_plugin_common.openstack
+    handler: openstack_handler
     external: *openstack_plugin_external
 
   - &hp_openstack_handler_configuration
@@ -171,7 +171,7 @@ handler_configurations:
 
   pclab47_devstack_nova_net:
     <<: *openstack_handler_configuration
-    handler: openstack_plugin_common.openstack_nova_net
+    handler: openstack_nova_net_handler
     inputs: inputs-nova-net-devstack.yaml
     manager_blueprint: openstack-nova-net/openstack.yaml
     bootstrap_using_docker: false
@@ -199,7 +199,7 @@ handler_configurations:
 
   vsphere:
     inputs: inputs-vsphere.yaml
-    handler: vsphere_plugin_commmon.vsphere
+    handler: vpshere_handler
     external: *vsphere_plugin_external
     manager_blueprint: manager_blueprint/vsphere.yaml
     bootstrap_using_docker: false
@@ -215,7 +215,7 @@ handler_configurations:
 
   softlayer:
     inputs: inputs-softlayer.yaml
-    handler: softlayer_plugin.softlayer
+    handler: softlayer_handler
     external: *softlayer_plugin_external
     manager_blueprint: softlayer/softlayer.yaml
     bootstrap_using_docker: false

@@ -136,9 +136,7 @@ class TestEnvironment(object):
 
         handler = self.handler_configuration['handler']
         if 'external' in self.handler_configuration:
-            main_package, handler_name = handler.split('.')
-            module_path = '{0}.system_tests.handlers.{1}.handler'\
-                          .format(main_package, handler_name)
+            module_path = 'system_tests.{0}'.format(handler)
         else:
             module_path = 'suites.helpers.handlers.{0}.handler'.format(handler)
         handler_module = importlib.import_module(module_path)

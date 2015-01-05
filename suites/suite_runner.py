@@ -30,13 +30,9 @@ class HandlerPackage(object):
             self._handler_module = 'helpers.handlers.{0}.handler'.format(
                 handler)
         else:
-            main_package, handler_name = handler.split('.')
             requirements_path = os.path.join(
-                directory, main_package, 'system_tests', 'handlers',
-                handler_name, 'requirements.txt')
-            self._handler_module = ('{0}.system_tests.handlers.{1}.'
-                                    'update_config'.format(main_package,
-                                                           handler_name))
+                directory, 'system_tests', 'requirements.txt')
+            self._handler_module = ('system_tests.{0}'.format(handler))
         self.requirements_path = path(requirements_path)
 
     @property
