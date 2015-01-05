@@ -289,14 +289,15 @@ tests:
       - cosmo_tester/test_suites/ec2_test_blueprints
 
   vsphere_blueprints:
+    external: *vsphere_plugin_external
     tests:
-      - cosmo_tester/test_suites/vsphere_test_blueprints
+      - system_tests/test_vsphere_blueprints
 
   softlayer_blueprints:
     external: *softlayer_plugin_external
     tests:
-      - softlayer_plugin/system_tests/manager
-      - softlayer_plugin/system_tests/local
+      - system_tests/manager
+      - system_tests/local
 
 #####################################################################################
 

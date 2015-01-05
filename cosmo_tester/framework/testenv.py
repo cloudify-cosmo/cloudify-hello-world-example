@@ -404,9 +404,9 @@ class TestCase(unittest.TestCase):
     def execute_uninstall(self, deployment_id=None):
         self.cfy.execute_uninstall(deployment_id=deployment_id or self.test_id)
 
-    def copy_blueprint(self, blueprint_dir_name):
+    def copy_blueprint(self, blueprint_dir_name, blueprints_dir=None):
         blueprint_path = path(self.workdir) / blueprint_dir_name
-        shutil.copytree(get_blueprint_path(blueprint_dir_name),
+        shutil.copytree(get_blueprint_path(blueprint_dir_name, blueprints_dir),
                         str(blueprint_path))
         return blueprint_path
 

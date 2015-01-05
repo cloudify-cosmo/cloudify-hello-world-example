@@ -42,9 +42,11 @@ def sh_bake(command):
                         _err=lambda line: sys.stderr.write(line))
 
 
-def get_blueprint_path(blueprint_name):
+def get_blueprint_path(blueprint_name, blueprints_dir=None):
     resources_dir = os.path.dirname(resources.__file__)
-    return os.path.join(resources_dir, 'blueprints', blueprint_name)
+    blueprints_dir = blueprints_dir or os.path.join(resources_dir,
+                                                    'blueprints')
+    return os.path.join(blueprints_dir, blueprint_name)
 
 
 def get_cloudify_config(name):
