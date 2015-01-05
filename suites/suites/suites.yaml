@@ -389,8 +389,8 @@ files:
     content: '{{SYSTEM_TESTS_AGENT_KEY}}'
     chmod: 0600
 
-# these enviroment variables will be passsed on to the client container
-# if they are empty, their values will be the one injected by quickbuild
+# these enviroment variables will be passsed on to the client container.
+# if they are empty, their value will be the one injected by quickbuild
 # only applies in quickbuild runs, not when running locally
 env:
   BRANCH_NAME_SYSTEM_TESTS: ''
