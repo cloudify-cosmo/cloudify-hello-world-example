@@ -20,7 +20,6 @@ def build_suites_json(all_suites_json_path):
     env_custom_cloudify_config = os.environ['SYSTEM_TESTS_CUSTOM_CLOUDIFY_CONFIG']
     env_custom_bootstrap_using_providers = os.environ['SYSTEM_TESTS_CUSTOM_BOOTSTRAP_USING_PROVIDERS']
     env_custom_bootstrap_using_docker = os.environ['SYSTEM_TESTS_CUSTOM_BOOTSTRAP_USING_DOCKER']
-    env_custom_use_external_agent_packages = os.environ['SYSTEM_TESTS_CUSTOM_USE_EXTERNAL_AGENT_PACKAGES']
     env_custom_handler_module = os.environ['SYSTEM_TESTS_CUSTOM_HANDLER_MODULE']
 
     logger.info('Creating suites json configuration:\n'
@@ -40,7 +39,6 @@ def build_suites_json(all_suites_json_path):
                         env_custom_cloudify_config,
                         env_custom_bootstrap_using_providers,
                         env_custom_bootstrap_using_docker,
-                        env_custom_use_external_agent_packages,
                         env_custom_handler_module))
 
     tests_suites = [s.strip() for s in env_system_tests_suites.split(',')]
@@ -52,8 +50,6 @@ def build_suites_json(all_suites_json_path):
         env_custom_bootstrap_using_providers == 'yes'
     custom_bootstrap_using_docker = \
         env_custom_bootstrap_using_docker == 'yes'
-    custom_use_external_agent_packages = \
-        env_custom_use_external_agent_packages == 'yes'
     custom_handler_module = env_custom_handler_module
 
     suites_json_path = tempfile.mktemp(prefix='suites-', suffix='.json')
@@ -65,7 +61,6 @@ def build_suites_json(all_suites_json_path):
             'cloudify_test_config': custom_cloudify_config,
             'bootstrap_using_providers': custom_bootstrap_using_providers,
             'bootstrap_using_docker': custom_bootstrap_using_docker,
-            'use_external_agent_packages': custom_use_external_agent_packages,
             'cloudify_test_handler_module': custom_handler_module
         }]
     else:
