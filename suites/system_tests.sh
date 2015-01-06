@@ -70,7 +70,6 @@ setenv()
 	fi
 	
 	export BOOTSTRAP_USING_DOCKER=${BOOTSTRAP_USING_DOCKER=true}
-    export USE_EXTERNAL_AGENT_PACKAGES=${USE_EXTERNAL_AGENT_PACKAGES=true}
 }
 
 clone_and_install_system_tests()
