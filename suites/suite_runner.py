@@ -2,6 +2,7 @@ import importlib
 import os
 import json
 import sys
+import logging
 
 import sh
 import yaml
@@ -11,6 +12,13 @@ from helpers import sh_bake
 # don't put imports that may include system tests code here
 # put them inside functions that use them only after cloudify-system-tests
 # have been installed
+
+
+logging.basicConfig()
+
+logger = logging.getLogger('suite_runner')
+logger.setLevel(logging.INFO)
+
 
 git = sh_bake(sh.git)
 pip = sh_bake(sh.pip)
