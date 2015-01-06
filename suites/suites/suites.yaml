@@ -17,7 +17,7 @@ templates:
     cloudify.agents.packages.ubuntu_agent_url: '{{UBUNTU_PACKAGE_URL}}'
     cloudify.agents.packages.centos_agent_url: '{{CENTOS_PACKAGE_URL}}'
     cloudify.agents.packages.windows_agent_url: '{{WINDOWS_PACKAGE_URL}}'
-    cloudify.workflows.task_retries: '{{WORKFLOW_TASK_RETRIES}}'
+    cloudify.workflows.task_retries: 20
 
   - &manager_blueprint_override
     node_templates.manager.properties.cloudify_packages.agents.ubuntu_agent_url: '{{UBUNTU_PACKAGE_URL}}'
