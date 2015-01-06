@@ -131,10 +131,11 @@ class NodecellarAppTest(TestCase):
         for key, value in nodes_state.items():
             if '_host' in key:
                 expected = self.host_expected_runtime_properties
-                for property in expected:
-                    self.assertTrue(property in value['runtime_properties'],
-                                    'Missing {0} in runtime_properties: {1}'
-                                    .format(property, value))
+                for expected_property in expected:
+                    self.assertTrue(
+                        expected_property in value['runtime_properties'],
+                        'Missing {0} in runtime_properties: {1}'
+                        .format(expected_property, value))
 
                 self.assertEqual(value['state'], 'started',
                                  'vm node should be started: {0}'
