@@ -118,19 +118,19 @@ class NodecellarAppTest(TestCase):
         self.assertEqual(len(delta['node_state']), 1,
                          'node_state: {0}'.format(delta))
 
-        self.assertEqual(len(delta['nodes']), self.expected_nodes_count(),
+        self.assertEqual(len(delta['nodes']), self.expected_nodes_count,
                          'nodes: {0}'.format(delta))
 
         nodes_state = delta['node_state'].values()[0]
-        self.assertEqual(len(nodes_state), self.expected_nodes_count(),
+        self.assertEqual(len(nodes_state), self.expected_nodes_count,
                          'nodes_state: {0}'.format(nodes_state))
 
         self.public_ip = None
-        entrypoint_node_name = self.entrypoint_node_name()
-        entrypoint_runtime_property_name = self.entrypoint_property_name()
+        entrypoint_node_name = self.entrypoint_node_name
+        entrypoint_runtime_property_name = self.entrypoint_property_name
         for key, value in nodes_state.items():
             if '_host' in key:
-                expected = self.host_expected_runtime_properties()
+                expected = self.host_expected_runtime_properties
                 for property in expected:
                     self.assertTrue(property in value['runtime_properties'],
                                     'Missing {0} in runtime_properties: {1}'
@@ -169,33 +169,21 @@ class NodecellarAppTest(TestCase):
         except ConnectionError:
             pass
 
-    def get_expected_nodes_count(self):
-        return 8
-
-    def get_host_expected_runtime_properties(self):
-        return ['ip', 'networks']
-
-    def get_entrypoint_node_name(self):
-        return 'nodecellar_floatingip'
-
-    def get_entrypoint_property_name(self):
-        return 'floating_ip_address'
-
     @property
     def expected_nodes_count(self):
-        return self.get_expected_nodes_count()
+        return 8
 
     @property
     def host_expected_runtime_properties(self):
-        return self.get_host_expected_runtime_properties()
+        return ['ip', 'networks']
 
     @property
     def entrypoint_node_name(self):
-        return self.get_entrypoint_node_name()
+        return 'nodecellar_floatingip'
 
     @property
     def entrypoint_property_name(self):
-        return self.get_entrypoint_property_name()
+        return 'floating_ip_address'
 
 
 class OpenStackNodeCellarTestBase(NodecellarAppTest):
