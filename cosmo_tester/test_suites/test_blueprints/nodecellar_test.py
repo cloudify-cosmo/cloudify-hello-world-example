@@ -28,7 +28,7 @@ NODECELLAR_URL = "https://github.com/cloudify-cosmo/" \
 class NodecellarAppTest(TestCase):
 
     def _test_nodecellar_impl(self, blueprint_file):
-        self.repo_dir = clone(NODECELLAR_URL, self.workdir)
+        self.repo_dir = clone(NODECELLAR_URL, self.workdir, 'CFY-1801-nodecellar-for-softlayer')
         self.blueprint_yaml = self.repo_dir / blueprint_file
 
         self.modify_blueprint()
@@ -118,19 +118,19 @@ class NodecellarAppTest(TestCase):
         self.assertEqual(len(delta['node_state']), 1,
                          'node_state: {0}'.format(delta))
 
-        self.assertEqual(len(delta['nodes']), self.get_expected_nodes_count(),
+        self.assertEqual(len(delta['nodes']), self.expected_nodes_count(),
                          'nodes: {0}'.format(delta))
 
         nodes_state = delta['node_state'].values()[0]
-        self.assertEqual(len(nodes_state), self.get_expected_nodes_count(),
+        self.assertEqual(len(nodes_state), self.expected_nodes_count(),
                          'nodes_state: {0}'.format(nodes_state))
 
         self.public_ip = None
-        entrypoint_node_name = self.get_entrypoint_node_name()
-        entrypoint_runtime_property_name = self.get_entrypoint_property_name()
+        entrypoint_node_name = self.entrypoint_node_name()
+        entrypoint_runtime_property_name = self.entrypoint_property_name()
         for key, value in nodes_state.items():
             if '_host' in key:
-                expected = self.get_host_expected_runtime_properties()
+                expected = self.host_expected_runtime_properties()
                 for property in expected:
                     self.assertTrue(property in value['runtime_properties'],
                                     'Missing {0} in runtime_properties: {1}'
@@ -139,7 +139,6 @@ class NodecellarAppTest(TestCase):
                 self.assertEqual(value['state'], 'started',
                                  'vm node should be started: {0}'
                                  .format(nodes_state))
-                self.get_entrypoint_node_name()
             if key.startswith(entrypoint_node_name):
                 self.public_ip = value['runtime_properties'][
                     entrypoint_runtime_property_name]
@@ -181,6 +180,22 @@ class NodecellarAppTest(TestCase):
 
     def get_entrypoint_property_name(self):
         return 'floating_ip_address'
+
+    @property
+    def expected_nodes_count(self):
+        return self.get_expected_nodes_count()
+
+    @property
+    def host_expected_runtime_properties(self):
+        return self.get_host_expected_runtime_properties()
+
+    @property
+    def entrypoint_node_name(self):
+        return self.get_entrypoint_node_name()
+
+    @property
+    def entrypoint_property_name(self):
+        return self.get_entrypoint_property_name()
 
 
 class OpenStackNodeCellarTestBase(NodecellarAppTest):
