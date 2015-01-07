@@ -35,7 +35,6 @@ def main():
             configuration_id, qb_url, auth))
     variables.update(_read_build_variables(build_id, qb_url, auth))
 
-    print variables
     yaml_dump = yaml.safe_dump(variables)
     with open(variables_path, 'w') as f:
         f.write(yaml_dump)
