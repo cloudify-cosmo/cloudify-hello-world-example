@@ -28,18 +28,11 @@ def load_suites_yaml
 end
 
 def build_env(suite_name, suite, suites_yaml)
-    cloudify_env = {}
-    env.each do |name, value|
-        if value and value.to_s.length > 0
-            cloudify_env[name] = value.to_s
-        elsif ENV[name]
-            cloudify_env[name] = ENV[name]
-        end
-    end
-    cloudify_env['TEST_SUITE_NAME'] = suite_name
-    cloudify_env['TEST_SUITE'] = suite.to_json
-    cloudify_env['TEST_SUITE_VARIABLES'] = suites_yaml['variables'] || {}
-    cloudify_env
+    {
+        'TEST_SUITE_NAME' => suite_name,
+        'TEST_SUITE' => suite.to_json,
+        'TEST_SUITES_VARIABLES' => (suites_yaml['variables'] || {}).to_json
+    }
 end
 
 vagrant_configure()

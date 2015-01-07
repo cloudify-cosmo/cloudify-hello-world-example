@@ -89,6 +89,8 @@ class SuiteRunner(object):
         os.environ['HANDLER_CONFIGURATION'] = self.test_suite[
             'handler_configuration']
         os.environ['SUITES_YAML_PATH'] = self.generated_suites_yaml_path
+        os.environ['BRANCH_NAME_PLUGINS'] = self.branch_name_plugins
+        os.environ['BRANCH_NAME_CORE'] = self.branch_name_core
 
     def clone_and_install_packages(self):
         with path(self.work_dir):
@@ -188,7 +190,9 @@ class SuiteRunner(object):
 
         handler = self.handler_package.handler
         if hasattr(handler, 'update_config'):
-            handler.update_config(self.manager_blueprints_dir)
+            handler.update_config(
+                manager_blueprints_dir=self.manager_blueprints_dir,
+                variables=self.suites_yaml.get('variables', {}))
 
         self.handler_configuration['manager_blueprints_dir'] = \
             self.manager_blueprints_dir
