@@ -19,7 +19,9 @@ create_virtualenv_if_needed_and_source()
 
 suites_runner()
 {
-    python suites_runner.py $(python helpers/inputs_builder.py)
+    variables_yaml_path=$(mktemp)
+    python helpers/variables_builder.py ${variables_yaml_path}
+    python suites_runner.py ${variables_yaml_path}
 }
 
 main()

@@ -192,7 +192,7 @@ class SuiteRunner(object):
         if hasattr(handler, 'update_config'):
             handler.update_config(
                 manager_blueprints_dir=self.manager_blueprints_dir,
-                variables=self.suites_yaml.get('variables', {}))
+                variables=self.variables)
 
         self.handler_configuration['manager_blueprints_dir'] = \
             self.manager_blueprints_dir
