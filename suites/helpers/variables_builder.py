@@ -25,7 +25,7 @@ def main():
                              .format(qb_url, configuration_id)
     xml_build = requests.get(build_endpoint, auth=(username, password)).text
     xml_configuration = requests.get(configuration_endpoint,
-                                     auto=(username, password)).text
+                                     auth=(username, password)).text
     build = xmltodict.parse(xml_build)
     configuration = xmltodict.parse(xml_configuration)
 
