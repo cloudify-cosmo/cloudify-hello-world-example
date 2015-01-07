@@ -22,6 +22,7 @@ def main():
     endpoint = '{0}/rest/builds/{1}'.format(qb_url, build_id)
     xml_build = requests.get(endpoint, auth=(username, password)).text
     build = xmltodict.parse(xml_build)
+    logger.info('{0}'.format(build))
     variables = build['com.pmease.quickbuild.model.Build']['variableValues'][
         'entry']
     variables = {e['string'][0]: e['string'][1]
