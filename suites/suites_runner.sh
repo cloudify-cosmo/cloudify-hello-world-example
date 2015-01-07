@@ -2,7 +2,6 @@
 
 setenv()
 {
-    # So that we get to see output faster from docker-logs
     export PYTHONUNBUFFERED="true"
 }
 
@@ -20,7 +19,7 @@ create_virtualenv_if_needed_and_source()
 
 suites_runner()
 {
-    python suites_runner.py
+    python suites_runner.py $(python helpers/inputs_builder.py)
 }
 
 main()

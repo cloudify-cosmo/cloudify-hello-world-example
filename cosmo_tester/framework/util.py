@@ -28,9 +28,7 @@ from cosmo_tester import resources
 
 
 def process_variables(suites_yaml, unprocessed_dict):
-    template_variables = {}
-    template_variables.update(os.environ)
-    template_variables.update(suites_yaml.get('variables', {}))
+    template_variables = suites_yaml.get('variables', {})
     result = {}
     for key, unprocessed_value in unprocessed_dict.items():
         if not isinstance(unprocessed_value, basestring):

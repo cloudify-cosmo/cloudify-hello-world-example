@@ -1,4 +1,5 @@
 variables:
+
   hp_openstack_ubuntu_precise_image_name: Ubuntu Server 12.04.5 LTS (amd64 20140927) - Partner Image
   hp_openstack_ubuntu_trusty_image_name: Ubuntu Server 14.04.1 LTS (amd64 20140927) - Partner Image
   hp_openstack_centos_image_name: CentOS 6.3 Server 64-bit 20130116
@@ -8,32 +9,68 @@ variables:
   hp_openstack_region_b_ubuntu_trusty: 9d25fe2d-cf31-4b05-8c58-f238ec78e633
   hp_openstack_region_b_centos_7_0_docker_1_2: 25bfd0c1-8f20-4e8f-a5cf-36ca825305f2
 
+  ######################################################
+
+  core_branch: '3.2m2'
+  plugins_branch: '1.2m2'
+  system_tests_branch: _
+
+  system_tests_manager_key: _
+  system_tests_agent_key: _
+
+  opencm_git_pwd: _
+  cloudify_automation_token: _
+
+  components_package_url: _
+  core_package_url: _
+  ubuntu_package_agent_url: _
+  ui_package_url: _
+  windows_package_agent_url: _
+  centos_package_agent_url: _
+  docker_image_url: _
+
+  system_tests_hp_username: _
+  system_tests_hp_password: _
+
+  system_test_ec2_access_id: _
+  system_test_ec2_secret_key: _
+
+  system_test_vsphere_username: _
+  system_test_vsphere_password: _
+  system_test_vsphere_url: _
+  system_test_vsphere_vcenter_name: _
+
+  system_tests_softlayer_username: _
+  system_tests_softlayer_api_key: _
+
+#####################################################################################
+
 templates:
 
   - &packages_provider_config_inputs
-    cloudify.server.packages.components_package_url: '{{COMPONENTS_PACKAGE_URL}}'
-    cloudify.server.packages.core_package_url: '{{CORE_PACKAGE_URL}}'
-    cloudify.server.packages.ui_package_url: '{{UI_PACKAGE_URL}}'
-    cloudify.agents.packages.ubuntu_agent_url: '{{UBUNTU_PACKAGE_URL}}'
-    cloudify.agents.packages.centos_agent_url: '{{CENTOS_PACKAGE_URL}}'
-    cloudify.agents.packages.windows_agent_url: '{{WINDOWS_PACKAGE_URL}}'
+    cloudify.server.packages.components_package_url: '{{components_package_url}}'
+    cloudify.server.packages.core_package_url: '{{core_package_url}}'
+    cloudify.server.packages.ui_package_url: '{{ui_package_url}}'
+    cloudify.agents.packages.ubuntu_agent_url: '{{ubuntu_package_agent_url}}'
+    cloudify.agents.packages.centos_agent_url: '{{centos_package_agent_url}}'
+    cloudify.agents.packages.windows_agent_url: '{{windows_package_agent_url}}'
     cloudify.workflows.task_retries: 20
 
   - &manager_blueprint_override
-    node_templates.manager.properties.cloudify_packages.agents.ubuntu_agent_url: '{{UBUNTU_PACKAGE_URL}}'
-    node_templates.manager.properties.cloudify_packages.agents.centos_agent_url: '{{CENTOS_PACKAGE_URL}}'
-    node_templates.manager.properties.cloudify_packages.agents.windows_agent_url: '{{WINDOWS_PACKAGE_URL}}'
+    node_templates.manager.properties.cloudify_packages.agents.ubuntu_agent_url: '{{ubuntu_package_agent_url}}'
+    node_templates.manager.properties.cloudify_packages.agents.centos_agent_url: '{{centos_package_agent_url}}'
+    node_templates.manager.properties.cloudify_packages.agents.windows_agent_url: '{{windows_package_agent_url}}'
     node_templates.manager.properties.cloudify.workflows.task_retries: 20
 
   - &docker_manager_blueprint_override
     <<: *manager_blueprint_override
-    node_templates.manager.properties.cloudify_packages.docker.docker_url: '{{DOCKER_IMAGE_URL}}'
+    node_templates.manager.properties.cloudify_packages.docker.docker_url: '{{docker_image_url}}'
 
   - &dockerless_manager_blueprint_override
     <<: *manager_blueprint_override
-    node_templates.manager.properties.cloudify_packages.server.components_package_url: '{{COMPONENTS_PACKAGE_URL}}'
-    node_templates.manager.properties.cloudify_packages.server.core_package_url: '{{CORE_PACKAGE_URL}}'
-    node_templates.manager.properties.cloudify_packages.server.ui_package_url: '{{UI_PACKAGE_URL}}'
+    node_templates.manager.properties.cloudify_packages.server.components_package_url: '{{components_package_url}}'
+    node_templates.manager.properties.cloudify_packages.server.core_package_url: '{{core_package_url}}'
+    node_templates.manager.properties.cloudify_packages.server.ui_package_url: '{{ui_package_url}}'
 
   ######################################################
 
@@ -49,7 +86,7 @@ templates:
     branch: CFY-1850-suites-breakup
     private: true
     username: opencm
-    password: '{{OPENCM_GIT_PWD}}'
+    password: '{{opencm_git_pwd}}'
 
   #######################################################
 
@@ -74,8 +111,8 @@ templates:
   #######################################################
 
   - &hp_openstack_credentials_inputs
-    keystone_username: '{{HP_KEYSTONE_USERNAME}}'
-    keystone_password: '{{HP_KEYSTONE_PASSWORD}}'
+    keystone_username: '{{system_tests_hp_username}}'
+    keystone_password: '{{system_tests_hp_password}}'
 
   #######################################################
 
@@ -223,8 +260,8 @@ handler_configurations:
       ubuntu_agent_ami: ami-a73264ce
     inputs_override:
       <<: *packages_provider_config_inputs
-      connection.access_id: '{{AWS_ACCESS_ID}}'
-      connection.secret_key: '{{AWS_SECRET_KEY}}'
+      connection.access_id: '{{system_test_ec2_access_id}}'
+      connection.secret_key: '{{system_test_ec2_secret_key}}'
 
   ################################################################################
 
@@ -238,10 +275,10 @@ handler_configurations:
       template: ubuntu-configured-template
     manager_blueprint_override: *dockerless_manager_blueprint_override
     inputs_override:
-      vsphere_username: '{{VSPHERE_USERNAME}}'
-      vsphere_password: '{{VSPHERE_PASSWORD}}'
-      vsphere_url: '{{VSPHERE_URL}}'
-      vsphere_datacenter_name: '{{VCENTER_NAME}}'
+      vsphere_username: '{{system_test_vsphere_username}}'
+      vsphere_password: '{{system_test_vsphere_password}}'
+      vsphere_url: '{{system_test_vsphere_url}}'
+      vsphere_datacenter_name: '{{system_test_vsphere_vcenter_name}}'
 
   ################################################################################
 
@@ -253,8 +290,8 @@ handler_configurations:
     bootstrap_using_docker: false
     manager_blueprint_override: *dockerless_manager_blueprint_override
     inputs_override:
-      username: '{{SOFTLAYER_USERNAME}}'
-      api_key: '{{SOFTLAYER_API_KEY}}'
+      username: '{{system_tests_softlayer_username}}'
+      api_key: '{{system_tests_softlayer_api_key}}'
 
 #####################################################################################
 
@@ -384,42 +421,8 @@ test_suites:
 # only applies in quickbuild runs, not when running locally
 files:
   '~/.ssh/shared-systemt-tests-manager.pem':
-    content: '{{SYSTEM_TESTS_MANAGER_KEY}}'
+    content: '{{system_tests_manager_key}}'
     chmod: 0600
   '~/.ssh/shared-systemt-tests-agent.pem':
-    content: '{{SYSTEM_TESTS_AGENT_KEY}}'
+    content: '{{system_tests_agent_key}}'
     chmod: 0600
-
-# these enviroment variables will be passsed on to the client container.
-# if they are empty, their value will be the one injected by quickbuild
-# only applies in quickbuild runs, not when running locally
-env:
-  BRANCH_NAME_SYSTEM_TESTS: ''
-  BRANCH_NAME_CORE: ''
-  BRANCH_NAME_PLUGINS: ''
-  SYSTEM_TESTS_MANAGER_KEY: ''
-  SYSTEM_TESTS_AGENT_KEY: ''
-  OPENCM_GIT_PWD: ''
-  CLOUDIFY_AUTOMATION_TOKEN: ''
-
-  COMPONENTS_PACKAGE_URL: ''
-  CORE_PACKAGE_URL: ''
-  UI_PACKAGE_URL: ''
-  UBUNTU_PACKAGE_URL: ''
-  CENTOS_PACKAGE_URL: ''
-  WINDOWS_PACKAGE_URL: ''
-  DOCKER_IMAGE_URL: ''
-
-  VSPHERE_USERNAME: ''
-  VSPHERE_PASSWORD: ''
-  VSPHERE_URL: ''
-  VSPHERE_DATACENTER_NAME: ''
-
-  SOFTLAYER_USERNAME: ''
-  SOFTLAYER_API_KEY: ''
-
-  AWS_ACCESS_ID: ''
-  AWS_SECRET_KEY: ''
-
-  HP_KEYSTONE_PASSWORD: ''
-  HP_KEYSTONE_USERNAME: ''

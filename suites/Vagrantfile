@@ -15,7 +15,7 @@ def vagrant_configure
       config.vm.define suite_name do |container|
         container.vm.provider 'docker' do |d|
           d.name = suite_name
-          d.env = build_env(suite_name, suite, suites_yaml['env'] || {})
+          d.env = build_env(suite_name, suite, suites_yaml)
         end
       end
     end
@@ -27,7 +27,7 @@ def load_suites_yaml
   YAML.load_file(suites_path)
 end
 
-def build_env(suite_name, suite, env)
+def build_env(suite_name, suite, suites_yaml)
     cloudify_env = {}
     env.each do |name, value|
         if value and value.to_s.length > 0
@@ -38,6 +38,7 @@ def build_env(suite_name, suite, env)
     end
     cloudify_env['TEST_SUITE_NAME'] = suite_name
     cloudify_env['TEST_SUITE'] = suite.to_json
+    cloudify_env['TEST_SUITE_VARIABLES'] = suites_yaml['variables'] || {}
     cloudify_env
 end
 

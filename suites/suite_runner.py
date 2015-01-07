@@ -53,14 +53,17 @@ class SuiteRunner(object):
     def __init__(self):
         self.base_dir = os.environ['BASE_HOST_DIR']
         self.work_dir = os.environ['WORK_DIR']
-        self.branch_name_core = os.environ['BRANCH_NAME_CORE']
-        self.branch_name_plugins = os.environ['BRANCH_NAME_PLUGINS']
-        self.branch_name_system_tests = os.environ['BRANCH_NAME_SYSTEM_TESTS']
 
         self.test_suite_name = os.environ['TEST_SUITE_NAME']
         self.test_suite = json.loads(os.environ['TEST_SUITE'])
+        self.variables = json.loads(os.environ['TEST_SUITES_VARIABLES'])
         with open(os.path.join(self.base_dir, 'suites', 'suites.yaml')) as f:
             self.suites_yaml = yaml.load(f.read())
+        self.suites_yaml['variables'] = self.variables
+
+        self.branch_name_core = self.variables['core_branch']
+        self.branch_name_plugins = self.variables['plugins_branch']
+        self.branch_name_system_tests = self.variables['system_tests_branch']
 
         self.handler_configuration = self.suites_yaml[
             'handler_configurations'][self.test_suite['handler_configuration']]

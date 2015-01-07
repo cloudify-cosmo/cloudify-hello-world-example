@@ -8,7 +8,7 @@ logger = logging.getLogger('suites_builder')
 logger.setLevel(logging.INFO)
 
 
-def build_suites_yaml(all_suites_yaml_path):
+def build_suites_yaml(all_suites_yaml_path, variables_path):
     env_system_tests_suites = os.environ['SYSTEM_TESTS_SUITES']
     env_custom = os.environ['SYSTEM_TESTS_CUSTOM']
     env_custom_descriptor = os.environ['SYSTEM_TESTS_CUSTOM_DESCRIPTOR']
@@ -25,6 +25,8 @@ def build_suites_yaml(all_suites_yaml_path):
                           in env_system_tests_suites.split(',')]
     custom = env_custom == 'yes'
 
+    with open(variables_path) as f:
+        variables = yaml.load(f.read())
     with open(all_suites_yaml_path) as f:
         suites_yaml = yaml.load(f.read())
     suites_yaml_path = tempfile.mktemp(prefix='suites-', suffix='.json')
@@ -36,6 +38,8 @@ def build_suites_yaml(all_suites_yaml_path):
                        in suites_yaml['test_suites'].items()
                        if suite_name in tests_suites_names}
 
+    suites_yaml['variables'] = suites_yaml.get('variables', {})
+    suites_yaml['variables'].update(variables)
     suites_yaml['test_suites'] = test_suites
     with open(suites_yaml_path, 'w') as f:
         f.write(yaml.safe_dump(suites_yaml))

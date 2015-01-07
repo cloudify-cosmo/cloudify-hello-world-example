@@ -65,9 +65,10 @@ def test_run():
         sys.exit(1)
 
 
-def setenv():
+def setenv(variables_path):
     setup_reports_dir()
-    os.environ[TEST_SUITES_PATH] = build_suites_yaml('suites/suites.yaml')
+    os.environ[TEST_SUITES_PATH] = build_suites_yaml('suites/suites.yaml',
+                                                     variables_path)
 
 
 def cleanup():
@@ -90,7 +91,8 @@ def get_containers_names():
 
 
 def main():
-    setenv()
+    variables_path = sys.argv[1]
+    setenv(variables_path)
     cleanup()
     test_run()
 
