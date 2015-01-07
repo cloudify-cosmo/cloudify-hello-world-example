@@ -14,11 +14,6 @@ logger.setLevel(logging.INFO)
 
 
 def main():
-    os.environ['QUICK_BUILD_USER'] = 'dank'
-    os.environ['QUICK_BUILD_PASSWORD'] = 'dan1324'
-    os.environ['QUICK_BUILD_URL'] = 'http://192.168.9.18:8810'
-    os.environ['QUICK_BUILD_BUILD_ID'] = '68463'
-    os.environ['QUICK_BUILD_CONFIGURATION_ID'] = '26227'
     variables_path = sys.argv[1]
     username = os.environ['QUICK_BUILD_USER']
     password = os.environ['QUICK_BUILD_PASSWORD']
