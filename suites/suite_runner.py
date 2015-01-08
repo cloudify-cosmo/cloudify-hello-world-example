@@ -64,6 +64,10 @@ class SuiteRunner(object):
         self.branch_name_core = self.variables['core_branch']
         self.branch_name_plugins = self.variables['plugins_branch']
         self.branch_name_system_tests = self.variables['system_tests_branch']
+        self.branch_name_manager_blueprints = self.variables.get(
+            'manager_blueprints_branch', self.branch_name_core)
+        self.branch_name_cli = self.variables.get(
+            'cli_branch', self.branch_name_core)
 
         self.handler_configuration = self.suites_yaml[
             'handler_configurations'][self.test_suite['handler_configuration']]
@@ -94,12 +98,15 @@ class SuiteRunner(object):
 
     def clone_and_install_packages(self):
         with path(self.work_dir):
-            self._clone_and_checkout_repo(repo=CLOUDIFY_SYSTEM_TESTS,
-                                          branch=self.branch_name_system_tests)
-            self._clone_and_checkout_repo(repo='cloudify-cli',
-                                          branch=self.branch_name_core)
-            self._clone_and_checkout_repo(repo='cloudify-manager-blueprints',
-                                          branch=self.branch_name_core)
+            self._clone_and_checkout_repo(
+                repo=CLOUDIFY_SYSTEM_TESTS,
+                branch=self.branch_name_system_tests)
+            self._clone_and_checkout_repo(
+                repo='cloudify-cli',
+                branch=self.branch_name_cli)
+            self._clone_and_checkout_repo(
+                repo='cloudify-manager-blueprints',
+                branch=self.branch_name_manager_blueprints)
 
             self._pip_install(
                 'cloudify-cli',
