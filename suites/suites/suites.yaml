@@ -21,8 +21,7 @@ variables:
   # as well.
   system_tests_branch: _
 
-  system_tests_manager_key: _
-  system_tests_agent_key: _
+  system_tests_shared_key: _
 
   cloudify_automation_token: _
 
@@ -423,9 +422,6 @@ test_suites:
 # these files are created on the client container before executing the tests
 # only applies in quickbuild runs, not when running locally
 files:
-  '~/.ssh/shared-systemt-tests-manager.pem':
-    content: '{{system_tests_manager_key}}'
-    chmod: 0600
-  '~/.ssh/shared-systemt-tests-agent.pem':
-    content: '{{system_tests_agent_key}}'
+  '~/.ssh/shared-systemt-tests-key.pem':
+    content: '{{system_tests_shared_key}}'
     chmod: 0600

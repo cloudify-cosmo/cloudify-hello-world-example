@@ -4,8 +4,8 @@ keystone_tenant_name: ''
 region: ''
 image_id: ''
 keystone_url: https://region-a.geo-1.identity.hpcloudsvc.com:35357/v2.0/
-manager_public_key_name: shared-systemt-tests-manager
-agent_public_key_name: shared-systemt-tests-agent
+manager_public_key_name: shared-systemt-tests-key
+agent_public_key_name: shared-systemt-tests-key
 flavor_id: 102
 external_network_name: Ext-Net
 
@@ -13,8 +13,8 @@ use_existing_manager_keypair: true
 use_existing_agent_keypair: true
 manager_server_name: systemt-cloudify-manager
 manager_server_user: ubuntu
-manager_private_key_path: ~/.ssh/shared-systemt-tests-manager.pem
-agent_private_key_path: ~/.ssh/shared-systemt-tests-agent.pem
+manager_private_key_path: ~/.ssh/shared-systemt-tests-key.pem
+agent_private_key_path: ~/.ssh/shared-systemt-tests-key.pem
 agents_user: ubuntu
 management_network_name: systemt-cloudify-management-network
 management_subnet_name: systemt-cloudify-management-network-subnet
