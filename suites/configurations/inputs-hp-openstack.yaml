@@ -4,8 +4,8 @@ keystone_tenant_name: ''
 region: ''
 image_id: ''
 keystone_url: https://region-a.geo-1.identity.hpcloudsvc.com:35357/v2.0/
-manager_public_key_name: systemt-tests-manager
-agent_public_key_name: systemt-tests-agent
+manager_public_key_name: shared-systemt-tests-manager
+agent_public_key_name: shared-systemt-tests-agent
 flavor_id: 102
 external_network_name: Ext-Net
 
