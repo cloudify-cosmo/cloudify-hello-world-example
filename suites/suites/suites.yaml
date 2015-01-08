@@ -81,14 +81,12 @@ templates:
 
   - &openstack_plugin_external
     repo: cloudify-openstack-plugin
-    branch: CFY-1850-suites-breakup
 
   - &softlayer_plugin_external
     repo: cloudify-softlayer-plugin
 
   - &vsphere_plugin_external
     repo: cloudify-vpshere-plugin
-    branch: CFY-1850-suites-breakup
     private: true
     username: opencm
     password: '{{opencm_git_pwd}}'

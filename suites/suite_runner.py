@@ -97,9 +97,9 @@ class SuiteRunner(object):
             self._clone_and_checkout_repo(repo=CLOUDIFY_SYSTEM_TESTS,
                                           branch=self.branch_name_system_tests)
             self._clone_and_checkout_repo(repo='cloudify-cli',
-                                          branch='CFY-1850-suites-breakup')
+                                          branch=self.branch_name_core)
             self._clone_and_checkout_repo(repo='cloudify-manager-blueprints',
-                                          branch='CFY-1850-suites-breakup')
+                                          branch=self.branch_name_plugins)
 
             self._pip_install(
                 'cloudify-cli',
