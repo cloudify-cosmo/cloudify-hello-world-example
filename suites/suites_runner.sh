@@ -21,7 +21,7 @@ suites_runner()
 {
     variables_yaml_path=$(mktemp)
     python helpers/variables_builder.py ${variables_yaml_path}
-    #python suites_runner.py ${variables_yaml_path}
+    python suites_runner.py ${variables_yaml_path}
 }
 
 main()
