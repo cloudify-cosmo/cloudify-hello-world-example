@@ -1,3 +1,6 @@
+# Variables specified here can be accessed in
+# inputs_override/manager_blueprint_override/external/files dict values
+# using `{{variable_name}}` syntax
 variables:
 
   hp_openstack_ubuntu_precise_image_name: Ubuntu Server 12.04.5 LTS (amd64 20140927) - Partner Image
@@ -49,6 +52,9 @@ variables:
 
 #####################################################################################
 
+# The name `templates` is arbitrary. This is simply
+# A place holders for configuring YAMl anchors (&)
+# That can later be used by YAML aliases (*) and merges (<<)
 templates:
 
   - &packages_provider_config_inputs
