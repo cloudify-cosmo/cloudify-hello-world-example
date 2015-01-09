@@ -79,14 +79,18 @@ class BaseCloudifyInputsConfigReader(BaseCloudifyConfigReader):
 
 class BaseHandler(object):
 
+    # The following attributes are mainly for documentation
+    # purposes. Handler subclasses should override them
+    # to have the appropriate config read loaded
+    # This might have to happen in the constructor in case
+    # The config reader could be either cloudify-config or
+    # inputs based
     provider = 'base'
     CleanupContext = BaseCleanupContext
-    CloudifyConfigReader = BaseCloudifyConfigReader
+    CloudifyConfigReader = BaseCloudifyInputsConfigReader
 
     def __init__(self, env):
         self.env = env
-        self.CloudifyConfigReader = BaseCloudifyProviderConfigReader if \
-            env.is_provider_bootstrap else BaseCloudifyInputsConfigReader
         properties_name = env.handler_configuration.get('properties')
         if properties_name:
             properties = env.suites_yaml['handler_properties'][properties_name]
