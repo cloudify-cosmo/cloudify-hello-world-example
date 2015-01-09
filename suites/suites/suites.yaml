@@ -221,6 +221,7 @@ handler_configurations:
 
   hp_openstack_system_tests_region_a:
     <<: *hp_openstack_handler_configuration
+    env: hp_openstack_system_tests_region_a
     properties: hp_openstack_region_a_properties
     inputs_override:
       <<: *hp_openstack_credentials_inputs
@@ -229,6 +230,7 @@ handler_configurations:
 
   hp_openstack_system_tests_region_b:
     <<: *hp_openstack_handler_configuration
+    env: hp_openstack_system_tests_region_b
     properties: hp_openstack_region_b_properties
     inputs_override:
       <<: *hp_openstack_credentials_inputs
@@ -237,6 +239,7 @@ handler_configurations:
 
   hp_openstack_system_tests2_region_a:
     <<: *hp_openstack_handler_configuration
+    env: hp_openstack_system_tests2_region_a
     properties: hp_openstack_region_a_properties
     inputs_override:
       <<: *hp_openstack_credentials_inputs
@@ -245,6 +248,7 @@ handler_configurations:
 
   hp_openstack_system_tests2_region_b:
     <<: *hp_openstack_handler_configuration
+    env: hp_openstack_system_tests2_region_b
     properties: hp_openstack_region_b_properties
     inputs_override:
       <<: *hp_openstack_credentials_inputs
@@ -255,6 +259,7 @@ handler_configurations:
 
   hp_openstack_dockerless_system_tests_region_a:
     <<: *hp_openstack_dockerless_handler_configuration
+    env: hp_openstack_system_tests_region_a
     properties: hp_openstack_region_a_properties
     inputs_override:
       <<: *hp_openstack_credentials_inputs
@@ -263,6 +268,7 @@ handler_configurations:
 
   hp_openstack_dockerless_system_tests_region_b:
     <<: *hp_openstack_dockerless_handler_configuration
+    env: hp_openstack_system_tests_region_b
     properties: hp_openstack_region_b_properties
     inputs_override:
       <<: *hp_openstack_credentials_inputs
@@ -271,6 +277,7 @@ handler_configurations:
 
   hp_openstack_dockerless_system_tests2_region_a:
     <<: *hp_openstack_dockerless_handler_configuration
+    env: hp_openstack_system_tests2_region_a
     properties: hp_openstack_region_a_properties
     inputs_override:
       <<: *hp_openstack_credentials_inputs
@@ -279,6 +286,7 @@ handler_configurations:
 
   hp_openstack_dockerless_system_tests2_region_b:
     <<: *hp_openstack_dockerless_handler_configuration
+    env: hp_openstack_system_tests2_region_b
     properties: hp_openstack_region_b_properties
     inputs_override:
       <<: *hp_openstack_credentials_inputs
@@ -289,6 +297,7 @@ handler_configurations:
 
   hp_openstack_centos_system_tests_region_b:
     <<: *hp_openstack_handler_configuration
+    env: hp_openstack_system_tests_region_b
     properties: hp_openstack_region_b_properties
     inputs_override:
       <<: *hp_openstack_credentials_inputs
@@ -301,6 +310,7 @@ handler_configurations:
 
   lab_openstack_test_tenant:
     <<: *lab_openstack_handler_configuration
+    env: lab_openstack
     inputs_override:
       <<: *lab_openstack_credentials_inputs
       <<: *lab_openstack_inputs
@@ -308,6 +318,7 @@ handler_configurations:
 
   lab_openstack_dockerless_test_tenant:
     <<: *lab_openstack_dockerless_handler_configuration
+    env: lab_openstack
     inputs_override:
       <<: *lab_openstack_credentials_inputs
       <<: *lab_openstack_dockerless_inputs

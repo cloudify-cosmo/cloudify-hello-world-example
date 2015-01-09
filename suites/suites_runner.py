@@ -1,6 +1,7 @@
 import os
 import sys
 import logging
+from StringIO import StringIO
 
 import yaml
 import sh
@@ -71,6 +72,28 @@ def setenv(variables_path):
                                                      variables_path)
 
 
+def validate():
+    with open(os.environ[TEST_SUITES_PATH]) as f:
+        suites = yaml.load(f.read())
+    handler_configurations = suites['handler_configurations']
+    environments = {}
+    for suite_name, suite in suites['test_suites'].items():
+        configuration = handler_configurations[suite['handler_configuration']]
+        env = configuration.get('env', configuration['handler'])
+        if env not in environments:
+            environments[env] = []
+        environments[env].append(suite_name)
+    validation_error = False
+    message = StringIO()
+    message.write('Multiple tests suites found for same environments:\n')
+    for env, suite_names in environments.items():
+        if len(suite_names) > 1:
+            validation_error = True
+            message.write('\t{0}: {1}'.format(env, suite_names))
+    if validation_error:
+        raise AssertionError(message.getvalue())
+
+
 def cleanup():
     logger.info('Current containers:\n{0}'
                 .format(list_containers()))
@@ -94,6 +117,7 @@ def main():
     variables_path = sys.argv[1]
     setenv(variables_path)
     cleanup()
+    validate()
     test_run()
 
 if __name__ == '__main__':
