@@ -73,8 +73,6 @@ class SuiteRunner(object):
             'handler_configurations'][self.test_suite['handler_configuration']]
         self.bootstrap_using_providers = self.handler_configuration.get(
             'bootstrap_using_providers', False)
-        self.bootstrap_using_docker = self.handler_configuration.get(
-            'bootstrap_using_docker', True)
 
         inputs = self.handler_configuration['inputs']
         self.inputs_path = os.path.join(self.base_dir, 'configurations',

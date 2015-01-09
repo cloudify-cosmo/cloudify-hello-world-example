@@ -106,16 +106,6 @@ templates:
     flavor_name: standard.small
     small_flavor_id: 101
 
-  - &hp_openstack_region_a_properties
-    <<: *hp_openstack_properties
-    ubuntu_image_id: '{{hp_openstack_region_a_ubuntu_precise}}'
-    ubuntu_trusty_image_id: '{{hp_openstack_region_a_ubuntu_trusty}}'
-
-  - &hp_openstack_region_b_properties
-    <<: *hp_openstack_properties
-    ubuntu_image_id: '{{hp_openstack_region_b_ubuntu_precise}}'
-    ubuntu_trusty_image_id: '{{hp_openstack_region_b_ubuntu_trusty}}'
-
   #######################################################
 
   - &hp_openstack_credentials_inputs
@@ -156,8 +146,34 @@ templates:
     <<: *openstack_handler_configuration
     inputs: inputs-hp-openstack.yaml
     manager_blueprint: openstack/openstack.yaml
-    bootstrap_using_docker: false
     manager_blueprint_override: *dockerless_manager_blueprint_override
+
+#####################################################################################
+
+handler_properties:
+
+  hp_openstack_region_a_properties:
+    <<: *hp_openstack_properties
+    ubuntu_image_id: '{{hp_openstack_region_a_ubuntu_precise}}'
+    ubuntu_trusty_image_id: '{{hp_openstack_region_a_ubuntu_trusty}}'
+
+  hp_openstack_region_b_properties:
+    <<: *hp_openstack_properties
+    ubuntu_image_id: '{{hp_openstack_region_b_ubuntu_precise}}'
+    ubuntu_trusty_image_id: '{{hp_openstack_region_b_ubuntu_trusty}}'
+
+  pclab47_devstack_nova_net:
+    ubuntu_image_name: ubuntu
+    flavor_name: m1.small
+    ubuntu_image_id: eada2fe8-894a-4b26-ac8d-cedab010f185
+    small_flavor_id: 3
+
+  aws_ec2:
+    medium_instance_type: m1.medium
+    ubuntu_agent_ami: ami-a73264ce
+
+  vsphere:
+    template: ubuntu-configured-template
 
 #####################################################################################
 
@@ -165,7 +181,7 @@ handler_configurations:
 
   hp_openstack_system_tests_region_a:
     <<: *hp_openstack_handler_configuration
-    properties: *hp_openstack_region_a_properties
+    properties: hp_openstack_region_a_properties
     inputs_override:
       <<: *hp_openstack_credentials_inputs
       <<: *hp_openstack_region_a_inputs
@@ -173,7 +189,7 @@ handler_configurations:
 
   hp_openstack_system_tests_region_b:
     <<: *hp_openstack_handler_configuration
-    properties: *hp_openstack_region_b_properties
+    properties: hp_openstack_region_b_properties
     inputs_override:
       <<: *hp_openstack_credentials_inputs
       <<: *hp_openstack_region_b_inputs
@@ -181,7 +197,7 @@ handler_configurations:
 
   hp_openstack_system_tests2_region_a:
     <<: *hp_openstack_handler_configuration
-    properties: *hp_openstack_region_a_properties
+    properties: hp_openstack_region_a_properties
     inputs_override:
       <<: *hp_openstack_credentials_inputs
       <<: *hp_openstack_region_a_inputs
@@ -189,7 +205,7 @@ handler_configurations:
 
   hp_openstack_system_tests2_region_b:
     <<: *hp_openstack_handler_configuration
-    properties: *hp_openstack_region_b_properties
+    properties: hp_openstack_region_b_properties
     inputs_override:
       <<: *hp_openstack_credentials_inputs
       <<: *hp_openstack_region_b_inputs
@@ -199,7 +215,7 @@ handler_configurations:
 
   hp_openstack_dockerless_system_tests_region_a:
     <<: *hp_openstack_dockerless_handler_configuration
-    properties: *hp_openstack_region_a_properties
+    properties: hp_openstack_region_a_properties
     inputs_override:
       <<: *hp_openstack_credentials_inputs
       <<: *hp_openstack_dockerless_region_a_inputs
@@ -207,7 +223,7 @@ handler_configurations:
 
   hp_openstack_dockerless_system_tests_region_b:
     <<: *hp_openstack_dockerless_handler_configuration
-    properties: *hp_openstack_region_b_properties
+    properties: hp_openstack_region_b_properties
     inputs_override:
       <<: *hp_openstack_credentials_inputs
       <<: *hp_openstack_dockerless_region_b_inputs
@@ -215,7 +231,7 @@ handler_configurations:
 
   hp_openstack_dockerless_system_tests2_region_a:
     <<: *hp_openstack_dockerless_handler_configuration
-    properties: *hp_openstack_region_a_properties
+    properties: hp_openstack_region_a_properties
     inputs_override:
       <<: *hp_openstack_credentials_inputs
       <<: *hp_openstack_dockerless_region_a_inputs
@@ -223,7 +239,7 @@ handler_configurations:
 
   hp_openstack_dockerless_system_tests2_region_b:
     <<: *hp_openstack_dockerless_handler_configuration
-    properties: *hp_openstack_region_b_properties
+    properties: hp_openstack_region_b_properties
     inputs_override:
       <<: *hp_openstack_credentials_inputs
       <<: *hp_openstack_dockerless_region_b_inputs
@@ -233,7 +249,7 @@ handler_configurations:
 
   hp_openstack_centos_system_tests_region_b:
     <<: *hp_openstack_handler_configuration
-    properties: *hp_openstack_region_b_properties
+    properties: hp_openstack_region_b_properties
     inputs_override:
       <<: *hp_openstack_credentials_inputs
       <<: *hp_openstack_region_b_inputs
@@ -248,13 +264,8 @@ handler_configurations:
     handler: openstack_nova_net_handler
     inputs: inputs-nova-net-devstack.yaml
     manager_blueprint: openstack-nova-net/openstack.yaml
-    bootstrap_using_docker: false
     manager_blueprint_override: *dockerless_manager_blueprint_override
-    properties:
-      ubuntu_image_name: ubuntu
-      flavor_name: m1.small
-      ubuntu_image_id: eada2fe8-894a-4b26-ac8d-cedab010f185
-      small_flavor_id: 3
+    properties: pclab47_devstack_nova_net
 
   ###############################################################################
 
@@ -262,10 +273,7 @@ handler_configurations:
     inputs: cloudify-config-ec2.yaml
     handler: ec2
     bootstrap_using_providers: true
-    bootstrap_using_docker: false
-    properties:
-      medium_instance_type: m1.medium
-      ubuntu_agent_ami: ami-a73264ce
+    properties: aws_ec2
     inputs_override:
       <<: *packages_provider_config_inputs
       connection.access_id: '{{system_test_ec2_access_id}}'
@@ -278,9 +286,7 @@ handler_configurations:
     handler: vpshere_handler
     external: *vsphere_plugin_external
     manager_blueprint: manager_blueprint/vsphere.yaml
-    bootstrap_using_docker: false
-    properties:
-      template: ubuntu-configured-template
+    properties: vsphere
     manager_blueprint_override: *dockerless_manager_blueprint_override
     inputs_override:
       vsphere_username: '{{system_test_vsphere_username}}'
@@ -295,7 +301,6 @@ handler_configurations:
     handler: softlayer_handler
     external: *softlayer_plugin_external
     manager_blueprint: softlayer/softlayer.yaml
-    bootstrap_using_docker: false
     manager_blueprint_override: *dockerless_manager_blueprint_override
     inputs_override:
       username: '{{system_tests_softlayer_username}}'

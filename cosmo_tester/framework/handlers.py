@@ -81,11 +81,13 @@ class BaseHandler(object):
         self.env = env
         self.CloudifyConfigReader = BaseCloudifyProviderConfigReader if \
             env.is_provider_bootstrap else BaseCloudifyInputsConfigReader
-        processed_properties = process_variables(
-            env.suites_yaml,
-            env.handler_configuration.get('properties', {}))
-        for attr_name, attr_value in processed_properties.items():
-            setattr(self, attr_name, attr_value)
+        properties_name = env.handler_configuration.get('properties')
+        if properties_name:
+            properties = env.suites_yaml['handler_properties'][properties_name]
+            processed_properties = process_variables(env.suites_yaml,
+                                                     properties)
+            for attr_name, attr_value in processed_properties.items():
+                setattr(self, attr_name, attr_value)
 
     @contextmanager
     def update_cloudify_config(self):
