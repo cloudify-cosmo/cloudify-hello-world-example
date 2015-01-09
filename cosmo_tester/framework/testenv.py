@@ -104,15 +104,20 @@ class TestEnvironment(object):
         if HANDLER_CONFIGURATION not in os.environ:
             raise RuntimeError('handler configuration name must be configured '
                                'in "HANDLER_CONFIGURATION" env variable')
-        handler_configuration_name = os.environ[HANDLER_CONFIGURATION]
+        handler_configuration = os.environ[HANDLER_CONFIGURATION]
         suites_yaml_path = os.environ.get(
             SUITES_YAML_PATH,
             path(__file__).dirname().dirname().dirname() / 'suites' / 'suites'
                                                          / 'suites.yaml')
         with open(suites_yaml_path) as f:
             self.suites_yaml = yaml.load(f.read())
-        self.handler_configuration = self.suites_yaml[
-            'handler_configurations'][handler_configuration_name]
+        if os.path.exists(os.path.expanduser(handler_configuration)):
+            configuration_path = os.path.expanduser(handler_configuration)
+            with open(configuration_path) as f:
+                self.handler_configuration = yaml.load(f.read())
+        else:
+            self.handler_configuration = self.suites_yaml[
+                'handler_configurations'][handler_configuration]
 
         self.cloudify_config_path = path(os.path.expanduser(
             self.handler_configuration['inputs']))
