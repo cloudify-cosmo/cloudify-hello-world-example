@@ -126,19 +126,15 @@ class TestEnvironment(object):
             'bootstrap_using_providers', False)
 
         if not self.is_provider_bootstrap and not (
-                'manager_blueprints_dir' in self.handler_configuration and
                 'manager_blueprint' in self.handler_configuration):
             raise RuntimeError(
-                'manager blueprint and manager blueprints dir must be '
-                'configured in handler configuration env variable in '
-                'order to run non-provider bootstraps')
+                'manager blueprint must be configured in handler '
+                'configuration in order to run non-provider bootstraps')
 
         if not self.is_provider_bootstrap:
-            manager_blueprints_base_dir = os.path.expanduser(
-                self.handler_configuration['manager_blueprints_dir'])
             manager_blueprint = self.handler_configuration['manager_blueprint']
-            self._manager_blueprint_path = \
-                os.path.join(manager_blueprints_base_dir, manager_blueprint)
+            self._manager_blueprint_path = os.path.expanduser(
+                manager_blueprint)
 
         # make a temp config files than can be modified freely
         self._generate_unique_configurations()
@@ -153,11 +149,12 @@ class TestEnvironment(object):
                     patch.set_value(key, value)
 
         handler = self.handler_configuration['handler']
-        if 'external' in self.handler_configuration:
-            module_path = 'system_tests.{0}'.format(handler)
-        else:
-            module_path = 'suites.helpers.handlers.{0}.handler'.format(handler)
-        handler_module = importlib.import_module(module_path)
+        try:
+            handler_module = importlib.import_module(
+                'system_tests.{0}'.format(handler))
+        except ImportError:
+            handler_module = importlib.import_module(
+                'suites.helpers.handlers.{0}.handler'.format(handler))
         handler_class = getattr(handler_module, 'handler')
         self.handler = handler_class(self)
 

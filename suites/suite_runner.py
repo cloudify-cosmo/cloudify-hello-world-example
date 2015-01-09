@@ -77,10 +77,8 @@ class SuiteRunner(object):
             'bootstrap_using_docker', True)
 
         inputs = self.handler_configuration['inputs']
-        self.original_inputs_path = os.path.join(self.base_dir,
-                                                 'configurations', inputs)
-        self.generated_inputs_path = os.path.join(
-            self.work_dir, 'generated-inputs.yaml')
+        self.inputs_path = os.path.join(self.base_dir, 'configurations',
+                                        inputs)
         self.generated_suites_yaml_path = os.path.join(
             self.work_dir, 'generated-suites.yaml')
         self.manager_blueprints_dir = os.path.join(
@@ -191,19 +189,16 @@ class SuiteRunner(object):
                 sys.path.append(repo_path)
 
     def generate_config(self):
-        with open(self.original_inputs_path) as rf:
-            with open(self.generated_inputs_path, 'w') as wf:
-                wf.write(rf.read())
-
         handler = self.handler_package.handler
         if hasattr(handler, 'update_config'):
             handler.update_config(
                 manager_blueprints_dir=self.manager_blueprints_dir,
                 variables=self.variables)
 
-        self.handler_configuration['manager_blueprints_dir'] = \
-            self.manager_blueprints_dir
-        self.handler_configuration['inputs'] = self.generated_inputs_path
+        self.handler_configuration['manager_blueprint'] = \
+            os.path.join(self.manager_blueprints_dir,
+                         self.handler_configuration['manager_blueprint'])
+        self.handler_configuration['inputs'] = self.inputs_path
         generated_suites_yaml = self.suites_yaml.copy()
         handler_configuration_name = self.test_suite['handler_configuration']
         generated_suites_yaml['handler_configurations'] = {
