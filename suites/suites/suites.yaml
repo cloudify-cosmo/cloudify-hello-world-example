@@ -12,6 +12,12 @@ variables:
   hp_openstack_region_b_ubuntu_trusty: 9d25fe2d-cf31-4b05-8c58-f238ec78e633
   hp_openstack_region_b_centos_7_0_docker_1_2: 25bfd0c1-8f20-4e8f-a5cf-36ca825305f2
 
+  lab_openstack_ubuntu_precise_image_name: ubuntu_12.04
+  lab_openstack_ubuntu_trusty_image_name: ubuntu_14.04
+  lab_openstack_centos_image_name: centos_6.5
+  lab_openstack_ubuntu_precise: d81ccdfe-7482-460e-a7ce-69ea29aa129b
+  lab_openstack_ubuntu_trusty: c6d36e11-f4d5-4221-b6e8-4e97914c67e9
+
   ######################################################
 
   # These values are updated by the version tool
@@ -112,6 +118,10 @@ templates:
     keystone_username: '{{system_tests_hp_username}}'
     keystone_password: '{{system_tests_hp_password}}'
 
+  - &lab_openstack_credentials_inputs
+    keystone_username: '{{system_tests_lab_os_username}}'
+    keystone_password: '{{system_tests_lab_os_password}}'
+
   #######################################################
 
   - &hp_openstack_region_a_inputs
@@ -129,6 +139,12 @@ templates:
   - &hp_openstack_dockerless_region_b_inputs
     region: region-b.geo-1
     image_id: '{{hp_openstack_region_b_ubuntu_precise}}'
+
+  - &lab_openstack_inputs
+    image_id: '{{lab_openstack_ubuntu_trusty}}'
+
+  - &lab_openstack_dockerless_inputs
+    image_id: '{{lab_openstack_ubuntu_precise}}'
 
   #######################################################
 
@@ -148,6 +164,20 @@ templates:
     manager_blueprint: openstack/openstack.yaml
     manager_blueprint_override: *dockerless_manager_blueprint_override
 
+  - &lab_openstack_handler_configuration
+    <<: *openstack_handler_configuration
+    inputs: inputs-lab-openstack.yaml
+    manager_blueprint: openstack-docker/openstack-docker.yaml
+    manager_blueprint_override: *docker_manager_blueprint_override
+    properties: lab_openstack_properties
+
+  - &lab_openstack_dockerless_handler_configuration
+    <<: *openstack_handler_configuration
+    inputs: inputs-lab-openstack.yaml
+    manager_blueprint: openstack/openstack.yaml
+    manager_blueprint_override: *dockerless_manager_blueprint_override
+    properties: lab_openstack_properties
+
 #####################################################################################
 
 handler_properties:
@@ -161,6 +191,16 @@ handler_properties:
     <<: *hp_openstack_properties
     ubuntu_image_id: '{{hp_openstack_region_b_ubuntu_precise}}'
     ubuntu_trusty_image_id: '{{hp_openstack_region_b_ubuntu_trusty}}'
+
+  lab_openstack_properties:
+    ubuntu_image_name: '{{lab_openstack_ubuntu_precise_image_name}}'
+    ubuntu_trusty_image_name: '{{lab_openstack_ubuntu_trusty_image_name}}'
+    centos_image_name: '{{lab_openstack_centos_image_name}}'
+    ubuntu_image_id: '{{lab_openstack_ubuntu_precise}}'
+    ubuntu_trusty_image_id: '{{lab_openstack_ubuntu_trusty}}'
+    centos_image_user: root
+    flavor_name: m1.small
+    small_flavor_id: ba4e08fd-e4c5-4233-a906-f1bb31cb659d
 
   pclab47_devstack_nova_net:
     ubuntu_image_name: ubuntu
@@ -258,6 +298,22 @@ handler_configurations:
       manager_server_user: centos
 
   ############################################################################
+
+  lab_openstack_test_tenant:
+    <<: *lab_openstack_handler_configuration
+    inputs_override:
+      <<: *lab_openstack_credentials_inputs
+      <<: *lab_openstack_inputs
+      keystone_tenant_name: test
+
+  lab_openstack_dockerless_test_tenant:
+    <<: *lab_openstack_dockerless_handler_configuration
+    inputs_override:
+      <<: *lab_openstack_credentials_inputs
+      <<: *lab_openstack_dockerless_inputs
+      keystone_tenant_name: test
+
+  ###############################################################################
 
   pclab47_devstack_nova_net:
     <<: *openstack_handler_configuration
