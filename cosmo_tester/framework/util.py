@@ -19,6 +19,7 @@ import sys
 import os
 import re
 import json
+import shutil
 
 import jinja2
 from path import path
@@ -38,6 +39,28 @@ def process_variables(suites_yaml, unprocessed_dict):
                 **template_variables)
         result[key] = value
     return result
+
+
+def generate_unique_configurations(workdir,
+                                   original_inputs_path,
+                                   original_manager_blueprint_path,
+                                   is_provider_bootstrap=False):
+    inputs_path = path(os.path.join(workdir, 'inputs.yaml'))
+    manager_blueprint_path = None
+    shutil.copy(original_inputs_path, inputs_path)
+    if not is_provider_bootstrap:
+        manager_blueprint_base = os.path.basename(
+            original_manager_blueprint_path)
+        source_manager_blueprint_dir = os.path.dirname(
+            original_manager_blueprint_path)
+        target_manager_blueprint_dir = os.path.join(workdir,
+                                                    'manager-blueprint')
+        shutil.copytree(source_manager_blueprint_dir,
+                        target_manager_blueprint_dir)
+        manager_blueprint_path = path(
+            os.path.join(target_manager_blueprint_dir,
+                         manager_blueprint_base))
+    return inputs_path, manager_blueprint_path
 
 
 def sh_bake(command):
@@ -109,10 +132,11 @@ class YamlPatcher(object):
 
     pattern = re.compile("(.+)\[(\d+)\]")
 
-    def __init__(self, yaml_path, is_json=False):
+    def __init__(self, yaml_path, is_json=False, default_flow_style=True):
         self.yaml_path = path(yaml_path)
         self.obj = yaml.load(self.yaml_path.text())
         self.is_json = is_json
+        self.default_flow_style = default_flow_style
 
     def __enter__(self):
         return self
@@ -120,7 +144,7 @@ class YamlPatcher(object):
     def __exit__(self, exc_type, exc_val, exc_tb):
         if not exc_type:
             output = json.dumps(self.obj) if self.is_json else yaml.safe_dump(
-                self.obj)
+                self.obj, default_flow_style=self.default_flow_style)
             self.yaml_path.write_text(output)
 
     def merge_obj(self, obj_prop_path, merged_props):
