@@ -70,6 +70,12 @@ class BaseCloudifyInputsConfigReader(BaseCloudifyConfigReader):
     def resources_prefix(self):
         return self.config['resources_prefix']
 
+    @property
+    def docker_url(self):
+        manager = self.manager_blueprint['node_templates'].get('manager', {})
+        packages = manager.get('properties', {}).get('cloudify_packages', {})
+        return packages.get('docker', {}).get('docker_url')
+
 
 class BaseHandler(object):
 
@@ -98,6 +104,11 @@ class BaseHandler(object):
         self.env._config_reader = self.CloudifyConfigReader(
             self.env.cloudify_config,
             manager_blueprint_path=self.env._manager_blueprint_path)
+
+    @property
+    def is_docker_bootstrap(self):
+        return (not self.env.is_provider_bootstrap and
+                self.env._config_reader.docker_url is not None)
 
     def before_bootstrap(self):
         pass
