@@ -254,15 +254,18 @@ class SuiteRunner(object):
                 self.base_dir, 'xunit-reports',
                 '{0}-{1}-report.xml'.format(self.test_suite_name,
                                             tests_dir))
-            tests = ' '.join(tests)
+            processed_tests = []
+            for test in tests:
+                processed_tests += test.split(' ')
+
             with path(self.work_dir) / tests_dir:
                 try:
-                    nosetests(tests,
-                              verbose=True,
+                    nosetests(verbose=True,
                               nocapture=True,
                               nologcapture=True,
                               with_xunit=True,
-                              xunit_file=report_file).wait()
+                              xunit_file=report_file,
+                              *processed_tests).wait()
                 except sh.ErrorReturnCode:
                     failed_groups.append(test_group)
 
