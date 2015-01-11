@@ -14,8 +14,6 @@
 #    * limitations under the License.
 
 
-__author__ = 'dan'
-
 import fabric.api
 import fabric.contrib.files
 
@@ -357,4 +355,3 @@ class NeutronGaloreTest(TestCase):
             return True
         except SystemExit:
             return False
-

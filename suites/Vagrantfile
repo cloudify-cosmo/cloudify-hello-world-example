@@ -1,4 +1,5 @@
 require 'json'
+require 'yaml'
 
 ENV['VAGRANT_DEFAULT_PROVIDER'] = 'docker'
 
@@ -7,51 +8,31 @@ def vagrant_configure
     config.vm.provider 'docker' do |d|
       d.build_dir = '.'
       d.build_args = ['-t', 'cloudify/test:env']
-      d.cmd = ['/vagrant/system_tests.sh']
+      d.cmd = ['/vagrant/suite_runner.sh']
     end
-    test_configurations.each do |test_config|
-      suite_name = test_config[:suite_name]
-      config.vm.define suite_name do |suite|
-        suite.vm.provider 'docker' do |d|
+    suites_yaml = load_suites_yaml()
+    suites_yaml['test_suites'].each do |suite_name, suite|
+      config.vm.define suite_name do |container|
+        container.vm.provider 'docker' do |d|
           d.name = suite_name
-          d.env = build_env(test_config)
+          d.env = build_env(suite_name, suite, suites_yaml)
         end
       end
     end
   end
 end
 
-def test_configurations
+def load_suites_yaml
   suites_path = ENV['TEST_SUITES_PATH']
-  JSON.parse(File.read(suites_path), {:symbolize_names => true})
+  YAML.load_file(suites_path)
 end
 
-def build_env(test_config)
-    env_variable_names = ENV['CLOUDIFY_ENVIRONMENT_VARIABLE_NAMES'] || ''
-    env_variable_names = env_variable_names.split(':')
-    cloudify_env = {}
-    env_variable_names.each do |name|
-        if ENV[name]
-            cloudify_env[name] = ENV[name]
-        end
-    end
-    if test_config[:resource_prefix]
-      resource_prefix = test_config[:resource_prefix]
-    else
-      resource_prefix = test_config[:suite_name] + '-'
-    end
-    cloudify_env['SUITE_NAME'] = test_config[:suite_name]
-    cloudify_env['RESOURCE_PREFIX'] = resource_prefix
-    cloudify_env['NOSETESTS_TO_RUN'] = test_config[:tests_to_run]
-    cloudify_env['CLOUDIFY_TEST_CONFIG'] = test_config[:cloudify_test_config]
-    cloudify_env['CLOUDIFY_TEST_HANDLER_MODULE'] = test_config[:cloudify_test_handler_module]
-    if test_config[:bootstrap_using_providers]
-        cloudify_env['BOOTSTRAP_USING_PROVIDERS'] = test_config[:bootstrap_using_providers]
-    end
-    if test_config[:bootstrap_using_docker]
-        cloudify_env['BOOTSTRAP_USING_DOCKER'] = test_config[:bootstrap_using_docker]
-    end
-    cloudify_env
+def build_env(suite_name, suite, suites_yaml)
+    {
+        'TEST_SUITE_NAME' => suite_name,
+        'TEST_SUITE' => suite.to_json,
+        'TEST_SUITES_VARIABLES' => (suites_yaml['variables'] || {}).to_json
+    }
 end
 
 vagrant_configure()

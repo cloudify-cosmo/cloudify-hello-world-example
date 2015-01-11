@@ -15,17 +15,15 @@
 
 """ Assumes fabric environment already set up """
 
-__author__ = 'ilyash'
-
 import subprocess
 import time
 import os
 from zipfile import ZipFile
 
-from fabric import operations
-import fabric.api
-from path import path
 import sh
+import fabric.api
+from fabric import operations
+from path import path
 
 from cosmo_tester.framework.testenv import TestCase
 from cosmo_tester.framework.util import YamlPatcher, get_actual_keypath

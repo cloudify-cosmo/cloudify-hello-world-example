@@ -16,11 +16,13 @@
 # a test for container management and recovery. The docker container is managed
 # by docker and should be restarted automatically upon failure.
 
-from cosmo_tester.test_suites.test_blueprints import nodecellar_test
-import fabric.api
-from time import sleep, time
 import urllib
 import json
+from time import sleep, time
+
+import fabric.api
+
+from cosmo_tester.test_suites.test_blueprints import nodecellar_test
 
 
 class DockerRecoveryTest(nodecellar_test.NodecellarAppTest):

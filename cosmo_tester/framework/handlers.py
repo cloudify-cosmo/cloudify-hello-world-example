@@ -13,17 +13,13 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
-
-__author__ = 'dan'
-
-
 import logging
 from contextlib import contextmanager
 
 import yaml
 from path import path
 
-from cosmo_tester.framework.util import YamlPatcher
+from cosmo_tester.framework.util import YamlPatcher, process_variables
 
 
 class BaseCleanupContext(object):
@@ -33,6 +29,8 @@ class BaseCleanupContext(object):
         self.env = env
         self.logger = logging.getLogger('CleanupContext')
         self.logger.setLevel(logging.DEBUG)
+        self.skip_cleanup = self.env.handler_configuration.get(
+            'skip_cleanup', False)
 
     def cleanup(self):
         pass
@@ -72,28 +70,49 @@ class BaseCloudifyInputsConfigReader(BaseCloudifyConfigReader):
     def resources_prefix(self):
         return self.config['resources_prefix']
 
+    @property
+    def docker_url(self):
+        manager = self.manager_blueprint['node_templates'].get('manager', {})
+        packages = manager.get('properties', {}).get('cloudify_packages', {})
+        return packages.get('docker', {}).get('docker_url')
+
 
 class BaseHandler(object):
 
+    # The following attributes are mainly for documentation
+    # purposes. Handler subclasses should override them
+    # to have the appropriate config read loaded
+    # This might have to happen in the constructor in case
+    # The config reader could be either cloudify-config or
+    # inputs based
     provider = 'base'
     CleanupContext = BaseCleanupContext
-    CloudifyConfigReader = BaseCloudifyConfigReader
+    CloudifyConfigReader = BaseCloudifyInputsConfigReader
 
     def __init__(self, env):
         self.env = env
-        self.CloudifyConfigReader = BaseCloudifyProviderConfigReader if \
-            env.is_provider_bootstrap else BaseCloudifyInputsConfigReader
+        properties_name = env.handler_configuration.get('properties')
+        if properties_name:
+            properties = env.suites_yaml['handler_properties'][properties_name]
+            processed_properties = process_variables(env.suites_yaml,
+                                                     properties)
+            for attr_name, attr_value in processed_properties.items():
+                setattr(self, attr_name, attr_value)
 
     @contextmanager
     def update_cloudify_config(self):
-        with YamlPatcher(self.env.cloudify_config_path,
-                         not self.env.is_provider_bootstrap) as patch:
+        with YamlPatcher(self.env.cloudify_config_path) as patch:
             yield patch
         self.env.cloudify_config = yaml.load(
             self.env.cloudify_config_path.text())
         self.env._config_reader = self.CloudifyConfigReader(
             self.env.cloudify_config,
             manager_blueprint_path=self.env._manager_blueprint_path)
+
+    @property
+    def is_docker_bootstrap(self):
+        return (not self.env.is_provider_bootstrap and
+                self.env._config_reader.docker_url is not None)
 
     def before_bootstrap(self):
         pass

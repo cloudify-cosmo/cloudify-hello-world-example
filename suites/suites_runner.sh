@@ -2,7 +2,6 @@
 
 setenv()
 {
-    # So that we get to see output faster from docker-logs
     export PYTHONUNBUFFERED="true"
 }
 
@@ -18,16 +17,18 @@ create_virtualenv_if_needed_and_source()
     fi
 }
 
-run_system_tests()
+suites_runner()
 {
-    ./suites_runner.py
+    variables_yaml_path=$(mktemp)
+    python helpers/variables_builder.py ${variables_yaml_path}
+    python suites_runner.py ${variables_yaml_path}
 }
 
 main()
 {
     setenv
     create_virtualenv_if_needed_and_source
-    run_system_tests
+    suites_runner
 }
 
 main
