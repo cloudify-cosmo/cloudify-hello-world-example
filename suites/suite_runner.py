@@ -219,8 +219,8 @@ class SuiteRunner(object):
     def run_nose(self):
         test_groups = {}
         for test in self.test_suite['tests']:
-            if test in self.suites_yaml:
-                test = self.suites_yaml[test]
+            if test in self.suites_yaml['tests']:
+                test = self.suites_yaml['tests'][test]
             elif isinstance(test, basestring):
                 test = {'tests': [test]}
 
