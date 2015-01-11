@@ -39,9 +39,6 @@ def main():
     with open(variables_path, 'w') as f:
         f.write(yaml_dump)
 
-    logger.info('Extracted QuickBuild variables:\n{0}'
-                .format(yaml_dump))
-
 
 def _get_parent_configuration_id(configuration_id, qb_url, auth):
     parent_endpoint = ('{0}/rest/configurations/{1}/parent'
