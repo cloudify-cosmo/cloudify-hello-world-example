@@ -284,7 +284,7 @@ class TestCase(unittest.TestCase):
         self.env = test_environment.setup()
         self.logger = logging.getLogger(self._testMethodName)
         self.logger.setLevel(logging.INFO)
-        self.logger('Starting test setUp')
+        self.logger.info('Starting test setUp')
         self.workdir = tempfile.mkdtemp(prefix='cosmo-test-')
         self.cfy = CfyHelper(cfy_workdir=self.workdir,
                              management_ip=self.env.management_ip)
