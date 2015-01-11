@@ -355,4 +355,3 @@ class NeutronGaloreTest(TestCase):
             return True
         except SystemExit:
             return False
-
