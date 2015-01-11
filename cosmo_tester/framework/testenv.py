@@ -63,17 +63,20 @@ test_environment = None
 
 
 def initialize_without_bootstrap():
+    logger.info('TestEnvironment initialize without bootstrap')
     global test_environment
     if not test_environment:
         test_environment = TestEnvironment()
 
 
 def clear_environment():
+    logger.info('TestEnvironment clear')
     global test_environment
     test_environment = None
 
 
 def bootstrap():
+    logger.info('TestEnvironment initialize with bootstrap')
     global test_environment
     if not test_environment:
         test_environment = TestEnvironment()
@@ -81,9 +84,11 @@ def bootstrap():
 
 
 def teardown():
+    logger.info('TestEnvironment teardown')
     global test_environment
     if test_environment:
         try:
+            logger.info('TestEnvironment teardown - starting')
             test_environment.teardown()
         finally:
             clear_environment()
@@ -279,6 +284,7 @@ class TestCase(unittest.TestCase):
         self.env = test_environment.setup()
         self.logger = logging.getLogger(self._testMethodName)
         self.logger.setLevel(logging.INFO)
+        self.logger('Starting test setUp')
         self.workdir = tempfile.mkdtemp(prefix='cosmo-test-')
         self.cfy = CfyHelper(cfy_workdir=self.workdir,
                              management_ip=self.env.management_ip)
@@ -295,6 +301,7 @@ class TestCase(unittest.TestCase):
         shutil.rmtree(self.workdir)
 
     def tearDown(self):
+        self.logger.info('Starting test tearDown')
         # note that the cleanup function is registered in setUp
         # because it is called regardless of whether setUp succeeded or failed
         # unlike tearDown which is not called when setUp fails (which might
