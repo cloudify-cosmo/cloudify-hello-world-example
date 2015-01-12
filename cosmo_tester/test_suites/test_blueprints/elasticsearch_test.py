@@ -20,7 +20,7 @@ from neutronclient.common.exceptions import NeutronClientException
 
 from cosmo_tester.framework import util
 from cosmo_tester.framework.testenv import TestCase
-from cosmo_tester.framework.handlers.openstack import OpenstackHandler
+
 
 ELASTICSEARCH_PORT = 9200
 
@@ -42,6 +42,7 @@ class ElasticsearchTimestampFormatTest(TestCase):
     """
 
     def _create_elasticsearch_rule(self):
+        from system_tests.openstack_handler import OpenstackHandler
         os_handler = OpenstackHandler(self.env)
         neutron_client = os_handler.openstack_clients()[1]
         sgr = {
@@ -80,6 +81,7 @@ class ElasticsearchTimestampFormatTest(TestCase):
 
     def _delete_elasticsearch_rule(self):
         if self.elasticsearch_rule is not None:
+            from system_tests.openstack_handler import OpenstackHandler
             os_handler = OpenstackHandler(self.env)
             neutron_client = os_handler.openstack_clients()[1]
             neutron_client.delete_security_group_rule(self.elasticsearch_rule)
