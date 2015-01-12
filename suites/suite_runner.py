@@ -265,6 +265,7 @@ class SuiteRunner(object):
                               nologcapture=True,
                               with_xunit=True,
                               xunit_file=report_file,
+                              xunit_testsuite_name=self.test_suite_name,
                               *processed_tests).wait()
                 except sh.ErrorReturnCode:
                     failed_groups.append(test_group)
