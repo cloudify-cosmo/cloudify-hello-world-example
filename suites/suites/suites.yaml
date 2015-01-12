@@ -455,7 +455,7 @@ test_suites:
   dockerless_hp_openstack_blueprints_no_chef_puppet_docker:
     handler_configuration: hp_openstack_dockerless_system_tests_region_b
     tests:
-      - openstack_blueprints_without_chef_puppet_and_docker
+      - openstack_blueprints_without_chef_puppet_docker
 
   dockerless_hp_openstack_manager_status:
     handler_configuration: hp_openstack_dockerless_system_tests2_region_a
