@@ -377,12 +377,9 @@ handler_configurations:
 
 tests:
 
-  openstack_blueprints:
-    tests:
-      - cosmo_tester/test_suites/test_blueprints
-
   openstack_blueprints_without_chef_puppet:
-    - cosmo_tester/test_suites/test_blueprints -e puppet -e chef
+    tests:
+      - cosmo_tester/test_suites/test_blueprints -e puppet -e chef
 
   openstack_chef_puppet_blueprints:
     tests:
@@ -428,7 +425,7 @@ test_suites:
   hp_openstack_chef_puppet:
     handler_configuration: hp_openstack_system_tests_region_b
     tests:
-      - openstack_blueprints
+      - openstack_chef_puppet_blueprints
 
   hp_openstack_manager_status:
     handler_configuration: hp_openstack_system_tests2_region_a
@@ -450,7 +447,7 @@ test_suites:
   dockerless_hp_openstack_chef_puppet:
     handler_configuration: hp_openstack_dockerless_system_tests_region_b
     tests:
-      - openstack_blueprints
+      - openstack_chef_puppet_blueprints
 
   dockerless_hp_openstack_manager_status:
     handler_configuration: hp_openstack_dockerless_system_tests2_region_a
