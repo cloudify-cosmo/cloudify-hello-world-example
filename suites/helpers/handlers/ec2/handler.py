@@ -17,7 +17,6 @@
 import random
 import os
 import copy
-import logging
 from time import sleep
 from contextlib import contextmanager
 
@@ -28,7 +27,6 @@ from cosmo_tester.framework.handlers import (
     BaseCloudifyProviderConfigReader
 )
 from cosmo_tester.framework.util import get_actual_keypath
-from cosmo_tester.framework.testenv import CLOUDIFY_TEST_NO_CLEANUP
 
 
 def boto_client(libcloud_provider_name, access_id=None, secret_key=None):
@@ -180,12 +178,11 @@ class Ec2CleanupContext(BaseHandler.CleanupContext):
         super(Ec2CleanupContext, self).__init__(context_name,
                                                 env)
         self.before_run = ec2_infra_state(env.cloudify_config)
-        self.logger = logging.getLogger('Ec2CleanupContext')
 
     def cleanup(self):
         super(Ec2CleanupContext, self).cleanup()
         resources_to_teardown = self.get_resources_to_teardown()
-        if os.environ.get(CLOUDIFY_TEST_NO_CLEANUP):
+        if self.skip_cleanup:
             self.logger.warn('[{0}] SKIPPING cleanup: of the resources: {1}'
                              .format(self.context_name, resources_to_teardown))
             return
@@ -264,16 +261,14 @@ class CloudifyEc2ConfigReader(BaseCloudifyProviderConfigReader):
 
 
 class LibcloudHandler(BaseHandler):
-    provider = 'libcloud'
-    CleanupContext = Ec2CleanupContext
-    CloudifyConfigReader = None
 
-    medium_instance_type = 'm1.medium'
-    ubuntu_agent_ami = 'ami-a73264ce'
+    CleanupContext = Ec2CleanupContext
+    CloudifyConfigReader = CloudifyEc2ConfigReader
+
+    provider = 'libcloud'
 
     def __init__(self, env):
         super(LibcloudHandler, self).__init__(env)
-        self.CloudifyConfigReader = CloudifyEc2ConfigReader
         self._ubuntu_ami = None
 
     @property
@@ -295,12 +290,14 @@ class LibcloudHandler(BaseHandler):
         return self._ubuntu_ami
 
     def before_bootstrap(self):
+        super(self, LibcloudHandler).before_bootstrap()
         with self.update_cloudify_config() as patch:
             suffix = '-%06x' % random.randrange(16 ** 6)
             patch.append_value('compute.management_server.instance.name',
                                suffix)
 
     def after_bootstrap(self, provider_context):
+        super(self, LibcloudHandler).after_bootstrap(provider_context)
         resources = provider_context['resources']
         agent_keypair = resources['agents_keypair']
         management_keypair = resources['management_keypair']
@@ -308,6 +305,7 @@ class LibcloudHandler(BaseHandler):
         self.remove_management_keypair = management_keypair['created'] is True
 
     def after_teardown(self):
+        super(self, LibcloudHandler).after_teardown()
         if self.remove_agent_keypair:
             agent_key_path = get_actual_keypath(self.env,
                                                 self.env.agent_key_path,
@@ -324,3 +322,4 @@ class LibcloudHandler(BaseHandler):
 
 
 handler = LibcloudHandler
+provider_repo = 'cloudify-libcloud-provider'

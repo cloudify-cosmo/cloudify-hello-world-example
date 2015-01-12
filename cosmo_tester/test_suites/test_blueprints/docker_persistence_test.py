@@ -17,12 +17,14 @@
 # main container and restart it using the data container and see that we can
 # still deploy the nodecellar app on it.
 
-from cosmo_tester.framework.util import YamlPatcher
-from cosmo_tester.test_suites.test_blueprints import nodecellar_test
-import fabric.api
-from time import sleep, time
 import urllib
 import json
+from time import sleep, time
+
+import fabric.api
+
+from cosmo_tester.framework.util import YamlPatcher
+from cosmo_tester.test_suites.test_blueprints import nodecellar_test
 
 
 class DockerPersistenceTest(nodecellar_test.NodecellarAppTest):
