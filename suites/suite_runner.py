@@ -265,7 +265,10 @@ class SuiteRunner(object):
                               nologcapture=True,
                               with_xunit=True,
                               xunit_file=report_file,
-                              xunit_testsuite_name=self.test_suite_name,
+                              # https://github.com/nose-devs/nose/pull/860
+                              # has been merged to master, uncomment when
+                              # version is greater than 1.3.4
+                              # xunit_testsuite_name=self.test_suite_name,
                               *processed_tests).wait()
                 except sh.ErrorReturnCode:
                     failed_groups.append(test_group)
