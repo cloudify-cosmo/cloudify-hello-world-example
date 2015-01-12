@@ -2,7 +2,7 @@ username: ''
 api_key: ''
 endpoint_url: ''
 location: 352494
-domain: cloudify.org
+domain: systest-manager.cloudify.org
 ram: 864
 cpu: 859
 disk: 1178
@@ -17,7 +17,5 @@ public_vlan: ''
 provision_scripts: []
 ssh_keys: [121388]
 agents_user: root
-manager_server_user: root
-manager_private_key_path: ~/.ssh/id_rsa
-agent_private_key_path: ~/.ssh/id_rsa
+ssh_key_filename: ~/.ssh/id_rsa
 resources_prefix: systest
