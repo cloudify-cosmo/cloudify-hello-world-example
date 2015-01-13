@@ -193,9 +193,10 @@ class SuiteRunner(object):
                 manager_blueprints_dir=self.manager_blueprints_dir,
                 variables=self.variables)
 
-        self.handler_configuration['manager_blueprint'] = \
-            os.path.join(self.manager_blueprints_dir,
-                         self.handler_configuration['manager_blueprint'])
+        if 'manager_blueprint' in self.handler_configuration:
+            self.handler_configuration['manager_blueprint'] = \
+                os.path.join(self.manager_blueprints_dir,
+                             self.handler_configuration['manager_blueprint'])
         self.handler_configuration['inputs'] = self.inputs_path
         generated_suites_yaml = self.suites_yaml.copy()
         handler_configuration_name = self.test_suite['handler_configuration']
