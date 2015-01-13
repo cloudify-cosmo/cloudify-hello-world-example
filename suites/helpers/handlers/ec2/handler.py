@@ -290,14 +290,14 @@ class LibcloudHandler(BaseHandler):
         return self._ubuntu_ami
 
     def before_bootstrap(self):
-        super(self, LibcloudHandler).before_bootstrap()
+        super(LibcloudHandler, self).before_bootstrap()
         with self.update_cloudify_config() as patch:
             suffix = '-%06x' % random.randrange(16 ** 6)
             patch.append_value('compute.management_server.instance.name',
                                suffix)
 
     def after_bootstrap(self, provider_context):
-        super(self, LibcloudHandler).after_bootstrap(provider_context)
+        super(LibcloudHandler, self).after_bootstrap(provider_context)
         resources = provider_context['resources']
         agent_keypair = resources['agents_keypair']
         management_keypair = resources['management_keypair']
@@ -305,7 +305,7 @@ class LibcloudHandler(BaseHandler):
         self.remove_management_keypair = management_keypair['created'] is True
 
     def after_teardown(self):
-        super(self, LibcloudHandler).after_teardown()
+        super(LibcloudHandler, self).after_teardown()
         if self.remove_agent_keypair:
             agent_key_path = get_actual_keypath(self.env,
                                                 self.env.agent_key_path,
