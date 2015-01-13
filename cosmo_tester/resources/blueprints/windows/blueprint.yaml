@@ -16,7 +16,7 @@ node_templates:
     properties:
       server:
         name: windows-agent-vm
-        image_name: windows-agent-machine
+        image_name: MODIFIED_BY_TEST
         flavor: 102
       cloudify_agent:
          service:
