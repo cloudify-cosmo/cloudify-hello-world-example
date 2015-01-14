@@ -46,6 +46,9 @@ variables:
   system_tests_hp_username: _
   system_tests_hp_password: _
 
+  system_tests_lab_os_username: _
+  system_tests_lab_os_password: _
+
   system_test_ec2_access_id: _
   system_test_ec2_secret_key: _
 
@@ -310,21 +313,69 @@ handler_configurations:
 
   ############################################################################
 
-  lab_openstack_test_tenant:
+  lab_openstack_system_tests1:
     <<: *lab_openstack_handler_configuration
-    env: lab_openstack
+    env: lab_openstack_1
     inputs_override:
       <<: *lab_openstack_credentials_inputs
       <<: *lab_openstack_inputs
-      keystone_tenant_name: test
+      keystone_tenant_name: system-tests/system-tests-1
 
-  lab_openstack_dockerless_test_tenant:
+  lab_openstack_dockerless_system_tests1:
     <<: *lab_openstack_dockerless_handler_configuration
-    env: lab_openstack
+    env: lab_openstack_1
     inputs_override:
       <<: *lab_openstack_credentials_inputs
       <<: *lab_openstack_dockerless_inputs
-      keystone_tenant_name: test
+      keystone_tenant_name: system-tests/system-tests-1
+
+  lab_openstack_system_tests2:
+    <<: *lab_openstack_handler_configuration
+    env: lab_openstack_2
+    inputs_override:
+      <<: *lab_openstack_credentials_inputs
+      <<: *lab_openstack_inputs
+      keystone_tenant_name: system-tests/system-tests-2
+
+  lab_openstack_dockerless_system_tests2:
+    <<: *lab_openstack_dockerless_handler_configuration
+    env: lab_openstack_2
+    inputs_override:
+      <<: *lab_openstack_credentials_inputs
+      <<: *lab_openstack_dockerless_inputs
+      keystone_tenant_name: system-tests/system-tests-2
+
+  lab_openstack_system_tests3:
+    <<: *lab_openstack_handler_configuration
+    env: lab_openstack_3
+    inputs_override:
+      <<: *lab_openstack_credentials_inputs
+      <<: *lab_openstack_inputs
+      keystone_tenant_name: system-tests/system-tests-3
+
+  lab_openstack_dockerless_system_tests3:
+    <<: *lab_openstack_dockerless_handler_configuration
+    env: lab_openstack_3
+    inputs_override:
+      <<: *lab_openstack_credentials_inputs
+      <<: *lab_openstack_dockerless_inputs
+      keystone_tenant_name: system-tests/system-tests-3
+
+  lab_openstack_system_tests4:
+    <<: *lab_openstack_handler_configuration
+    env: lab_openstack_4
+    inputs_override:
+      <<: *lab_openstack_credentials_inputs
+      <<: *lab_openstack_inputs
+      keystone_tenant_name: system-tests/system-tests-4
+
+  lab_openstack_dockerless_system_tests4:
+    <<: *lab_openstack_dockerless_handler_configuration
+    env: lab_openstack_4
+    inputs_override:
+      <<: *lab_openstack_credentials_inputs
+      <<: *lab_openstack_dockerless_inputs
+      keystone_tenant_name: system-tests/system-tests-4
 
   ###############################################################################
 
