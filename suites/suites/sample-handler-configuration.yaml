@@ -56,7 +56,7 @@ properties: hp_openstack_region_b_properties
 ######################################################
 # if set to true, will use providers instead of manager
 # blueprints
-# bootstrap_using_provider: false
+# bootstrap_using_providers: false
 
 ######################################################
 # set to false to prevent the --install-plugins
