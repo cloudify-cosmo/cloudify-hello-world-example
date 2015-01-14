@@ -319,7 +319,7 @@ handler_configurations:
     inputs_override:
       <<: *lab_openstack_credentials_inputs
       <<: *lab_openstack_inputs
-      keystone_tenant_name: system-tests/system-tests-1
+      keystone_tenant_name: system-tests/system-test-1
 
   lab_openstack_dockerless_system_tests1:
     <<: *lab_openstack_dockerless_handler_configuration
@@ -327,7 +327,7 @@ handler_configurations:
     inputs_override:
       <<: *lab_openstack_credentials_inputs
       <<: *lab_openstack_dockerless_inputs
-      keystone_tenant_name: system-tests/system-tests-1
+      keystone_tenant_name: system-tests/system-test-1
 
   lab_openstack_system_tests2:
     <<: *lab_openstack_handler_configuration
@@ -335,7 +335,7 @@ handler_configurations:
     inputs_override:
       <<: *lab_openstack_credentials_inputs
       <<: *lab_openstack_inputs
-      keystone_tenant_name: system-tests/system-tests-2
+      keystone_tenant_name: system-tests/system-test-2
 
   lab_openstack_dockerless_system_tests2:
     <<: *lab_openstack_dockerless_handler_configuration
@@ -343,7 +343,7 @@ handler_configurations:
     inputs_override:
       <<: *lab_openstack_credentials_inputs
       <<: *lab_openstack_dockerless_inputs
-      keystone_tenant_name: system-tests/system-tests-2
+      keystone_tenant_name: system-tests/system-test-2
 
   lab_openstack_system_tests3:
     <<: *lab_openstack_handler_configuration
@@ -351,7 +351,7 @@ handler_configurations:
     inputs_override:
       <<: *lab_openstack_credentials_inputs
       <<: *lab_openstack_inputs
-      keystone_tenant_name: system-tests/system-tests-3
+      keystone_tenant_name: system-tests/system-test-3
 
   lab_openstack_dockerless_system_tests3:
     <<: *lab_openstack_dockerless_handler_configuration
@@ -359,7 +359,7 @@ handler_configurations:
     inputs_override:
       <<: *lab_openstack_credentials_inputs
       <<: *lab_openstack_dockerless_inputs
-      keystone_tenant_name: system-tests/system-tests-3
+      keystone_tenant_name: system-tests/system-test-3
 
   lab_openstack_system_tests4:
     <<: *lab_openstack_handler_configuration
@@ -367,7 +367,7 @@ handler_configurations:
     inputs_override:
       <<: *lab_openstack_credentials_inputs
       <<: *lab_openstack_inputs
-      keystone_tenant_name: system-tests/system-tests-4
+      keystone_tenant_name: system-tests/system-test-4
 
   lab_openstack_dockerless_system_tests4:
     <<: *lab_openstack_dockerless_handler_configuration
@@ -375,7 +375,7 @@ handler_configurations:
     inputs_override:
       <<: *lab_openstack_credentials_inputs
       <<: *lab_openstack_dockerless_inputs
-      keystone_tenant_name: system-tests/system-tests-4
+      keystone_tenant_name: system-tests/system-test-4
 
   ###############################################################################
 
