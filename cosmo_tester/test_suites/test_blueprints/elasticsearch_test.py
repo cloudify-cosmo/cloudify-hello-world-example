@@ -93,7 +93,7 @@ class ElasticsearchTimestampFormatTest(TestCase):
 
     def test_events_timestamp_format(self):
         self.blueprint_path = self.copy_blueprint('mocks')
-        self.blueprint_yaml = self.blueprint_path / 'empty-bp.yaml'
+        self.blueprint_yaml = self.blueprint_path / 'empty-blueprint.yaml'
 
         deployment_id = self.test_id
         self.upload_deploy_and_execute_install(deployment_id=deployment_id)

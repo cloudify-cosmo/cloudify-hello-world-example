@@ -130,7 +130,8 @@ class ChefPluginClientTest(TestCase):
                                             self.env.agent_key_path)
 
         blueprint_dir = self.copy_blueprint('chef-plugin')
-        self.blueprint_yaml = blueprint_dir / 'chef-server-by-chef-solo.yaml'
+        self.blueprint_yaml = (
+            blueprint_dir / 'chef-server-by-chef-solo-blueprint.yaml')
 
         with YamlPatcher(self.blueprint_yaml) as blueprint:
             bp_info, inputs = update_blueprint(self.env, blueprint,
@@ -193,7 +194,7 @@ class ChefPluginClientTest(TestCase):
 
     def test_chef_client(self):
         blueprint_dir = self.blueprint_dir
-        self.blueprint_yaml = blueprint_dir / 'chef-client-test.yaml'
+        self.blueprint_yaml = blueprint_dir / 'chef-client-test-blueprint.yaml'
         with YamlPatcher(self.blueprint_yaml) as blueprint:
             _, inputs = update_blueprint(self.env, blueprint, 'chef-server', {
                 'chef_server_ip': self.chef_server_ip,
@@ -246,7 +247,7 @@ class ChefPluginSoloTest(TestCase):
         agent_key_file = get_actual_keypath(self.env,
                                             self.env.agent_key_path)
         blueprint_dir = self.blueprint_dir
-        self.blueprint_yaml = blueprint_dir / 'chef-solo-test.yaml'
+        self.blueprint_yaml = blueprint_dir / 'chef-solo-test-blueprint.yaml'
         with YamlPatcher(self.blueprint_yaml) as blueprint:
             bp_info, inputs = update_blueprint(self.env, blueprint,
                                                'chef-solo')

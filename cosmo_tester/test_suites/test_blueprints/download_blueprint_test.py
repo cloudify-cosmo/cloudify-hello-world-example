@@ -43,13 +43,14 @@ class DownloadBlueprintTest(TestCase):
 
     def download_blueprint_test(self):
         blueprint_path = self.copy_blueprint('mocks')
-        blueprint_yaml = blueprint_path / 'single-node.yaml'
+        blueprint_yaml = blueprint_path / 'single-node-blueprint.yaml'
         self.cfy.upload_blueprint(self.blueprint_id, blueprint_yaml)
         self.cfy.download_blueprint(self.blueprint_id)
         self.assertTrue(os.path.exists(self.downloaded_archive_path))
         self._extract_tar_file()
-        downloaded_blueprint_file = os.path.join(self.download_path,
-                                                 'mocks/single-node.yaml')
+        downloaded_blueprint_file = os.path.join(
+            self.download_path,
+            'mocks/single-node-blueprint.yaml')
         self.assertTrue(os.path.exists(downloaded_blueprint_file))
         self.assertTrue(filecmp.cmp(blueprint_yaml, downloaded_blueprint_file))
 
