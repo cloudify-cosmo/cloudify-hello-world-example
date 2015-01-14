@@ -131,7 +131,8 @@ class PuppetPluginAgentTest(TestCase):
 
         self.logger.info('Setting up Puppet master')
 
-        self.blueprint_yaml = blueprint_dir / 'puppet-server-by-puppet.yaml'
+        self.blueprint_yaml = (
+            blueprint_dir / 'puppet-server-by-puppet-blueprint.yaml')
 
         with YamlPatcher(self.blueprint_yaml) as blueprint:
             bp_info, inputs = update_blueprint(self.env, blueprint,
@@ -166,7 +167,8 @@ class PuppetPluginAgentTest(TestCase):
 
     def test_puppet_agent(self):
         blueprint_dir = self.blueprint_dir
-        self.blueprint_yaml = blueprint_dir / 'puppet-agent-test.yaml'
+        self.blueprint_yaml = (
+            blueprint_dir / 'puppet-agent-test-blueprint.yaml')
         with YamlPatcher(self.blueprint_yaml) as blueprint:
             bp_info, inputs = update_blueprint(
                 self.env, blueprint,
@@ -224,7 +226,8 @@ class PuppetPluginStandaloneTest(TestCase):
                                                      str(int(time.time())))
         blueprint_dir = self.copy_blueprint('puppet-plugin')
 
-        self.blueprint_yaml = blueprint_dir / 'puppet-standalone-test.yaml'
+        self.blueprint_yaml = (
+            blueprint_dir / 'puppet-standalone-test-blueprint.yaml')
         with YamlPatcher(self.blueprint_yaml) as blueprint:
             _, inputs = update_blueprint(self.env, blueprint,
                                          'puppet-standalone-nodl')
@@ -285,7 +288,8 @@ class PuppetPluginStandaloneTest(TestCase):
         call(['tar', '-vczf', os.path.join(blueprint_dir, MANIFESTS_FILE_NAME),
               '-C', temp_dir, '.'])
 
-        self.blueprint_yaml = blueprint_dir / 'puppet-standalone-test.yaml'
+        self.blueprint_yaml = (
+            blueprint_dir / 'puppet-standalone-test-blueprint.yaml')
         with YamlPatcher(self.blueprint_yaml) as blueprint:
             _, inputs = update_blueprint(self.env, blueprint,
                                          'puppet-standalone-' + mode)
