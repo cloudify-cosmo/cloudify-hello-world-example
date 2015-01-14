@@ -42,9 +42,9 @@ class OpenStackAutohealNodeCellarTest(OpenStackNodeCellarTestBase):
             'policies': {
                 'simple_autoheal_policy': {
                     'type': 'cloudify.policies.types.host_failure',
-                    'properties':
-                        service:
-                            - example
+                    'properties': {
+                        'service': ['example']
+                    },
                     'triggers': {
                         'auto_heal_trigger': {
                             'type':
