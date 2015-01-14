@@ -21,4 +21,6 @@ management_subnet_name: systemt-cloudify-management-network-subnet
 management_router: systemt-cloudify-management-router
 manager_security_group_name: systemt-cloudify-sg-manager
 agents_security_group_name: systemt-cloudify-sg-agents
+manager_port_name: systemt-cloudify-manager-port
+manager_volume_name: systemt-cloudify-manager-volume
 resources_prefix: ''
