@@ -4,8 +4,9 @@ keystone_tenant_name: ''
 region: ''
 image_id: ''
 keystone_url: http://192.168.9.161:5000/v2.0
-manager_public_key_name: shared-systemt-tests-key
-agent_public_key_name: shared-systemt-tests-key
+# limitation on key name length generation in openstack lab horizen
+manager_public_key_name: shared-systemt-tests
+agent_public_key_name: shared-systemt-tests
 flavor_id: ba4e08fd-e4c5-4233-a906-f1bb31cb659d
 external_network_name: public
 
