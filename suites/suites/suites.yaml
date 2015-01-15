@@ -92,8 +92,8 @@ templates:
     node_templates.manager.properties.cloudify_packages.server.core_package_url: '{{core_package_url}}'
     node_templates.manager.properties.cloudify_packages.server.ui_package_url: '{{ui_package_url}}'
     # add stub input placeholders so we can have the same inputs file for docker/dockerless paths
-    inputs.manager_port_name: {}
-    inputs.manager_volume_name: {}
+    inputs.manager_port_name.default: stub
+    inputs.manager_volume_name.default: stub
 
   ######################################################
 
