@@ -68,8 +68,10 @@ def test_run():
 
 def setenv(variables_path):
     setup_reports_dir()
+    descriptor = os.environ['SYSTEM_TESTS_DESCRIPTOR']
     os.environ[TEST_SUITES_PATH] = build_suites_yaml('suites/suites.yaml',
-                                                     variables_path)
+                                                     variables_path,
+                                                     descriptor)
 
 
 def validate():

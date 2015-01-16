@@ -1,4 +1,3 @@
-import os
 import tempfile
 import logging
 
@@ -8,22 +7,12 @@ logger = logging.getLogger('suites_builder')
 logger.setLevel(logging.INFO)
 
 
-def build_suites_yaml(all_suites_yaml_path, variables_path):
-    env_system_tests_suites = os.environ['SYSTEM_TESTS_SUITES']
-    env_custom = os.environ['SYSTEM_TESTS_CUSTOM']
-    env_custom_descriptor = os.environ['SYSTEM_TESTS_CUSTOM_DESCRIPTOR']
+def build_suites_yaml(all_suites_yaml_path,
+                      variables_path,
+                      descriptor):
 
     logger.info('Generating suites yaml:\n'
-                '\tSYSTEM_TESTS_SUITES={}\n'
-                '\tSYSTEM_TESTS_CUSTOM={}\n'
-                '\tSYSTEM_TESTS_CUSTOM_DESCRIPTOR={}\n'
-                .format(env_system_tests_suites,
-                        env_custom,
-                        env_custom_descriptor))
-
-    tests_suites_names = [s.strip() for s
-                          in env_system_tests_suites.split(',')]
-    custom = env_custom == 'yes'
+                '\descriptor={}'.format(descriptor))
 
     with open(variables_path) as f:
         variables = yaml.load(f.read())
@@ -31,12 +20,7 @@ def build_suites_yaml(all_suites_yaml_path, variables_path):
         suites_yaml = yaml.load(f.read())
     suites_yaml_path = tempfile.mktemp(prefix='suites-', suffix='.json')
 
-    if custom:
-        test_suites = parse_custom_descriptor(env_custom_descriptor)
-    else:
-        test_suites = {suite_name: suite for suite_name, suite
-                       in suites_yaml['test_suites'].items()
-                       if suite_name in tests_suites_names}
+    test_suites = parse_descriptor(suites_yaml, descriptor)
 
     suites_yaml['variables'] = suites_yaml.get('variables', {})
     suites_yaml['variables'].update(variables)
@@ -47,15 +31,21 @@ def build_suites_yaml(all_suites_yaml_path, variables_path):
     return suites_yaml_path
 
 
-def parse_custom_descriptor(custom_descriptor):
+def parse_descriptor(suites_yaml, custom_descriptor):
+    preconfigured = suites_yaml['test_suites']
     result = {}
     suite_descriptors = [s.strip() for s in custom_descriptor.split('#')]
     for i, suite_descriptor in enumerate(suite_descriptors, start=1):
-        tests, handler_configuration = suite_descriptor.split('@')
-        tests = [s.strip() for s in tests.split(',')]
-        handler_configuration = handler_configuration.strip()
-        result['{0}_{1}'.format(handler_configuration, i)] = {
-            'handler_configuration': handler_configuration,
-            'tests': tests
-        }
+        if '@' in suite_descriptor:
+            # custom suite
+            tests, handler_configuration = suite_descriptor.split('@')
+            tests = [s.strip() for s in tests.split(',')]
+            handler_configuration = handler_configuration.strip()
+            result['{0}_{1}'.format(handler_configuration, i)] = {
+                'handler_configuration': handler_configuration,
+                'tests': tests
+            }
+
+        else:
+            result[suite_descriptor] = preconfigured[suite_descriptor]
     return result
