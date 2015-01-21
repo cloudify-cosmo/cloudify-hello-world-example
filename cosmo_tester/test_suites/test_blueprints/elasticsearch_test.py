@@ -77,6 +77,9 @@ class ElasticsearchTimestampFormatTest(TestCase):
 
     def setUp(self):
         super(ElasticsearchTimestampFormatTest, self).setUp()
+        # addCleanup is always called, tearDown is not called
+        # if setUp fails
+        self.addCleanup(self._delete_elasticsearch_rule)
         self._create_elasticsearch_rule()
 
     def _delete_elasticsearch_rule(self):
@@ -88,7 +91,6 @@ class ElasticsearchTimestampFormatTest(TestCase):
 
     def tearDown(self):
         self.execute_uninstall()
-        self._delete_elasticsearch_rule()
         super(ElasticsearchTimestampFormatTest, self).tearDown()
 
     def test_events_timestamp_format(self):

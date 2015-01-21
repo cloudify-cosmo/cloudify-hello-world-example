@@ -125,6 +125,11 @@ def wait_for_open_port(ip, port, timeout):
 def check_port(ip, port):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     result = sock.connect_ex((ip, port))
+    try:
+        sock.shutdown()
+        sock.close()
+    except socket.error:
+        pass
     return result == 0
 
 
