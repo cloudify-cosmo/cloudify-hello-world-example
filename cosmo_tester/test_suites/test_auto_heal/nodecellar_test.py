@@ -24,18 +24,6 @@ from cosmo_tester.test_suites.test_blueprints.nodecellar_test import (
 
 class OpenStackAutohealNodeCellarTest(OpenStackNodeCellarTestBase):
 
-    AUTOHEAL_WORKFLOW_YAML = {
-        'auto_heal_workflow': {
-            'mapping': 'default_workflows.cloudify.plugins.workflows'
-                       '.auto_heal_reinstall_node_subgraph',
-            'parameters': {
-                'node_id': {
-                    'description': 'Which node has failed',
-                }
-            }
-        }
-    }
-
     AUTOHEAL_GROUP_YAML = {
         'autohealing_group': {
             'members': ['nodejs_host'],
@@ -50,7 +38,7 @@ class OpenStackAutohealNodeCellarTest(OpenStackNodeCellarTestBase):
                             'type':
                                 'cloudify.policies.triggers.execute_workflow',
                             'parameters': {
-                                'workflow': 'auto_heal_workflow',
+                                'workflow': 'heal',
                                 'allow_custom_parameters': True,
                                 'workflow_parameters': {
                                     'node_id': {
@@ -110,7 +98,7 @@ class OpenStackAutohealNodeCellarTest(OpenStackNodeCellarTestBase):
         executions = self.client.executions.list(
             deployment_id=self.deployment_id)
         for e in executions:
-            if e.workflow_id == 'auto_heal_workflow':
+            if e.workflow_id == 'heal':
                 return e
         return None
 
@@ -141,12 +129,20 @@ class OpenStackAutohealNodeCellarTest(OpenStackNodeCellarTestBase):
 
     def modify_blueprint(self):
         with YamlPatcher(self.blueprint_yaml) as patch:
-            patch.merge_obj('workflows', self.AUTOHEAL_WORKFLOW_YAML)
             patch.merge_obj('groups', self.AUTOHEAL_GROUP_YAML)
             patch.merge_obj("node_types.nodecellar\\.nodes\\.MonitoredServer."
                             'interfaces.cloudify\\.interfaces\\.monitoring.'
                             'start.inputs.collectors_config.default',
                             {'ExampleCollector': {}})
+            # TODO: Remove this link replacement when suitable
+            imports = patch._get_object_by_path('imports')
+            imports = [
+                imp if 'types.yaml' not in imp
+                else 'https://raw.githubusercontent.com/cloudify-cosmo/cloudify-manager/master'
+                     '/resources/rest-service/cloudify/types/types.yaml'
+                for imp in imports
+            ]
+            patch.set_value('imports', imports)
         print self.blueprint_yaml
 
     def get_inputs(self):
