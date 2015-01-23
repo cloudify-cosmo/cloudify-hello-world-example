@@ -12,7 +12,7 @@
 #    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
-
+import requests
 from cosmo_tester.framework.testenv import TestCase
 
 
@@ -36,6 +36,10 @@ class MonitoringTest(TestCase):
             expected_metric,
             timeout=300)
 
+        url = "http://{0}/#/deployment/{1}/monitoring" \
+              .format(self.env.management_ip, self.test_id)
+        self.assert_grafana_path_active(url)
+
         self.execute_uninstall()
 
     def wait_for_expected_outputs(self,
@@ -48,3 +52,10 @@ class MonitoringTest(TestCase):
             self.assertIn(expected_service_contains, outputs['service'] or '')
             self.assertEqual(expected_metric, outputs['metric'])
         self.repetitive(assertion, timeout=timeout)
+
+    def assert_grafana_path_active(self, url):
+        response = requests.get(url=url)
+        self.assertEqual(response.status_code, requests.codes.ok,
+                         "grafana url {0} returned status code {1}. "
+                         "expecting 200 OK status code"
+                         .format(url, response.status_code))

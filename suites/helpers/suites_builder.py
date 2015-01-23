@@ -1,70 +1,51 @@
-#! /usr/bin/env python
-# flake8: NOQA
-
-import sys
-import os
-import json
 import tempfile
 import logging
 
+import yaml
 
 logger = logging.getLogger('suites_builder')
 logger.setLevel(logging.INFO)
 
 
-def build_suites_json(all_suites_json_path):
-    env_system_tests_suites = os.environ['SYSTEM_TESTS_SUITES']
-    env_custom_suite = os.environ['SYSTEM_TESTS_CUSTOM_SUITE']
-    env_custom_suite_name = os.environ['SYSTEM_TESTS_CUSTOM_SUITE_NAME']
-    env_custom_tests_to_run = os.environ['SYSTEM_TESTS_CUSTOM_TESTS_TO_RUN']
-    env_custom_cloudify_config = os.environ['SYSTEM_TESTS_CUSTOM_CLOUDIFY_CONFIG']
-    env_custom_bootstrap_using_providers = os.environ['SYSTEM_TESTS_CUSTOM_BOOTSTRAP_USING_PROVIDERS']
-    env_custom_handler_module = os.environ['SYSTEM_TESTS_CUSTOM_HANDLER_MODULE']
+def build_suites_yaml(all_suites_yaml_path,
+                      variables_path,
+                      descriptor):
 
-    logger.info('Creating suites json configuration:\n'
-                '\tSYSTEM_TESTS_SUITES={}\n'
-                '\tSYSTEM_TESTS_CUSTOM_SUITE={}\n'
-                '\tSYSTEM_TESTS_CUSTOM_SUITE_NAME={}\n'
-                '\tSYSTEM_TESTS_CUSTOM_TESTS_TO_RUN={}\n'
-                '\tSYSTEM_TESTS_CUSTOM_CLOUDIFY_CONFIG={}\n'
-                '\tSYSTEM_TESTS_CUSTOM_BOOTSTRAP_USING_PROVIDERS={}\n'
-                '\tSYSTEM_TESTS_CUSTOM_HANDLER_MODULE={}'
-                .format(env_system_tests_suites,
-                        env_custom_suite,
-                        env_custom_suite_name,
-                        env_custom_tests_to_run,
-                        env_custom_cloudify_config,
-                        env_custom_bootstrap_using_providers,
-                        env_custom_handler_module))
+    logger.info('Generating suites yaml:\n'
+                '\descriptor={}'.format(descriptor))
 
-    tests_suites = [s.strip() for s in env_system_tests_suites.split(',')]
-    custom_suite = env_custom_suite == 'yes'
-    custom_suite_name = env_custom_suite_name
-    custom_tests_to_run = env_custom_tests_to_run
-    custom_cloudify_config = env_custom_cloudify_config
-    custom_bootstrap_using_providers = \
-        env_custom_bootstrap_using_providers == 'yes'
-    custom_handler_module = env_custom_handler_module
+    with open(variables_path) as f:
+        variables = yaml.load(f.read())
+    with open(all_suites_yaml_path) as f:
+        suites_yaml = yaml.load(f.read())
+    suites_yaml_path = tempfile.mktemp(prefix='suites-', suffix='.json')
 
-    suites_json_path = tempfile.mktemp(prefix='suites-', suffix='.json')
+    test_suites = parse_descriptor(suites_yaml, descriptor)
 
-    if custom_suite:
-        suites = [{
-            'suite_name': custom_suite_name,
-            'tests_to_run': custom_tests_to_run,
-            'cloudify_test_config': custom_cloudify_config,
-            'bootstrap_using_providers': custom_bootstrap_using_providers,
-            'cloudify_test_handler_module': custom_handler_module
-        }]
-    else:
-        with open(all_suites_json_path) as f:
-            all_suites = json.loads(f.read())
-        suites = []
-        for suite in all_suites:
-            if suite['suite_name'] in tests_suites:
-                suites.append(suite)
+    suites_yaml['variables'] = suites_yaml.get('variables', {})
+    suites_yaml['variables'].update(variables)
+    suites_yaml['test_suites'] = test_suites
+    with open(suites_yaml_path, 'w') as f:
+        f.write(yaml.safe_dump(suites_yaml))
 
-    with open(suites_json_path, 'w') as f:
-        f.write(json.dumps(suites))
+    return suites_yaml_path
 
-    return suites_json_path
+
+def parse_descriptor(suites_yaml, custom_descriptor):
+    preconfigured = suites_yaml['test_suites']
+    result = {}
+    suite_descriptors = [s.strip() for s in custom_descriptor.split('#')]
+    for i, suite_descriptor in enumerate(suite_descriptors, start=1):
+        if '@' in suite_descriptor:
+            # custom suite
+            tests, handler_configuration = suite_descriptor.split('@')
+            tests = [s.strip() for s in tests.split(',')]
+            handler_configuration = handler_configuration.strip()
+            result['{0}_{1}'.format(handler_configuration, i)] = {
+                'handler_configuration': handler_configuration,
+                'tests': tests
+            }
+
+        else:
+            result[suite_descriptor] = preconfigured[suite_descriptor]
+    return result

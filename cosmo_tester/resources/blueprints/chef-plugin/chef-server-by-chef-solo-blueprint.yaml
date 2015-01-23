@@ -1,0 +1,57 @@
+tosca_definitions_version: cloudify_dsl_1_0
+
+imports:
+    - http://www.getcloudify.org/spec/cloudify/3.2m3/types.yaml
+    - http://www.getcloudify.org/spec/openstack-plugin/1.2m3/plugin.yaml
+    - http://www.getcloudify.org/spec/chef-plugin/1.2m3/plugin.yaml
+
+inputs:
+    server_name: {}
+    image_name: {}
+    flavor_name: {}
+    security_groups: {}
+    userdata: {}
+
+node_templates:
+    chef_server:
+        type: cloudify.openstack.nodes.Server
+        properties:
+            install_agent: true
+            server:
+                name: { get_input: server_name }
+                image_name: { get_input: image_name }
+                flavor_name: { get_input: flavor_name }
+                security_groups: { get_input: security_groups }
+                userdata: { get_input: userdata }
+        relationships:
+            -   type: cloudify.openstack.server_connected_to_floating_ip
+                target: ip
+            -   type: cloudify.relationships.connected_to
+                target: chef_sg
+    ip:
+        type: cloudify.openstack.nodes.FloatingIP
+    chef_sg:
+        type: cloudify.openstack.nodes.SecurityGroup
+        properties:
+            security_group:
+                name: chef_sg
+            rules:
+                -   remote_ip_prefix: 0.0.0.0/0
+                    port: 22
+                -   remote_ip_prefix: 0.0.0.0/0
+                    port: 443
+    chef_service:
+        type: cloudify.chef.nodes.ApplicationServer
+        properties:
+            chef_config:
+                version: 11.10.4-1  # Chef Solo for installing Chef server
+                cookbooks: cookbooks.tar.gz
+                attributes:
+                    # https://github.com/opscode-cookbooks/chef-server
+                    chef-server:
+                        version: 11.0.11-1
+                runlists:
+                    create: recipe[chef-server]
+        relationships:
+            -   type: cloudify.relationships.contained_in
+                target: chef_server

@@ -24,16 +24,21 @@ import copy
 import os
 import importlib
 import json
-
 from StringIO import StringIO
 
 import yaml
 from fabric import api as fabric_api
 from path import path
+
 from cloudify_rest_client import CloudifyClient
 
-from cosmo_tester.framework.cfy_helper import CfyHelper
-from cosmo_tester.framework.util import get_blueprint_path, get_actual_keypath
+from cosmo_tester.framework.cfy_helper import (CfyHelper,
+                                               DEFAULT_EXECUTE_TIMEOUT)
+from cosmo_tester.framework.util import (get_blueprint_path,
+                                         get_actual_keypath,
+                                         process_variables,
+                                         YamlPatcher,
+                                         generate_unique_configurations)
 
 root = logging.getLogger()
 ch = logging.StreamHandler(sys.stdout)
@@ -48,33 +53,30 @@ for logging_handler in root.handlers:
     root.removeHandler(logging_handler)
 
 root.addHandler(ch)
-logger = logging.getLogger("TESTENV")
+logger = logging.getLogger('TESTENV')
 logger.setLevel(logging.DEBUG)
 
-CLOUDIFY_TEST_MANAGEMENT_IP = 'CLOUDIFY_TEST_MANAGEMENT_IP'
-CLOUDIFY_TEST_CONFIG_PATH = 'CLOUDIFY_TEST_CONFIG_PATH'
-CLOUDIFY_TEST_NO_CLEANUP = 'CLOUDIFY_TEST_NO_CLEANUP'
-CLOUDIFY_TEST_HANDLER_MODULE = 'CLOUDIFY_TEST_HANDLER_MODULE'
-MANAGER_BLUEPRINTS_DIR = 'MANAGER_BLUEPRINTS_DIR'
-BOOTSTRAP_USING_PROVIDERS = 'BOOTSTRAP_USING_PROVIDERS'
-INSTALL_MANAGER_BLUEPRINT_DEPENDENCIES = \
-    'INSTALL_MANAGER_BLUEPRINT_DEPENDENCIES'
+HANDLER_CONFIGURATION = 'HANDLER_CONFIGURATION'
+SUITES_YAML_PATH = 'SUITES_YAML_PATH'
 
 test_environment = None
 
 
 def initialize_without_bootstrap():
+    logger.info('TestEnvironment initialize without bootstrap')
     global test_environment
     if not test_environment:
         test_environment = TestEnvironment()
 
 
 def clear_environment():
+    logger.info('TestEnvironment clear')
     global test_environment
     test_environment = None
 
 
 def bootstrap():
+    logger.info('TestEnvironment initialize with bootstrap')
     global test_environment
     if not test_environment:
         test_environment = TestEnvironment()
@@ -82,9 +84,11 @@ def bootstrap():
 
 
 def teardown():
+    logger.info('TestEnvironment teardown')
     global test_environment
     if test_environment:
         try:
+            logger.info('TestEnvironment teardown - starting')
             test_environment.teardown()
         finally:
             clear_environment()
@@ -103,60 +107,93 @@ class TestEnvironment(object):
         self._manager_blueprint_path = None
         self._workdir = tempfile.mkdtemp(prefix='cloudify-testenv-')
 
-        if CLOUDIFY_TEST_CONFIG_PATH not in os.environ:
-            raise RuntimeError('a path to config must be configured '
-                               'in "CLOUDIFY_TEST_CONFIG_PATH" env variable')
-        self.cloudify_config_path = path(os.environ[CLOUDIFY_TEST_CONFIG_PATH])
+        if HANDLER_CONFIGURATION not in os.environ:
+            raise RuntimeError('handler configuration name must be configured '
+                               'in "HANDLER_CONFIGURATION" env variable')
+        handler_configuration = os.environ[HANDLER_CONFIGURATION]
+        suites_yaml_path = os.environ.get(
+            SUITES_YAML_PATH,
+            path(__file__).dirname().dirname().dirname() / 'suites' / 'suites'
+                                                         / 'suites.yaml')
+        with open(suites_yaml_path) as f:
+            self.suites_yaml = yaml.load(f.read())
+        if os.path.exists(os.path.expanduser(handler_configuration)):
+            configuration_path = os.path.expanduser(handler_configuration)
+            with open(configuration_path) as f:
+                self.handler_configuration = yaml.load(f.read())
+        else:
+            self.handler_configuration = self.suites_yaml[
+                'handler_configurations'][handler_configuration]
+
+        self.cloudify_config_path = path(os.path.expanduser(
+            self.handler_configuration['inputs']))
 
         if not self.cloudify_config_path.isfile():
-            raise RuntimeError('config file configured in env variable'
-                               ' {0} does not seem to exist'
+            raise RuntimeError('config file configured in handler '
+                               'configuration does not seem to exist: {0}'
                                .format(self.cloudify_config_path))
 
-        self.is_provider_bootstrap = \
-            self._get_boolean_env_var(BOOTSTRAP_USING_PROVIDERS, False)
+        self.is_provider_bootstrap = self.handler_configuration.get(
+            'bootstrap_using_providers', False)
 
-        if not self.is_provider_bootstrap and MANAGER_BLUEPRINTS_DIR not in \
-                os.environ:
-                raise RuntimeError(
-                    'manager blueprints dir must be configured in '
-                    '"MANAGER_BLUEPRINTS_DIR" env variable in order to '
-                    'run non-provider bootstraps')
+        if not self.is_provider_bootstrap and not (
+                'manager_blueprint' in self.handler_configuration):
+            raise RuntimeError(
+                'manager blueprint must be configured in handler '
+                'configuration in order to run non-provider bootstraps')
 
-        # make a temp config file so handlers can modify it at will
-        self._generate_unique_config()
+        if not self.is_provider_bootstrap:
+            manager_blueprint = self.handler_configuration['manager_blueprint']
+            self._manager_blueprint_path = os.path.expanduser(
+                manager_blueprint)
 
-        if CLOUDIFY_TEST_HANDLER_MODULE in os.environ:
-            handler_module_name = os.environ[CLOUDIFY_TEST_HANDLER_MODULE]
-        else:
-            handler_module_name = 'cosmo_tester.framework.handlers.openstack'
-        handler_module = importlib.import_module(handler_module_name)
+        # make a temp config files than can be modified freely
+        self._generate_unique_configurations()
+
+        if not self.is_provider_bootstrap:
+            with YamlPatcher(self._manager_blueprint_path) as patch:
+                manager_blueprint_override = process_variables(
+                    self.suites_yaml,
+                    self.handler_configuration.get(
+                        'manager_blueprint_override', {}))
+                for key, value in manager_blueprint_override.items():
+                    patch.set_value(key, value)
+
+        handler = self.handler_configuration['handler']
+        try:
+            handler_module = importlib.import_module(
+                'system_tests.{0}'.format(handler))
+        except ImportError:
+            handler_module = importlib.import_module(
+                'suites.helpers.handlers.{0}.handler'.format(handler))
         handler_class = getattr(handler_module, 'handler')
         self.handler = handler_class(self)
 
-        if not self.is_provider_bootstrap:
-            manager_blueprints_base_dir = os.environ[MANAGER_BLUEPRINTS_DIR]
-            self._manager_blueprint_path = \
-                os.path.join(manager_blueprints_base_dir,
-                             self.handler.manager_blueprint)
-
-        if CLOUDIFY_TEST_MANAGEMENT_IP in os.environ:
-            self._running_env_setup(os.environ[CLOUDIFY_TEST_MANAGEMENT_IP])
+        if 'manager_ip' in self.handler_configuration:
+            self._running_env_setup(self.handler_configuration['manager_ip'])
 
         self.cloudify_config = yaml.load(self.cloudify_config_path.text())
         self._config_reader = self.handler.CloudifyConfigReader(
             self.cloudify_config,
             manager_blueprint_path=self._manager_blueprint_path)
+        with self.handler.update_cloudify_config() as patch:
+            processed_inputs = process_variables(
+                self.suites_yaml,
+                self.handler_configuration.get('inputs_override', {}))
+            for key, value in processed_inputs.items():
+                patch.set_value(key, value)
 
         global test_environment
         test_environment = self
 
-    def _generate_unique_config(self):
-        file_name = 'config.yaml' if self.is_provider_bootstrap else \
-            'inputs.json'
-        unique_config_path = os.path.join(self._workdir, file_name)
-        shutil.copy(self.cloudify_config_path, unique_config_path)
-        self.cloudify_config_path = path(unique_config_path)
+    def _generate_unique_configurations(self):
+        inputs_path, manager_blueprint_path = generate_unique_configurations(
+            workdir=self._workdir,
+            original_inputs_path=self.cloudify_config_path,
+            original_manager_blueprint_path=self._manager_blueprint_path,
+            is_provider_bootstrap=self.is_provider_bootstrap)
+        self.cloudify_config_path = inputs_path
+        self._manager_blueprint_path = manager_blueprint_path
 
     def setup(self):
         os.chdir(self._initial_cwd)
@@ -181,8 +218,8 @@ class TestEnvironment(object):
                 dev_mode=False)
         else:
 
-            install_plugins = self._get_boolean_env_var(
-                INSTALL_MANAGER_BLUEPRINT_DEPENDENCIES, True)
+            install_plugins = self.handler_configuration.get(
+                'install_manager_blueprint_dependencies', True)
 
             cfy.bootstrap(
                 self._manager_blueprint_path,
@@ -211,10 +248,6 @@ class TestEnvironment(object):
             self.handler.after_teardown()
             if os.path.exists(self._workdir):
                 shutil.rmtree(self._workdir)
-
-    def _get_boolean_env_var(self, env_var_name, default_value):
-        return os.environ.get(
-            env_var_name, str(default_value).lower()) == 'true'
 
     def _running_env_setup(self, management_ip):
         self.management_ip = management_ip
@@ -251,6 +284,7 @@ class TestCase(unittest.TestCase):
         self.env = test_environment.setup()
         self.logger = logging.getLogger(self._testMethodName)
         self.logger.setLevel(logging.INFO)
+        self.logger.info('Starting test setUp')
         self.workdir = tempfile.mkdtemp(prefix='cosmo-test-')
         self.cfy = CfyHelper(cfy_workdir=self.workdir,
                              management_ip=self.env.management_ip)
@@ -267,6 +301,7 @@ class TestCase(unittest.TestCase):
         shutil.rmtree(self.workdir)
 
     def tearDown(self):
+        self.logger.info('Starting test tearDown')
         # note that the cleanup function is registered in setUp
         # because it is called regardless of whether setUp succeeded or failed
         # unlike tearDown which is not called when setUp fails (which might
@@ -340,10 +375,13 @@ class TestCase(unittest.TestCase):
             fetch_state,
             deployment_id=deployment_id)
 
-    def upload_deploy_and_execute_install(self, blueprint_id=None,
-                                          deployment_id=None,
-                                          fetch_state=True,
-                                          inputs=None):
+    def upload_deploy_and_execute_install(
+            self,
+            blueprint_id=None,
+            deployment_id=None,
+            fetch_state=True,
+            execute_timeout=DEFAULT_EXECUTE_TIMEOUT,
+            inputs=None):
 
         return self._make_operation_with_before_after_states(
             self.cfy.upload_deploy_and_execute_install,
@@ -351,6 +389,7 @@ class TestCase(unittest.TestCase):
             str(self.blueprint_yaml),
             blueprint_id=blueprint_id or self.test_id,
             deployment_id=deployment_id or self.test_id,
+            execute_timeout=execute_timeout,
             inputs=inputs)
 
     def _make_operation_with_before_after_states(self, operation, fetch_state,
@@ -367,9 +406,9 @@ class TestCase(unittest.TestCase):
     def execute_uninstall(self, deployment_id=None):
         self.cfy.execute_uninstall(deployment_id=deployment_id or self.test_id)
 
-    def copy_blueprint(self, blueprint_dir_name):
+    def copy_blueprint(self, blueprint_dir_name, blueprints_dir=None):
         blueprint_path = path(self.workdir) / blueprint_dir_name
-        shutil.copytree(get_blueprint_path(blueprint_dir_name),
+        shutil.copytree(get_blueprint_path(blueprint_dir_name, blueprints_dir),
                         str(blueprint_path))
         return blueprint_path
 

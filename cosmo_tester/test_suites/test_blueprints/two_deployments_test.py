@@ -13,16 +13,14 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
-__author__ = 'dank'
-
-
 import threading
 import Queue
 
 from cosmo_tester.framework.util import YamlPatcher
 from cosmo_tester.framework.testenv import TestCase
 from cosmo_tester.framework.git_helper import clone
-import hello_world_bash_test as bash
+from cosmo_tester.test_suites.test_blueprints import hello_world_bash_test as \
+    bash
 
 
 class TwoDeploymentsTest(TestCase):

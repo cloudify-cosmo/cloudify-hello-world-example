@@ -13,11 +13,13 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
-""" Assumes fabric environment already set up """
+"""
+Assumes Windows image with WinRM and python.
+"""
 
-__author__ = 'elip'
 
 from cosmo_tester.framework.testenv import TestCase
+from cosmo_tester.framework.util import YamlPatcher
 
 
 class WindowsAgentTest(TestCase):
@@ -26,6 +28,9 @@ class WindowsAgentTest(TestCase):
 
         blueprint_path = self.copy_blueprint('windows')
         self.blueprint_yaml = blueprint_path / 'blueprint.yaml'
+        with YamlPatcher(self.blueprint_yaml) as patch:
+            patch.set_value('node_templates.vm.properties.server.image_name',
+                            self.env.windows_image_name)
 
         self.upload_deploy_and_execute_install()
         self.execute_uninstall()
