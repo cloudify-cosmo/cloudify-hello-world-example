@@ -32,7 +32,7 @@ class OpenStackAutohealNodeCellarTest(OpenStackNodeCellarTestBase):
                 'simple_autoheal_policy': {
                     'type': 'cloudify.policies.types.host_failure',
                     'properties': {
-                        'service': ['example']
+                        'service': ['cpu.total.system']
                     },
                     'triggers': {
                         'auto_heal_trigger': {
@@ -131,10 +131,6 @@ class OpenStackAutohealNodeCellarTest(OpenStackNodeCellarTestBase):
     def modify_blueprint(self):
         with YamlPatcher(self.blueprint_yaml) as patch:
             patch.merge_obj('groups', self.AUTOHEAL_GROUP_YAML)
-            patch.merge_obj("node_types.nodecellar\\.nodes\\.MonitoredServer."
-                            'interfaces.cloudify\\.interfaces\\.monitoring.'
-                            'start.inputs.collectors_config.default',
-                            {'ExampleCollector': {}})
         print self.blueprint_yaml
 
     def get_inputs(self):
