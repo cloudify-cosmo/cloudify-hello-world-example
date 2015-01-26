@@ -135,15 +135,6 @@ class OpenStackAutohealNodeCellarTest(OpenStackNodeCellarTestBase):
                             'interfaces.cloudify\\.interfaces\\.monitoring.'
                             'start.inputs.collectors_config.default',
                             {'ExampleCollector': {}})
-            # TODO: Remove this link replacement when suitable
-            imports = patch._get_object_by_path('imports')
-            imports = [
-                imp if 'types.yaml' not in imp
-                else 'https://raw.githubusercontent.com/cloudify-cosmo/cloudify-manager/master'
-                     '/resources/rest-service/cloudify/types/types.yaml'
-                for imp in imports
-            ]
-            patch.set_value('imports', imports)
         print self.blueprint_yaml
 
     def get_inputs(self):
