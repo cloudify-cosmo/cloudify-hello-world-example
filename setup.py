@@ -34,6 +34,7 @@ setup(
         'retrying==1.2.2',
         'cloudify==3.2a3',
         'elasticsearch',
-        'Jinja2==2.7.2'
+        'Jinja2==2.7.2',
+        'influxdb==0.1.13'
     ]
 )
