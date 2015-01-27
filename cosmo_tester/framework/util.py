@@ -159,7 +159,23 @@ class YamlPatcher(object):
 
     def set_value(self, prop_path, new_value):
         obj, prop_name = self._get_parent_obj_prop_name_by_path(prop_path)
-        obj[prop_name] = new_value
+        list_item_match = self.pattern.match(prop_name)
+        if list_item_match:
+            index = int(list_item_match.group(2))
+            prop_name = list_item_match.group(1)
+            obj = obj[prop_name]
+            if not isinstance(obj, list):
+                raise AssertionError('Cannot set list value for not list item '
+                                     'in {0}'.format(prop_path))
+            if index > len(obj):
+                raise AssertionError('Cannot set list value for {0}'
+                                     .format(prop_path))
+            if index == len(obj):
+                obj.append(new_value)
+            else:
+                obj[index] = new_value
+        else:
+            obj[prop_name] = new_value
 
     def append_value(self, prop_path, value):
         obj, prop_name = self._get_parent_obj_prop_name_by_path(prop_path)
