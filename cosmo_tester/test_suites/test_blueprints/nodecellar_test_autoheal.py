@@ -25,30 +25,21 @@ from cosmo_tester.test_suites.test_blueprints.nodecellar_test import (
 
 class OpenStackAutohealNodeCellarTest(OpenStackNodeCellarTestBase):
 
-    AUTOHEAL_WORKFLOW_YAML = {
-        'auto_heal_workflow': {
-            'mapping': 'default_workflows.cloudify.plugins.workflows'
-                       '.auto_heal_reinstall_node_subgraph',
-            'parameters': {
-                'node_id': {
-                    'description': 'Which node has failed',
-                }
-            }
-        }
-    }
-
     AUTOHEAL_GROUP_YAML = {
         'autohealing_group': {
             'members': ['nodejs_host'],
             'policies': {
                 'simple_autoheal_policy': {
                     'type': 'cloudify.policies.types.host_failure',
+                    'properties': {
+                        'service': ['cpu.total.system']
+                    },
                     'triggers': {
                         'auto_heal_trigger': {
                             'type':
                                 'cloudify.policies.triggers.execute_workflow',
                             'parameters': {
-                                'workflow': 'auto_heal_workflow',
+                                'workflow': 'heal',
                                 'allow_custom_parameters': True,
                                 'workflow_parameters': {
                                     'node_id': {
@@ -108,7 +99,7 @@ class OpenStackAutohealNodeCellarTest(OpenStackNodeCellarTestBase):
         executions = self.client.executions.list(
             deployment_id=self.deployment_id)
         for e in executions:
-            if e.workflow_id == 'auto_heal_workflow':
+            if e.workflow_id == 'heal':
                 return e
         return None
 
@@ -139,14 +130,7 @@ class OpenStackAutohealNodeCellarTest(OpenStackNodeCellarTestBase):
 
     def modify_blueprint(self):
         with YamlPatcher(self.blueprint_yaml) as patch:
-            patch.merge_obj('workflows', self.AUTOHEAL_WORKFLOW_YAML)
             patch.merge_obj('groups', self.AUTOHEAL_GROUP_YAML)
-            # FIXME: this is a workaround for multiple collectors starting
-            # multiple auto-heal workflows
-            patch.set_value("node_types.nodecellar\\.nodes\\.MonitoredServer."
-                            'interfaces.cloudify\\.interfaces\\.monitoring.'
-                            'start.inputs.collectors_config.default',
-                            {'ExampleCollector': {}})
         print self.blueprint_yaml
 
     def get_inputs(self):
