@@ -75,12 +75,12 @@ def clear_environment():
     test_environment = None
 
 
-def bootstrap():
+def bootstrap(task_retries=5):
     logger.info('TestEnvironment initialize with bootstrap')
     global test_environment
     if not test_environment:
         test_environment = TestEnvironment()
-        test_environment.bootstrap()
+        test_environment.bootstrap(task_retries)
 
 
 def teardown():
@@ -199,7 +199,7 @@ class TestEnvironment(object):
         os.chdir(self._initial_cwd)
         return self
 
-    def bootstrap(self):
+    def bootstrap(self, task_retries=5):
         if self._management_running:
             return
 
@@ -226,6 +226,7 @@ class TestEnvironment(object):
                 inputs_file=self.cloudify_config_path,
                 install_plugins=install_plugins,
                 keep_up_on_failure=False,
+                task_retries=task_retries,
                 verbose=True)
         self._running_env_setup(cfy.get_management_ip())
         self.handler.after_bootstrap(cfy.get_provider_context())
