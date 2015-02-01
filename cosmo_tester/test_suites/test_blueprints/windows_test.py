@@ -32,7 +32,7 @@ class WindowsAgentTest(TestCase):
             patch.set_value('node_templates.vm.properties.server.image_name',
                             self.env.windows_image_name)
             patch.set_value('node_templates.vm.properties.server.flavor',
-                            self.env.small_flavor_id)
+                            self.env.medium_flavor_id)
 
         self.upload_deploy_and_execute_install()
         self.execute_uninstall()

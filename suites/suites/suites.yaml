@@ -211,6 +211,7 @@ handler_properties:
     centos_image_user: root
     flavor_name: m1.small
     small_flavor_id: ba4e08fd-e4c5-4233-a906-f1bb31cb659d
+    medium_flavor_id: 8b5be402-98e6-461c-8425-56f708187c13
 
   pclab47_devstack_nova_net:
     ubuntu_image_name: ubuntu
