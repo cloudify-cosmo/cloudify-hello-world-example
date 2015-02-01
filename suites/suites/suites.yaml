@@ -16,6 +16,7 @@ variables:
   lab_openstack_ubuntu_precise_image_name: ubuntu_12.04
   lab_openstack_ubuntu_trusty_image_name: ubuntu_14.04
   lab_openstack_centos_image_name: centos_6.5
+  lab_openstack_windows_image_name: windows-server-2012
   lab_openstack_ubuntu_precise: d81ccdfe-7482-460e-a7ce-69ea29aa129b
   lab_openstack_ubuntu_trusty: c6d36e11-f4d5-4221-b6e8-4e97914c67e9
 
@@ -204,6 +205,7 @@ handler_properties:
     ubuntu_image_name: '{{lab_openstack_ubuntu_precise_image_name}}'
     ubuntu_trusty_image_name: '{{lab_openstack_ubuntu_trusty_image_name}}'
     centos_image_name: '{{lab_openstack_centos_image_name}}'
+    windows_image_name: '{{lab_openstack_windows_image_name}}'
     ubuntu_image_id: '{{lab_openstack_ubuntu_precise}}'
     ubuntu_trusty_image_id: '{{lab_openstack_ubuntu_trusty}}'
     centos_image_user: root

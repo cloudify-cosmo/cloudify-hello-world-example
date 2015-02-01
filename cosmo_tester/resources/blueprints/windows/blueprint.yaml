@@ -2,7 +2,8 @@ tosca_definitions_version: cloudify_dsl_1_0
 
 imports:
     - http://www.getcloudify.org/spec/cloudify/3.2m4/types.yaml
-    - http://www.getcloudify.org/spec/openstack-plugin/1.2m4/plugin.yaml
+#    - http://www.getcloudify.org/spec/openstack-plugin/1.2m4/plugin.yaml
+    - https://raw.githubusercontent.com/cloudify-cosmo/cloudify-openstack-plugin/CFY-2110-support-get-password-for-openstack-servers/plugin.yaml
 
 plugins:
   windows_host_plugin:
@@ -18,14 +19,83 @@ node_templates:
         name: windows-agent-vm
         image_name: MODIFIED_BY_TEST
         flavor: 102
-      cloudify_agent:
-         service:
-           successful_consecutive_status_queries_count: 10
-           status_transition_sleep_interval: 5
-           start_timeout: 240
-           stop_timeout: 240
-         user: Administrator
-         password: 1408Rokk
+        userdata: |
+          cmd /c winrm quickconfig -quiet
+          cmd /c winrm s winrm/config/service @{AllowUnencrypted="true";MaxConcurrentOperationsPerUser="4294967295"}
+          cmd /c winrm s winrm/config/service/auth @{Basic="true"}
+          cmd /c winrm s winrm/config/winrs @{MaxShellsPerUser="2147483647"}
+          cmd /c msiexec /i https://www.python.org/ftp/python/2.7.6/python-2.7.6.msi TARGETDIR=C:\Python27 ALLUSERS=1 /qn
+          cmd /c powershell Set-ExecutionPolicy Unrestricted > NUL 2> NUL
+
+    interfaces:
+      cloudify.interfaces.worker_installer:
+        install:
+          inputs:
+            cloudify_agent:
+              default:
+                service:
+                  successful_consecutive_status_queries_count: 10
+                  status_transition_sleep_interval: 5
+                  start_timeout: 240
+                  stop_timeout: 240
+                user: Admin
+                password: { get_attribute: [SELF, password] }
+        start:
+          inputs:
+            cloudify_agent:
+              default:
+                service:
+                  successful_consecutive_status_queries_count: 10
+                  status_transition_sleep_interval: 5
+                  start_timeout: 240
+                  stop_timeout: 240
+                user: Admin
+                password: { get_attribute: [SELF, password] }
+        stop:
+          inputs:
+            cloudify_agent:
+              default:
+                service:
+                  successful_consecutive_status_queries_count: 10
+                  status_transition_sleep_interval: 5
+                  start_timeout: 240
+                  stop_timeout: 240
+                user: Admin
+                password: { get_attribute: [SELF, password] }
+        uninstall:
+          inputs:
+            cloudify_agent:
+              default:
+                service:
+                  successful_consecutive_status_queries_count: 10
+                  status_transition_sleep_interval: 5
+                  start_timeout: 240
+                  stop_timeout: 240
+                user: Admin
+                password: { get_attribute: [SELF, password] }
+        restart:
+          inputs:
+            cloudify_agent:
+              default:
+                service:
+                  successful_consecutive_status_queries_count: 10
+                  status_transition_sleep_interval: 5
+                  start_timeout: 240
+                  stop_timeout: 240
+                user: Admin
+                password: { get_attribute: [SELF, password] }
+        cloudify.interfaces.plugin_installer:
+          install:
+            inputs:
+              cloudify_agent:
+                default:
+                  service:
+                    successful_consecutive_status_queries_count: 10
+                    status_transition_sleep_interval: 5
+                    start_timeout: 240
+                    stop_timeout: 240
+                  user: Admin
+                  password: { get_attribute: [SELF, password] }
 
   app:
     type: cloudify.nodes.ApplicationModule
