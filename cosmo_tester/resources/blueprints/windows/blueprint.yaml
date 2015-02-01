@@ -18,7 +18,7 @@ node_templates:
       server:
         name: windows-agent-vm
         image_name: MODIFIED_BY_TEST
-        flavor: 102
+        flavor: MODIFIED_BY_TEST
         userdata: |
           winrm quickconfig -q
           winrm set winrm/config/winrs '@{MaxMemoryPerShellMB="300"}'
