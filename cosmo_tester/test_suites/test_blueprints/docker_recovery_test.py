@@ -31,6 +31,8 @@ class DockerRecoveryTest(nodecellar_test.NodecellarAppTest):
         provider_context = self.get_provider_context()
         self.init_fabric()
         self.restart_vm()
+        self.fail('TODO: Fix me to wait for management to actually be down'
+                  ' before waiting for it to be up')
         started = self._wait_for_management(self.env.management_ip, 180)
         if not started:
             raise AssertionError('Cloudify docker service container failed to'
