@@ -47,70 +47,64 @@ node_templates:
         install:
           inputs:
             cloudify_agent:
-              default:
-                service:
-                  successful_consecutive_status_queries_count: 10
-                  status_transition_sleep_interval: 5
-                  start_timeout: 240
-                  stop_timeout: 240
-                user: Admin
-                password: { get_attribute: [SELF, password] }
+              service:
+                successful_consecutive_status_queries_count: 10
+                status_transition_sleep_interval: 5
+                start_timeout: 240
+                stop_timeout: 240
+              user: Admin
+              password: { get_attribute: [SELF, password] }
         start:
           inputs:
             cloudify_agent:
-              default:
-                service:
-                  successful_consecutive_status_queries_count: 10
-                  status_transition_sleep_interval: 5
-                  start_timeout: 240
-                  stop_timeout: 240
-                user: Admin
-                password: { get_attribute: [SELF, password] }
+              service:
+                successful_consecutive_status_queries_count: 10
+                status_transition_sleep_interval: 5
+                start_timeout: 240
+                stop_timeout: 240
+              user: Admin
+              password: { get_attribute: [SELF, password] }
         stop:
           inputs:
             cloudify_agent:
-              default:
-                service:
-                  successful_consecutive_status_queries_count: 10
-                  status_transition_sleep_interval: 5
-                  start_timeout: 240
-                  stop_timeout: 240
-                user: Admin
-                password: { get_attribute: [SELF, password] }
+              service:
+                successful_consecutive_status_queries_count: 10
+                status_transition_sleep_interval: 5
+                start_timeout: 240
+                stop_timeout: 240
+              user: Admin
+              password: { get_attribute: [SELF, password] }
         uninstall:
           inputs:
             cloudify_agent:
-              default:
-                service:
-                  successful_consecutive_status_queries_count: 10
-                  status_transition_sleep_interval: 5
-                  start_timeout: 240
-                  stop_timeout: 240
-                user: Admin
-                password: { get_attribute: [SELF, password] }
+              service:
+                successful_consecutive_status_queries_count: 10
+                status_transition_sleep_interval: 5
+                start_timeout: 240
+                stop_timeout: 240
+              user: Admin
+              password: { get_attribute: [SELF, password] }
         restart:
           inputs:
             cloudify_agent:
-              default:
-                service:
-                  successful_consecutive_status_queries_count: 10
-                  status_transition_sleep_interval: 5
-                  start_timeout: 240
-                  stop_timeout: 240
-                user: Admin
-                password: { get_attribute: [SELF, password] }
+              service:
+                successful_consecutive_status_queries_count: 10
+                status_transition_sleep_interval: 5
+                start_timeout: 240
+                stop_timeout: 240
+              user: Admin
+              password: { get_attribute: [SELF, password] }
       cloudify.interfaces.plugin_installer:
         install:
           inputs:
             cloudify_agent:
-              default:
-                service:
-                  successful_consecutive_status_queries_count: 10
-                  status_transition_sleep_interval: 5
-                  start_timeout: 240
-                  stop_timeout: 240
-                user: Admin
-                password: { get_attribute: [SELF, password] }
+              service:
+                successful_consecutive_status_queries_count: 10
+                status_transition_sleep_interval: 5
+                start_timeout: 240
+                stop_timeout: 240
+              user: Admin
+              password: { get_attribute: [SELF, password] }
 
   app:
     type: cloudify.nodes.ApplicationModule
