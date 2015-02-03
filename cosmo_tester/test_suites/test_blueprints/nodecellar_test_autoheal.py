@@ -40,11 +40,9 @@ class OpenStackAutohealNodeCellarTest(OpenStackNodeCellarTestBase):
                                 'cloudify.policies.triggers.execute_workflow',
                             'parameters': {
                                 'workflow': 'heal',
-                                'allow_custom_parameters': True,
                                 'workflow_parameters': {
                                     'node_id': {
-                                        'get_property':
-                                            ['SELF', 'failing_node']
+                                        'get_property': ['SELF', 'node_id']
                                     },
                                     'diagnose_value': {
                                         'get_property': ['SELF', 'diagnose']
