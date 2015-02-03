@@ -82,7 +82,7 @@ class DockerPersistenceTest(nodecellar_test.NodecellarAppTest):
         start_cmd = 'sudo docker run -t -v ~/:/root ' \
                     '--volumes-from data -p 80:80 -p 5555:5555 ' \
                     '-p 5672:5672 -p 53229:53229 -p 8100:8100 ' \
-                    '-p 9200:9200 -e MANAGEMENT_IP={0} ' \
+                    '-p 9200:9200 -p 8086:8086 -e MANAGEMENT_IP={0} ' \
                     '--restart=always --name=cfy -d ' \
                     'cloudify:latest /sbin/my_init' \
                     .format(private_ip)
