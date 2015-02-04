@@ -160,18 +160,22 @@ class NodecellarAppTest(TestCase):
         self.assert_nodecellar_working(self.public_ip)
 
     def assert_monitoring_data_exists(self):
-        client = InfluxDBClient(self.env.management_ip,
-                                8086, 'root', 'root', 'cloudify')
-        found_data = False
-        events_list = client.query('list series')
-        for event in events_list:
-            for value in event.get('points'):
-                if value[1].startswith(self.deployment_id):
-                    found_data = True
-                    break
-        self.assertTrue(found_data, 'no monitoring data was found for '
-                                    'nodecellar deployment with ID: {0}'
-                                    .format(self.deployment_id))
+        client = InfluxDBClient(self.env.management_ip, 8086, 'root', 'root',
+                                'cloudify')
+        try:
+            # select monitoring events from the past 5 seconds
+            events_list = client.query('select * from /^{0}\./i '
+                                       'where time > now() - 5s'
+                                       .format(self.deployment_id))
+            self.assertIsNotNone(events_list, 'monitoring events list for '
+                                              'deployment with ID {} returned '
+                                              'None.'
+                                              .format(self.deployment_id))
+        except NameError as e:
+            # client throws NameError in-case no matches were found.
+            self.fail('monitoring events list for deployment with ID {0} were'
+                      ' not found. error is: {1}'
+                      .format(self.deployment_id, e))
 
     def post_uninstall_assertions(self):
         nodes_instances = self.client.node_instances.list(self.deployment_id)
