@@ -81,7 +81,7 @@ templates:
     node_templates.manager.properties.cloudify_packages.agents.centos_agent_url: '{{centos_package_agent_url}}'
     node_templates.manager.properties.cloudify_packages.agents.windows_agent_url: '{{windows_package_agent_url}}'
     node_templates.manager.properties.cloudify.workflows.task_retries: 20
-    'node_templates.management_security_group.properties.rules[5]':
+    'node_templates.management_security_group.properties.rules[append]':
       port: 8086
       remote_ip_prefix: 0.0.0.0/0
 
