@@ -72,28 +72,10 @@ class DockerPersistenceTest(nodecellar_test.NodecellarAppTest):
         })
 
     def restart_container(self):
-        self.logger.info('acquiring instance private IP')
-        private_ip = fabric.api.run('ip addr | grep \'eth0\' -A0 | tail -n1 '
-                                    '| awk \'{print $2}\' | cut -f1  -d\'/\'')
-
         self.logger.info('terminating cloudify services container')
-        fabric.api.run('sudo docker rm -f cfy')
-
-        start_cmd = 'sudo docker run -t -v ~/:/root ' \
-                    '--volumes-from data -p 80:80 -p 5555:5555 ' \
-                    '-p 5672:5672 -p 53229:53229 -p 8100:8100 ' \
-                    '-p 9200:9200 -p 8086:8086 -e MANAGEMENT_IP={0} ' \
-                    '--restart=always --name=cfy -d ' \
-                    'cloudify:latest /sbin/my_init' \
-                    .format(private_ip)
-
-        self.logger.info('starting new cloudify container.. running command:' +
-                         start_cmd)
-        started = fabric.api.run(start_cmd)
-        if not started:
-            return False
-        self._wait_for_management(self.env.management_ip, 120)
-        return True
+        fabric.api.run('sudo service docker restart')
+        started = self._wait_for_management(self.env.management_ip, 180)
+        return started
 
     def _wait_for_management(self, ip, timeout, port=80):
         """ Wait for url to become available
