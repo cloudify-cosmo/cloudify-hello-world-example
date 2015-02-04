@@ -136,6 +136,7 @@ def check_port(ip, port):
 class YamlPatcher(object):
 
     pattern = re.compile("(.+)\[(\d+)\]")
+    set_pattern = re.compile("(.+)\[(\d+|append)\]")
 
     def __init__(self, yaml_path, is_json=False, default_flow_style=True):
         self.yaml_path = path(yaml_path)
@@ -159,7 +160,20 @@ class YamlPatcher(object):
 
     def set_value(self, prop_path, new_value):
         obj, prop_name = self._get_parent_obj_prop_name_by_path(prop_path)
-        obj[prop_name] = new_value
+        list_item_match = self.set_pattern.match(prop_name)
+        if list_item_match:
+            prop_name = list_item_match.group(1)
+            obj = obj[prop_name]
+            if not isinstance(obj, list):
+                raise AssertionError('Cannot set list value for not list item '
+                                     'in {0}'.format(prop_path))
+            raw_index = list_item_match.group(2)
+            if raw_index == 'append':
+                obj.append(new_value)
+            else:
+                obj[int(raw_index)] = new_value
+        else:
+            obj[prop_name] = new_value
 
     def append_value(self, prop_path, value):
         obj, prop_name = self._get_parent_obj_prop_name_by_path(prop_path)

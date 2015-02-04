@@ -31,12 +31,13 @@ class DockerRecoveryTest(nodecellar_test.NodecellarAppTest):
         provider_context = self.get_provider_context()
         self.init_fabric()
         self.restart_vm()
-        self.fail('TODO: Fix me to wait for management to actually be down'
-                  ' before waiting for it to be up')
-        started = self._wait_for_management(self.env.management_ip, 180)
-        if not started:
-            raise AssertionError('Cloudify docker service container failed to'
-                                 ' start after reboot. Test failed.')
+        down = self._wait_for_management_state(self.env.management_ip, 180,
+                                               state=False)
+        self.assertTrue(down, 'Management VM {} failed to terminate'
+                              .format(self.env.management_ip))
+        started = self._wait_for_management_state(self.env.management_ip, 180)
+        self.assertTrue(started, 'Cloudify docker service container failed'
+                                 ' to start after reboot. Test failed.')
 
         self.assertEqual(json.load(provider_context),
                          json.load(self.get_provider_context()),
@@ -63,11 +64,12 @@ class DockerRecoveryTest(nodecellar_test.NodecellarAppTest):
                          .format(self.env.management_ip))
         return fabric.api.run('sudo shutdown -r now')
 
-    def _wait_for_management(self, ip, timeout, port=80):
-        """ Wait for url to become available
+    def _wait_for_management_state(self, ip, timeout, port=80, state=True):
+        """ Wait for management to reach state
             :param ip: the manager IP
             :param timeout: in seconds
             :param port: port used by the rest service.
+            :param state: management state, true for running, else false.
             :return: True of False
         """
         validation_url = 'http://{0}:{1}/blueprints'.format(ip, port)
@@ -77,12 +79,21 @@ class DockerRecoveryTest(nodecellar_test.NodecellarAppTest):
         while end - time() >= 0:
             try:
                 status = urllib.urlopen(validation_url).getcode()
-                if status == 200:
+                if status == 200 and state:
                     return True
+                if not state:
+                    if status == 200:
+                        self.logger.info('Manager is accessible. '
+                                         'retrying in 2 seconds.')
+                    else:
+                        return True
 
             except IOError:
-                print 'Manager not accessible. retrying in 5 seconds.'
-            sleep(5)
+                if not state:
+                    return True
+                self.logger.info('Manager not accessible. '
+                                 'retrying in 2 seconds.')
+            sleep(2)
 
         return False
 
