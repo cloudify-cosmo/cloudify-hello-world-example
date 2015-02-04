@@ -81,13 +81,18 @@ class DockerRecoveryTest(nodecellar_test.NodecellarAppTest):
                 status = urllib.urlopen(validation_url).getcode()
                 if status == 200 and state:
                     return True
-                if status != 200 and not state:
-                    return True
+                if not state:
+                    if status == 200:
+                        self.logger.info('Manager is accessible. '
+                                         'retrying in 2 seconds.')
+                    else:
+                        return True
 
             except IOError:
                 if not state:
                     return True
-                print 'Manager not accessible. retrying in 2 seconds.'
+                self.logger.info('Manager not accessible. '
+                                 'retrying in 2 seconds.')
             sleep(2)
 
         return False
