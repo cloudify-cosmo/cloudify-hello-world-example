@@ -85,7 +85,7 @@ class DockerRecoveryTest(nodecellar_test.NodecellarAppTest):
                     return True
 
             except IOError:
-                if not status:
+                if not state:
                     return True
                 print 'Manager not accessible. retrying in 5 seconds.'
             sleep(2)
