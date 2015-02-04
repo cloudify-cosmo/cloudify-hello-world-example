@@ -65,7 +65,7 @@ class DockerRecoveryTest(nodecellar_test.NodecellarAppTest):
         return fabric.api.run('sudo shutdown -r now')
 
     def _wait_for_management_state(self, ip, timeout, port=80, state=True):
-        """ Wait for url to become available
+        """ Wait for management to reach state
             :param ip: the manager IP
             :param timeout: in seconds
             :param port: port used by the rest service.
@@ -85,8 +85,10 @@ class DockerRecoveryTest(nodecellar_test.NodecellarAppTest):
                     return True
 
             except IOError:
+                if not status:
+                    return True
                 print 'Manager not accessible. retrying in 5 seconds.'
-            sleep(5)
+            sleep(2)
 
         return False
 
