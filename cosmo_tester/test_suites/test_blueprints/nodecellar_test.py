@@ -163,18 +163,15 @@ class NodecellarAppTest(TestCase):
         client = InfluxDBClient(self.env.management_ip, 8086, 'root', 'root',
                                 'cloudify')
         try:
-            # select monitoring events from the past 5 seconds
-            events_list = client.query('select * from /^{0}\./i '
-                                       'where time > now() - 5s'
-                                       .format(self.deployment_id))
-            self.assertIsNotNone(events_list, 'monitoring events list for '
-                                              'deployment with ID {} returned '
-                                              'None.'
-                                              .format(self.deployment_id))
+            # select monitoring events for deployment from the past 5 seconds.
+            # a NameError will be thrown only if NO deployment events exist
+            # in the DB regardless of time-span in query.
+            client.query('select * from /^{0}\./i '
+                         'where time > now() - 5s'
+                         .format(self.deployment_id))
         except NameError as e:
-            # client throws NameError in-case no matches were found.
             self.fail('monitoring events list for deployment with ID {0} were'
-                      ' not found. error is: {1}'
+                      ' not found on influxDB. error is: {1}'
                       .format(self.deployment_id, e))
 
     def post_uninstall_assertions(self):
