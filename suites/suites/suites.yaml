@@ -6,7 +6,7 @@ variables:
   hp_openstack_ubuntu_precise_image_name: Ubuntu Server 12.04.5 LTS (amd64 20140927) - Partner Image
   hp_openstack_ubuntu_trusty_image_name: Ubuntu Server 14.04.1 LTS (amd64 20140927) - Partner Image
   hp_openstack_centos_image_name: CentOS 6.3 Server 64-bit 20130116
-  hp_openstack_windows_image_name: windows-agent-machine
+  hp_openstack_windows_image_name: Windows Server 2008 R2 Enterprise SP1 x64 Volume License 20140415 (b)
   hp_openstack_region_a_ubuntu_precise: 8ca068c5-6fde-4701-bab8-322b3e7c8d81
   hp_openstack_region_a_ubuntu_trusty: bec3cab5-4722-40b9-a78a-3489218e22fe
   hp_openstack_region_b_ubuntu_precise: 261844b3-479c-5446-a2c4-1ea95d53b668
@@ -120,6 +120,7 @@ templates:
     centos_image_user: root
     flavor_name: standard.small
     small_flavor_id: 101
+    medium_flavor_id: 102
 
   #######################################################
 
@@ -183,7 +184,7 @@ templates:
   - &lab_openstack_dockerless_handler_configuration
     <<: *openstack_handler_configuration
     inputs: inputs-lab-openstack.yaml
-    skip_cleanup: true
+#    skip_cleanup: true
     manager_blueprint: openstack/openstack.yaml
     manager_blueprint_override: *dockerless_manager_blueprint_override
     properties: lab_openstack_properties

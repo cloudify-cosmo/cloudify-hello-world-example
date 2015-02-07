@@ -20,91 +20,56 @@ node_templates:
         image_name: MODIFIED_BY_TEST
         flavor: MODIFIED_BY_TEST
         userdata: |
-          winrm quickconfig -q
-          winrm set winrm/config/winrs '@{MaxMemoryPerShellMB="300"}'
-          winrm set winrm/config '@{MaxTimeoutms="1800000"}'
-          winrm set winrm/config/service '@{AllowUnencrypted="true"}'
-          winrm set winrm/config/service/auth '@{Basic="true"}'
+#          winrm quickconfig -q
+#          winrm set winrm/config/winrs '@{MaxMemoryPerShellMB="300"}'
+#          winrm set winrm/config '@{MaxTimeoutms="1800000"}'
+#          winrm set winrm/config/service '@{AllowUnencrypted="true"}'
+#          winrm set winrm/config/service/auth '@{Basic="true"}'
+#
+#          netsh advfirewall firewall add rule name="WinRM 5985" protocol=TCP dir=in localport=5985 action=allow
+#          netsh advfirewall firewall add rule name="WinRM 5986" protocol=TCP dir=in localport=5986 action=allow
+#
+#          net stop winrm
+#          sc config winrm
+#          net start winrm
+#
+#          msiexec /i https://www.python.org/ftp/python/2.7.6/python-2.7.6.msi TARGETDIR=C:\Python27 ALLUSERS=1 /qn
 
-          netsh advfirewall firewall add rule name="WinRM 5985" protocol=TCP dir=in localport=5985 action=allow
-          netsh advfirewall firewall add rule name="WinRM 5986" protocol=TCP dir=in localport=5986 action=allow
-
-          net stop winrm
-          sc config winrm
-          net start winrm
-
-          msiexec /i https://www.python.org/ftp/python/2.7.6/python-2.7.6.msi TARGETDIR=C:\Python27 ALLUSERS=1 /qn
-
-#          cmd /c winrm quickconfig -quiet
-#          cmd /c winrm s winrm/config/service @{AllowUnencrypted="true";MaxConcurrentOperationsPerUser="4294967295"}
-#          cmd /c winrm s winrm/config/service/auth @{Basic="true"}
-#          cmd /c winrm s winrm/config/winrs @{MaxShellsPerUser="2147483647"}
-#          cmd /c msiexec /i https://www.python.org/ftp/python/2.7.6/python-2.7.6.msi TARGETDIR=C:\Python27 ALLUSERS=1 /qn
-#          cmd /c powershell Set-ExecutionPolicy Unrestricted > NUL 2> NUL
+          cmd /c winrm quickconfig -quiet
+          cmd /c winrm s winrm/config/service @{AllowUnencrypted="true";MaxConcurrentOperationsPerUser="4294967295"}
+          cmd /c winrm s winrm/config/service/auth @{Basic="true"}
+          cmd /c winrm s winrm/config/winrs @{MaxShellsPerUser="2147483647"}
+          cmd /c msiexec /i https://www.python.org/ftp/python/2.7.6/python-2.7.6.msi TARGETDIR=C:\Python27 ALLUSERS=1 /qn
+          cmd /c powershell Set-ExecutionPolicy Unrestricted > NUL 2> NUL
 
     interfaces:
       cloudify.interfaces.worker_installer:
         install:
           inputs:
-            cloudify_agent:
+            cloudify_agent: &cloudify_agent
               service:
                 successful_consecutive_status_queries_count: 10
                 status_transition_sleep_interval: 5
                 start_timeout: 240
                 stop_timeout: 240
-              user: Admin
+              user: Administrator
               password: { get_attribute: [SELF, password] }
         start:
           inputs:
-            cloudify_agent:
-              service:
-                successful_consecutive_status_queries_count: 10
-                status_transition_sleep_interval: 5
-                start_timeout: 240
-                stop_timeout: 240
-              user: Admin
-              password: { get_attribute: [SELF, password] }
+            cloudify_agent: *cloudify_agent
         stop:
           inputs:
-            cloudify_agent:
-              service:
-                successful_consecutive_status_queries_count: 10
-                status_transition_sleep_interval: 5
-                start_timeout: 240
-                stop_timeout: 240
-              user: Admin
-              password: { get_attribute: [SELF, password] }
+            cloudify_agent: *cloudify_agent
         uninstall:
           inputs:
-            cloudify_agent:
-              service:
-                successful_consecutive_status_queries_count: 10
-                status_transition_sleep_interval: 5
-                start_timeout: 240
-                stop_timeout: 240
-              user: Admin
-              password: { get_attribute: [SELF, password] }
+            cloudify_agent: *cloudify_agent
         restart:
           inputs:
-            cloudify_agent:
-              service:
-                successful_consecutive_status_queries_count: 10
-                status_transition_sleep_interval: 5
-                start_timeout: 240
-                stop_timeout: 240
-              user: Admin
-              password: { get_attribute: [SELF, password] }
+            cloudify_agent: *cloudify_agent
       cloudify.interfaces.plugin_installer:
         install:
           inputs:
-            cloudify_agent:
-              service:
-                successful_consecutive_status_queries_count: 10
-                status_transition_sleep_interval: 5
-                start_timeout: 240
-                stop_timeout: 240
-              user: Admin
-              password: { get_attribute: [SELF, password] }
+            cloudify_agent: *cloudify_agent
 
   app:
     type: cloudify.nodes.ApplicationModule
