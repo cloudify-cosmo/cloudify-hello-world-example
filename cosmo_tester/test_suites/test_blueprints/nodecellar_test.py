@@ -17,6 +17,7 @@
 import requests
 import json
 from requests.exceptions import ConnectionError
+from influxdb import InfluxDBClient
 
 from cosmo_tester.framework.testenv import TestCase
 from cosmo_tester.framework.git_helper import clone
@@ -124,7 +125,7 @@ class NodecellarAppTest(TestCase):
         nodes_state = delta['node_state'].values()[0]
         self.assertEqual(len(nodes_state), self.expected_nodes_count,
                          'nodes_state: {0}'.format(nodes_state))
-
+        self.assert_monitoring_data_exists()
         self.public_ip = None
         entrypoint_node_name = self.entrypoint_node_name
         entrypoint_runtime_property_name = self.entrypoint_property_name
@@ -157,6 +158,21 @@ class NodecellarAppTest(TestCase):
                            .format(execution_by_id.id))
 
         self.assert_nodecellar_working(self.public_ip)
+
+    def assert_monitoring_data_exists(self):
+        client = InfluxDBClient(self.env.management_ip, 8086, 'root', 'root',
+                                'cloudify')
+        try:
+            # select monitoring events for deployment from the past 5 seconds.
+            # a NameError will be thrown only if NO deployment events exist
+            # in the DB regardless of time-span in query.
+            client.query('select * from /^{0}\./i '
+                         'where time > now() - 5s'
+                         .format(self.deployment_id))
+        except NameError as e:
+            self.fail('monitoring events list for deployment with ID {0} were'
+                      ' not found on influxDB. error is: {1}'
+                      .format(self.deployment_id, e))
 
     def post_uninstall_assertions(self):
         nodes_instances = self.client.node_instances.list(self.deployment_id)
