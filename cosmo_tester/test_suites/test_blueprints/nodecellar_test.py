@@ -22,14 +22,11 @@ from influxdb import InfluxDBClient
 from cosmo_tester.framework.testenv import TestCase
 from cosmo_tester.framework.git_helper import clone
 
-NODECELLAR_URL = "https://github.com/cloudify-cosmo/" \
-                 "cloudify-nodecellar-example.git"
-
 
 class NodecellarAppTest(TestCase):
 
     def _test_nodecellar_impl(self, blueprint_file):
-        self.repo_dir = clone(NODECELLAR_URL, self.workdir)
+        self.repo_dir = clone(self.repo_url, self.blueprint_directory)
         self.blueprint_yaml = self.repo_dir / blueprint_file
 
         self.modify_blueprint()
@@ -185,6 +182,15 @@ class NodecellarAppTest(TestCase):
                       'but no error was raised.')
         except ConnectionError:
             pass
+
+    @property
+    def repo_url(self):
+        return 'https://github.com/cloudify-cosmo/' \
+               'cloudify-nodecellar-example.git'
+
+    @property
+    def blueprint_directory(self):
+        return self.workdir
 
     @property
     def expected_nodes_count(self):
