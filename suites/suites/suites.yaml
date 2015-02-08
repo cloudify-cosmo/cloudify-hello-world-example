@@ -91,6 +91,19 @@ templates:
     node_templates.manager.properties.cloudify_packages.server.components_package_url: '{{components_package_url}}'
     node_templates.manager.properties.cloudify_packages.server.core_package_url: '{{core_package_url}}'
     node_templates.manager.properties.cloudify_packages.server.ui_package_url: '{{ui_package_url}}'
+
+  - &openstack_manager_blueprint_override
+    'node_templates.management_security_group.properties.rules[append]':
+      port: 8086
+      remote_ip_prefix: 0.0.0.0/0
+
+  - &docker_openstack_manager_blueprint_override
+    <<: *docker_manager_blueprint_override
+    <<: *openstack_manager_blueprint_override
+
+  - &dockerless_openstack_manager_blueprint_override
+    <<: *dockerless_manager_blueprint_override
+    <<: *openstack_manager_blueprint_override
     # add stub input placeholders so we can have the same inputs file for docker/dockerless paths
     inputs.manager_port_name.default: stub
     inputs.manager_volume_name.default: stub
@@ -164,26 +177,26 @@ templates:
     <<: *openstack_handler_configuration
     inputs: inputs-hp-openstack.yaml
     manager_blueprint: openstack-docker/openstack-docker.yaml
-    manager_blueprint_override: *docker_manager_blueprint_override
+    manager_blueprint_override: *docker_openstack_manager_blueprint_override
 
   - &hp_openstack_dockerless_handler_configuration
     <<: *openstack_handler_configuration
     inputs: inputs-hp-openstack.yaml
     manager_blueprint: openstack/openstack.yaml
-    manager_blueprint_override: *dockerless_manager_blueprint_override
+    manager_blueprint_override: *dockerless_openstack_manager_blueprint_override
 
   - &lab_openstack_handler_configuration
     <<: *openstack_handler_configuration
     inputs: inputs-lab-openstack.yaml
     manager_blueprint: openstack-docker/openstack-docker.yaml
-    manager_blueprint_override: *docker_manager_blueprint_override
+    manager_blueprint_override: *docker_openstack_manager_blueprint_override
     properties: lab_openstack_properties
 
   - &lab_openstack_dockerless_handler_configuration
     <<: *openstack_handler_configuration
     inputs: inputs-lab-openstack.yaml
     manager_blueprint: openstack/openstack.yaml
-    manager_blueprint_override: *dockerless_manager_blueprint_override
+    manager_blueprint_override: *dockerless_openstack_manager_blueprint_override
     properties: lab_openstack_properties
 
 #####################################################################################
@@ -387,7 +400,7 @@ handler_configurations:
     handler: openstack_nova_net_handler
     inputs: inputs-nova-net-devstack.yaml
     manager_blueprint: openstack-nova-net/openstack.yaml
-    manager_blueprint_override: *dockerless_manager_blueprint_override
+    manager_blueprint_override: *dockerless_openstack_manager_blueprint_override
     properties: pclab47_devstack_nova_net
 
   ###############################################################################
