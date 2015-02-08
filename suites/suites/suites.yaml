@@ -184,7 +184,6 @@ templates:
   - &hp_openstack_dockerless_handler_configuration
     <<: *openstack_handler_configuration
     inputs: inputs-hp-openstack.yaml
-    skip_cleanup: true
     manager_blueprint: openstack/openstack.yaml
     manager_blueprint_override: *dockerless_openstack_manager_blueprint_override
 
