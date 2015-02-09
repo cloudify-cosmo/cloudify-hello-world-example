@@ -235,8 +235,8 @@ class OldVersionOpenStackNodeCellarTest(OpenStackNodeCellarTestBase):
 
     def modify_blueprint(self):
         old_openstack_plugin_yaml = \
-            'http://www.getcloudify.org/spec/openstack-plugin/1.1/plugin.yaml'     #NOQA
-            # 'http://www.getcloudify.org/spec/openstack-plugin/1.1/plugin.yaml'    #NOQA
+            'https://raw.githubusercontent.com/cloudify-cosmo/cloudify-openstack-plugin/CFY-2040-support-older-plugins/plugin.yaml'
+        # 'http://www.getcloudify.org/spec/openstack-plugin/1.1/plugin.yaml'
 
         with YamlPatcher(self.blueprint_yaml) as patch:
             openstack_plugin_import_path = 'imports[1]'
