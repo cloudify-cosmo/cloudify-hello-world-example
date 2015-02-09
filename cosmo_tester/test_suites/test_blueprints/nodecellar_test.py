@@ -26,7 +26,7 @@ from cosmo_tester.framework.git_helper import clone
 class NodecellarAppTest(TestCase):
 
     def _test_nodecellar_impl(self, blueprint_file):
-        self.repo_dir = clone(self.repo_url, self.blueprint_directory)
+        self.repo_dir = clone(self.repo_url, self.workdir)
         self.blueprint_yaml = self.repo_dir / blueprint_file
 
         self.modify_blueprint()
@@ -187,10 +187,6 @@ class NodecellarAppTest(TestCase):
     def repo_url(self):
         return 'https://github.com/cloudify-cosmo/' \
                'cloudify-nodecellar-example.git'
-
-    @property
-    def blueprint_directory(self):
-        return self.workdir
 
     @property
     def expected_nodes_count(self):
