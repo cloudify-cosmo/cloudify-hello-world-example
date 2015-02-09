@@ -20,6 +20,7 @@ from requests.exceptions import ConnectionError
 from influxdb import InfluxDBClient
 
 from cosmo_tester.framework.testenv import TestCase
+from cosmo_tester.framework.util import YamlPatcher
 from cosmo_tester.framework.git_helper import clone
 
 
@@ -223,3 +224,21 @@ class OpenStackNodeCellarTest(OpenStackNodeCellarTestBase):
 
     def test_openstack_nodecellar(self):
         self._test_openstack_nodecellar('openstack-blueprint.yaml')
+
+
+class OldVersionOpenStackNodeCellarTest(OpenStackNodeCellarTestBase):
+
+    # Nodecellar test using an older Openstack plugin version
+
+    def test_old_version_openstack_nodecellar(self):
+        self._test_openstack_nodecellar('openstack-blueprint.yaml')
+
+    def modify_blueprint(self):
+        old_openstack_plugin_yaml = \
+            'http://www.getcloudify.org/spec/openstack-plugin/1.1/plugin.yaml'     #NOQA
+            # 'http://www.getcloudify.org/spec/openstack-plugin/1.1/plugin.yaml'    #NOQA
+
+        with YamlPatcher(self.blueprint_yaml) as patch:
+            openstack_plugin_import_path = 'imports[1]'
+            patch.set_value(openstack_plugin_import_path,
+                            old_openstack_plugin_yaml)
