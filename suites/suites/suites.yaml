@@ -518,8 +518,8 @@ test_suites:
     tests:
       - manager_status
 
-  hp_openstack_manager_recovery:
-    handler_configuration: hp_openstack_system_tests2_region_b
+  lab_openstack_manager_recovery:
+    handler_configuration: lab_openstack_system_tests2
     tests:
       - manager_recovery
 
