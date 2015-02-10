@@ -11,22 +11,61 @@ plugins:
 
 node_templates:
 
+  keypair:
+    type: cloudify.openstack.nodes.KeyPair
+    properties:
+        private_key_path: /tmp/windows-test.pem
+
   vm:
     type: cloudify.openstack.nodes.WindowsServer
     properties:
       server:
         name: windows-agent-vm
         image_name: MODIFIED_BY_TEST
-        flavor: 102
-      cloudify_agent:
-         service:
-           successful_consecutive_status_queries_count: 10
-           status_transition_sleep_interval: 5
-           start_timeout: 240
-           stop_timeout: 240
-         user: Administrator
-         password: 1408Rokk
+        flavor: MODIFIED_BY_TEST
+        userdata: |
+          #ps1_sysnative
+          winrm quickconfig -q
+          winrm set winrm/config/winrs '@{MaxMemoryPerShellMB="300"}'
+          winrm set winrm/config '@{MaxTimeoutms="1800000"}'
+          winrm set winrm/config/service '@{AllowUnencrypted="true"}'
+          winrm set winrm/config/service/auth '@{Basic="true"}'
+          &netsh advfirewall firewall add rule name="WinRM 5985" protocol=TCP dir=in localport=5985 action=allow
+          &netsh advfirewall firewall add rule name="WinRM 5986" protocol=TCP dir=in localport=5986 action=allow
 
+          msiexec /i https://www.python.org/ftp/python/2.7.6/python-2.7.6.msi TARGETDIR=C:\Python27 ALLUSERS=1 /qn
+
+    interfaces:
+      cloudify.interfaces.worker_installer:
+        install:
+          inputs:
+            cloudify_agent: &CLOUDIFY_AGENT
+              service:
+                successful_consecutive_status_queries_count: 10
+                status_transition_sleep_interval: 5
+                start_timeout: 240
+                stop_timeout: 240
+              user: Admin
+              password: { get_attribute: [SELF, password] }
+        start:
+          inputs:
+            cloudify_agent: *CLOUDIFY_AGENT
+        stop:
+          inputs:
+            cloudify_agent: *CLOUDIFY_AGENT
+        uninstall:
+          inputs:
+            cloudify_agent: *CLOUDIFY_AGENT
+        restart:
+          inputs:
+            cloudify_agent: *CLOUDIFY_AGENT
+      cloudify.interfaces.plugin_installer:
+        install:
+          inputs:
+            cloudify_agent: *CLOUDIFY_AGENT
+    relationships:
+      - type: cloudify.openstack.server_connected_to_keypair
+        target: keypair
   app:
     type: cloudify.nodes.ApplicationModule
     interfaces:
