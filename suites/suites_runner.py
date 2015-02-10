@@ -1,93 +1,57 @@
-#! /usr/bin/env python
-# flake8: NOQA
-
 import os
 import sys
-import json
 import logging
+from StringIO import StringIO
 
+import yaml
 import sh
 from path import path
 
-from helpers.suites_builder import build_suites_json
+from helpers import sh_bake
+from helpers.suites_builder import build_suites_yaml
 
 logging.basicConfig()
 
 logger = logging.getLogger('suites_runner')
 logger.setLevel(logging.INFO)
 
-def sh_bake(command):
-    return command.bake(_out=lambda line: sys.stdout.write(line),
-                        _err=lambda line: sys.stderr.write(line))
-
 docker = sh_bake(sh.docker)
 vagrant = sh_bake(sh.vagrant)
 
 reports_dir = path(os.path.dirname(__file__)) / 'xunit-reports'
 
-env_variables = {
-    'TEST_SUITES_PATH': '',
+TEST_SUITES_PATH = 'TEST_SUITES_PATH'
 
-    # ec2 creds
-    'AWS_ACCESS_ID': '',
-    'AWS_SECRET_KEY': '',
 
-    # keystone
-    'KEYSTONE_PASSWORD': '',
-    'KEYSTONE_USERNAME': '',
-    'KEYSTONE_TENANT': '',
-    'KEYSTONE_AUTH_URL': '',
+def list_containers(quiet=False):
+    return sh.docker.ps(a=True, q=quiet).strip()
 
-    # branch names
-    'BRANCH_NAME_CORE': '',
-    'BRANCH_NAME_PLUGINS': '',
-    'BRANCH_NAME_OPENSTACK_PROVIDER': '',
-    'BRANCH_NAME_LIBCLOUD_PROVIDER': '',
-    'BRANCH_NAME_SYSTEM_TESTS': '',
-    'BRANCH_NAME_CLI': '',
-    'BRANCH_NAME_MANAGER_BLUEPRINTS': '',
 
-    # packages
-    'COMPONENTS_PACKAGE_URL': '',
-    'CORE_PACKAGE_URL': '',
-    'UBUNTU_PACKAGE_URL': '',
-    'CENTOS_PACKAGE_URL': '',
-    'WINDOWS_PACKAGE_URL': '',
-    'UI_PACKAGE_URL': ''
-}
+def kill_containers():
+    containers = list_containers(quiet=True)
+    if containers:
+        logger.info('Killing containers: {0}'.format(containers))
+        docker.rm('-f', containers).wait()
 
-def list_containers():
-    return sh.docker.ps(a=True).strip()
 
 def container_exit_code(container_name):
     return int(sh.docker.wait(container_name).strip())
 
-def container_kill(container_name, ignore_errors=False):
-    try:
-        logger.info('Killing container: {0}'.format(container_name))
-        docker.rm('-f', container_name).wait()
-    except Exception:
-        if ignore_errors:
-            pass
-        else:
-            raise
 
-def test_logs():
-    vagrant('docker-logs', f=True).wait()
+def container_kill(container_name):
+    logger.info('Killing container: {0}'.format(container_name))
+    docker.rm('-f', container_name).wait()
+
 
 def test_start():
-    setup_reports_dir()
     vagrant.up().wait()
+    vagrant('docker-logs', f=True).wait()
+
 
 def test_run():
-    logger.info('Current containers:\n{0}'
-                .format(list_containers()))
-    containers = get_containers_names()
-    for c in containers:
-        container_kill(c, ignore_errors=True)
     test_start()
-    test_logs()
     logger.info('wait for containers exit status codes')
+    containers = get_containers_names()
     exit_codes = [(c, container_exit_code(c)) for c in containers]
     logger.info('removing containers')
     for c in containers:
@@ -101,21 +65,42 @@ def test_run():
             logger.info('\t{}: exit code: {}'.format(c, exit_code))
         sys.exit(1)
 
-def setenv():
-    if 'Docker version 1.1.2' not in sh.docker(version=True):
-        raise RuntimeError('Tested with docker 1.1.2 only. If you know this will work with other versions, '
-                           'Update this code to be more flexible')
-    if 'Vagrant 1.6.3' not in sh.vagrant(version=True):
-        raise RuntimeError('Tested with vagrant 1.6.3 only. If you know this will work with other versions, '
-                           'Update this code to be more flexible')
-    for env_var, default_value in env_variables.items():
-        if default_value and not os.environ.get(env_var):
-            os.environ[env_var] = default_value
-    cloudify_enviroment_varaible_names = ':'.join(env_variables.keys())
-    os.environ['CLOUDIFY_ENVIRONMENT_VARIABLE_NAMES'] = cloudify_enviroment_varaible_names
-    if not os.environ.get('TEST_SUITES_PATH'):
-        suite_json_path = build_suites_json('suites/suites.json')
-        os.environ['TEST_SUITES_PATH'] = suite_json_path
+
+def setenv(variables_path):
+    setup_reports_dir()
+    descriptor = os.environ['SYSTEM_TESTS_DESCRIPTOR']
+    os.environ[TEST_SUITES_PATH] = build_suites_yaml('suites/suites.yaml',
+                                                     variables_path,
+                                                     descriptor)
+
+
+def validate():
+    with open(os.environ[TEST_SUITES_PATH]) as f:
+        suites = yaml.load(f.read())
+    handler_configurations = suites['handler_configurations']
+    environments = {}
+    for suite_name, suite in suites['test_suites'].items():
+        configuration = handler_configurations[suite['handler_configuration']]
+        env = configuration.get('env', configuration['handler'])
+        if env not in environments:
+            environments[env] = []
+        environments[env].append(suite_name)
+    validation_error = False
+    message = StringIO()
+    message.write('Multiple tests suites found for same environments:\n')
+    for env, suite_names in environments.items():
+        if len(suite_names) > 1:
+            validation_error = True
+            message.write('\t{0}: {1}'.format(env, suite_names))
+    if validation_error:
+        raise AssertionError(message.getvalue())
+
+
+def cleanup():
+    logger.info('Current containers:\n{0}'
+                .format(list_containers()))
+    kill_containers()
+
 
 def setup_reports_dir():
     if not reports_dir.exists():
@@ -123,13 +108,18 @@ def setup_reports_dir():
     for report in reports_dir.files():
         report.remove()
 
+
 def get_containers_names():
-    with open(os.environ['TEST_SUITES_PATH']) as f:
-        suites = json.loads(f.read())
-    return [s['suite_name'] for s in suites]
+    with open(os.environ[TEST_SUITES_PATH]) as f:
+        suites = yaml.load(f.read())['test_suites'].keys()
+    return [s for s in suites]
+
 
 def main():
-    setenv()
+    variables_path = sys.argv[1]
+    setenv(variables_path)
+    cleanup()
+    validate()
     test_run()
 
 if __name__ == '__main__':

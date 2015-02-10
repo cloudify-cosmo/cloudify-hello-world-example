@@ -13,10 +13,7 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
-__author__ = 'dank'
-
 import time
-
 import fabric.api
 import fabric.context_managers
 from path import path
@@ -37,8 +34,15 @@ class ExistingVMTest(TestCase):
         # 1. it is needed to work properly
         # 2. it is needed for the cleanup process to work properly
         prefix = self.env.resources_prefix
+        remote_key_name = '{}test-existing-vm.pem'.format(prefix)
         server_name = '{}testexistingvm'.format(prefix)
-        remote_key_path = '/tmp/{}test-existing-vm.pem'.format(prefix)
+        if self._is_docker_manager():
+            docker_manager = True
+            remote_key_path = '/home/{}/{}'.format(
+                self.env.management_user_name, remote_key_name)
+        else:
+            docker_manager = False
+            remote_key_path = '/tmp/{}'.format(remote_key_name)
         key_name = '{}test_existing_vm_key'.format(prefix)
         agents_security_group = self.env.agents_security_group
         management_network_name = self.env.management_network_name
@@ -53,7 +57,7 @@ class ExistingVMTest(TestCase):
             management_network_name = '{}{}'.format(
                 prefix, self.env.management_network_name)
 
-        nova_client, _ = self.env.handler.openstack_clients()
+        nova_client, _, _ = self.env.handler.openstack_clients()
         self.create_keypair_and_copy_to_manager(
             nova_client=nova_client,
             remote_key_path=remote_key_path,
@@ -69,7 +73,8 @@ class ExistingVMTest(TestCase):
             fetch_state=False,
             inputs=dict(
                 ip=private_server_ip,
-                agent_key=remote_key_path
+                agent_key=remote_key_path if not docker_manager
+                else '/tmp/home/{0}'.format(remote_key_name)
             ))
 
         instances = self.client.node_instances.list(deployment_id=self.test_id)
@@ -95,6 +100,8 @@ class ExistingVMTest(TestCase):
             'key_filename': management_key_path,
             'host_string': self.env.management_ip,
         })
+        if self._is_docker_manager():
+            fabric.api.run('mkdir -p /tmp/home')
         fabric.api.put(local_path=key_file,
                        remote_path=remote_key_path)
 
@@ -127,3 +134,20 @@ class ExistingVMTest(TestCase):
             'Failed finding new server ip [expected management network '
             'name={}, vm networks={}]'.format(management_network_name,
                                               srv.networks))
+
+    def _is_docker_manager(self):
+        manager_key_path = get_actual_keypath(
+            self.env, self.env.management_key_path)
+
+        fabric_env = fabric.api.env
+        fabric_env.update({
+            'timeout': 30,
+            'user': self.env.management_user_name,
+            'key_filename': manager_key_path,
+            'host_string': self.env.management_ip
+        })
+        try:
+            fabric.api.sudo('which docker')
+            return True
+        except SystemExit:
+            return False

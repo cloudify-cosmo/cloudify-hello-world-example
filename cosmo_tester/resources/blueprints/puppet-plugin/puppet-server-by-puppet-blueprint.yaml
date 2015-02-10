@@ -1,0 +1,61 @@
+tosca_definitions_version: cloudify_dsl_1_0
+
+imports:
+    - http://www.getcloudify.org/spec/cloudify/3.2m4/types.yaml
+    - http://www.getcloudify.org/spec/openstack-plugin/1.2m4/plugin.yaml
+    - http://www.getcloudify.org/spec/puppet-plugin/1.2m4/plugin.yaml
+
+inputs:
+    server_name: {}
+    image_name: {}
+    flavor_name: {}
+    security_groups: {}
+    userdata: {}
+
+node_types:
+    puppet_master_service:
+        derived_from: cloudify.nodes.SoftwareComponent
+        properties:
+            puppet_config: {}
+        interfaces:
+            cloudify.interfaces.lifecycle:
+                create:
+                    implementation: puppet.puppet_plugin.install.operation
+                    inputs: {}
+
+node_templates:
+    puppet_master_vm:
+        type: cloudify.openstack.nodes.Server
+        properties:
+            server:
+                name: { get_input: server_name }
+                image_name: { get_input: image_name }
+                flavor_name: { get_input: flavor_name }
+                security_groups: { get_input: security_groups }
+                userdata: { get_input: userdata }
+        relationships:
+            -   type: cloudify.openstack.server_connected_to_floating_ip
+                target: ip
+            -   type: cloudify.relationships.connected_to
+                target: puppet_sg
+    ip:
+        type: cloudify.openstack.nodes.FloatingIP
+    puppet_sg:
+        type: cloudify.openstack.nodes.SecurityGroup
+        properties:
+            security_group:
+                name: puppet_sg
+            rules:
+                -   remote_ip_prefix: 0.0.0.0/0
+                    port: 22
+                -   remote_ip_prefix: 0.0.0.0/0
+                    port: 8140
+    system_tests_puppet_master_service:
+        type: puppet_master_service
+        properties:
+            puppet_config:
+                server: puppet
+                environment: cloudify0system0test
+        relationships:
+            -   type: cloudify.relationships.contained_in
+                target: puppet_master_vm

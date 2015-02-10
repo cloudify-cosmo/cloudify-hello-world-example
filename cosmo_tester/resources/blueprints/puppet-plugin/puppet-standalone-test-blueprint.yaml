@@ -1,0 +1,75 @@
+tosca_definitions_version: cloudify_dsl_1_0
+
+imports:
+    - http://www.getcloudify.org/spec/cloudify/3.2m4/types.yaml
+    - http://www.getcloudify.org/spec/openstack-plugin/1.2m4/plugin.yaml
+    - http://www.getcloudify.org/spec/puppet-plugin/1.2m4/plugin.yaml
+
+inputs:
+    server_name: {}
+    image_name: {}
+    flavor_name: {}
+    security_groups: {}
+
+node_templates:
+    puppet-standalone-vm:
+        type: cloudify.openstack.nodes.Server
+        properties:
+            server:
+                name: { get_input: server_name }
+                image_name: { get_input: image_name }
+                flavor_name: { get_input: flavor_name }
+                security_groups: { get_input: security_groups }
+        relationships:
+            -   type: cloudify.openstack.server_connected_to_floating_ip
+                target: ip
+            -   type: cloudify.relationships.connected_to
+                target: puppet_sg
+
+    puppet_node_one:
+        type: cloudify.puppet.nodes.WebServer
+        properties:
+            port: 8080
+            puppet_config:
+                environment: e1
+                node_name_prefix: pfx-
+                node_name_suffix: .puppet.example.com
+                modules:
+                    - puppetlabs-apache
+                    - puppetlabs-concat
+                    - puppetlabs-stdlib
+                    - puppetlabs-vcsrepo
+                # download: -- added by all download tests
+                # manifest: -- added by download tests (url)
+                # "execute" section is removed by download tests (url)
+                execute:
+                    # "configure" section is removed by download tests (resource)
+                    configure: |
+                        package{'git':}
+                        ->
+                        vcsrepo{$cloudify_local_repo:
+                          ensure => present,
+                          provider => git,
+                          source   => 'https://github.com/Fewbytes/cosmo-tester-puppet-downloadable.git',
+                        }
+                    start: |
+                        class{'cloudify_hello_world':
+                        }
+        relationships:
+            -
+                type: cloudify.relationships.contained_in
+                target: puppet-standalone-vm
+
+    ip:
+        type: cloudify.openstack.nodes.FloatingIP
+
+    puppet_sg:
+        type: cloudify.openstack.nodes.SecurityGroup
+        properties:
+            security_group:
+                name: puppet_sg
+            rules:
+                -   remote_ip_prefix: 0.0.0.0/0
+                    port: 22
+                -   remote_ip_prefix: 0.0.0.0/0
+                    port: 8080

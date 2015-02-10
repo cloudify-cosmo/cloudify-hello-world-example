@@ -1,0 +1,46 @@
+tosca_definitions_version: cloudify_dsl_1_0
+
+imports:
+    - http://www.getcloudify.org/spec/cloudify/3.2m4/types.yaml
+    - http://www.getcloudify.org/spec/openstack-plugin/1.2m4/plugin.yaml
+    - http://www.getcloudify.org/spec/puppet-plugin/1.2m4/plugin.yaml
+
+
+inputs:
+    server_name: {}
+    image_name: {}
+    flavor_name: {}
+    security_groups: {}
+    userdata: {}
+
+node_templates:
+    db-vm:
+        type: cloudify.openstack.nodes.Server
+        properties:
+            server:
+                name: { get_input: server_name }
+                image_name: { get_input: image_name }
+                flavor_name: { get_input: flavor_name }
+                security_groups: { get_input: security_groups }
+                userdata: { get_input: userdata }
+        relationships:
+            -   type: cloudify.openstack.server_connected_to_floating_ip
+                target: ip
+    puppet_db:
+        type: cloudify.puppet.nodes.DBMS
+        properties:
+            puppet_config:
+                add_operation_tag: True,
+                operations_tags:
+                    create: [op_tag_create, tag2]
+                environment: e1
+                tags: [a, b]
+                server: puppet
+                node_name_prefix: pfx-
+                node_name_suffix: .puppet.example.com
+        relationships:
+            -   type: cloudify.relationships.contained_in
+                target: db-vm
+
+    ip:
+        type: cloudify.openstack.nodes.FloatingIP

@@ -14,12 +14,10 @@
 #    * limitations under the License.
 # ***************************************************************************/
 
-__author__ = 'dank'
-
 from setuptools import setup
 
 setup(
     name='mock-plugin',
-    version='3.1',
+    version='3.2a4',
     packages=['mock_plugin']
 )
