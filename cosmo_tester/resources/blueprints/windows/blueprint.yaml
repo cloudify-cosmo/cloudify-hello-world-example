@@ -12,6 +12,11 @@ plugins:
 
 node_templates:
 
+  keypair:
+    type: cloudify.openstack.nodes.KeyPair
+    properties:
+        private_key_path: /tmp/windows-test.pem
+
   vm:
     type: cloudify.openstack.nodes.WindowsServer
     properties:
@@ -70,7 +75,9 @@ node_templates:
         install:
           inputs:
             cloudify_agent: *cloudify_agent
-
+    relationships:
+      - type: cloudify.openstack.server_connected_to_keypair
+        target: keypair
   app:
     type: cloudify.nodes.ApplicationModule
     interfaces:
