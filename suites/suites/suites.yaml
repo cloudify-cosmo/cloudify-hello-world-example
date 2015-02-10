@@ -6,7 +6,7 @@ variables:
   hp_openstack_ubuntu_precise_image_name: Ubuntu Server 12.04.5 LTS (amd64 20140927) - Partner Image
   hp_openstack_ubuntu_trusty_image_name: Ubuntu Server 14.04.1 LTS (amd64 20140927) - Partner Image
   hp_openstack_centos_image_name: CentOS 6.3 Server 64-bit 20130116
-  hp_openstack_windows_image_name: windows-agent-machine
+  hp_openstack_windows_image_name: Windows Server 2008 R2 Enterprise SP1 x64 Volume License 20140415 (b)
   hp_openstack_region_a_ubuntu_precise: 8ca068c5-6fde-4701-bab8-322b3e7c8d81
   hp_openstack_region_a_ubuntu_trusty: bec3cab5-4722-40b9-a78a-3489218e22fe
   hp_openstack_region_b_ubuntu_precise: 261844b3-479c-5446-a2c4-1ea95d53b668
@@ -16,6 +16,7 @@ variables:
   lab_openstack_ubuntu_precise_image_name: ubuntu_12.04
   lab_openstack_ubuntu_trusty_image_name: ubuntu_14.04
   lab_openstack_centos_image_name: centos_6.5
+  lab_openstack_windows_image_name: windows-server-2012
   lab_openstack_ubuntu_precise: d81ccdfe-7482-460e-a7ce-69ea29aa129b
   lab_openstack_ubuntu_trusty: c6d36e11-f4d5-4221-b6e8-4e97914c67e9
 
@@ -132,6 +133,7 @@ templates:
     centos_image_user: root
     flavor_name: standard.small
     small_flavor_id: 101
+    medium_flavor_id: 102
 
   #######################################################
 
@@ -217,11 +219,13 @@ handler_properties:
     ubuntu_image_name: '{{lab_openstack_ubuntu_precise_image_name}}'
     ubuntu_trusty_image_name: '{{lab_openstack_ubuntu_trusty_image_name}}'
     centos_image_name: '{{lab_openstack_centos_image_name}}'
+    windows_image_name: '{{lab_openstack_windows_image_name}}'
     ubuntu_image_id: '{{lab_openstack_ubuntu_precise}}'
     ubuntu_trusty_image_id: '{{lab_openstack_ubuntu_trusty}}'
     centos_image_user: root
     flavor_name: m1.small
     small_flavor_id: ba4e08fd-e4c5-4233-a906-f1bb31cb659d
+    medium_flavor_id: 8b5be402-98e6-461c-8425-56f708187c13
 
   pclab47_devstack_nova_net:
     ubuntu_image_name: ubuntu
@@ -446,9 +450,9 @@ handler_configurations:
 
 tests:
 
-  openstack_blueprints_without_chef_puppet_docker:
+  openstack_blueprints_without_chef_puppet_docker_windows:
     tests:
-      - cosmo_tester/test_suites/test_blueprints -e puppet -e chef -e docker
+      - cosmo_tester/test_suites/test_blueprints -e puppet -e chef -e docker -e windows
 
   openstack_blueprints_docker:
     tests:
@@ -459,6 +463,10 @@ tests:
     tests:
       - cosmo_tester/test_suites/test_blueprints/chef_plugin_test.py
       - cosmo_tester/test_suites/test_blueprints/puppet_plugin_test.py
+
+  openstack_blueprints_windows:
+    tests:
+      - cosmo_tester/test_suites/test_blueprints/windows_test.py
 
   manager_status:
     tests:
@@ -500,10 +508,10 @@ test_suites:
     tests:
       - openstack_blueprints_chef_puppet
 
-  hp_openstack_blueprints_no_chef_puppet_docker:
+  hp_openstack_blueprints_no_chef_puppet_docker_windows:
     handler_configuration: hp_openstack_system_tests_region_b
     tests:
-      - openstack_blueprints_without_chef_puppet_docker
+      - openstack_blueprints_without_chef_puppet_docker_windows
 
   hp_openstack_manager_status:
     handler_configuration: hp_openstack_system_tests2_region_a
@@ -528,10 +536,10 @@ test_suites:
     tests:
       - openstack_blueprints_chef_puppet
 
-  dockerless_hp_openstack_blueprints_no_chef_puppet_docker:
+  dockerless_hp_openstack_blueprints_no_chef_puppet_docker_windows:
     handler_configuration: hp_openstack_dockerless_system_tests_region_b
     tests:
-      - openstack_blueprints_without_chef_puppet_docker
+      - openstack_blueprints_without_chef_puppet_docker_windows
 
   dockerless_hp_openstack_manager_status:
     handler_configuration: hp_openstack_dockerless_system_tests2_region_a
@@ -542,6 +550,13 @@ test_suites:
     handler_configuration: hp_openstack_dockerless_system_tests2_region_b
     tests:
       - openstack_plugin
+
+  #####################################################################
+
+  lab_openstack_windows:
+    handler_configuration: lab_openstack_system_tests1
+    tests:
+      - openstack_blueprints_windows
 
   #####################################################################
 
