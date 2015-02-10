@@ -85,6 +85,10 @@ class CfyHelper(object):
                 dev_mode=dev_mode,
                 verbose=verbose).wait()
 
+    def recover(self):
+        with self.workdir:
+            cfy.recover(force=True).wait()
+
     def teardown(self,
                  ignore_deployments=True,
                  ignore_validation=False,

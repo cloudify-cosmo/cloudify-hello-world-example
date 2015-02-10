@@ -472,6 +472,10 @@ tests:
     tests:
       - cosmo_tester/test_suites/test_manager_status
 
+  manager_recovery:
+    tests:
+      - cosmo_tester/test_suites/test_manager_recovery
+
   openstack_plugin:
     tests:
       - cosmo_tester/test_suites/test_openstack_plugin
@@ -513,6 +517,11 @@ test_suites:
     handler_configuration: hp_openstack_system_tests2_region_a
     tests:
       - manager_status
+
+  lab_openstack_manager_recovery:
+    handler_configuration: lab_openstack_system_tests2
+    tests:
+      - manager_recovery
 
   hp_openstack_plugin_and_docker_tests:
     handler_configuration: hp_openstack_system_tests2_region_b
