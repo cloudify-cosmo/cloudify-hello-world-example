@@ -450,9 +450,9 @@ handler_configurations:
 
 tests:
 
-  openstack_blueprints_without_chef_puppet_docker:
+  openstack_blueprints_without_chef_puppet_docker_windows:
     tests:
-      - cosmo_tester/test_suites/test_blueprints -e puppet -e chef -e docker
+      - cosmo_tester/test_suites/test_blueprints -e puppet -e chef -e docker -e windows
 
   openstack_blueprints_docker:
     tests:
@@ -463,6 +463,10 @@ tests:
     tests:
       - cosmo_tester/test_suites/test_blueprints/chef_plugin_test.py
       - cosmo_tester/test_suites/test_blueprints/puppet_plugin_test.py
+
+  openstack_blueprints_windows:
+    tests:
+      - cosmo_tester/test_suites/test_blueprints/windows_test.py
 
   manager_status:
     tests:
@@ -500,10 +504,10 @@ test_suites:
     tests:
       - openstack_blueprints_chef_puppet
 
-  hp_openstack_blueprints_no_chef_puppet_docker:
+  hp_openstack_blueprints_no_chef_puppet_docker_windows:
     handler_configuration: hp_openstack_system_tests_region_b
     tests:
-      - openstack_blueprints_without_chef_puppet_docker
+      - openstack_blueprints_without_chef_puppet_docker_windows
 
   hp_openstack_manager_status:
     handler_configuration: hp_openstack_system_tests2_region_a
@@ -523,10 +527,10 @@ test_suites:
     tests:
       - openstack_blueprints_chef_puppet
 
-  dockerless_hp_openstack_blueprints_no_chef_puppet_docker:
+  dockerless_hp_openstack_blueprints_no_chef_puppet_docker_windows:
     handler_configuration: hp_openstack_dockerless_system_tests_region_b
     tests:
-      - openstack_blueprints_without_chef_puppet_docker
+      - openstack_blueprints_without_chef_puppet_docker_windows
 
   dockerless_hp_openstack_manager_status:
     handler_configuration: hp_openstack_dockerless_system_tests2_region_a
@@ -537,6 +541,13 @@ test_suites:
     handler_configuration: hp_openstack_dockerless_system_tests2_region_b
     tests:
       - openstack_plugin
+
+  #####################################################################
+
+  lab_openstack_windows:
+    handler_configuration: lab_openstack_system_tests1
+    tests:
+      - openstack_blueprints_windows
 
   #####################################################################
 
