@@ -2,8 +2,7 @@ tosca_definitions_version: cloudify_dsl_1_0
 
 imports:
     - http://www.getcloudify.org/spec/cloudify/3.2m4/types.yaml
-#    - http://www.getcloudify.org/spec/openstack-plugin/1.2m4/plugin.yaml
-    - https://raw.githubusercontent.com/cloudify-cosmo/cloudify-openstack-plugin/CFY-2110-support-get-password-for-openstack-servers/plugin.yaml
+    - http://www.getcloudify.org/spec/openstack-plugin/1.2m4/plugin.yaml
 
 plugins:
   windows_host_plugin:
@@ -35,23 +34,12 @@ node_templates:
           &netsh advfirewall firewall add rule name="WinRM 5986" protocol=TCP dir=in localport=5986 action=allow
 
           msiexec /i https://www.python.org/ftp/python/2.7.6/python-2.7.6.msi TARGETDIR=C:\Python27 ALLUSERS=1 /qn
-#          net stop winrm
-#          sc config winrm
-#          net start winrm
-
-#          windows-server 2008:
-#          cmd /c winrm quickconfig -quiet
-#          cmd /c winrm s winrm/config/service @{AllowUnencrypted="true";MaxConcurrentOperationsPerUser="4294967295"}
-#          cmd /c winrm s winrm/config/service/auth @{Basic="true"}
-#          cmd /c winrm s winrm/config/winrs @{MaxShellsPerUser="2147483647"}
-#          cmd /c msiexec /i https://www.python.org/ftp/python/2.7.6/python-2.7.6.msi TARGETDIR=C:\Python27 ALLUSERS=1 /qn
-#          cmd /c powershell Set-ExecutionPolicy Unrestricted > NUL 2> NUL
 
     interfaces:
       cloudify.interfaces.worker_installer:
         install:
           inputs:
-            cloudify_agent: &cloudify_agent
+            cloudify_agent: &CLOUDIFY_AGENT
               service:
                 successful_consecutive_status_queries_count: 10
                 status_transition_sleep_interval: 5
@@ -61,20 +49,20 @@ node_templates:
               password: { get_attribute: [SELF, password] }
         start:
           inputs:
-            cloudify_agent: *cloudify_agent
+            cloudify_agent: *CLOUDIFY_AGENT
         stop:
           inputs:
-            cloudify_agent: *cloudify_agent
+            cloudify_agent: *CLOUDIFY_AGENT
         uninstall:
           inputs:
-            cloudify_agent: *cloudify_agent
+            cloudify_agent: *CLOUDIFY_AGENT
         restart:
           inputs:
-            cloudify_agent: *cloudify_agent
+            cloudify_agent: *CLOUDIFY_AGENT
       cloudify.interfaces.plugin_installer:
         install:
           inputs:
-            cloudify_agent: *cloudify_agent
+            cloudify_agent: *CLOUDIFY_AGENT
     relationships:
       - type: cloudify.openstack.server_connected_to_keypair
         target: keypair
