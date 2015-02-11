@@ -191,7 +191,7 @@ class NodecellarAppTest(TestCase):
 
     @property
     def repo_branch(self):
-        return None  # will default to master branch
+        return None  # will use git_helper.clone default branch
 
     @property
     def expected_nodes_count(self):
