@@ -20,7 +20,6 @@ from requests.exceptions import ConnectionError
 from influxdb import InfluxDBClient
 
 from cosmo_tester.framework.testenv import TestCase
-from cosmo_tester.framework.util import YamlPatcher
 from cosmo_tester.framework.git_helper import clone
 
 
