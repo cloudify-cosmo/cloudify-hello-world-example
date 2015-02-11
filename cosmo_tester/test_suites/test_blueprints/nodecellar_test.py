@@ -230,23 +230,12 @@ class OpenStackNodeCellarTest(OpenStackNodeCellarTestBase):
         self._test_openstack_nodecellar('openstack-blueprint.yaml')
 
 
-class OldVersionOpenStackNodeCellarTest(OpenStackNodeCellarTestBase):
+class OldVersionNodeCellarTest(OpenStackNodeCellarTestBase):
 
-    # Nodecellar test using an older Openstack plugin version
+    # Nodecellar test using the 3.1 version blueprint
 
     def test_old_version_openstack_nodecellar(self):
         self._test_openstack_nodecellar('openstack-blueprint.yaml')
-
-    def modify_blueprint(self):
-        old_openstack_plugin_yaml =\
-            'https://raw.githubusercontent.com/cloudify-cosmo/cloudify-openstack-plugin/CFY-2040-support-older-plugins/plugin.yaml'
-            # 'http://www.getcloudify.org/spec/openstack-plugin/1.1/plugin.yaml'
-
-        # modifying the Openstack plugin import in the nodecellar blueprint
-        with YamlPatcher(self.blueprint_yaml) as patch:
-            openstack_plugin_import_path = 'imports[1]'
-            patch.set_value(openstack_plugin_import_path,
-                            old_openstack_plugin_yaml)
 
     @property
     def repo_branch(self):
