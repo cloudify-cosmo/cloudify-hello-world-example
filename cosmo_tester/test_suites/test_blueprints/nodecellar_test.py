@@ -27,7 +27,7 @@ from cosmo_tester.framework.git_helper import clone
 class NodecellarAppTest(TestCase):
 
     def _test_nodecellar_impl(self, blueprint_file):
-        self.repo_dir = clone(self.repo_url, self.workdir)
+        self.repo_dir = clone(self.repo_url, self.workdir, self.repo_branch)
         self.blueprint_yaml = self.repo_dir / blueprint_file
 
         self.modify_blueprint()
@@ -190,6 +190,10 @@ class NodecellarAppTest(TestCase):
                'cloudify-nodecellar-example.git'
 
     @property
+    def repo_branch(self):
+        return None  # will default to master branch
+
+    @property
     def expected_nodes_count(self):
         return 8
 
@@ -235,10 +239,15 @@ class OldVersionOpenStackNodeCellarTest(OpenStackNodeCellarTestBase):
 
     def modify_blueprint(self):
         old_openstack_plugin_yaml =\
-            'http://www.getcloudify.org/spec/openstack-plugin/1.1/plugin.yaml'
+            'https://raw.githubusercontent.com/cloudify-cosmo/cloudify-openstack-plugin/CFY-2040-support-older-plugins/plugin.yaml'
+            # 'http://www.getcloudify.org/spec/openstack-plugin/1.1/plugin.yaml'
 
         # modifying the Openstack plugin import in the nodecellar blueprint
         with YamlPatcher(self.blueprint_yaml) as patch:
             openstack_plugin_import_path = 'imports[1]'
             patch.set_value(openstack_plugin_import_path,
                             old_openstack_plugin_yaml)
+
+    @property
+    def repo_branch(self):
+        return 'tags/3.1'
