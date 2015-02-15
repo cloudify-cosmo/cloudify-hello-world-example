@@ -250,14 +250,6 @@ class TestEnvironment(object):
             if os.path.exists(self._workdir):
                 shutil.rmtree(self._workdir)
 
-    def use(self):
-        cfy = CfyHelper(cfy_workdir=self._workdir)
-        cfy.use(self.management_ip, provider=False)
-
-    def recover(self):
-        cfy = CfyHelper(cfy_workdir=self._workdir)
-        cfy.recover()
-
     def _running_env_setup(self, management_ip):
         self.management_ip = management_ip
         self.rest_client = CloudifyClient(self.management_ip)

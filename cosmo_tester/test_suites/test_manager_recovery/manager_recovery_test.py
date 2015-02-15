@@ -90,11 +90,18 @@ class ManagerRecoveryTest(TestCase):
     def _kill_and_recover_manager(self):
 
         def _kill_and_recover():
-            self.env.use()
+            self.cfy.use(management_ip=self.env.management_ip,
+                         provider=False)
             with settings(**self.fabric_env):
                 sudo('docker kill cfy')
-            self.env.recover()
+            self.cfy.recover()
 
         return self._make_operation_with_before_after_states(
             _kill_and_recover,
             fetch_state=True)
+
+    def tearDown(self):
+        super(ManagerRecoveryTest, self).tearDown()
+        self.cfy.teardown(ignore_deployments=True,
+                          ignore_validation=True,
+                          verbose=True)
