@@ -503,11 +503,6 @@ tests:
 
 test_suites:
 
-  hp_openstack_chef_puppet:
-    handler_configuration: hp_openstack_system_tests_region_a
-    tests:
-      - openstack_blueprints_chef_puppet
-
   hp_openstack_blueprints_no_chef_puppet_docker_windows:
     handler_configuration: hp_openstack_system_tests_region_b
     tests:
@@ -518,8 +513,8 @@ test_suites:
     tests:
       - manager_status
 
-  lab_openstack_manager_recovery:
-    handler_configuration: lab_openstack_system_tests2
+  hp_openstack_manager_recovery:
+    handler_configuration: hp_openstack_system_tests_region_a
     tests:
       - manager_recovery
 
@@ -553,8 +548,13 @@ test_suites:
 
   #####################################################################
 
+  lab_openstack_chef_puppet:
+    handler_configuration: lab_openstack_dockerless_system_tests2
+    tests:
+      - openstack_blueprints_chef_puppet
+
   lab_openstack_windows:
-    handler_configuration: lab_openstack_system_tests1
+    handler_configuration: lab_openstack_dockerless_system_tests1
     tests:
       - openstack_blueprints_windows
 
