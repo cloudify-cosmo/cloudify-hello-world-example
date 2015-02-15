@@ -548,12 +548,12 @@ test_suites:
 
   #####################################################################
 
-  lab_openstack_chef_puppet:
+  lab_dockerless_openstack_chef_puppet:
     handler_configuration: lab_openstack_dockerless_system_tests2
     tests:
       - openstack_blueprints_chef_puppet
 
-  lab_openstack_windows:
+  lab_dockerless_openstack_windows:
     handler_configuration: lab_openstack_dockerless_system_tests1
     tests:
       - openstack_blueprints_windows
