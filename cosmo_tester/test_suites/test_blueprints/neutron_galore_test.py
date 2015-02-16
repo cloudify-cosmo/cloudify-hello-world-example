@@ -105,7 +105,7 @@ class NeutronGaloreTest(TestCase):
                               5, len(openstack['server']['security_groups']),
                               openstack['server']['security_groups'],
                               nova.servers.get(openstack['server'][
-                                  'id']).list_security_groups()))
+                                  'id']).list_security_group()))
 
         self.assert_obj_list_contains_subset(
             openstack['server']['security_groups'],
