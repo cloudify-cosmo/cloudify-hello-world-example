@@ -91,6 +91,16 @@ node_templates:
         relationships:
             -   type: cloudify.relationships.connected_to
                 target: security_group_src
+    # security groups 3 and 4 are used to test concurrent linking of security
+    # groups to a server
+    security_group_3:
+        type: cloudify.openstack.nodes.SecurityGroup
+        properties:
+            resource_id: neutron_test_security_group_3
+    security_group_4:
+        type: cloudify.openstack.nodes.SecurityGroup
+        properties:
+            resource_id: neutron_test_security_group_4
     floatingip:
         type: cloudify.openstack.nodes.FloatingIP
     keypair:
