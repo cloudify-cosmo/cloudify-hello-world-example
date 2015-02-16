@@ -2,8 +2,7 @@ tosca_definitions_version: cloudify_dsl_1_0
 
 imports:
     - http://www.getcloudify.org/spec/cloudify/3.2m5/types.yaml
-    - https://raw.githubusercontent.com/cloudify-cosmo/cloudify-openstack-plugin/CFY-2132-connecting-multiple-security-groups/plugin.yaml
-#    - http://www.getcloudify.org/spec/openstack-plugin/1.2m5/plugin.yaml
+    - http://www.getcloudify.org/spec/openstack-plugin/1.2m5/plugin.yaml
 
 
 inputs:
