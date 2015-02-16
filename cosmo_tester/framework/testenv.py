@@ -113,8 +113,8 @@ class TestEnvironment(object):
         handler_configuration = os.environ[HANDLER_CONFIGURATION]
         suites_yaml_path = os.environ.get(
             SUITES_YAML_PATH,
-            path(__file__).dirname().dirname().dirname() / 'suites' / 'suites'
-                                                         / 'suites.yaml')
+            path(__file__).dirname().dirname().dirname() / 'suites' /
+            'suites' / 'suites.yaml')
         with open(suites_yaml_path) as f:
             self.suites_yaml = yaml.load(f.read())
         if os.path.exists(os.path.expanduser(handler_configuration)):
