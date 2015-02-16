@@ -96,6 +96,12 @@ class NeutronGaloreTest(TestCase):
                          [p('neutron_network_test')][0]
                          ['version'], 4)
         self.assertTrue(port_assigned_addr.startswith('10.10.10.'))
+        self.assertEquals(6, len(openstack['server']['security_groups']),
+                          msg='Expected {0} security groups on the server '
+                              'but there were {1}; security groups on the '
+                              'server are: {2}'.format(
+                              6, len(openstack['server']['security_groups']),
+                              openstack['server']['security_groups']))
         self.assert_obj_list_contains_subset(
             openstack['server']['security_groups'],
             {'name': p('neutron_test_security_group_dst')})
