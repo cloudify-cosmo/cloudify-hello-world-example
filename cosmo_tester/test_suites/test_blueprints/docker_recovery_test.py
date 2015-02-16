@@ -28,7 +28,7 @@ from cosmo_tester.test_suites.test_blueprints import nodecellar_test
 class DockerRecoveryTest(nodecellar_test.NodecellarAppTest):
 
     def test_docker_recovery(self):
-        provider_context = self.get_provider_context()
+        context_before = self.get_provider_context()
         self.init_fabric()
         self.restart_vm()
         down = self._wait_for_management_state(self.env.management_ip, 180,
@@ -38,9 +38,10 @@ class DockerRecoveryTest(nodecellar_test.NodecellarAppTest):
         started = self._wait_for_management_state(self.env.management_ip, 180)
         self.assertTrue(started, 'Cloudify docker service container failed'
                                  ' to start after reboot. Test failed.')
+        context_after = self._wait_for_provider_context(180)
 
-        self.assertEqual(json.load(provider_context),
-                         json.load(self.get_provider_context()),
+        self.assertEqual(json.load(context_before),
+                         json.load(context_after),
                          msg='Provider context should be identical to what it '
                              'was prior to reboot.')
 
@@ -63,6 +64,20 @@ class DockerRecoveryTest(nodecellar_test.NodecellarAppTest):
         self.logger.info('Restarting machine with ip {0}'
                          .format(self.env.management_ip))
         return fabric.api.run('sudo shutdown -r now')
+
+    def _wait_for_provider_context(self, timeout):
+        end = time() + timeout
+        while end - time() >= 0:
+            context = self.get_provider_context()
+            if context:
+                return context
+            else:
+                self.logger.info('Provider context is empty. sleeping for 2 '
+                                 'seconds...')
+                sleep(2)
+
+        raise RuntimeError('Failed waiting for provider context. '
+                           'waited {0} seconds'.format(timeout))
 
     def _wait_for_management_state(self, ip, timeout, port=80, state=True):
         """ Wait for management to reach state
