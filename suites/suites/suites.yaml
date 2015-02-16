@@ -75,13 +75,13 @@ templates:
     cloudify.agents.packages.ubuntu_agent_url: '{{ubuntu_package_agent_url}}'
     cloudify.agents.packages.centos_agent_url: '{{centos_package_agent_url}}'
     cloudify.agents.packages.windows_agent_url: '{{windows_package_agent_url}}'
-    cloudify.workflows.task_retries: 20
+    cloudify.workflows.task_retries: 30
 
   - &manager_blueprint_override
     node_templates.manager.properties.cloudify_packages.agents.ubuntu_agent_url: '{{ubuntu_package_agent_url}}'
     node_templates.manager.properties.cloudify_packages.agents.centos_agent_url: '{{centos_package_agent_url}}'
     node_templates.manager.properties.cloudify_packages.agents.windows_agent_url: '{{windows_package_agent_url}}'
-    node_templates.manager.properties.cloudify.workflows.task_retries: 20
+    node_templates.manager.properties.cloudify.workflows.task_retries: 30
 
   - &docker_manager_blueprint_override
     <<: *manager_blueprint_override
