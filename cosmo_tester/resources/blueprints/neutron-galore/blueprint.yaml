@@ -19,6 +19,10 @@ node_templates:
                target: neutron_port
            -   type: cloudify.openstack.server_connected_to_security_group
                target: security_group_dst
+           -   type: cloudify.openstack.server_connected_to_security_group
+               target: security_group_3
+           -   type: cloudify.openstack.server_connected_to_security_group
+               target: security_group_4
            -   type: cloudify.openstack.server_connected_to_floating_ip
                target: floatingip
            -   type: cloudify.openstack.server_connected_to_keypair
