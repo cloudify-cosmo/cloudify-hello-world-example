@@ -253,6 +253,7 @@ handler_configurations:
     <<: *hp_openstack_handler_configuration
     env: hp_openstack_system_tests_region_a
     properties: hp_openstack_region_a_properties
+    skip_cleanup: true
     inputs_override:
       <<: *hp_openstack_credentials_inputs
       <<: *hp_openstack_region_a_inputs
