@@ -17,10 +17,10 @@
 # by docker and should be restarted automatically upon failure.
 
 import urllib
-import json
 from time import sleep, time
 
 import fabric.api
+from cloudify_rest_client import exceptions
 
 from cosmo_tester.test_suites.test_blueprints import nodecellar_test
 
@@ -40,15 +40,16 @@ class DockerRecoveryTest(nodecellar_test.NodecellarAppTest):
                                  ' to start after reboot. Test failed.')
         context_after = self._wait_for_provider_context(180)
 
-        self.assertEqual(json.load(context_before),
-                         json.load(context_after),
-                         msg='Provider context should be identical to what it '
-                             'was prior to reboot.')
+        self.logger.info('provider context before restart is : {0}'
+                         .format(context_before))
+        self.logger.info('provider context after restart is : {0}'
+                         .format(context_after))
+        self.assertEqual(context_before,
+                         context_after,
+                         msg='Provider context is not the same after restart')
 
     def get_provider_context(self):
-        context_url = 'http://{0}/provider/context'\
-                      .format(self.env.management_ip)
-        return urllib.urlopen(context_url)
+        return self.client.manager.get_context()
 
     def init_fabric(self):
         manager_keypath = self.env._config_reader.management_key_path
@@ -68,12 +69,17 @@ class DockerRecoveryTest(nodecellar_test.NodecellarAppTest):
     def _wait_for_provider_context(self, timeout):
         end = time() + timeout
         while end - time() >= 0:
-            context = self.get_provider_context()
-            if context:
-                return context
-            else:
+            try:
+                context = self.get_provider_context()
+                if context:
+                    return context
                 self.logger.info('Provider context is empty. sleeping for 2 '
                                  'seconds...')
+                sleep(2)
+            except exceptions.CloudifyClientError as e:
+                # might be an elastic search issue (
+                # NoShardAvailableActionException)
+                self.logger.warning(str(e))
                 sleep(2)
 
         raise RuntimeError('Failed waiting for provider context. '
