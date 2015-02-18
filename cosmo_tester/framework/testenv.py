@@ -58,7 +58,7 @@ logger.setLevel(logging.DEBUG)
 
 HANDLER_CONFIGURATION = 'HANDLER_CONFIGURATION'
 SUITES_YAML_PATH = 'SUITES_YAML_PATH'
-os.environ[HANDLER_CONFIGURATION] = '/home/dan/work/cfy/configurations/lab_openstack_dockerless/handler-configuration.yaml'  # noqa
+
 test_environment = None
 
 
