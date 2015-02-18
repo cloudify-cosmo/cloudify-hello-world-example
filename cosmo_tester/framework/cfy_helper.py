@@ -151,12 +151,28 @@ class CfyHelper(object):
                 verbose=verbose,
                 inputs=inputs_file).wait()
 
+    def delete_deployment(self, deployment_id,
+                          verbose=False,
+                          ignore_live_nodes=False):
+        with self.workdir:
+            cfy.deployments.delete(
+                deployment_id=deployment_id,
+                ignore_live_nodes=ignore_live_nodes,
+                verbose=verbose).wait()
+
+    def delete_blueprint(self, blueprint_id,
+                         verbose=False):
+        with self.workdir:
+            cfy.blueprints.delete(
+                blueprint_id=blueprint_id,
+                verbose=verbose).wait()
+
     def execute_install(self,
                         deployment_id,
                         verbose=False,
                         include_logs=True,
                         execute_timeout=DEFAULT_EXECUTE_TIMEOUT):
-        self._execute_workflow(
+        self.execute_workflow(
             workflow='install',
             deployment_id=deployment_id,
             execute_timeout=execute_timeout,
@@ -168,7 +184,7 @@ class CfyHelper(object):
                           verbose=False,
                           include_logs=True,
                           execute_timeout=DEFAULT_EXECUTE_TIMEOUT):
-        self._execute_workflow(
+        self.execute_workflow(
             workflow='uninstall',
             deployment_id=deployment_id,
             execute_timeout=execute_timeout,
@@ -210,19 +226,22 @@ class CfyHelper(object):
         if self.tmpdir:
             shutil.rmtree(self._cfy_workdir)
 
-    def _execute_workflow(self,
-                          workflow,
-                          deployment_id,
-                          verbose=False,
-                          include_logs=True,
-                          execute_timeout=DEFAULT_EXECUTE_TIMEOUT):
+    def execute_workflow(self,
+                         workflow,
+                         deployment_id,
+                         verbose=False,
+                         include_logs=True,
+                         execute_timeout=DEFAULT_EXECUTE_TIMEOUT,
+                         parameters=None):
+        params_file = self._get_inputs_in_temp_file(parameters, workflow)
         with self.workdir:
             cfy.executions.start(
                 workflow=workflow,
                 deployment_id=deployment_id,
                 timeout=execute_timeout,
                 verbose=verbose,
-                include_logs=include_logs).wait()
+                include_logs=include_logs,
+                parameters=params_file).wait()
 
     def _get_inputs_in_temp_file(self, inputs, inputs_prefix):
         inputs = inputs or {}

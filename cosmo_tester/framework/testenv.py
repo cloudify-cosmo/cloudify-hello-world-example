@@ -58,7 +58,7 @@ logger.setLevel(logging.DEBUG)
 
 HANDLER_CONFIGURATION = 'HANDLER_CONFIGURATION'
 SUITES_YAML_PATH = 'SUITES_YAML_PATH'
-
+os.environ[HANDLER_CONFIGURATION] = '/home/dan/work/cfy/configurations/lab_openstack_dockerless/handler-configuration.yaml'
 test_environment = None
 
 
@@ -403,6 +403,16 @@ class TestCase(unittest.TestCase):
         if fetch_state:
             after_state = self.get_manager_state()
         return before_state, after_state
+
+    def delete_deployment(self,
+                          deployment_id=None,
+                          ignore_live_nodes=False,
+                          verbose=False):
+        self.cfy.delete_deployment(deployment_id=deployment_id,
+                                   ignore_live_nodes=ignore_live_nodes,
+                                   verbose=verbose)
+
+
 
     def execute_uninstall(self, deployment_id=None):
         self.cfy.execute_uninstall(deployment_id=deployment_id or self.test_id)
