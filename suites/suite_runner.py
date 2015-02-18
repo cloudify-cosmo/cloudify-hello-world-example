@@ -161,12 +161,12 @@ class SuiteRunner(object):
                                  password=None):
         with path(self.work_dir):
             if private_repo:
-                git.clone('https://{0}:{1}@github.com/{2}/{3}'
-                          .format(username, password, organization, repo),
-                          depth=1).wait()
+                git.clone(
+                    'https://{0}:{1}@github.com/{2}/{3}'
+                    .format(username, password, organization, repo)).wait()
             else:
                 git.clone('https://github.com/{0}/{1}'
-                          .format(organization, repo), depth=1).wait()
+                          .format(organization, repo)).wait()
 
             with path(repo):
                 git.checkout(branch).wait()
