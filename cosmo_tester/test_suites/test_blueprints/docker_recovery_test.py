@@ -17,10 +17,10 @@
 # by docker and should be restarted automatically upon failure.
 
 import urllib
-import json
 from time import sleep, time
 
 import fabric.api
+from cloudify_rest_client import exceptions
 
 from cosmo_tester.test_suites.test_blueprints import nodecellar_test
 
@@ -28,7 +28,7 @@ from cosmo_tester.test_suites.test_blueprints import nodecellar_test
 class DockerRecoveryTest(nodecellar_test.NodecellarAppTest):
 
     def test_docker_recovery(self):
-        provider_context = self.get_provider_context()
+        context_before = self.get_provider_context()
         self.init_fabric()
         self.restart_vm()
         down = self._wait_for_management_state(self.env.management_ip, 180,
@@ -38,16 +38,18 @@ class DockerRecoveryTest(nodecellar_test.NodecellarAppTest):
         started = self._wait_for_management_state(self.env.management_ip, 180)
         self.assertTrue(started, 'Cloudify docker service container failed'
                                  ' to start after reboot. Test failed.')
+        context_after = self._wait_for_provider_context(180)
 
-        self.assertEqual(json.load(provider_context),
-                         json.load(self.get_provider_context()),
-                         msg='Provider context should be identical to what it '
-                             'was prior to reboot.')
+        self.logger.info('provider context before restart is : {0}'
+                         .format(context_before))
+        self.logger.info('provider context after restart is : {0}'
+                         .format(context_after))
+        self.assertEqual(context_before,
+                         context_after,
+                         msg='Provider context is not the same after restart')
 
     def get_provider_context(self):
-        context_url = 'http://{0}/provider/context'\
-                      .format(self.env.management_ip)
-        return urllib.urlopen(context_url)
+        return self.client.manager.get_context()
 
     def init_fabric(self):
         manager_keypath = self.env._config_reader.management_key_path
@@ -63,6 +65,25 @@ class DockerRecoveryTest(nodecellar_test.NodecellarAppTest):
         self.logger.info('Restarting machine with ip {0}'
                          .format(self.env.management_ip))
         return fabric.api.run('sudo shutdown -r now')
+
+    def _wait_for_provider_context(self, timeout):
+        end = time() + timeout
+        while end - time() >= 0:
+            try:
+                context = self.get_provider_context()
+                if context:
+                    return context
+                self.logger.info('Provider context is empty. sleeping for 2 '
+                                 'seconds...')
+                sleep(2)
+            except exceptions.CloudifyClientError as e:
+                # might be an elastic search issue (
+                # NoShardAvailableActionException)
+                self.logger.warning(str(e))
+                sleep(2)
+
+        raise RuntimeError('Failed waiting for provider context. '
+                           'waited {0} seconds'.format(timeout))
 
     def _wait_for_management_state(self, ip, timeout, port=80, state=True):
         """ Wait for management to reach state

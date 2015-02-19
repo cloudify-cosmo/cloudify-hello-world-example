@@ -20,7 +20,7 @@ import requests
 from cosmo_tester.framework.git_helper import clone
 from cosmo_tester.framework.util import YamlPatcher
 from cosmo_tester.test_suites.test_blueprints.nodecellar_test import (
-    NODECELLAR_URL, OpenStackNodeCellarTestBase)
+    OpenStackNodeCellarTestBase)
 
 
 class OpenStackAutohealNodeCellarTest(OpenStackNodeCellarTestBase):
@@ -57,7 +57,7 @@ class OpenStackAutohealNodeCellarTest(OpenStackNodeCellarTestBase):
     }
 
     def _test_nodecellar_impl(self, blueprint_file):
-        self.repo_dir = clone(NODECELLAR_URL, self.workdir)
+        self.repo_dir = clone(self.repo_url, self.workdir)
         self.blueprint_yaml = self.repo_dir / blueprint_file
 
         self.modify_blueprint()

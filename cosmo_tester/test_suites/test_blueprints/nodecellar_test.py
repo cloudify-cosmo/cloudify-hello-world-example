@@ -26,7 +26,7 @@ from cosmo_tester.framework.git_helper import clone
 class NodecellarAppTest(TestCase):
 
     def _test_nodecellar_impl(self, blueprint_file):
-        self.repo_dir = clone(self.repo_url, self.workdir)
+        self.repo_dir = clone(self.repo_url, self.workdir, self.repo_branch)
         self.blueprint_yaml = self.repo_dir / blueprint_file
 
         self.modify_blueprint()
@@ -189,6 +189,10 @@ class NodecellarAppTest(TestCase):
                'cloudify-nodecellar-example.git'
 
     @property
+    def repo_branch(self):
+        return None  # will use git_helper.clone default branch
+
+    @property
     def expected_nodes_count(self):
         return 8
 
@@ -223,3 +227,15 @@ class OpenStackNodeCellarTest(OpenStackNodeCellarTestBase):
 
     def test_openstack_nodecellar(self):
         self._test_openstack_nodecellar('openstack-blueprint.yaml')
+
+
+class OldVersionNodeCellarTest(OpenStackNodeCellarTestBase):
+
+    # Nodecellar test using the 3.1 version blueprint
+
+    def test_old_version_openstack_nodecellar(self):
+        self._test_openstack_nodecellar('openstack-blueprint.yaml')
+
+    @property
+    def repo_branch(self):
+        return 'tags/3.1'

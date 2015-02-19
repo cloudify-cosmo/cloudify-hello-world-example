@@ -13,12 +13,8 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
-from cosmo_tester.framework.testenv import bootstrap, teardown
+from cosmo_tester.framework.testenv import bootstrap
 
 
 def setUp():
     bootstrap()
-
-
-def tearDown():
-    teardown()
