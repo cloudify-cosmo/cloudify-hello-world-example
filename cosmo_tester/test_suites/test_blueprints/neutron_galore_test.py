@@ -13,6 +13,7 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
+import os
 
 import fabric.api
 import fabric.contrib.files
@@ -135,7 +136,7 @@ class NeutronGaloreTest(TestCase):
         self.assertEqual(port_subnet_id, openstack['subnet']['id'])
         self.assertEqual(openstack['sg_dst']['name'],
                          p('neutron_test_security_group_dst'))
-        self.assertEqual(4, len(openstack['sg_dst']['security_group_rules']))
+        self.assertEqual(5, len(openstack['sg_dst']['security_group_rules']))
         self.assert_obj_list_contains_subset(
             openstack['sg_dst']['security_group_rules'],
             {'remote_ip_prefix': '1.2.3.0/24',
@@ -156,9 +157,17 @@ class NeutronGaloreTest(TestCase):
              'direction': 'ingress'})
         self.assert_obj_list_contains_subset(
             openstack['sg_dst']['security_group_rules'],
-            {'remote_ip_prefix': '3.4.5.0/24',
-             'port_range_min': 443,
-             'port_range_max': 443,
+            {'remote_ip_prefix': '0.0.0.0/0',
+             'port_range_min': 0,
+             'port_range_max': 0,
+             'protocol': 'icmp',
+             'direction': 'ingress'})
+        self.assert_obj_list_contains_subset(
+            openstack['sg_dst']['security_group_rules'],
+            {'remote_ip_prefix': '0.0.0.0/0',
+             'port_range_min': 0,
+             'port_range_max': 0,
+             'protocol': 'icmp',
              'direction': 'egress'})
         self.assertEqual(node_states['floatingip']['floating_ip_address'],
                          openstack['floatingip']['floating_ip_address'])
@@ -176,6 +185,9 @@ class NeutronGaloreTest(TestCase):
         self.assert_router_connected_to_subnet(openstack['router']['id'],
                                                openstack['router_ports'],
                                                openstack['subnet']['id'])
+        # check the ICMP security group rule for allowing ping is ok
+        self._assert_ping_to_server(
+            ip=node_states['floatingip']['floating_ip_address'])
 
     def post_uninstall_assertions(self):
         leftovers = self._test_cleanup_context.get_resources_to_teardown()
@@ -199,6 +211,10 @@ class NeutronGaloreTest(TestCase):
         self.execute_uninstall(bp_and_dep_name)
 
         self._post_use_external_resource_uninstall_assertions(bp_and_dep_name)
+
+    def _assert_ping_to_server(self, ip):
+        exit_code = os.system('ping -c 1 {0}'.format(ip))
+        self.assertEquals(0, exit_code)
 
     def _modify_blueprint_use_external_resource(self):
         node_instances = self.client.node_instances.list(
