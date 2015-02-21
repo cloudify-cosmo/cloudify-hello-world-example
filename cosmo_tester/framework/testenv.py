@@ -166,7 +166,7 @@ class TestEnvironment(object):
         except ImportError:
             handler_module = importlib.import_module(
                 'suites.helpers.handlers.{0}.handler'.format(handler))
-        handler_class = getattr(handler_module, 'handler')
+        handler_class = handler_module.handler
         self.handler = handler_class(self)
 
         if 'manager_ip' in self.handler_configuration:
