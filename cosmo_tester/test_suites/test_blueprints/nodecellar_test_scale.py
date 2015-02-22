@@ -27,8 +27,7 @@ class OpenStackScaleNodeCellarTest(OpenStackNodeCellarTestBase):
 
     def _test_nodecellar_impl(self, blueprint_file):
         self.addCleanup(self._test_cleanup)
-        self.repo_dir = clone(self.repo_url, self.workdir,
-                              branch='CFY-2043-auto-scale-workflow')
+        self.repo_dir = clone(self.repo_url, self.workdir)
         self.blueprint_yaml = self.repo_dir / blueprint_file
 
         # install
@@ -73,6 +72,8 @@ class OpenStackScaleNodeCellarTest(OpenStackNodeCellarTestBase):
         return self._expected_node_instances_count(nodejs_instances=2)
 
     def _expected_node_instances_count(self, nodejs_instances):
+        # 8 1 instance nodes + (nodecellar contained in nodejs
+        #                       contained in nodejs_host) * num_host_instances
         return 8 + 3 * nodejs_instances
 
     def _scale(self, delta):
