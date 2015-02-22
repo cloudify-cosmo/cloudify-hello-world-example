@@ -48,8 +48,8 @@ class NodecellarAppTest(TestCase):
         raise RuntimeError('Must be implemented by Subclasses')
 
     def assert_nodecellar_working(self, public_ip):
-        nodejs_server_page_response = requests.get('http://{0}:8080'
-                                                   .format(self.public_ip))
+        nodejs_server_page_response = requests.get(
+            'http://{0}:{1}'.format(self.public_ip, self.nodecellar_port))
         self.assertEqual(200, nodejs_server_page_response.status_code,
                          'Failed to get home page of nodecellar app')
         page_title = 'Node Cellar'
@@ -57,8 +57,7 @@ class NodecellarAppTest(TestCase):
                         'Expected to find {0} in web server response: {1}'
                         .format(page_title, nodejs_server_page_response))
 
-        wines_page_response = requests.get('http://{0}:8080/wines'.format(
-            self.public_ip))
+        wines_page_response = self._get_wines_request()
         self.assertEqual(200, wines_page_response.status_code,
                          'Failed to get the wines page on nodecellar app ('
                          'probably means a problem with the connection to '
@@ -77,6 +76,10 @@ class NodecellarAppTest(TestCase):
         except BaseException:
             self.fail('Response from wines page is not a valid JSON: {0}'
                       .format(wines_page_response.text))
+
+    def _get_wines_request(self):
+        return requests.get('http://{0}:{1}/wines'.format(
+            self.public_ip, self.nodecellar_port))
 
     def post_install_assertions(self, before_state, after_state):
         delta = self.get_manager_state_delta(before_state, after_state)
@@ -176,7 +179,8 @@ class NodecellarAppTest(TestCase):
         self.assertFalse(any(node_ins for node_ins in nodes_instances if
                              node_ins.state != 'deleted'))
         try:
-            requests.get('http://{0}:8080'.format(self.public_ip))
+            requests.get('http://{0}:{1}'.format(self.public_ip,
+                                                 self.nodecellar_port))
             self.fail('Expected a no route to host error to be raised when '
                       'trying to retrieve the web page after uninstall, '
                       'but no error was raised.')
@@ -207,6 +211,10 @@ class NodecellarAppTest(TestCase):
     @property
     def entrypoint_property_name(self):
         return 'floating_ip_address'
+
+    @property
+    def nodecellar_port(self):
+        return 8080
 
 
 class OpenStackNodeCellarTestBase(NodecellarAppTest):
