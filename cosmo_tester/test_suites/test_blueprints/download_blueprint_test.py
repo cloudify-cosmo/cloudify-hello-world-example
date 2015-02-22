@@ -25,7 +25,7 @@ from cosmo_tester.framework.testenv import TestCase
 class DownloadBlueprintTest(TestCase):
     """
     CFY-196: Tests downloading of a previously uploaded blueprint.
-    CFY-995" Added a large (50MB) file to the blueprint
+    CFY-995: Added a large (50MB) file to the blueprint
     """
 
     def setUp(self):
@@ -40,11 +40,15 @@ class DownloadBlueprintTest(TestCase):
     def tearDown(self):
         if os.path.exists(self.download_path):
             shutil.rmtree(self.download_path)
+        if os.path.isfile(self.large_file_location):
+            os.remove(self.large_file_location)
+
         super(DownloadBlueprintTest, self).tearDown()
 
     def download_blueprint_test(self):
         blueprint_path = self.copy_blueprint('mocks')
-        self._create_file("50M", "just_a_large_file.img", blueprint_path)
+        self.large_file_location = blueprint_path / "just_a_large_file.img"
+        self._create_file("50M", self.large_file_location)
         blueprint_yaml = blueprint_path / 'single-node-blueprint.yaml'
         self.cfy.upload_blueprint(self.blueprint_id, blueprint_yaml)
         self.cfy.download_blueprint(self.blueprint_id)
@@ -61,6 +65,6 @@ class DownloadBlueprintTest(TestCase):
             for item in tar:
                 tar.extract(item, self.download_path)
 
-    def _create_file(self, fileSize, fileName, path):
+    def _create_file(self, fileSize, fileLocation):
         os.system("fallocate -l " + fileSize +
-                  " " + path + "/" + fileName)
+                  " " + fileLocation)
