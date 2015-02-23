@@ -293,7 +293,7 @@ class NeutronGaloreTest(TestCase):
             'port': self._node_state('neutron_port', node_states,
                                      deployment_id),
             'port2': self._node_state('neutron_port2', node_states,
-                                     deployment_id),
+                                      deployment_id),
             'sg_src': self._node_state('security_group_src', node_states,
                                        deployment_id),
             'sg_dst': self._node_state('security_group_dst', node_states,
@@ -342,7 +342,7 @@ class NeutronGaloreTest(TestCase):
     def _node_state(self, starts_with, node_states, deployment_id):
         node_states = node_states[deployment_id].values()
         state = [state for state in node_states
-                 if state['id'].startswith(starts_with)][0]
+                 if state['id'].startswith('{0}_'.format(starts_with))][0]
         self.assertEqual(state['state'], 'started')
         return state['runtime_properties']
 
