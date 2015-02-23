@@ -25,6 +25,8 @@ node_templates:
                target: security_group_4
            -   type: cloudify.openstack.server_connected_to_floating_ip
                target: floatingip
+               inputs:
+                   fixed_ip: { get_attribute: [neutron_port, fixed_ip_address] }
            -   type: cloudify.openstack.server_connected_to_keypair
                target: keypair
         properties:
@@ -70,6 +72,17 @@ node_templates:
                 target: neutron_subnet
             -   type: cloudify.openstack.port_connected_to_security_group
                 target: security_group_src
+    neutron_port2:
+        type: cloudify.openstack.nodes.Port
+        properties:
+            resource_id: neutron_test_port2
+        relationships:
+            -   type: cloudify.relationships.contained_in
+                target: neutron_network
+            -   type: cloudify.relationships.depends_on
+                target: neutron_subnet
+            -   type: cloudify.relationships.port_connected_to_floating_ip
+                target: floatingip2
     security_group_src:
         type: cloudify.openstack.nodes.SecurityGroup
         properties:
@@ -112,6 +125,8 @@ node_templates:
             resource_id: neutron_test_security_group_4
     floatingip:
         type: cloudify.openstack.nodes.FloatingIP
+    floatingip2:
+            type: cloudify.openstack.nodes.FloatingIP
     keypair:
         type: cloudify.openstack.nodes.KeyPair
         properties:

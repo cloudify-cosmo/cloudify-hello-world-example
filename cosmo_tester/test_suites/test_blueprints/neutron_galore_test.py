@@ -182,6 +182,10 @@ class NeutronGaloreTest(TestCase):
         self.assertEqual(node_states['server']['ip'],
                          openstack['server']['addresses']
                          [management_network_name][0]['addr'])
+        self.assertEquals(node_states['port2']['fixed_ip_address'],
+                          openstack['port2']['fixed_ips'][0]['ip_address'])
+        self.assertEquals(openstack['port2']['id'],
+                          openstack['floatingip2']['port_id'])
         self.assert_router_connected_to_subnet(openstack['router']['id'],
                                                openstack['router_ports'],
                                                openstack['subnet']['id'])
@@ -288,6 +292,8 @@ class NeutronGaloreTest(TestCase):
                                        deployment_id),
             'port': self._node_state('neutron_port', node_states,
                                      deployment_id),
+            'port2': self._node_state('neutron_port2', node_states,
+                                     deployment_id),
             'sg_src': self._node_state('security_group_src', node_states,
                                        deployment_id),
             'sg_dst': self._node_state('security_group_dst', node_states,
@@ -298,6 +304,8 @@ class NeutronGaloreTest(TestCase):
                                      deployment_id),
             'floatingip': self._node_state('floatingip', node_states,
                                            deployment_id),
+            'floatingip2': self._node_state('floatingip2', node_states,
+                                            deployment_id),
             'keypair': self._node_state('keypair', node_states,
                                         deployment_id)
         }
@@ -311,7 +319,6 @@ class NeutronGaloreTest(TestCase):
         nova, neutron, _ = self.env.handler.openstack_clients()
         eid = 'external_id'
         sg = 'security_group'
-        i = 'floatingip'
         rid = states['router'][eid]
         return {
             'server': nova.servers.get(states['server'][eid]).to_dict(),
@@ -319,11 +326,15 @@ class NeutronGaloreTest(TestCase):
             'subnet': neutron.show_subnet(states['subnet'][eid])['subnet'],
             'router': neutron.show_router(rid)['router'],
             'port': neutron.show_port(states['port'][eid])['port'],
+            'port2': neutron.show_port(states['port2'][eid])['port'],
             'sg_src': neutron.show_security_group(states['sg_src'][eid])[sg],
             'sg_dst': neutron.show_security_group(states['sg_dst'][eid])[sg],
             'sg_3': neutron.show_security_group(states['sg_3'][eid])[sg],
             'sg_4': neutron.show_security_group(states['sg_4'][eid])[sg],
-            'floatingip': neutron.show_floatingip(states[i][eid])[i],
+            'floatingip': neutron.show_floatingip(
+                states['floatingip'][eid])['floatingip'],
+            'floatingip2': neutron.show_floatingip(
+                states['floatingip2'][eid])['floatingip'],
             'router_ports': neutron.list_ports(device_id=rid)['ports'],
             'keypair': nova.keypairs.get(states['keypair'][eid]).to_dict()
         }
