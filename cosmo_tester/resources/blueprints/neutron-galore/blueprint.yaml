@@ -84,7 +84,7 @@ node_templates:
                 target: neutron_network
             -   type: cloudify.relationships.depends_on
                 target: neutron_subnet
-            -   type: cloudify.relationships.port_connected_to_floating_ip
+            -   type: cloudify.openstack.port_connected_to_floating_ip
                 target: floatingip2
     security_group_src:
         type: cloudify.openstack.nodes.SecurityGroup
