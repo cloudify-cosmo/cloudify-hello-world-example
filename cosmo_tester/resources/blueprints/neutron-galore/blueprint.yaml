@@ -25,8 +25,11 @@ node_templates:
                target: security_group_4
            -   type: cloudify.openstack.server_connected_to_floating_ip
                target: floatingip
-               inputs:
-                   fixed_ip: { get_attribute: [neutron_port, fixed_ip_address] }
+               source_interfaces:
+                 cloudify.interfaces.relationship_lifecycle:
+                   establish:
+                     inputs:
+                       fixed_ip: { get_attribute: [neutron_port, fixed_ip_address] }
            -   type: cloudify.openstack.server_connected_to_keypair
                target: keypair
         properties:
