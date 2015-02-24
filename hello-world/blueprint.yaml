@@ -20,11 +20,11 @@ inputs:
   agent_user:
     description: User name used when SSH-ing into the started machine
 
-  image_name:
-    description: Openstack image name to use for the new server
+  image:
+    description: Openstack image name or id to use for the new server
 
-  flavor_name:
-    description: Openstack flavor name to use for the new server
+  flavor:
+    description: Openstack flavor name or id to use for the new server
 
 node_templates:
   virtual_ip:
@@ -43,8 +43,8 @@ node_templates:
       cloudify_agent:
         user: { get_input: agent_user }
       server:
-        image_name: { get_input: image_name }
-        flavor_name: { get_input: flavor_name }
+        image: { get_input: image }
+        flavor: { get_input: flavor }
     relationships:
       - type: cloudify.openstack.server_connected_to_floating_ip
         target: virtual_ip
