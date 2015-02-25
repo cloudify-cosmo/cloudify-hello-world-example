@@ -7,8 +7,8 @@ imports:
 
 inputs:
     server_name: {}
-    image_name: {}
-    flavor_name: {}
+    image: {}
+    flavor: {}
     security_groups: {}
 
 node_templates:
@@ -16,10 +16,10 @@ node_templates:
         type: cloudify.openstack.nodes.Server
         properties:
             install_agent: true
+            image: { get_input: image }
+            flavor: { get_input: flavor }
             server:
                 name: { get_input: server_name }
-                image_name: { get_input: image_name }
-                flavor_name: { get_input: flavor_name }
                 security_groups: { get_input: security_groups }
         relationships:
             -   type: cloudify.openstack.server_connected_to_floating_ip

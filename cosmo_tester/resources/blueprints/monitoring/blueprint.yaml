@@ -7,8 +7,8 @@ imports:
     - policies/diamond_test.yaml
 
 inputs:
-    image_name: {}
-    flavor_name: {}
+    image: {}
+    flavor: {}
     diamond_config:
         default:
             interval: 1
@@ -31,10 +31,10 @@ node_templates:
     vm:
         type: cloudify.openstack.nodes.Server
         properties:
+            image: { get_input: image }
+            flavor: { get_input: flavor }
             server:
                 name: diamond-agent-server
-                image_name: { get_input: image_name }
-                flavor_name: { get_input: flavor_name }
         interfaces:
             cloudify.interfaces.monitoring_agent:
                 install:

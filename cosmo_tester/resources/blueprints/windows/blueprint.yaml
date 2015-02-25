@@ -21,7 +21,7 @@ node_templates:
     properties:
       server:
         name: windows-agent-vm
-        image_name: MODIFIED_BY_TEST
+        image: MODIFIED_BY_TEST
         flavor: MODIFIED_BY_TEST
         userdata: |
           #ps1_sysnative

@@ -81,8 +81,8 @@ class HelloWorldBashTest(TestCase):
                 fetch_state=False,
                 inputs=dict(
                     agent_user=user,
-                    image_name=image_name,
-                    flavor_name=self.env.flavor_name))
+                    image=image_name,
+                    flavor=self.env.flavor_name))
         else:
             self.execute_install(deployment_id=self.test_id, fetch_state=False)
 
