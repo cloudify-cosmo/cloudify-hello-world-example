@@ -14,6 +14,7 @@
 #    * limitations under the License.
 
 import os
+import time
 
 import fabric.api
 import fabric.contrib.files
@@ -67,6 +68,7 @@ class NeutronGaloreTest(TestCase):
             management_network_name = p(management_network_name)
             agents_security_group = p(agents_security_group)
 
+        time.sleep(5)  # actually waiting for Openstack to update...
         openstack = self.get_openstack_components(node_states)
 
         self.assertTrue(self._check_if_private_key_is_on_manager())
@@ -219,8 +221,15 @@ class NeutronGaloreTest(TestCase):
         self._post_use_external_resource_uninstall_assertions(bp_and_dep_name)
 
     def _assert_ping_to_server(self, ip):
-        exit_code = os.system('ping -c 1 {0}'.format(ip))
-        self.assertEquals(0, exit_code)
+        for i in range(3):
+            exit_code = os.system('ping -c 1 {0}'.format(ip))
+            if exit_code == 0:
+                return
+            else:
+                time.sleep(3)
+
+        self.fail('Failed to ping server {0}; Exit code for ping command was '
+                  '{1}'.format(ip, exit_code))
 
     def _modify_blueprint_use_external_resource(self):
         node_instances = self.client.node_instances.list(
