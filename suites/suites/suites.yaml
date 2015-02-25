@@ -114,6 +114,13 @@ templates:
     inputs.manager_port_name.default: stub
     inputs.manager_volume_name.default: stub
 
+  - &softlayer_manager_blueprint_override
+    node_templates.manager.properties.cloudify.workflows.task_retries: 50
+
+  - &docker_softlayer_manager_blueprint_override
+    <<: *docker_manager_blueprint_override
+    <<: *softlayer_manager_blueprint_override
+
   ######################################################
 
   - &openstack_plugin_external
@@ -448,7 +455,7 @@ handler_configurations:
     handler: softlayer_handler
     external: *softlayer_plugin_external
     manager_blueprint: softlayer/softlayer.yaml
-    manager_blueprint_override: *docker_manager_blueprint_override
+    manager_blueprint_override: *docker_softlayer_manager_blueprint_override
     inputs_override:
       username: '{{system_tests_softlayer_username}}'
       api_key: '{{system_tests_softlayer_api_key}}'
