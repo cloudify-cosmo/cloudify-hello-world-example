@@ -23,8 +23,8 @@ variables:
   ######################################################
 
   # These values are updated by the version tool
-  core_branch: '3.2m5'
-  plugins_branch: '1.2m5'
+  core_branch: '3.2m6'
+  plugins_branch: '1.2m6'
 
   # These values are injected by quickbuild and are here mainly
   # for reference (i.e. they will exist in runtime either way)
@@ -81,7 +81,7 @@ templates:
     node_templates.manager.properties.cloudify_packages.agents.ubuntu_agent_url: '{{ubuntu_package_agent_url}}'
     node_templates.manager.properties.cloudify_packages.agents.centos_agent_url: '{{centos_package_agent_url}}'
     node_templates.manager.properties.cloudify_packages.agents.windows_agent_url: '{{windows_package_agent_url}}'
-    node_templates.manager.properties.cloudify.workflows.task_retries: 30
+    node_templates.manager.properties.cloudify.workflows.task_retries: 20
 
   - &docker_manager_blueprint_override
     <<: *manager_blueprint_override
@@ -113,6 +113,13 @@ templates:
     # add stub input placeholders so we can have the same inputs file for docker/dockerless paths
     inputs.manager_port_name.default: stub
     inputs.manager_volume_name.default: stub
+
+  - &softlayer_manager_blueprint_override
+    node_templates.manager.properties.cloudify.workflows.task_retries: 50
+
+  - &docker_softlayer_manager_blueprint_override
+    <<: *docker_manager_blueprint_override
+    <<: *softlayer_manager_blueprint_override
 
   ######################################################
 
@@ -448,7 +455,7 @@ handler_configurations:
     handler: softlayer_handler
     external: *softlayer_plugin_external
     manager_blueprint: softlayer/softlayer.yaml
-    manager_blueprint_override: *docker_manager_blueprint_override
+    manager_blueprint_override: *docker_softlayer_manager_blueprint_override
     inputs_override:
       username: '{{system_tests_softlayer_username}}'
       api_key: '{{system_tests_softlayer_api_key}}'
