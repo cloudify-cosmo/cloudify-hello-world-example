@@ -79,10 +79,11 @@ node_templates:
         type: cloudify.openstack.nodes.Port
         properties:
             resource_id: neutron_test_port2
+            fixed_ip: 10.10.10.123
         relationships:
             -   type: cloudify.relationships.contained_in
                 target: neutron_network
-            -   type: cloudify.relationships.depends_on
+            -   type: cloudify.openstack.port_connected_to_subnet
                 target: neutron_subnet
             -   type: cloudify.openstack.port_connected_to_floating_ip
                 target: floatingip2

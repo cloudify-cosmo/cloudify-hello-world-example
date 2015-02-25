@@ -184,6 +184,8 @@ class NeutronGaloreTest(TestCase):
                          [management_network_name][0]['addr'])
         self.assertEquals(node_states['port2']['fixed_ip_address'],
                           openstack['port2']['fixed_ips'][0]['ip_address'])
+        self.assertEquals('10.10.10.123',
+                          openstack['port2']['fixed_ips'][0]['ip_address'])
         self.assertEquals(openstack['port2']['id'],
                           openstack['floatingip2']['port_id'])
         self.assert_router_connected_to_subnet(openstack['router']['id'],
