@@ -10,8 +10,8 @@ inputs:
     keystone_tenant_name: {}
     keystone_url: {}
     region: {}
-    image_name: {}
-    flavor_name: {}
+    image: {}
+    flavor: {}
     nova_url: {}
     neutron_url: {}
 
@@ -32,9 +32,8 @@ node_templates:
         type: cloudify.openstack.nodes.Server
         properties:
             resource_id: server
-            server:
-                image_name: { get_input: image_name }
-                flavor_name: { get_input: flavor_name }
+            image: { get_input: image }
+            flavor: { get_input: flavor }
             openstack_config:
                 username: { get_input: keystone_username }
                 password: { get_input: keystone_password }

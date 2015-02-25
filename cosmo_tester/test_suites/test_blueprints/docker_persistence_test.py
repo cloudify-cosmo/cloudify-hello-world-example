@@ -53,8 +53,8 @@ class DockerPersistenceTest(nodecellar_test.NodecellarAppTest):
                             '.properties'
             vm_type_path = 'node_types.vm_host.properties'
             patch.merge_obj('{0}.server.default'.format(vm_type_path), {
-                'image_name': self.env.ubuntu_trusty_image_name,
-                'flavor_name': self.env.flavor_name
+                'image': self.env.ubuntu_trusty_image_name,
+                'flavor': self.env.flavor_name
             })
             # Use ubuntu trusty 14.04 as agent machine
             patch.merge_obj('{0}.server.default'.format(vm_props_path), {

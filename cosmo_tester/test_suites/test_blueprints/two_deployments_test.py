@@ -58,8 +58,8 @@ class TwoDeploymentsTest(TestCase):
                 # inputs are not used (overridden by modify_yaml)
                 inputs=dict(
                     agent_user='',
-                    image_name='',
-                    flavor_name='',
+                    image='',
+                    flavor='',
                 ))
 
             floatingip_node, _, _ = bash.get_instances(
@@ -87,8 +87,8 @@ class TwoDeploymentsTest(TestCase):
                     'user': self.env.cloudify_agent_user,
                 })
             patch.merge_obj('{0}.server'.format(vm_properties_path), {
-                'image_name': self.env.ubuntu_image_name,
-                'flavor_name': self.env.flavor_name,
+                'image': self.env.ubuntu_image_name,
+                'flavor': self.env.flavor_name,
             })
             sg_name_path = 'node_templates.security_group.properties' \
                            '.security_group.name'

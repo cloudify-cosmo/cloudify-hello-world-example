@@ -6,11 +6,11 @@ imports:
 
 inputs:
 
-  image_name:
+  image:
     description: >
       Image to be used when launching agent VM's.
 
-  flavor_name:
+  flavor:
     description: >
       Flavor of the agent VM's.
 
@@ -27,9 +27,8 @@ node_templates:
   test_vm:
     type: cloudify.openstack.nodes.Server
     properties:
-      server:
-        image_name: { get_input: image_name }
-        flavor_name: { get_input: flavor_name }
+      image: { get_input: image }
+      flavor: { get_input: flavor }
 
   test_volume:
     type: cloudify.openstack.nodes.Volume

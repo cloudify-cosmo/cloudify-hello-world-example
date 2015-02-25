@@ -47,8 +47,8 @@ class CinderVolumeTest(CinderVolumeTestBase):
         self._wait_for_volume_available(volume)
 
         inputs = {
-            'image_name': self.env.ubuntu_image_name,
-            'flavor_name': self.env.flavor_name,
+            'image': self.env.ubuntu_image_name,
+            'flavor': self.env.flavor_name,
             'existing_volume_id': volume.id,
             'device_name': self.DEVICE_NAME
         }
@@ -167,8 +167,8 @@ class CinderVolumeFSTest(CinderVolumeTestBase):
         self.blueprint_yaml = blueprint_path / 'file-system-blueprint.yaml'
 
         inputs = {
-            'image_name': self.env.ubuntu_image_name,
-            'flavor_name': self.env.flavor_name,
+            'image': self.env.ubuntu_image_name,
+            'flavor': self.env.flavor_name,
             'volume_size': self.VOLUME_SIZE,
             'fs_type': self.FS_TYPE,
             'fs_mount_path': self.FS_MOUNT_PATH

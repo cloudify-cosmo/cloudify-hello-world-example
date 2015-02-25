@@ -37,8 +37,8 @@ class NeutronGaloreTest(TestCase):
 
         inputs = {
             'server_name': 'novaservertest',
-            'image_name': self.env.ubuntu_image_name,
-            'flavor_name': self.env.flavor_name,
+            'image': self.env.ubuntu_image_name,
+            'flavor': self.env.flavor_name,
             'private_key_path': PRIVATE_KEY_PATH,
         }
 
