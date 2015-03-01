@@ -14,6 +14,7 @@
 #    * limitations under the License.
 
 import os
+import time
 
 import fabric.api
 import fabric.contrib.files
@@ -36,15 +37,18 @@ class NeutronGaloreTest(TestCase):
 
         inputs = {
             'server_name': 'novaservertest',
-            'image_name': self.env.ubuntu_image_name,
-            'flavor_name': self.env.flavor_name,
+            'image': self.env.ubuntu_image_name,
+            'flavor': self.env.flavor_name,
             'private_key_path': PRIVATE_KEY_PATH,
         }
 
         before, after = self.upload_deploy_and_execute_install(inputs=inputs)
 
         node_states = self.get_delta_node_states(before, after)
-        self.post_install_assertions(node_states)
+
+        self.repetitive(self.post_install_assertions,
+                        timeout=300,
+                        args=[node_states])
 
         self._test_use_external_resource(inputs=inputs)
 
@@ -67,6 +71,7 @@ class NeutronGaloreTest(TestCase):
             management_network_name = p(management_network_name)
             agents_security_group = p(agents_security_group)
 
+        time.sleep(5)  # actually waiting for Openstack to update...
         openstack = self.get_openstack_components(node_states)
 
         self.assertTrue(self._check_if_private_key_is_on_manager())
@@ -182,6 +187,12 @@ class NeutronGaloreTest(TestCase):
         self.assertEqual(node_states['server']['ip'],
                          openstack['server']['addresses']
                          [management_network_name][0]['addr'])
+        self.assertEquals(node_states['port2']['fixed_ip_address'],
+                          openstack['port2']['fixed_ips'][0]['ip_address'])
+        self.assertEquals('10.10.10.123',
+                          openstack['port2']['fixed_ips'][0]['ip_address'])
+        self.assertEquals(openstack['port2']['id'],
+                          openstack['floatingip2']['port_id'])
         self.assert_router_connected_to_subnet(openstack['router']['id'],
                                                openstack['router_ports'],
                                                openstack['subnet']['id'])
@@ -213,8 +224,15 @@ class NeutronGaloreTest(TestCase):
         self._post_use_external_resource_uninstall_assertions(bp_and_dep_name)
 
     def _assert_ping_to_server(self, ip):
-        exit_code = os.system('ping -c 1 {0}'.format(ip))
-        self.assertEquals(0, exit_code)
+        for i in range(3):
+            exit_code = os.system('ping -c 1 {0}'.format(ip))
+            if exit_code == 0:
+                return
+            else:
+                time.sleep(3)
+
+        self.fail('Failed to ping server {0}; Exit code for ping command was '
+                  '{1}'.format(ip, exit_code))
 
     def _modify_blueprint_use_external_resource(self):
         node_instances = self.client.node_instances.list(
@@ -288,6 +306,8 @@ class NeutronGaloreTest(TestCase):
                                        deployment_id),
             'port': self._node_state('neutron_port', node_states,
                                      deployment_id),
+            'port2': self._node_state('neutron_port2', node_states,
+                                      deployment_id),
             'sg_src': self._node_state('security_group_src', node_states,
                                        deployment_id),
             'sg_dst': self._node_state('security_group_dst', node_states,
@@ -298,6 +318,8 @@ class NeutronGaloreTest(TestCase):
                                      deployment_id),
             'floatingip': self._node_state('floatingip', node_states,
                                            deployment_id),
+            'floatingip2': self._node_state('floatingip2', node_states,
+                                            deployment_id),
             'keypair': self._node_state('keypair', node_states,
                                         deployment_id)
         }
@@ -311,7 +333,6 @@ class NeutronGaloreTest(TestCase):
         nova, neutron, _ = self.env.handler.openstack_clients()
         eid = 'external_id'
         sg = 'security_group'
-        i = 'floatingip'
         rid = states['router'][eid]
         return {
             'server': nova.servers.get(states['server'][eid]).to_dict(),
@@ -319,11 +340,15 @@ class NeutronGaloreTest(TestCase):
             'subnet': neutron.show_subnet(states['subnet'][eid])['subnet'],
             'router': neutron.show_router(rid)['router'],
             'port': neutron.show_port(states['port'][eid])['port'],
+            'port2': neutron.show_port(states['port2'][eid])['port'],
             'sg_src': neutron.show_security_group(states['sg_src'][eid])[sg],
             'sg_dst': neutron.show_security_group(states['sg_dst'][eid])[sg],
             'sg_3': neutron.show_security_group(states['sg_3'][eid])[sg],
             'sg_4': neutron.show_security_group(states['sg_4'][eid])[sg],
-            'floatingip': neutron.show_floatingip(states[i][eid])[i],
+            'floatingip': neutron.show_floatingip(
+                states['floatingip'][eid])['floatingip'],
+            'floatingip2': neutron.show_floatingip(
+                states['floatingip2'][eid])['floatingip'],
             'router_ports': neutron.list_ports(device_id=rid)['ports'],
             'keypair': nova.keypairs.get(states['keypair'][eid]).to_dict()
         }
@@ -331,7 +356,7 @@ class NeutronGaloreTest(TestCase):
     def _node_state(self, starts_with, node_states, deployment_id):
         node_states = node_states[deployment_id].values()
         state = [state for state in node_states
-                 if state['id'].startswith(starts_with)][0]
+                 if state['id'].startswith('{0}_'.format(starts_with))][0]
         self.assertEqual(state['state'], 'started')
         return state['runtime_properties']
 

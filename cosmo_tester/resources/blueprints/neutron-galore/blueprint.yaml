@@ -1,14 +1,14 @@
 tosca_definitions_version: cloudify_dsl_1_0
 
 imports:
-    - http://www.getcloudify.org/spec/cloudify/3.2m5/types.yaml
-    - http://www.getcloudify.org/spec/openstack-plugin/1.2m5/plugin.yaml
+    - http://www.getcloudify.org/spec/cloudify/3.2m6/types.yaml
+    - http://www.getcloudify.org/spec/openstack-plugin/1.2m6/plugin.yaml
 
 
 inputs:
     server_name: {}
-    image_name: {}
-    flavor_name: {}
+    image: {}
+    flavor: {}
     private_key_path: {}
 
 node_templates:
@@ -25,6 +25,11 @@ node_templates:
                target: security_group_4
            -   type: cloudify.openstack.server_connected_to_floating_ip
                target: floatingip
+               source_interfaces:
+                 cloudify.interfaces.relationship_lifecycle:
+                   establish:
+                     inputs:
+                       fixed_ip: { get_attribute: [neutron_port, fixed_ip_address] }
            -   type: cloudify.openstack.server_connected_to_keypair
                target: keypair
         properties:
@@ -32,10 +37,9 @@ node_templates:
             cloudify_agent:
                 user: ubuntu
                 port: 22
-            server:
-                name: { get_input: server_name }
-                image_name: { get_input: image_name }
-                flavor_name: { get_input: flavor_name }
+            resource_id: { get_input: server_name }
+            image: { get_input: image }
+            flavor: { get_input: flavor }
     neutron_network:
         type: cloudify.openstack.nodes.Network
         properties:
@@ -70,6 +74,18 @@ node_templates:
                 target: neutron_subnet
             -   type: cloudify.openstack.port_connected_to_security_group
                 target: security_group_src
+    neutron_port2:
+        type: cloudify.openstack.nodes.Port
+        properties:
+            resource_id: neutron_test_port2
+            fixed_ip: 10.10.10.123
+        relationships:
+            -   type: cloudify.relationships.contained_in
+                target: neutron_network
+            -   type: cloudify.openstack.port_connected_to_subnet
+                target: neutron_subnet
+            -   type: cloudify.openstack.port_connected_to_floating_ip
+                target: floatingip2
     security_group_src:
         type: cloudify.openstack.nodes.SecurityGroup
         properties:
@@ -112,6 +128,8 @@ node_templates:
             resource_id: neutron_test_security_group_4
     floatingip:
         type: cloudify.openstack.nodes.FloatingIP
+    floatingip2:
+            type: cloudify.openstack.nodes.FloatingIP
     keypair:
         type: cloudify.openstack.nodes.KeyPair
         properties:

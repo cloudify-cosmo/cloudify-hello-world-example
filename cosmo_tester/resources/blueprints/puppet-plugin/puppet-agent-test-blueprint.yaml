@@ -1,15 +1,15 @@
 tosca_definitions_version: cloudify_dsl_1_0
 
 imports:
-    - http://www.getcloudify.org/spec/cloudify/3.2m5/types.yaml
-    - http://www.getcloudify.org/spec/openstack-plugin/1.2m5/plugin.yaml
-    - http://www.getcloudify.org/spec/puppet-plugin/1.2m5/plugin.yaml
+    - http://www.getcloudify.org/spec/cloudify/3.2m6/types.yaml
+    - http://www.getcloudify.org/spec/openstack-plugin/1.2m6/plugin.yaml
+    - http://www.getcloudify.org/spec/puppet-plugin/1.2m6/plugin.yaml
 
 
 inputs:
     server_name: {}
-    image_name: {}
-    flavor_name: {}
+    image: {}
+    flavor: {}
     security_groups: {}
     userdata: {}
 
@@ -17,10 +17,10 @@ node_templates:
     db-vm:
         type: cloudify.openstack.nodes.Server
         properties:
+            image: { get_input: image }
+            flavor: { get_input: flavor }
             server:
                 name: { get_input: server_name }
-                image_name: { get_input: image_name }
-                flavor_name: { get_input: flavor_name }
                 security_groups: { get_input: security_groups }
                 userdata: { get_input: userdata }
         relationships:

@@ -3,7 +3,7 @@ api_key: ''
 endpoint_url: ''
 location: 352494
 domain: cloudify.org
-hostname: systest-manager
+hostname: dev-manager
 ram: 864
 cpu: 859
 disk: 1178
@@ -19,4 +19,4 @@ provision_scripts: ['https://raw.githubusercontent.com/cloudify-cosmo/cloudify-s
 ssh_keys: [156067]
 ssh_key_filename: ~/.ssh/shared-systemt-tests-key.pem
 agents_user: root
-resources_prefix: systest
+resources_prefix: 'dev'
