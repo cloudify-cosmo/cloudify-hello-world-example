@@ -115,7 +115,7 @@ templates:
     inputs.manager_volume_name.default: stub
 
   - &softlayer_manager_blueprint_override
-    node_templates.manager.properties.cloudify.workflows.task_retries: 50
+    node_templates.manager.properties.cloudify.workflows.task_retries: 100
 
   - &docker_softlayer_manager_blueprint_override
     <<: *docker_manager_blueprint_override
