@@ -96,38 +96,12 @@ class ManagerRecoveryTest(TestCase):
             with settings(**self.fabric_env):
                 sudo('docker kill cfy')
             self.cfy.recover()
-            self._fix_servers_state()
+            self._fix_management_server_id()
 
         return self._make_operation_with_before_after_states(
             _kill_and_recover,
             fetch_state=True)
 
-    def _fix_servers_state(self):
-
-        # retrieve the id of the new management server
-        nova, _, _ = self.env.handler.openstack_clients()
+    def _fix_management_server_id(self):
         management_server_name = self.env.management_server_name
-        managers = nova.servers.list(
-            search_opts={'name': management_server_name})
-        if len(managers) > 1:
-            raise RuntimeError(
-                'Expected 1 manager with name {0}, but found '
-                '{1}'.format(management_server_name, len(managers)))
-
-        new_manager_id = managers[0].id
-
-        # retrieve the id of the old management server
-        old_manager_id = None
-        servers = self._test_cleanup_context.before_run['servers']
-        for server_id, server_name in servers.iteritems():
-            if server_name == management_server_name:
-                old_manager_id = server_id
-                break
-        if old_manager_id is None:
-            raise RuntimeError(
-                'Could not find a server with name {0} '
-                'in the internal cleanup context state'
-                .format(management_server_name))
-
-        # replace the id in the internal state
-        servers[new_manager_id] = servers.pop(old_manager_id)
+        self._test_cleanup_context.update_server_id(management_server_name)
