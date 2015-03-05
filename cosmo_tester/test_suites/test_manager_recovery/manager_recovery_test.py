@@ -88,6 +88,9 @@ class ManagerRecoveryTest(TestCase):
         # this will test that the operations worker is still responsive
         self.execute_uninstall(self.deployment_id)
 
+        # this will test the management worker is still responding
+        self.cfy.delete_deployment(self.deployment_id)
+
     def _kill_and_recover_manager(self):
 
         def _kill_and_recover():
