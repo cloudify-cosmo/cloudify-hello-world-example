@@ -42,9 +42,8 @@ node_templates:
     properties:
       cloudify_agent:
         user: { get_input: agent_user }
-      server:
-        image: { get_input: image }
-        flavor: { get_input: flavor }
+      image: { get_input: image }
+      flavor: { get_input: flavor }
     relationships:
       - type: cloudify.openstack.server_connected_to_floating_ip
         target: virtual_ip
