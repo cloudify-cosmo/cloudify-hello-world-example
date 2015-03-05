@@ -29,9 +29,9 @@ class WindowsAgentTest(TestCase):
         blueprint_path = self.copy_blueprint('windows')
         self.blueprint_yaml = blueprint_path / 'blueprint.yaml'
         with YamlPatcher(self.blueprint_yaml) as patch:
-            patch.set_value('node_templates.vm.properties.server.image',
+            patch.set_value('node_templates.vm.properties.image',
                             self.env.windows_image_name)
-            patch.set_value('node_templates.vm.properties.server.flavor',
+            patch.set_value('node_templates.vm.properties.flavor',
                             self.env.medium_flavor_id)
 
         self.upload_deploy_and_execute_install()

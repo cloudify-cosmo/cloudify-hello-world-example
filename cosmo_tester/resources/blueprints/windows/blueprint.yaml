@@ -19,10 +19,10 @@ node_templates:
   vm:
     type: cloudify.openstack.nodes.WindowsServer
     properties:
+      image: MODIFIED_BY_TEST
+      flavor: MODIFIED_BY_TEST
       server:
         name: windows-agent-vm
-        image: MODIFIED_BY_TEST
-        flavor: MODIFIED_BY_TEST
         userdata: |
           #ps1_sysnative
           winrm quickconfig -q
