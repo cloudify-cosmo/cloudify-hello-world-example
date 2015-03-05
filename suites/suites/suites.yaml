@@ -130,7 +130,7 @@ templates:
     repo: cloudify-softlayer-plugin
 
   - &vsphere_plugin_external
-    repo: cloudify-vpshere-plugin
+    repo: cloudify-vsphere-plugin
     private: true
     username: opencm
     password: '{{opencm_git_pwd}}'
@@ -437,7 +437,7 @@ handler_configurations:
 
   vsphere:
     inputs: inputs-vsphere.yaml
-    handler: vpshere_handler
+    handler: vsphere_handler
     external: *vsphere_plugin_external
     manager_blueprint: manager_blueprint/vsphere.yaml
     properties: vsphere
