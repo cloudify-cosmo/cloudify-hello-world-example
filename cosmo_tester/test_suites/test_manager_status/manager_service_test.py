@@ -12,6 +12,8 @@
 #    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
+import urllib
+from time import sleep, time
 
 from fabric.api import env, reboot
 
@@ -66,6 +68,7 @@ class RebootManagerTest(TestCase):
             is_docker_manager = self.is_docker_manager()
             pre_reboot_status = self.status
             self._reboot_server()
+            self._wait_for_management(self.env.management_ip, timeout=180)
             post_reboot_status = self.client.manager.get_status()['services']
 
             self.assertEqual(len(pre_reboot_status), len(post_reboot_status),
@@ -86,6 +89,27 @@ class RebootManagerTest(TestCase):
                                      'pre and post reboot status is not equal:'
                                      '{0}\n {1}'.format(pre.get('name'),
                                                         post.get('name')))
+
+    def _wait_for_management(self, ip, timeout, port=80):
+        """ Wait for url to become available
+            :param ip: the manager IP
+            :param timeout: in seconds
+            :param port: port used by the rest service.
+            :return: True of False
+        """
+        validation_url = 'http://{0}:{1}/blueprints'.format(ip, port)
+
+        end = time() + timeout
+
+        while end - time() >= 0:
+                try:
+                    status = urllib.urlopen(validation_url).getcode()
+                    if status == 200:
+                        return True
+                except IOError:
+                    sleep(5)
+
+        return False
 
     def test_02_post_reboot(self):
         is_docker_manager = self.is_docker_manager()

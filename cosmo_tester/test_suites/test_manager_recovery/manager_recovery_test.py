@@ -14,6 +14,7 @@
 #    * limitations under the License.
 
 import os
+
 from fabric.api import sudo
 from fabric.api import settings
 
@@ -87,6 +88,9 @@ class ManagerRecoveryTest(TestCase):
         # this will test that the operations worker is still responsive
         self.execute_uninstall(self.deployment_id)
 
+        # this will test the management worker is still responding
+        self.cfy.delete_deployment(self.deployment_id)
+
     def _kill_and_recover_manager(self):
 
         def _kill_and_recover():
@@ -95,13 +99,12 @@ class ManagerRecoveryTest(TestCase):
             with settings(**self.fabric_env):
                 sudo('docker kill cfy')
             self.cfy.recover()
+            self._fix_management_server_id()
 
         return self._make_operation_with_before_after_states(
             _kill_and_recover,
             fetch_state=True)
 
-    def tearDown(self):
-        super(ManagerRecoveryTest, self).tearDown()
-        self.cfy.teardown(ignore_deployments=True,
-                          ignore_validation=True,
-                          verbose=True)
+    def _fix_management_server_id(self):
+        management_server_name = self.env.management_server_name
+        self._test_cleanup_context.update_server_id(management_server_name)
