@@ -75,8 +75,7 @@ class HelloWorldBashTest(TestCase):
         if not is_existing_deployment:
             self.repo_dir = clone(CLOUDIFY_HELLO_WORLD_EXAMPLE_URL,
                                   self.workdir)
-            self.blueprint_path = self.repo_dir / 'hello-world'
-            self.blueprint_yaml = self.blueprint_path / 'blueprint.yaml'
+            self.blueprint_yaml = self.repo_dir / 'blueprint.yaml'
             self.upload_deploy_and_execute_install(
                 fetch_state=False,
                 inputs=dict(
