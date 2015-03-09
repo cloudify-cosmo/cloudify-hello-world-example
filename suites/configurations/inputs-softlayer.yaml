@@ -2,8 +2,8 @@ username: ''
 api_key: ''
 endpoint_url: ''
 location: 352494
-domain: cloudify.org
-hostname: dev-manager
+domain: manager.cloudify.org
+hostname: dev-sys-tests
 ram: 864
 cpu: 859
 disk: 1178
