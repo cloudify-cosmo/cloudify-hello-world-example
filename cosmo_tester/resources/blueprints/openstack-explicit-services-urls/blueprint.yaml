@@ -31,6 +31,7 @@ node_templates:
     server:
         type: cloudify.openstack.nodes.Server
         properties:
+            install_agent: false
             resource_id: server
             image: { get_input: image }
             flavor: { get_input: flavor }
