@@ -1,8 +1,8 @@
 tosca_definitions_version: cloudify_dsl_1_0
 
 imports:
-    - http://www.getcloudify.org/spec/cloudify/3.2m6/types.yaml
-    - http://www.getcloudify.org/spec/openstack-plugin/1.2m6/plugin.yaml
+    - http://www.getcloudify.org/spec/cloudify/3.2m7/types.yaml
+    - http://www.getcloudify.org/spec/openstack-plugin/1.2m7/plugin.yaml
 
 inputs:
     keystone_username: {}
@@ -31,6 +31,7 @@ node_templates:
     server:
         type: cloudify.openstack.nodes.Server
         properties:
+            install_agent: false
             resource_id: server
             image: { get_input: image }
             flavor: { get_input: flavor }

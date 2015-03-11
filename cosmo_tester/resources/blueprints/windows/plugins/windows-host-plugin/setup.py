@@ -18,7 +18,7 @@ from setuptools import setup
 
 setup(
     name='windows-host-plugin',
-    version='3.2a6',
+    version='3.2a7',
     packages=['windows_host_plugin'],
     zip_safe=False,
 )

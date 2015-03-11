@@ -27,7 +27,7 @@ class TwoDeploymentsTest(TestCase):
 
     def test_two_deployments(self):
         repo_dir = clone(bash.CLOUDIFY_HELLO_WORLD_EXAMPLE_URL, self.workdir)
-        self.blueprint_path = repo_dir / 'hello-world'
+        self.blueprint_path = repo_dir
         self.blueprint_yaml = self.blueprint_path / 'blueprint.yaml'
 
         count = 2
