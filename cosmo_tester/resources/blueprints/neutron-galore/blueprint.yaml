@@ -19,10 +19,6 @@ node_templates:
                target: neutron_port
            -   type: cloudify.openstack.server_connected_to_security_group
                target: security_group_dst
-           -   type: cloudify.openstack.server_connected_to_security_group
-               target: security_group_3
-           -   type: cloudify.openstack.server_connected_to_security_group
-               target: security_group_4
            -   type: cloudify.openstack.server_connected_to_floating_ip
                target: floatingip
                source_interfaces:
@@ -40,6 +36,23 @@ node_templates:
             resource_id: { get_input: server_name }
             image: { get_input: image }
             flavor: { get_input: flavor }
+    nova_server2:
+        type: cloudify.openstack.nodes.Server
+        properties:
+            install_agent: false
+            cloudify_agent:
+                user: ubuntu
+                port: 22
+            resource_id: novaservertest2
+            image: { get_input: image }
+            flavor: { get_input: flavor }
+        relationships:
+           -   type: cloudify.openstack.server_connected_to_security_group
+               target: security_group_3
+           -   type: cloudify.openstack.server_connected_to_security_group
+               target: security_group_4
+           -   type: cloudify.openstack.server_connected_to_floating_ip
+               target: floatingip2
     neutron_network:
         type: cloudify.openstack.nodes.Network
         properties:
@@ -85,7 +98,7 @@ node_templates:
             -   type: cloudify.openstack.port_connected_to_subnet
                 target: neutron_subnet
             -   type: cloudify.openstack.port_connected_to_floating_ip
-                target: floatingip2
+                target: floatingip3
     security_group_src:
         type: cloudify.openstack.nodes.SecurityGroup
         properties:
@@ -105,14 +118,6 @@ node_templates:
                     port_range_max: 65510
                 -   remote_group_node: security_group_src
                     port: 65521
-                -   protocol: icmp
-                    port_range_min: 0
-                    port_range_max: 0
-                    remote_ip_prefix: 0.0.0.0/0
-                -   direction: egress
-                    protocol: icmp
-                    remote_ip_prefix: 0.0.0.0/0
-                    port: 0
         relationships:
             -   type: cloudify.relationships.connected_to
                 target: security_group_src
@@ -122,6 +127,16 @@ node_templates:
         type: cloudify.openstack.nodes.SecurityGroup
         properties:
             resource_id: neutron_test_security_group_3
+            disable_default_egress_rules: True
+            rules:
+                -   protocol: icmp
+                    port_range_min: 0
+                    port_range_max: 0
+                    remote_ip_prefix: 0.0.0.0/0
+                -   direction: egress
+                    protocol: icmp
+                    remote_ip_prefix: 0.0.0.0/0
+                    port: 0
     security_group_4:
         type: cloudify.openstack.nodes.SecurityGroup
         properties:
@@ -129,7 +144,9 @@ node_templates:
     floatingip:
         type: cloudify.openstack.nodes.FloatingIP
     floatingip2:
-            type: cloudify.openstack.nodes.FloatingIP
+        type: cloudify.openstack.nodes.FloatingIP
+    floatingip3:
+        type: cloudify.openstack.nodes.FloatingIP
     keypair:
         type: cloudify.openstack.nodes.KeyPair
         properties:
