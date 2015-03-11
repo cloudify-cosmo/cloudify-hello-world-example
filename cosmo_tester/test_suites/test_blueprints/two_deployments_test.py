@@ -86,7 +86,7 @@ class TwoDeploymentsTest(TestCase):
                 '{0}.cloudify_agent'.format(vm_properties_path), {
                     'user': self.env.cloudify_agent_user,
                 })
-            patch.merge_obj('{0}.server'.format(vm_properties_path), {
+            patch.merge_obj('{0}'.format(vm_properties_path), {
                 'image': self.env.ubuntu_image_name,
                 'flavor': self.env.flavor_name,
             })
