@@ -292,6 +292,24 @@ handler_configurations:
       <<: *hp_openstack_region_b_inputs
       keystone_tenant_name: cloudify-cosmo-system-tests2
 
+  hp_openstack_system_tests3_region_a:
+    <<: *hp_openstack_handler_configuration
+    env: hp_openstack_system_tests3_region_a
+    properties: hp_openstack_region_a_properties
+    inputs_override:
+      <<: *hp_openstack_credentials_inputs
+      <<: *hp_openstack_region_a_inputs
+      keystone_tenant_name: cloudify-cosmo-system-tests3
+
+  hp_openstack_system_tests3_region_b:
+    <<: *hp_openstack_handler_configuration
+    env: hp_openstack_system_tests3_region_b
+    properties: hp_openstack_region_b_properties
+    inputs_override:
+      <<: *hp_openstack_credentials_inputs
+      <<: *hp_openstack_region_b_inputs
+      keystone_tenant_name: cloudify-cosmo-system-tests3
+
   ############################################################################
 
   hp_openstack_dockerless_system_tests_region_a:
@@ -329,6 +347,24 @@ handler_configurations:
       <<: *hp_openstack_credentials_inputs
       <<: *hp_openstack_dockerless_region_b_inputs
       keystone_tenant_name: cloudify-cosmo-system-tests2
+
+  hp_openstack_dockerless_system_tests3_region_a:
+    <<: *hp_openstack_dockerless_handler_configuration
+    env: hp_openstack_system_tests3_region_a
+    properties: hp_openstack_region_a_properties
+    inputs_override:
+      <<: *hp_openstack_credentials_inputs
+      <<: *hp_openstack_dockerless_region_a_inputs
+      keystone_tenant_name: cloudify-cosmo-system-tests3
+
+  hp_openstack_dockerless_system_tests3_region_b:
+    <<: *hp_openstack_dockerless_handler_configuration
+    env: hp_openstack_system_tests3_region_b
+    properties: hp_openstack_region_b_properties
+    inputs_override:
+      <<: *hp_openstack_credentials_inputs
+      <<: *hp_openstack_dockerless_region_b_inputs
+      keystone_tenant_name: cloudify-cosmo-system-tests3
 
   #############################################################################
 
