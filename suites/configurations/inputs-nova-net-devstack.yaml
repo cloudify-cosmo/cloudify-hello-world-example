@@ -4,16 +4,16 @@ keystone_tenant_name: demo
 keystone_url: http://192.168.9.67:5000/v2.0
 region: RegionOne
 internal_cidr: 10.0.0.0/24
-manager_public_key_name: systemt-tests-manager
-agent_public_key_name: systemt-tests-agent
+manager_public_key_name: s-systemt-tests-key
+agent_public_key_name: s-systemt-tests-key
 image_id: eada2fe8-894a-4b26-ac8d-cedab010f185
 flavor_id: 3
 
-use_existing_manager_keypair: false
-use_existing_agent_keypair: false
+use_existing_manager_keypair: true
+use_existing_agent_keypair: true
 manager_server_name: systemt-cloudify-manager
 manager_server_user: ubuntu
-manager_private_key_path: ~/.ssh/systemt-tests-manager.pem
-agent_private_key_path: ~/.ssh/systemt-tests-agent.pem
+manager_private_key_path: ~/.ssh/shared-systemt-tests-key.pem
+agent_private_key_path: ~/.ssh/shared-systemt-tests-key.pem
 agents_user: ubuntu
 resources_prefix: ''
