@@ -167,19 +167,8 @@ templates:
     region: region-b.geo-1
     image_id: '{{hp_openstack_region_b_ubuntu_trusty}}'
 
-  - &hp_openstack_dockerless_region_a_inputs
-    region: region-a.geo-1
-    image_id: '{{hp_openstack_region_a_ubuntu_precise}}'
-
-  - &hp_openstack_dockerless_region_b_inputs
-    region: region-b.geo-1
-    image_id: '{{hp_openstack_region_b_ubuntu_precise}}'
-
   - &lab_openstack_inputs
     image_id: '{{lab_openstack_ubuntu_trusty}}'
-
-  - &lab_openstack_dockerless_inputs
-    image_id: '{{lab_openstack_ubuntu_precise}}'
 
   #######################################################
 
@@ -193,24 +182,11 @@ templates:
     manager_blueprint: openstack-docker/openstack-docker.yaml
     manager_blueprint_override: *docker_openstack_manager_blueprint_override
 
-  - &hp_openstack_dockerless_handler_configuration
-    <<: *openstack_handler_configuration
-    inputs: inputs-hp-openstack.yaml
-    manager_blueprint: openstack/openstack.yaml
-    manager_blueprint_override: *dockerless_openstack_manager_blueprint_override
-
   - &lab_openstack_handler_configuration
     <<: *openstack_handler_configuration
     inputs: inputs-lab-openstack.yaml
     manager_blueprint: openstack-docker/openstack-docker.yaml
     manager_blueprint_override: *docker_openstack_manager_blueprint_override
-    properties: lab_openstack_properties
-
-  - &lab_openstack_dockerless_handler_configuration
-    <<: *openstack_handler_configuration
-    inputs: inputs-lab-openstack.yaml
-    manager_blueprint: openstack/openstack.yaml
-    manager_blueprint_override: *dockerless_openstack_manager_blueprint_override
     properties: lab_openstack_properties
 
 #####################################################################################
@@ -312,62 +288,6 @@ handler_configurations:
 
   ############################################################################
 
-  hp_openstack_dockerless_system_tests_region_a:
-    <<: *hp_openstack_dockerless_handler_configuration
-    env: hp_openstack_system_tests_region_a
-    properties: hp_openstack_region_a_properties
-    inputs_override:
-      <<: *hp_openstack_credentials_inputs
-      <<: *hp_openstack_dockerless_region_a_inputs
-      keystone_tenant_name: cloudify-cosmo-system-tests
-
-  hp_openstack_dockerless_system_tests_region_b:
-    <<: *hp_openstack_dockerless_handler_configuration
-    env: hp_openstack_system_tests_region_b
-    properties: hp_openstack_region_b_properties
-    inputs_override:
-      <<: *hp_openstack_credentials_inputs
-      <<: *hp_openstack_dockerless_region_b_inputs
-      keystone_tenant_name: cloudify-cosmo-system-tests
-
-  hp_openstack_dockerless_system_tests2_region_a:
-    <<: *hp_openstack_dockerless_handler_configuration
-    env: hp_openstack_system_tests2_region_a
-    properties: hp_openstack_region_a_properties
-    inputs_override:
-      <<: *hp_openstack_credentials_inputs
-      <<: *hp_openstack_dockerless_region_a_inputs
-      keystone_tenant_name: cloudify-cosmo-system-tests2
-
-  hp_openstack_dockerless_system_tests2_region_b:
-    <<: *hp_openstack_dockerless_handler_configuration
-    env: hp_openstack_system_tests2_region_b
-    properties: hp_openstack_region_b_properties
-    inputs_override:
-      <<: *hp_openstack_credentials_inputs
-      <<: *hp_openstack_dockerless_region_b_inputs
-      keystone_tenant_name: cloudify-cosmo-system-tests2
-
-  hp_openstack_dockerless_system_tests3_region_a:
-    <<: *hp_openstack_dockerless_handler_configuration
-    env: hp_openstack_system_tests3_region_a
-    properties: hp_openstack_region_a_properties
-    inputs_override:
-      <<: *hp_openstack_credentials_inputs
-      <<: *hp_openstack_dockerless_region_a_inputs
-      keystone_tenant_name: cloudify-cosmo-system-tests3
-
-  hp_openstack_dockerless_system_tests3_region_b:
-    <<: *hp_openstack_dockerless_handler_configuration
-    env: hp_openstack_system_tests3_region_b
-    properties: hp_openstack_region_b_properties
-    inputs_override:
-      <<: *hp_openstack_credentials_inputs
-      <<: *hp_openstack_dockerless_region_b_inputs
-      keystone_tenant_name: cloudify-cosmo-system-tests3
-
-  #############################################################################
-
   hp_openstack_centos_system_tests_region_b:
     <<: *hp_openstack_handler_configuration
     env: hp_openstack_system_tests_region_b
@@ -389,28 +309,12 @@ handler_configurations:
       <<: *lab_openstack_inputs
       keystone_tenant_name: system-tests/system-test-1
 
-  lab_openstack_dockerless_system_tests1:
-    <<: *lab_openstack_dockerless_handler_configuration
-    env: lab_openstack_1
-    inputs_override:
-      <<: *lab_openstack_credentials_inputs
-      <<: *lab_openstack_dockerless_inputs
-      keystone_tenant_name: system-tests/system-test-1
-
   lab_openstack_system_tests2:
     <<: *lab_openstack_handler_configuration
     env: lab_openstack_2
     inputs_override:
       <<: *lab_openstack_credentials_inputs
       <<: *lab_openstack_inputs
-      keystone_tenant_name: system-tests/system-test-2
-
-  lab_openstack_dockerless_system_tests2:
-    <<: *lab_openstack_dockerless_handler_configuration
-    env: lab_openstack_2
-    inputs_override:
-      <<: *lab_openstack_credentials_inputs
-      <<: *lab_openstack_dockerless_inputs
       keystone_tenant_name: system-tests/system-test-2
 
   lab_openstack_system_tests3:
@@ -421,28 +325,12 @@ handler_configurations:
       <<: *lab_openstack_inputs
       keystone_tenant_name: system-tests/system-test-3
 
-  lab_openstack_dockerless_system_tests3:
-    <<: *lab_openstack_dockerless_handler_configuration
-    env: lab_openstack_3
-    inputs_override:
-      <<: *lab_openstack_credentials_inputs
-      <<: *lab_openstack_dockerless_inputs
-      keystone_tenant_name: system-tests/system-test-3
-
   lab_openstack_system_tests4:
     <<: *lab_openstack_handler_configuration
     env: lab_openstack_4
     inputs_override:
       <<: *lab_openstack_credentials_inputs
       <<: *lab_openstack_inputs
-      keystone_tenant_name: system-tests/system-test-4
-
-  lab_openstack_dockerless_system_tests4:
-    <<: *lab_openstack_dockerless_handler_configuration
-    env: lab_openstack_4
-    inputs_override:
-      <<: *lab_openstack_credentials_inputs
-      <<: *lab_openstack_dockerless_inputs
       keystone_tenant_name: system-tests/system-test-4
 
   ###############################################################################
@@ -576,35 +464,13 @@ test_suites:
 
   #####################################################################
 
-  dockerless_hp_openstack_chef_puppet:
-    handler_configuration: hp_openstack_dockerless_system_tests_region_a
+  lab_openstack_chef_puppet:
+    handler_configuration: lab_openstack_system_tests2
     tests:
       - openstack_blueprints_chef_puppet
 
-  dockerless_hp_openstack_blueprints_no_chef_puppet_docker_windows:
-    handler_configuration: hp_openstack_dockerless_system_tests_region_b
-    tests:
-      - openstack_blueprints_without_chef_puppet_docker_windows
-
-  dockerless_hp_openstack_manager_status:
-    handler_configuration: hp_openstack_dockerless_system_tests2_region_a
-    tests:
-      - manager_status
-
-  dockerless_hp_openstack_plugin_tests:
-    handler_configuration: hp_openstack_dockerless_system_tests2_region_b
-    tests:
-      - openstack_plugin
-
-  #####################################################################
-
-  lab_dockerless_openstack_chef_puppet:
-    handler_configuration: lab_openstack_dockerless_system_tests2
-    tests:
-      - openstack_blueprints_chef_puppet
-
-  lab_dockerless_openstack_windows:
-    handler_configuration: lab_openstack_dockerless_system_tests1
+  lab_openstack_windows:
+    handler_configuration: lab_openstack_system_tests1
     tests:
       - openstack_blueprints_windows
 
