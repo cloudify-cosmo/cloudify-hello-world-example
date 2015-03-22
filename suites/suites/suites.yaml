@@ -353,10 +353,6 @@ handler_configurations:
             implementation: flask_securest.authentication_providers.password:PasswordAuthenticator
             properties:
               password_hash: plaintext
-          - name: token
-            implementation: flask_securest.authentication_providers.token:TokenAuthenticator
-            properties:
-              secret_key: yaml_secret
     inputs_override:
       <<: *lab_openstack_credentials_inputs
       <<: *lab_openstack_inputs
