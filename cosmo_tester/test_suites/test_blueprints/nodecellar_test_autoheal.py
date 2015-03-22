@@ -41,7 +41,7 @@ class OpenStackAutohealNodeCellarTest(OpenStackNodeCellarTestBase):
                             'parameters': {
                                 'workflow': 'heal',
                                 'workflow_parameters': {
-                                    'node_id': {
+                                    'node_instance_id': {
                                         'get_property': ['SELF', 'node_id']
                                     },
                                     'diagnose_value': {
