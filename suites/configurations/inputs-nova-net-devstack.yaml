@@ -6,7 +6,7 @@ region: RegionOne
 internal_cidr: 10.0.0.0/24
 manager_public_key_name: s-systemt-tests-key
 agent_public_key_name: s-systemt-tests-key
-image_id: eada2fe8-894a-4b26-ac8d-cedab010f185
+image_id: 0cecc725-f30a-48bb-acff-715f38d72adb
 flavor_id: 3
 
 use_existing_manager_keypair: true
