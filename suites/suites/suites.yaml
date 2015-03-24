@@ -341,7 +341,7 @@ handler_configurations:
     inputs: inputs-nova-net-devstack.yaml
     manager_blueprint: openstack-nova-net/openstack.yaml
     manager_blueprint_override:
-      <<: *dockerless_manager_blueprint_override
+      <<: *docker_manager_blueprint_override
       <<: *openstack_nova_manager_blueprint_override
     properties: pclab47_devstack_nova_net
 
