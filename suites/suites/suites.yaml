@@ -485,7 +485,7 @@ test_suites:
   #####################################################################
 
   docker_centos_on_openstack:
-    handler_configuration: hp_openstack_centos_system_tests_region_b
+    handler_configuration: hp_openstack_centos_system_tests3_region_b
     tests:
       - cosmo_tester/test_suites/test_docker_centos_env
 
