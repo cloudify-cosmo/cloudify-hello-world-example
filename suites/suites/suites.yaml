@@ -296,7 +296,7 @@ handler_configurations:
     inputs_override:
       <<: *hp_openstack_credentials_inputs
       <<: *hp_openstack_region_b_inputs
-      keystone_tenant_name: cloudify-cosmo-system-tests
+      keystone_tenant_name: cloudify-cosmo-system-tests3
       image_id: '{{hp_openstack_region_b_centos_7_0_docker_1_5}}'
       manager_server_user: centos
 
