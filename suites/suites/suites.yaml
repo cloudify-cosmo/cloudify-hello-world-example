@@ -11,7 +11,7 @@ variables:
   hp_openstack_region_a_ubuntu_trusty: bec3cab5-4722-40b9-a78a-3489218e22fe
   hp_openstack_region_b_ubuntu_precise: 261844b3-479c-5446-a2c4-1ea95d53b668
   hp_openstack_region_b_ubuntu_trusty: 9d25fe2d-cf31-4b05-8c58-f238ec78e633
-  hp_openstack_region_b_centos_7_0_docker_1_5: 9ec3a352-fcaf-4944-815c-bc2f5742a75c
+  hp_openstack_region_b_centos_7_0_docker_1_5: 2b8f2903-4156-4f64-8182-697c179cff89
 
   lab_openstack_ubuntu_precise_image_name: ubuntu_12.04
   lab_openstack_ubuntu_trusty_image_name: ubuntu_14.04
