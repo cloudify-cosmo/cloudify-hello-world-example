@@ -13,8 +13,12 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
+import os
+
+from cosmo_tester.framework.git_helper import clone
 from cosmo_tester.test_suites.test_blueprints.nodecellar_test import (
     NodecellarAppTest)
+
 
 class NodecellarDockerPluginTest(NodecellarAppTest):
 
@@ -46,8 +50,8 @@ class NodecellarDockerPluginTest(NodecellarAppTest):
             'web_port': 8080,
             'mongo_port': 27017,
             'web_status_port': 28017,
-            'nodecellar_container_port_bindings': { 8080: 8080 },
-            'mongo_container_port_bindings': { 27017: 27017, 28017: 28017 }
+            'nodecellar_container_port_bindings': {8080: 8080},
+            'mongo_container_port_bindings': {27017: 27017, 28017: 28017}
         }
 
     @property
@@ -61,4 +65,4 @@ class NodecellarDockerPluginTest(NodecellarAppTest):
 
     @property
     def expected_nodes_count(self):
-        return 7  
+        return 7
