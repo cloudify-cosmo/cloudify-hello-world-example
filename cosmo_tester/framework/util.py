@@ -75,6 +75,17 @@ def get_blueprint_path(blueprint_name, blueprints_dir=None):
     return os.path.join(blueprints_dir, blueprint_name)
 
 
+def get_plugin_path(plugin_name):
+    resources_dir = os.path.dirname(resources.__file__)
+    plugins_dir = os.path.join(resources_dir, 'plugins')
+    return os.path.join(plugins_dir, plugin_name)
+
+
+def get_resource_path(resource):
+    resources_dir = os.path.dirname(resources.__file__)
+    return os.path.join(resources_dir, resource)
+
+
 def get_cloudify_config(name):
     reference_dir = resources.__file__
     for _ in range(3):
