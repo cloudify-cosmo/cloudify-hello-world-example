@@ -1,8 +1,8 @@
 tosca_definitions_version: cloudify_dsl_1_1
 
 imports:
-    - http://www.getcloudify.org/spec/cloudify/3.2m7/types.yaml
-    - http://www.getcloudify.org/spec/openstack-plugin/1.2m7/plugin.yaml
+    - http://www.getcloudify.org/spec/cloudify/3.2m8/types.yaml
+    - http://www.getcloudify.org/spec/openstack-plugin/1.2m8/plugin.yaml
 
 plugins:
   windows_host_plugin:
@@ -36,6 +36,9 @@ node_templates:
           msiexec /i https://www.python.org/ftp/python/2.7.6/python-2.7.6.msi TARGETDIR=C:\Python27 ALLUSERS=1 /qn
 
     interfaces:
+      cloudify.interfaces.lifecycle:
+        start:
+          max_retries: 35
       cloudify.interfaces.worker_installer:
         install:
           inputs:
@@ -50,7 +53,7 @@ node_templates:
         start:
           inputs:
             cloudify_agent: *CLOUDIFY_AGENT
-          max_retries: 35
+
         stop:
           inputs:
             cloudify_agent: *CLOUDIFY_AGENT

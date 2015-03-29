@@ -30,22 +30,26 @@ from cosmo_tester.test_suites.test_blueprints import nodecellar_test
 class DockerPersistenceTest(nodecellar_test.NodecellarAppTest):
 
     def test_docker_persistence_nodecellar(self):
-        provider_context = self.get_provider_context()
+        origin_provider_context = self.get_provider_context()
         self.init_fabric()
         restarted = self.restart_container()
         if not restarted:
             raise AssertionError('Failed restarting container. Test failed.')
-        self.assertEqual(json.load(provider_context),
-                         json.load(self.get_provider_context()),
-                         msg='Provider context should be identical to what it '
-                             'was prior to reboot.')
+        after_restart_provider_context = self.get_provider_context()
+        self.assertEqual(origin_provider_context,
+                         after_restart_provider_context,
+                         msg='Provider context should be identical to '
+                             'what it was prior to reboot. Context before'
+                             ' restart: {0}. Context after restart: {1}'
+                         .format(origin_provider_context,
+                                 after_restart_provider_context))
 
         self._test_nodecellar_impl('openstack-blueprint.yaml')
 
     def get_provider_context(self):
         context_url = 'http://{0}/provider/context' \
             .format(self.env.management_ip)
-        return urllib.urlopen(context_url)
+        return json.loads(urllib.urlopen(context_url).read())
 
     def modify_blueprint(self):
         with YamlPatcher(self.blueprint_yaml) as patch:
@@ -84,7 +88,7 @@ class DockerPersistenceTest(nodecellar_test.NodecellarAppTest):
             :param port: port used by the rest service.
             :return: True of False
         """
-        validation_url = 'http://{0}:{1}/blueprints'.format(ip, port)
+        validation_url = 'http://{0}:{1}/provider/context'.format(ip, port)
 
         end = time() + timeout
 
