@@ -46,6 +46,7 @@ variables:
   windows_package_agent_url: _
   centos_package_agent_url: _
   docker_image_url: _
+  windows_cli_package_url: _
 
   system_tests_hp_username: _
   system_tests_hp_password: _
@@ -137,6 +138,9 @@ templates:
     private: true
     username: opencm
     password: '{{opencm_git_pwd}}'
+
+  - &cli_packager_external
+    repo: cloudify-cli-packager
 
   #######################################################
 
@@ -358,6 +362,14 @@ handler_configurations:
       <<: *lab_openstack_inputs
       keystone_tenant_name: system-tests/system-test-4
 
+  lab_openstack_system_tests5:
+    <<: *lab_openstack_handler_configuration
+    env: lab_openstack_5
+    inputs_override:
+      <<: *lab_openstack_credentials_inputs
+      <<: *lab_openstack_inputs
+      keystone_tenant_name: system-tests/system-test-5
+
   ###############################################################################
 
   pclab47_devstack_nova_net:
@@ -470,6 +482,11 @@ tests:
       - system_tests/manager
       - system_tests/local
 
+  cli_packager:
+    external: *cli_packager_external
+    tests:
+      - system_tests
+
 #####################################################################################
 
 test_suites:
@@ -516,6 +533,11 @@ test_suites:
     handler_configuration: lab_openstack_system_tests4_secured
     tests:
       - openstack_blueprints_nodecellar
+
+  lab_openstack_cli_packager:
+    handler_configuration: lab_openstack_system_tests5
+    tests:
+      - cli_packager
 
   #####################################################################
 
