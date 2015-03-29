@@ -20,25 +20,9 @@ from cosmo_tester.test_suites.test_blueprints.nodecellar_test import (
     NodecellarAppTest)
 
 
-class NodecellarDockerPluginTest(NodecellarAppTest):
+class DockerPluginNodecellarTest(NodecellarAppTest):
 
-    def _test_nodecellar_impl(self, blueprint_file):
-        self.repo_dir = clone(self.repo_url, self.workdir, self.repo_branch)
-        self.blueprint_yaml = os.path.join(self.repo_dir, blueprint_file)
-
-        self.modify_blueprint()
-
-        before, after = self.upload_deploy_and_execute_install(
-            inputs=self.get_inputs()
-        )
-
-        self.post_install_assertions(before, after)
-
-        self.execute_uninstall()
-
-        self.post_uninstall_assertions()
-
-    def test_openstack_nodecellar_docker_plugin(self):
+    def test_docker_plugin_openstack_nodecellar(self):
         self._test_nodecellar_impl('blueprint/openstack.yaml')
 
     def get_inputs(self):
