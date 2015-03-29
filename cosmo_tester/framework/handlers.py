@@ -103,15 +103,6 @@ class BaseHandler(object):
     def update_cloudify_config(self):
         with YamlPatcher(self.env.cloudify_config_path) as patch:
             yield patch
-        self._reload_config()
-
-    @contextmanager
-    def update_manager_blueprint(self):
-        with YamlPatcher(self.env._manager_blueprint_path) as patch:
-            yield patch
-        self._reload_config()
-
-    def _reload_config(self):
         self.env.cloudify_config = yaml.load(
             self.env.cloudify_config_path.text())
         self.env._config_reader = self.CloudifyConfigReader(

@@ -16,7 +16,7 @@
 import os
 import shutil
 
-import fabric
+from fabric import api as fabric_api
 from path import path
 
 from cosmo_tester.framework import util
@@ -26,62 +26,69 @@ from cosmo_tester.framework.testenv import TestCase
 class RestPluginsTests(TestCase):
 
     def test_install_rest_plugins(self):
-        self.manager_blueprint_path = path(self.env._manager_blueprint_path)
+        self._copy_manager_blueprint()
         self._update_manager_blueprint()
         self._bootstrap()
         self._assert_plugins_installed()
-        self._teardown()
+
+    def _copy_manager_blueprint(self):
+        inputs_path, mb_path = util.generate_unique_configurations(
+            workdir=self.workdir,
+            original_inputs_path=self.env.cloudify_config_path,
+            original_manager_blueprint_path=self.env._manager_blueprint_path)
+        self.test_manager_blueprint_path = path(mb_path)
+        self.test_inputs_path = path(inputs_path)
 
     def _update_manager_blueprint(self):
         src_plugin_dir = util.get_plugin_path('mock-rest-plugin')
         shutil.copytree(src_plugin_dir,
-                        self.manager_blueprint_path.dirname() /
+                        self.test_manager_blueprint_path.dirname() /
                         'mock-rest-plugin')
-        plugin_template_url = ('https://github.com/cloudify-cosmo/'
-                               'cloudify-plugin-template/archive/{0}.zip'
-                               .format(os.environ.get('BRANCH_NAME_PLUGINS',
-                                                      'master')))
         plugins = {
             'plugin1': {
-                'source': plugin_template_url
+                # testing plugin installation from remote url
+                'source': 'https://github.com/cloudify-cosmo/'
+                          'cloudify-plugin-template/archive/{0}.zip'
+                          .format(os.environ.get('BRANCH_NAME_PLUGINS',
+                                                 'master'))
             },
             'plugin2': {
+                # testing plugin installation in manager blueprint directory
                 'source': 'mock-rest-plugin',
+                # testing install_args, without the following, plugin
+                # installation should fail
                 'install_args': "--install-option='--do-not-fail'"
             }
         }
         plugins_path = 'node_templates.manager.properties.cloudify.plugins'
-        with self.env.handler.update_manager_blueprint() as patch:
+        with util.YamlPatcher(self.test_manager_blueprint_path) as patch:
             patch.set_value(plugins_path, plugins)
 
     def _assert_plugins_installed(self):
         manager_key_path = util.get_actual_keypath(
             self.env, self.env.management_key_path)
-        fabric.api.env.update({
-            'timeout': 30,
-            'user': self.env.management_user_name,
-            'key_filename': manager_key_path,
-            'host_string': self.cfy.get_management_ip()
-        })
-        local_path = util.get_resource_path('scripts/test_rest_plugins.sh')
-        remote_path = ('/home/{0}/test_rest_plugins.sh'
-                       .format(self.env.management_user_name))
-        container_path = '/tmp/home/test_rest_plugins.sh'
-        fabric.api.put(local_path, remote_path)
-        output = fabric.api.run(
-            'chmod +x {0} && '
-            'sudo docker exec -t cfy bash {1}'
-            .format(remote_path, container_path))
+        local_script_path = util.get_resource_path(
+            'scripts/test_rest_plugins.sh')
+        remote_script_path = ('/home/{0}/test_rest_plugins.sh'
+                              .format(self.env.management_user_name))
+        container_script_path = '/tmp/home/test_rest_plugins.sh'
+        with fabric_api.settings(
+                timeout=30,
+                user=self.env.management_user_name,
+                key_filename=manager_key_path,
+                host_string=self.cfy.get_management_ip()):
+            fabric_api.put(local_script_path, remote_script_path)
+            output = fabric_api.run(
+                'chmod +x {0} && sudo docker exec -t cfy bash {1}'
+                .format(remote_script_path, container_script_path))
         # This tells us that plugin-template was successfully installed
         self.assertIn('imported_plugin_tasks', output)
         # This tells us that mock-rest-plugin was successfully installed
         self.assertIn('mock_attribute_value', output)
 
     def _bootstrap(self):
-        self.cfy.bootstrap(self.manager_blueprint_path,
-                           inputs_file=self.env.cloudify_config_path,
+        self.cfy.bootstrap(blueprint_path=self.test_manager_blueprint_path,
+                           inputs_file=self.test_inputs_path,
                            task_retries=5,
                            install_plugins=False)
-
-    def _teardown(self):
-        self.cfy.teardown()
+        self.addCleanup(self.cfy.teardown)
