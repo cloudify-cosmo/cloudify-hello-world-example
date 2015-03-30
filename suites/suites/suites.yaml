@@ -79,7 +79,7 @@ templates:
     cloudify.workflows.task_retries: 30
 
   - &hp_openstack_centos7_0_inputs
-    node_templates.manager.interfaces.cloudify.interfaces.lifecycle.start.inputs.task_properties.privileged: true
+    node_templates.manager.interfaces.cloudify\.interfaces\.lifecycle.start.inputs.task_properties.privileged: true
     node_types.monitored_docker_host.properties.server.default.userdata: |
       #!/bin/bash
       sudo yum install -y docker wget
