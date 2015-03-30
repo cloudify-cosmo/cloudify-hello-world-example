@@ -447,6 +447,10 @@ tests:
     tests:
       - cosmo_tester/test_suites/test_openstack_plugin
 
+  openstack_rest_plugins:
+    tests:
+      - cosmo_tester/test_suites/test_rest_plugins
+
   docker_centos:
     tests:
       - cosmo_tester/test_suites/test_docker_centos_env
@@ -502,6 +506,11 @@ test_suites:
     handler_configuration: lab_openstack_system_tests1
     tests:
       - openstack_blueprints_windows
+
+  lab_openstack_rest_plugins:
+    handler_configuration: lab_openstack_system_tests3
+    tests:
+      - openstack_rest_plugins
 
   lab_openstack_secured:
     handler_configuration: lab_openstack_system_tests4_secured
