@@ -336,28 +336,6 @@ handler_configurations:
       <<: *lab_openstack_inputs
       keystone_tenant_name: system-tests/system-test-4
 
-  lab_openstack_system_tests4_secured:
-    <<: *lab_openstack_handler_configuration
-    env: lab_openstack_4
-    manager_blueprint_override:
-      <<: *docker_openstack_manager_blueprint_override
-      node_templates.manager.properties.cloudify.security:
-        enabled: true
-        userstore_driver:
-          implementation: flask_securest.userstores.file:FileUserstore
-          properties:
-            userstore_file: users.yaml
-            identifying_attribute: username
-        authentication_methods:
-          - name: password
-            implementation: flask_securest.authentication_providers.password:PasswordAuthenticator
-            properties:
-              password_hash: plaintext
-    inputs_override:
-      <<: *lab_openstack_credentials_inputs
-      <<: *lab_openstack_inputs
-      keystone_tenant_name: system-tests/system-test-4
-
   ###############################################################################
 
   pclab47_devstack_nova_net:
