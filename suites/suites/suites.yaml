@@ -302,10 +302,11 @@ handler_configurations:
     <<: *hp_openstack_handler_configuration
     env: hp_openstack_system_tests3_region_b
     properties: hp_openstack_region_b_properties
+    manager_blueprint_override:
+      <<: *hp_openstack_centos7_0_inputs
     inputs_override:
       <<: *hp_openstack_credentials_inputs
       <<: *hp_openstack_region_b_inputs
-      <<: *hp_openstack_centos7_0_inputs
       keystone_tenant_name: cloudify-cosmo-system-tests3
       image_id: a2859f14-ea12-55e7-8e39-cec9b59e56fb
       manager_server_user: centos
