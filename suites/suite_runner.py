@@ -68,6 +68,8 @@ class SuiteRunner(object):
             'manager_blueprints_branch', self.branch_name_core)
         self.branch_name_cli = self.variables.get(
             'cli_branch', self.branch_name_core)
+        self.windows_cli_package_url = \
+            self.variables['windows_cli_package_url']
 
         self.handler_configuration = self.suites_yaml[
             'handler_configurations'][self.test_suite['handler_configuration']]
@@ -91,6 +93,7 @@ class SuiteRunner(object):
         os.environ['SUITES_YAML_PATH'] = self.generated_suites_yaml_path
         os.environ['BRANCH_NAME_PLUGINS'] = self.branch_name_plugins
         os.environ['BRANCH_NAME_CORE'] = self.branch_name_core
+        os.environ['WINDOWS_CLI_PACKAGE_URL'] = self.windows_cli_package_url
 
     def clone_and_install_packages(self):
         with path(self.work_dir):

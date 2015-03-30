@@ -24,10 +24,8 @@ import copy
 import os
 import importlib
 import json
-from StringIO import StringIO
 
 import yaml
-from fabric import api as fabric_api
 from path import path
 
 from cloudify_rest_client import CloudifyClient
@@ -37,7 +35,6 @@ from cloudify_cli.constants import (CLOUDIFY_USERNAME_ENV,
 from cosmo_tester.framework.cfy_helper import (CfyHelper,
                                                DEFAULT_EXECUTE_TIMEOUT)
 from cosmo_tester.framework.util import (get_blueprint_path,
-                                         get_actual_keypath,
                                          process_variables,
                                          YamlPatcher,
                                          generate_unique_configurations)
@@ -323,25 +320,6 @@ class TestCase(unittest.TestCase):
         # because it is called regardless of whether setUp succeeded or failed
         # unlike tearDown which is not called when setUp fails (which might
         # happen when tests override setUp)
-        if self.env.management_ip:
-            try:
-                self.logger.info('Running ps aux on Cloudify manager...')
-                output = StringIO()
-                with fabric_api.settings(
-                        user=self.env.management_user_name,
-                        host_string=self.env.management_ip,
-                        key_filename=get_actual_keypath(
-                            self.env,
-                            self.env.management_key_path),
-                        disable_known_hosts=True):
-                    fabric_api.run('ps aux --sort -rss', stdout=output)
-                    self.logger.info(
-                        'Cloudify manager ps aux output:\n{0}'.format(
-                            output.getvalue()))
-            except Exception as e:
-                self.logger.info(
-                    'Error running ps aux on Cloudify manager: {0}'.format(
-                        str(e)))
 
     def get_manager_state(self):
         self.logger.info('Fetching manager current state')
