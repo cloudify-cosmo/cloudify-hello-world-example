@@ -141,6 +141,7 @@ templates:
 
   - &cli_packager_external
     repo: cloudify-cli-packager
+    branch: '{{core_branch}}'
 
   #######################################################
 
