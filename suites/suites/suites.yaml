@@ -80,7 +80,7 @@ templates:
 
   - &hp_openstack_centos7_0_inputs
     node_templates.manager.interfaces.cloudify\.interfaces\.lifecycle.start.inputs.task_properties.privileged: true
-    node_types.monitored_docker_host.properties.server.default.userdata: |
+    node_templates.manager_server.properties.server.userdata: |
       #!/bin/bash
       sudo yum install -y docker wget
       sudo service docker stop
