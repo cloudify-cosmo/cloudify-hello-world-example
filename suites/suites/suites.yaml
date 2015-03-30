@@ -78,6 +78,15 @@ templates:
     cloudify.agents.packages.windows_agent_url: '{{windows_package_agent_url}}'
     cloudify.workflows.task_retries: 30
 
+  - &hp_openstack_centos7_0_inputs
+    node_templates.manager.interfaces.cloudify.interfaces.lifecycle.start.inputs.task_properties.privileged: true
+    node_types.monitored_docker_host.properties.server.default.userdata: |
+      #!/bin/bash
+      sudo yum install -y docker wget
+      sudo service docker stop
+      sudo wget https://get.docker.com/builds/Linux/x86_64/docker-latest -O /usr/bin/docker
+      sudo service docker start
+
   - &manager_blueprint_override
     node_templates.manager.properties.cloudify_packages.agents.ubuntu_agent_url: '{{ubuntu_package_agent_url}}'
     node_templates.manager.properties.cloudify_packages.agents.centos_agent_url: '{{centos_package_agent_url}}'
@@ -296,6 +305,7 @@ handler_configurations:
     inputs_override:
       <<: *hp_openstack_credentials_inputs
       <<: *hp_openstack_region_b_inputs
+      <<: *hp_openstack_centos7_0_inputs
       keystone_tenant_name: cloudify-cosmo-system-tests3
       image_id: '{{hp_openstack_region_b_centos_7_0_docker_1_5}}'
       manager_server_user: centos
