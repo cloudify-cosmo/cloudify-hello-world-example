@@ -82,9 +82,9 @@ templates:
     node_templates.manager.interfaces.cloudify\.interfaces\.lifecycle.start.inputs.task_properties.privileged: true
     node_templates.manager_server.properties.server.userdata: |
       #!/bin/bash
-      sudo yum install -y docker wget
-      sudo service docker stop
-      sudo wget https://get.docker.com/builds/Linux/x86_64/docker-latest -O /usr/bin/docker
+      sudo yum install -y docker wget && \
+      sudo service docker stop && \
+      sudo wget https://get.docker.com/builds/Linux/x86_64/docker-latest -O /usr/bin/docker && \
       sudo service docker start
 
   - &manager_blueprint_override
