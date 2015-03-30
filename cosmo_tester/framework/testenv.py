@@ -31,6 +31,8 @@ from fabric import api as fabric_api
 from path import path
 
 from cloudify_rest_client import CloudifyClient
+from cloudify_cli.constants import (CLOUDIFY_USERNAME_ENV,
+                                    CLOUDIFY_PASSWORD_ENV)
 
 from cosmo_tester.framework.cfy_helper import (CfyHelper,
                                                DEFAULT_EXECUTE_TIMEOUT)
@@ -58,6 +60,9 @@ logger.setLevel(logging.DEBUG)
 
 HANDLER_CONFIGURATION = 'HANDLER_CONFIGURATION'
 SUITES_YAML_PATH = 'SUITES_YAML_PATH'
+
+TESTS_CFY_USERNAME_FIELD = 'system_tests_cfy_username'
+TESTS_CFY_PASSWORD_FIELD = 'system_tests_cfy_password'
 
 test_environment = None
 
@@ -169,9 +174,6 @@ class TestEnvironment(object):
         handler_class = handler_module.handler
         self.handler = handler_class(self)
 
-        if 'manager_ip' in self.handler_configuration:
-            self._running_env_setup(self.handler_configuration['manager_ip'])
-
         self.cloudify_config = yaml.load(self.cloudify_config_path.text())
         self._config_reader = self.handler.CloudifyConfigReader(
             self.cloudify_config,
@@ -182,6 +184,16 @@ class TestEnvironment(object):
                 self.handler_configuration.get('inputs_override', {}))
             for key, value in processed_inputs.items():
                 patch.set_value(key, value)
+
+        if self.secured:
+            variables = self.suites_yaml.get('variables', {})
+            os.environ[CLOUDIFY_USERNAME_ENV] = \
+                variables[TESTS_CFY_USERNAME_FIELD]
+            os.environ[CLOUDIFY_PASSWORD_ENV] = \
+                variables[TESTS_CFY_PASSWORD_FIELD]
+
+        if 'manager_ip' in self.handler_configuration:
+            self._running_env_setup(self.handler_configuration['manager_ip'])
 
         global test_environment
         test_environment = self
@@ -252,7 +264,11 @@ class TestEnvironment(object):
 
     def _running_env_setup(self, management_ip):
         self.management_ip = management_ip
-        self.rest_client = CloudifyClient(self.management_ip)
+        self.rest_client = \
+            CloudifyClient(self.management_ip,
+                           user=os.environ.get(CLOUDIFY_USERNAME_ENV),
+                           password=os.environ.get(CLOUDIFY_PASSWORD_ENV))
+
         response = self.rest_client.manager.get_status()
         if not response['status'] == 'running':
             raise RuntimeError('Manager at {0} is not running.'

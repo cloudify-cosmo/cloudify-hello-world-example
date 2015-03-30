@@ -20,6 +20,9 @@ variables:
   lab_openstack_ubuntu_precise: d81ccdfe-7482-460e-a7ce-69ea29aa129b
   lab_openstack_ubuntu_trusty: c6d36e11-f4d5-4221-b6e8-4e97914c67e9
 
+  system_tests_cfy_username: user1
+  system_tests_cfy_password: pass1
+
   ######################################################
 
   # These values are updated by the version tool
@@ -333,6 +336,28 @@ handler_configurations:
       <<: *lab_openstack_inputs
       keystone_tenant_name: system-tests/system-test-4
 
+  lab_openstack_system_tests4_secured:
+    <<: *lab_openstack_handler_configuration
+    env: lab_openstack_4
+    manager_blueprint_override:
+      <<: *docker_openstack_manager_blueprint_override
+      node_templates.manager.properties.cloudify.security:
+        enabled: true
+        userstore_driver:
+          implementation: flask_securest.userstores.file:FileUserstore
+          properties:
+            userstore_file: users.yaml
+            identifying_attribute: username
+        authentication_methods:
+          - name: password
+            implementation: flask_securest.authentication_providers.password:PasswordAuthenticator
+            properties:
+              password_hash: plaintext
+    inputs_override:
+      <<: *lab_openstack_credentials_inputs
+      <<: *lab_openstack_inputs
+      keystone_tenant_name: system-tests/system-test-4
+
   ###############################################################################
 
   pclab47_devstack_nova_net:
@@ -406,6 +431,10 @@ tests:
     tests:
       - cosmo_tester/test_suites/test_blueprints/windows_test.py
 
+  openstack_blueprints_nodecellar:
+      tests:
+        - cosmo_tester/test_suites/test_blueprints/nodecellar_test.py
+
   manager_status:
     tests:
       - cosmo_tester/test_suites/test_manager_status
@@ -473,6 +502,11 @@ test_suites:
     handler_configuration: lab_openstack_system_tests1
     tests:
       - openstack_blueprints_windows
+
+  lab_openstack_secured:
+    handler_configuration: lab_openstack_system_tests4_secured
+    tests:
+      - openstack_blueprints_nodecellar
 
   #####################################################################
 
