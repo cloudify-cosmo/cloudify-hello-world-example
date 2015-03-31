@@ -83,7 +83,7 @@ class SecuredOpenstackNodecellarTest(OpenStackNodeCellarTestBase):
         self.cfy.bootstrap(blueprint_path=self.test_manager_blueprint_path,
                            inputs_file=self.test_inputs_path,
                            task_retries=5,
-                           install_plugins=False)
+                           install_plugins=self.env.install_plugins)
         self.addCleanup(self.cfy.teardown)
 
     def _set_credentials_env_vars(self):
