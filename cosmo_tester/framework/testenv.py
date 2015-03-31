@@ -182,13 +182,6 @@ class TestEnvironment(object):
             for key, value in processed_inputs.items():
                 patch.set_value(key, value)
 
-        if self.secured:
-            variables = self.suites_yaml.get('variables', {})
-            os.environ[CLOUDIFY_USERNAME_ENV] = \
-                variables[TESTS_CFY_USERNAME_FIELD]
-            os.environ[CLOUDIFY_PASSWORD_ENV] = \
-                variables[TESTS_CFY_PASSWORD_FIELD]
-
         if 'manager_ip' in self.handler_configuration:
             self._running_env_setup(self.handler_configuration['manager_ip'])
 
