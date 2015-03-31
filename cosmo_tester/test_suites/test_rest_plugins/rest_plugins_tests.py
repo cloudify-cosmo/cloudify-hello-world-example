@@ -90,5 +90,5 @@ class RestPluginsTests(TestCase):
         self.cfy.bootstrap(blueprint_path=self.test_manager_blueprint_path,
                            inputs_file=self.test_inputs_path,
                            task_retries=5,
-                           install_plugins=False)
+                           install_plugins=self.env.install_plugins)
         self.addCleanup(self.cfy.teardown)

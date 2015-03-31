@@ -76,13 +76,6 @@ class BaseCloudifyInputsConfigReader(BaseCloudifyConfigReader):
         packages = manager.get('properties', {}).get('cloudify_packages', {})
         return packages.get('docker', {}).get('docker_url')
 
-    @property
-    def secured(self):
-        manager = self.manager_blueprint['node_templates'].get('manager', {})
-        cloudify = manager.get('properties', {}).get('cloudify', {})
-        security = cloudify.get('security', {})
-        return security.get('enabled', False)
-
 
 class BaseHandler(object):
 
