@@ -11,7 +11,7 @@ variables:
   hp_openstack_region_a_ubuntu_trusty: bec3cab5-4722-40b9-a78a-3489218e22fe
   hp_openstack_region_b_ubuntu_precise: 261844b3-479c-5446-a2c4-1ea95d53b668
   hp_openstack_region_b_ubuntu_trusty: 9d25fe2d-cf31-4b05-8c58-f238ec78e633
-  hp_openstack_region_b_centos_7_0_docker_1_2: 25bfd0c1-8f20-4e8f-a5cf-36ca825305f2
+  hp_openstack_region_b_centos_7_0_selinux: a2859f14-ea12-55e7-8e39-cec9b59e56fb
 
   lab_openstack_ubuntu_precise_image_name: ubuntu_12.04
   lab_openstack_ubuntu_trusty_image_name: ubuntu_14.04
@@ -80,6 +80,15 @@ templates:
     cloudify.agents.packages.centos_agent_url: '{{centos_package_agent_url}}'
     cloudify.agents.packages.windows_agent_url: '{{windows_package_agent_url}}'
     cloudify.workflows.task_retries: 30
+
+  - &hp_openstack_centos7_0_inputs
+    node_templates.manager.interfaces.cloudify\.interfaces\.lifecycle.start.inputs.task_properties.privileged: true
+    node_templates.manager_server.properties.server.userdata: |
+      #!/bin/bash
+      yum install -y docker wget && \
+      service docker stop && \
+      wget https://get.docker.com/builds/Linux/x86_64/docker-latest -O /usr/bin/docker && \
+      service docker start
 
   - &manager_blueprint_override
     node_templates.manager.properties.cloudify_packages.agents.ubuntu_agent_url: '{{ubuntu_package_agent_url}}'
@@ -296,15 +305,18 @@ handler_configurations:
 
   ############################################################################
 
-  hp_openstack_centos_system_tests_region_b:
+  hp_openstack_centos_system_tests3_region_b:
     <<: *hp_openstack_handler_configuration
-    env: hp_openstack_system_tests_region_b
+    env: hp_openstack_system_tests3_region_b
     properties: hp_openstack_region_b_properties
+    manager_blueprint_override:
+      <<: *hp_openstack_centos7_0_inputs
+      <<: *docker_openstack_manager_blueprint_override
     inputs_override:
       <<: *hp_openstack_credentials_inputs
       <<: *hp_openstack_region_b_inputs
-      keystone_tenant_name: cloudify-cosmo-system-tests
-      image_id: '{{hp_openstack_region_b_centos_7_0_docker_1_2}}'
+      keystone_tenant_name: cloudify-cosmo-system-tests3
+      image_id: '{{hp_openstack_region_b_centos_7_0_selinux}}'
       manager_server_user: centos
 
   ############################################################################
@@ -532,7 +544,7 @@ test_suites:
   #####################################################################
 
   docker_centos_on_openstack:
-    handler_configuration: hp_openstack_centos_system_tests_region_b
+    handler_configuration: hp_openstack_centos_system_tests3_region_b
     tests:
       - cosmo_tester/test_suites/test_docker_centos_env
 
