@@ -39,10 +39,7 @@ variables:
 
   cloudify_automation_token: _
 
-  components_package_url: _
-  core_package_url: _
   ubuntu_package_agent_url: _
-  ui_package_url: _
   windows_package_agent_url: _
   centos_package_agent_url: _
   docker_image_url: _
@@ -73,9 +70,6 @@ variables:
 templates:
 
   - &packages_provider_config_inputs
-    cloudify.server.packages.components_package_url: '{{components_package_url}}'
-    cloudify.server.packages.core_package_url: '{{core_package_url}}'
-    cloudify.server.packages.ui_package_url: '{{ui_package_url}}'
     cloudify.agents.packages.ubuntu_agent_url: '{{ubuntu_package_agent_url}}'
     cloudify.agents.packages.centos_agent_url: '{{centos_package_agent_url}}'
     cloudify.agents.packages.windows_agent_url: '{{windows_package_agent_url}}'
@@ -100,12 +94,6 @@ templates:
     <<: *manager_blueprint_override
     node_templates.manager.properties.cloudify_packages.docker.docker_url: '{{docker_image_url}}'
 
-  - &dockerless_manager_blueprint_override
-    <<: *manager_blueprint_override
-    node_templates.manager.properties.cloudify_packages.server.components_package_url: '{{components_package_url}}'
-    node_templates.manager.properties.cloudify_packages.server.core_package_url: '{{core_package_url}}'
-    node_templates.manager.properties.cloudify_packages.server.ui_package_url: '{{ui_package_url}}'
-
   - &openstack_manager_blueprint_override
     'node_templates.management_security_group.properties.rules[append]':
       port: 8086
@@ -119,13 +107,6 @@ templates:
   - &docker_openstack_manager_blueprint_override
     <<: *docker_manager_blueprint_override
     <<: *openstack_manager_blueprint_override
-
-  - &dockerless_openstack_manager_blueprint_override
-    <<: *dockerless_manager_blueprint_override
-    <<: *openstack_manager_blueprint_override
-    # add stub input placeholders so we can have the same inputs file for docker/dockerless paths
-    inputs.manager_port_name.default: stub
-    inputs.manager_volume_name.default: stub
 
   - &softlayer_manager_blueprint_override
     node_templates.manager.properties.cloudify.workflows.task_retries: 100
@@ -393,7 +374,7 @@ handler_configurations:
     external: *vsphere_plugin_external
     manager_blueprint: manager_blueprint/vsphere.yaml
     properties: vsphere
-    manager_blueprint_override: *dockerless_manager_blueprint_override
+    manager_blueprint_override: *manager_blueprint_override
     inputs_override:
       vsphere_username: '{{system_test_vsphere_username}}'
       vsphere_password: '{{system_test_vsphere_password}}'
