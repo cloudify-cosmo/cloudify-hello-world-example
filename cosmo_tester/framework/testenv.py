@@ -195,6 +195,9 @@ class TestEnvironment(object):
         if 'manager_ip' in self.handler_configuration:
             self._running_env_setup(self.handler_configuration['manager_ip'])
 
+        self.install_plugins = self.handler_configuration.get(
+            'install_manager_blueprint_dependencies', True)
+
         global test_environment
         test_environment = self
 
@@ -230,13 +233,10 @@ class TestEnvironment(object):
                 dev_mode=False)
         else:
 
-            install_plugins = self.handler_configuration.get(
-                'install_manager_blueprint_dependencies', True)
-
             cfy.bootstrap(
                 self._manager_blueprint_path,
                 inputs_file=self.cloudify_config_path,
-                install_plugins=install_plugins,
+                install_plugins=self.install_plugins,
                 keep_up_on_failure=False,
                 task_retries=task_retries,
                 verbose=True)
