@@ -448,6 +448,10 @@ tests:
       - system_tests/manager
       - system_tests/local
 
+  openstack_security:
+    tests:
+      - cosmo_tester/test_suites/test_security
+
 #####################################################################################
 
 test_suites:
@@ -490,10 +494,10 @@ test_suites:
     tests:
       - openstack_rest_plugins
 
-  lab_openstack_secured:
-    handler_configuration: lab_openstack_system_tests4_secured
+  lab_openstack_security:
+    handler_configuration: lab_openstack_system_tests4
     tests:
-      - openstack_blueprints_nodecellar
+      - openstack_security
 
   #####################################################################
 

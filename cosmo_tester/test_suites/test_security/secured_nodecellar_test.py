@@ -1,5 +1,5 @@
 ########
-# Copyright (c) 2014 GigaSpaces Technologies Ltd. All rights reserved
+# Copyright (c) 2015 GigaSpaces Technologies Ltd. All rights reserved
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,14 +16,14 @@
 import os
 from path import path
 
-from cosmo_tester.framework import util
-from cosmo_tester.framework.cfy_helper import CfyHelper
-from cosmo_tester.test_suites.test_blueprints.nodecellar_test \
-    import OpenStackNodeCellarTestBase
-
 from cloudify_rest_client.client import CloudifyClient
 from cloudify_cli.constants import (CLOUDIFY_USERNAME_ENV,
                                     CLOUDIFY_PASSWORD_ENV)
+
+from cosmo_tester.framework import util
+from cosmo_tester.test_suites.test_blueprints.nodecellar_test \
+    import OpenStackNodeCellarTestBase
+
 
 TEST_CFY_USERNAME = 'user1'
 TEST_CFY_PASSWORD = 'pass1'
@@ -70,15 +70,6 @@ class SecuredOpenstackNodecellarTest(OpenStackNodeCellarTestBase):
                     'properties': {
                         'password_hash': 'plaintext'
                     }
-                },
-                {
-                    'name': 'token',
-                    'implementation': 'flask_securest.'
-                                      'authentication_providers.token:'
-                                      'TokenAuthenticator',
-                    'properties': {
-                        'secret_key': 'yaml_secret'
-                    }
                 }
             ]
         }
@@ -100,12 +91,12 @@ class SecuredOpenstackNodecellarTest(OpenStackNodeCellarTestBase):
         os.environ[CLOUDIFY_PASSWORD_ENV] = TEST_CFY_PASSWORD
 
     def _running_env_setup(self):
-        cfy = CfyHelper(cfy_workdir=self.workdir)
-        self.env.management_ip = cfy.get_management_ip()
+        # cfy = CfyHelper(cfy_workdir=self.workdir)
+        self.env.management_ip = self.cfy.get_management_ip()
         self.client = CloudifyClient(
             self.env.management_ip,
-            user=os.environ[CLOUDIFY_USERNAME_ENV],
-            password=os.environ[CLOUDIFY_PASSWORD_ENV])
+            user=TEST_CFY_USERNAME,
+            password=TEST_CFY_PASSWORD)
 
         response = self.client.manager.get_status()
         if not response['status'] == 'running':
