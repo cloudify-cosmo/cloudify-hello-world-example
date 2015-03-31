@@ -342,12 +342,12 @@ handler_configurations:
       keystone_tenant_name: system-tests/system-test-4
 
   lab_openstack_system_tests5:
-      <<: *lab_openstack_handler_configuration
-      env: lab_openstack_5
-      inputs_override:
-        <<: *lab_openstack_credentials_inputs
-        <<: *lab_openstack_inputs
-        keystone_tenant_name: system-tests/system-test-5
+    <<: *lab_openstack_handler_configuration
+    env: lab_openstack_5
+    inputs_override:
+      <<: *lab_openstack_credentials_inputs
+      <<: *lab_openstack_inputs
+      keystone_tenant_name: system-tests/system-test-5
 
   ###############################################################################
 
