@@ -516,11 +516,11 @@ test_suites:
     handler_configuration: lab_openstack_system_tests4
     tests:
       - openstack_security
-  
+
   lab_openstack_cli_packager:
-      handler_configuration: lab_openstack_system_tests5
-      tests:
-        - cli_packager
+    handler_configuration: lab_openstack_system_tests5
+    tests:
+      - cli_packager
 
   #####################################################################
 
