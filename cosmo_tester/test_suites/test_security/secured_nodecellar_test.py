@@ -91,7 +91,6 @@ class SecuredOpenstackNodecellarTest(OpenStackNodeCellarTestBase):
         os.environ[CLOUDIFY_PASSWORD_ENV] = TEST_CFY_PASSWORD
 
     def _running_env_setup(self):
-        # cfy = CfyHelper(cfy_workdir=self.workdir)
         self.env.management_ip = self.cfy.get_management_ip()
         self.client = CloudifyClient(
             self.env.management_ip,
