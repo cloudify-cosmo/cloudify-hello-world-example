@@ -29,6 +29,7 @@ variables:
   core_branch: '3.2m8'
   plugins_branch: '1.2m8'
   cli_branch: 'CFY-2344-remove-packages'
+  manager_blueprints_branch: 'CFY-2344-remove-packages-path'
 
   # These values are injected by quickbuild and are here mainly
   # for reference (i.e. they will exist in runtime either way)
