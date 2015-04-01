@@ -98,11 +98,8 @@ templates:
       remote_ip_prefix: 0.0.0.0/0
 
   - &softlayer_manager_blueprint_override
-    node_templates.manager.properties.cloudify.workflows.task_retries: 100
-
-  - &softlayer_manager_blueprint_override
     <<: *manager_blueprint_override
-    <<: *softlayer_manager_blueprint_override
+    node_templates.manager.properties.cloudify.workflows.task_retries: 100
 
   ######################################################
 
