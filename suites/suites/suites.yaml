@@ -69,12 +69,6 @@ variables:
 # That can later be used by YAML aliases (*) and merges (<<)
 templates:
 
-  - &packages_provider_config_inputs
-    cloudify.agents.packages.ubuntu_agent_url: '{{ubuntu_package_agent_url}}'
-    cloudify.agents.packages.centos_agent_url: '{{centos_package_agent_url}}'
-    cloudify.agents.packages.windows_agent_url: '{{windows_package_agent_url}}'
-    cloudify.workflows.task_retries: 30
-
   - &hp_openstack_centos7_0_inputs
     node_templates.manager.interfaces.cloudify\.interfaces\.lifecycle.start.inputs.task_properties.privileged: true
     node_templates.manager_server.properties.server.userdata: |
@@ -90,7 +84,7 @@ templates:
     node_templates.manager.properties.cloudify_packages.agents.windows_agent_url: '{{windows_package_agent_url}}'
     node_templates.manager.properties.cloudify.workflows.task_retries: 20
 
-  - &docker_manager_blueprint_override
+  - &manager_blueprint_override
     <<: *manager_blueprint_override
     node_templates.manager.properties.cloudify_packages.docker.docker_url: '{{docker_image_url}}'
 
@@ -104,15 +98,15 @@ templates:
       port: 8086
       cidr: 0.0.0.0/0
 
-  - &docker_openstack_manager_blueprint_override
-    <<: *docker_manager_blueprint_override
+  - &openstack_manager_blueprint_override
+    <<: *manager_blueprint_override
     <<: *openstack_manager_blueprint_override
 
   - &softlayer_manager_blueprint_override
     node_templates.manager.properties.cloudify.workflows.task_retries: 100
 
-  - &docker_softlayer_manager_blueprint_override
-    <<: *docker_manager_blueprint_override
+  - &softlayer_manager_blueprint_override
+    <<: *manager_blueprint_override
     <<: *softlayer_manager_blueprint_override
 
   ######################################################
@@ -177,14 +171,14 @@ templates:
   - &hp_openstack_handler_configuration
     <<: *openstack_handler_configuration
     inputs: inputs-hp-openstack.yaml
-    manager_blueprint: openstack-docker/openstack-docker.yaml
-    manager_blueprint_override: *docker_openstack_manager_blueprint_override
+    manager_blueprint: openstack/openstack.yaml
+    manager_blueprint_override: *openstack_manager_blueprint_override
 
   - &lab_openstack_handler_configuration
     <<: *openstack_handler_configuration
     inputs: inputs-lab-openstack.yaml
-    manager_blueprint: openstack-docker/openstack-docker.yaml
-    manager_blueprint_override: *docker_openstack_manager_blueprint_override
+    manager_blueprint: openstack/openstack.yaml
+    manager_blueprint_override: *openstack_manager_blueprint_override
     properties: lab_openstack_properties
 
 #####################################################################################
@@ -292,7 +286,7 @@ handler_configurations:
     properties: hp_openstack_region_b_properties
     manager_blueprint_override:
       <<: *hp_openstack_centos7_0_inputs
-      <<: *docker_openstack_manager_blueprint_override
+      <<: *openstack_manager_blueprint_override
     inputs_override:
       <<: *hp_openstack_credentials_inputs
       <<: *hp_openstack_region_b_inputs
@@ -350,7 +344,7 @@ handler_configurations:
     inputs: inputs-nova-net-devstack.yaml
     manager_blueprint: openstack-nova-net/openstack.yaml
     manager_blueprint_override:
-      <<: *docker_manager_blueprint_override
+      <<: *manager_blueprint_override
       <<: *openstack_nova_manager_blueprint_override
     properties: pclab47_devstack_nova_net
 
@@ -362,7 +356,7 @@ handler_configurations:
     bootstrap_using_providers: true
     properties: aws_ec2
     inputs_override:
-      <<: *packages_provider_config_inputs
+      <<: *manager_blueprint_override
       connection.access_id: '{{system_test_ec2_access_id}}'
       connection.secret_key: '{{system_test_ec2_secret_key}}'
 
@@ -388,7 +382,7 @@ handler_configurations:
     handler: softlayer_handler
     external: *softlayer_plugin_external
     manager_blueprint: softlayer/softlayer.yaml
-    manager_blueprint_override: *docker_softlayer_manager_blueprint_override
+    manager_blueprint_override: *softlayer_manager_blueprint_override
     inputs_override:
       username: '{{system_tests_softlayer_username}}'
       api_key: '{{system_tests_softlayer_api_key}}'
@@ -401,7 +395,7 @@ tests:
     tests:
       - cosmo_tester/test_suites/test_blueprints -e puppet -e chef -e docker -e windows
 
-  openstack_blueprints_docker:
+  openstack_blueprints_persistence_recovery:
     tests:
       - cosmo_tester/test_suites/test_blueprints/docker_persistence_test.py
       - cosmo_tester/test_suites/test_blueprints/docker_recovery_test.py
@@ -486,7 +480,7 @@ test_suites:
     handler_configuration: hp_openstack_system_tests2_region_b
     tests:
       - openstack_plugin
-      - openstack_blueprints_docker
+      - openstack_blueprints_persistence_recovery
 
   #####################################################################
 
