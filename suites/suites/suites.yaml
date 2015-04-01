@@ -71,7 +71,7 @@ variables:
 # That can later be used by YAML aliases (*) and merges (<<)
 templates:
 
-  - &hp_openstack_centos7_0_inputs
+  - &hp_openstack_centos7_0_overrides
     node_templates.manager.interfaces.cloudify\.interfaces\.lifecycle.start.inputs.task_properties.privileged: true
     node_templates.manager_server.properties.server.userdata: |
       #!/bin/bash
@@ -87,6 +87,11 @@ templates:
     node_templates.manager.properties.cloudify_packages.docker.docker_url: '{{docker_image_url}}'
     node_templates.manager.properties.cloudify.workflows.task_retries: 20
 
+  - &openstack_manager_blueprint_sg_override
+    'node_templates.management_security_group.properties.rules[append]':
+      port: 8086
+      cidr: 0.0.0.0/0
+
   - &openstack_nova_manager_blueprint_override
     'node_templates.management_security_group.properties.rules[append]':
       port: 8086
@@ -94,9 +99,7 @@ templates:
 
   - &openstack_manager_blueprint_override
     <<: *manager_blueprint_override
-    'node_templates.management_security_group.properties.rules[append]':
-      port: 8086
-      remote_ip_prefix: 0.0.0.0/0
+    <<: *openstack_manager_blueprint_sg_override
 
   - &softlayer_manager_blueprint_override
     <<: *manager_blueprint_override
@@ -278,8 +281,8 @@ handler_configurations:
     env: hp_openstack_system_tests3_region_b
     properties: hp_openstack_region_b_properties
     manager_blueprint_override:
-      <<: *hp_openstack_centos7_0_inputs
       <<: *openstack_manager_blueprint_override
+      <<: *hp_openstack_centos7_0_overrides
     inputs_override:
       <<: *hp_openstack_credentials_inputs
       <<: *hp_openstack_region_b_inputs
