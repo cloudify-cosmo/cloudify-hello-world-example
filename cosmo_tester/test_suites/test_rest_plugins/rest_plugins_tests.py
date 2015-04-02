@@ -49,7 +49,7 @@ class RestPluginsTests(TestCase):
                 # testing plugin installation from remote url
                 'source': 'https://github.com/cloudify-cosmo/'
                           'cloudify-plugin-template/archive/{0}.zip'
-                          .format(os.environ.get('BRANCH_NAME_PLUGINS',
+                          .format(os.environ.get('BRANCH_NAME_CORE',
                                                  'master'))
             },
             'plugin2': {
