@@ -30,7 +30,7 @@ TEST_CFY_PASSWORD = 'pass1'
 
 class SecurityTestBase(TestCase):
 
-    def _setup_secured_manager(self):
+    def setup_secured_manager(self):
         self._copy_manager_blueprint()
         self._update_manager_blueprint(
             prop_path='node_templates.manager.properties.cloudify.security',
@@ -59,9 +59,8 @@ class SecurityTestBase(TestCase):
         self.cfy.bootstrap(blueprint_path=self.test_manager_blueprint_path,
                            inputs_file=self.test_inputs_path,
                            task_retries=5,
-                           install_plugins=self.env.install_plugins,
-                           keep_up_on_failure=True)
-        # self.addCleanup(self.cfy.teardown)
+                           install_plugins=self.env.install_plugins)
+        self.addCleanup(self.cfy.teardown)
 
     def _set_credentials_env_vars(self):
         os.environ[CLOUDIFY_USERNAME_ENV] = TEST_CFY_USERNAME

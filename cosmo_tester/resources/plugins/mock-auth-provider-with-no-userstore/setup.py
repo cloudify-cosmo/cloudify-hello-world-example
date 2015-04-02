@@ -20,7 +20,4 @@ setup(
     name='mock-auth-provider-with-no-userstore',
     version='3.2a8',
     packages=['mock_auth_provider_with_no_userstore'],
-    install_requires=[
-        'flask_securest>=0.5',
-    ]
 )

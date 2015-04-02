@@ -31,8 +31,8 @@ SECURITY_PROP_PATH = 'node_templates.manager.properties.cloudify.security'
 class NoUserstoreTests(SecurityTestBase):
 
     def test_authentication_without_userstore(self):
-        self._setup_secured_manager()
-        self._assert_unauthorized_user_failure()
+        self.setup_secured_manager()
+        self._assert_unauthorized_user_fails()
 
     def _update_manager_blueprint(self, prop_path, new_value):
         src_plugin_dir = util.get_plugin_path(CUSTOM_AUTH_PROVIDER_PLUGIN)
@@ -67,8 +67,8 @@ class NoUserstoreTests(SecurityTestBase):
             ]
         }
 
-    def _assert_unauthorized_user_failure(self):
-        self.client = CloudifyClient(self.env.management_ip,
-                                     user='user2', password='pass2')
+    def _assert_unauthorized_user_fails(self):
+        client = CloudifyClient(self.env.management_ip,
+                                user='user2', password='pass2')
         self.assertRaisesRegexp(CloudifyClientError, '401: user unauthorized',
-                                self.client.manager.get_status)
+                                client.manager.get_status)

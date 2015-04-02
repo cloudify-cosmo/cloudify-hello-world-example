@@ -23,7 +23,7 @@ class SecuredOpenstackNodecellarTest(OpenStackNodeCellarTestBase,
                                      SecurityTestBase):
 
     def test_secured_openstack_nodecellar(self):
-        self._setup_secured_manager()
+        self.setup_secured_manager()
         self._test_openstack_nodecellar('openstack-blueprint.yaml')
 
     def get_security_settings(self):
