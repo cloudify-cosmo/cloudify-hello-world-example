@@ -43,23 +43,20 @@ def process_variables(suites_yaml, unprocessed_dict):
 
 def generate_unique_configurations(workdir,
                                    original_inputs_path,
-                                   original_manager_blueprint_path,
-                                   is_provider_bootstrap=False):
+                                   original_manager_blueprint_path):
     inputs_path = path(os.path.join(workdir, 'inputs.yaml'))
-    manager_blueprint_path = None
     shutil.copy(original_inputs_path, inputs_path)
-    if not is_provider_bootstrap:
-        manager_blueprint_base = os.path.basename(
-            original_manager_blueprint_path)
-        source_manager_blueprint_dir = os.path.dirname(
-            original_manager_blueprint_path)
-        target_manager_blueprint_dir = os.path.join(workdir,
-                                                    'manager-blueprint')
-        shutil.copytree(source_manager_blueprint_dir,
-                        target_manager_blueprint_dir)
-        manager_blueprint_path = path(
-            os.path.join(target_manager_blueprint_dir,
-                         manager_blueprint_base))
+    manager_blueprint_base = os.path.basename(
+        original_manager_blueprint_path)
+    source_manager_blueprint_dir = os.path.dirname(
+        original_manager_blueprint_path)
+    target_manager_blueprint_dir = os.path.join(workdir,
+                                                'manager-blueprint')
+    shutil.copytree(source_manager_blueprint_dir,
+                    target_manager_blueprint_dir)
+    manager_blueprint_path = path(
+        os.path.join(target_manager_blueprint_dir,
+                     manager_blueprint_base))
     return inputs_path, manager_blueprint_path
 
 
@@ -110,9 +107,6 @@ def fix_keypath(env, keypath):
 
 
 def get_actual_keypath(env, keypath, raise_on_missing=True):
-    if env.is_provider_bootstrap:
-        # providers also use resources_prefix on the private key file
-        keypath = fix_keypath(env, keypath)
     keypath = path(os.path.expanduser(keypath)).abspath()
     if not keypath.exists():
         if raise_on_missing:

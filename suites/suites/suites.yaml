@@ -344,18 +344,6 @@ handler_configurations:
 
   ###############################################################################
 
-  aws_ec2:
-    inputs: cloudify-config-ec2.yaml
-    handler: ec2
-    bootstrap_using_providers: true
-    properties: aws_ec2
-    inputs_override:
-      <<: *manager_blueprint_override
-      connection.access_id: '{{system_test_ec2_access_id}}'
-      connection.secret_key: '{{system_test_ec2_secret_key}}'
-
-  ################################################################################
-
   vsphere:
     inputs: inputs-vsphere.yaml
     handler: vsphere_handler

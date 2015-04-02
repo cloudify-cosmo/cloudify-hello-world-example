@@ -69,22 +69,6 @@ class CfyHelper(object):
                 task_retries=task_retries,
                 verbose=verbose).wait()
 
-    def bootstrap_with_providers(self,
-                                 cloud_config_path,
-                                 provider,
-                                 keep_up_on_failure=False,
-                                 verbose=False,
-                                 dev_mode=False):
-        with self.workdir:
-            cfy.init(
-                provider=provider,
-                verbose=verbose).wait()
-            cfy.bootstrap(
-                config_file=cloud_config_path,
-                keep_up_on_failure=keep_up_on_failure,
-                dev_mode=dev_mode,
-                verbose=verbose).wait()
-
     def recover(self):
         with self.workdir:
             cfy.recover(force=True).wait()
@@ -95,19 +79,6 @@ class CfyHelper(object):
                  verbose=False):
         with self.workdir:
             cfy.teardown(
-                ignore_deployments=ignore_deployments,
-                ignore_validation=ignore_validation,
-                force=True,
-                verbose=verbose).wait()
-
-    def teardown_with_providers(self,
-                                cloud_config_path,
-                                ignore_deployments=True,
-                                ignore_validation=False,
-                                verbose=False):
-        with self.workdir:
-            cfy.teardown(
-                config_file=cloud_config_path,
                 ignore_deployments=ignore_deployments,
                 ignore_validation=ignore_validation,
                 force=True,
@@ -205,12 +176,9 @@ class CfyHelper(object):
         with self.workdir:
             cfy.blueprints.download(blueprint_id=blueprint_id).wait()
 
-    def use(self, management_ip, provider=True):
+    def use(self, management_ip):
         with self.workdir:
-            cfy.use(
-                management_ip=management_ip,
-                provider=provider
-            ).wait()
+            cfy.use(management_ip=management_ip).wait()
 
     def get_management_ip(self):
         with self.workdir:
