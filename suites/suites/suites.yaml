@@ -20,9 +20,6 @@ variables:
   lab_openstack_ubuntu_precise: d81ccdfe-7482-460e-a7ce-69ea29aa129b
   lab_openstack_ubuntu_trusty: c6d36e11-f4d5-4221-b6e8-4e97914c67e9
 
-  system_tests_cfy_username: user1
-  system_tests_cfy_password: pass1
-
   ######################################################
 
   # These values are updated by the version tool

@@ -58,9 +58,6 @@ logger.setLevel(logging.DEBUG)
 HANDLER_CONFIGURATION = 'HANDLER_CONFIGURATION'
 SUITES_YAML_PATH = 'SUITES_YAML_PATH'
 
-TESTS_CFY_USERNAME_FIELD = 'system_tests_cfy_username'
-TESTS_CFY_PASSWORD_FIELD = 'system_tests_cfy_password'
-
 test_environment = None
 
 
