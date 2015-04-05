@@ -40,22 +40,12 @@ class TokenAuthenticationTest(SecurityTestBase):
                             'username': 'user1',
                             'password': 'pass1',
                             'email': 'user1@domain.dom'
-                        },
-                        'user2': {
-                            'username': 'user2',
-                            'password': 'pass2',
-                            'email': 'user2@domain.dom'
-                        },
-                        'user3': {
-                            'username': 'user3',
-                            'password': 'pass3',
-                            'email': 'user3@domain.dom'
-                        },
+                        }
                     },
                     'identifying_attribute': 'username'
                 }
             },
-            'securest_token_generator': {
+            'auth_token_generator': {
                 'implementation':
                     'flask_securest.authentication_providers.token:'
                     'TokenAuthenticator',
@@ -94,7 +84,7 @@ class TokenAuthenticationTest(SecurityTestBase):
 
     def _assert_valid_token_authenticates(self):
         client = CloudifyClient(self.env.management_ip,
-                                user='user2', password='pass2')
+                                user='user1', password='pass1')
         token = client.tokens.get()
         client = CloudifyClient(self.env.management_ip, token=token)
         response = client.manager.get_status()
