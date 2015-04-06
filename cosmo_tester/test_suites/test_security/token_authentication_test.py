@@ -16,6 +16,7 @@
 from cloudify_rest_client.client import CloudifyClient
 from cloudify_rest_client.exceptions import CloudifyClientError
 
+from cosmo_tester.framework import util
 from cosmo_tester.test_suites.test_security.security_test_base import \
     SecurityTestBase
 
@@ -77,21 +78,26 @@ class TokenAuthenticationTest(SecurityTestBase):
         }
 
     def _assert_invalid_user_fails(self):
-        client = CloudifyClient(self.env.management_ip,
-                                user='user1', password='pass2')
+        client = CloudifyClient(host=self.env.management_ip,
+                                headers=util.get_auth_header('user1', 'pass2'))
         self.assertRaisesRegexp(CloudifyClientError, '401: user unauthorized',
                                 client.manager.get_status)
 
     def _assert_valid_token_authenticates(self):
-        client = CloudifyClient(self.env.management_ip,
-                                user='user1', password='pass1')
-        token = client.tokens.get()
-        client = CloudifyClient(self.env.management_ip, token=token)
+        user_pass_header = util.get_auth_header(username='user1',
+                                                password='pass1')
+        client = CloudifyClient(host=self.env.management_ip,
+                                headers=user_pass_header)
+
+        token_header = util.get_auth_header(token=client.tokens.get())
+        client = CloudifyClient(self.env.management_ip, headers=token_header)
+
         response = client.manager.get_status()
         if not response['status'] == 'running':
             raise RuntimeError('Failed to get manager status using token')
 
     def _assert_invalid_token_fails(self):
-        client = CloudifyClient(self.env.management_ip, token='wrong_token')
+        token_header = util.get_auth_header(token='wrong_token')
+        client = CloudifyClient(self.env.management_ip, headers=token_header)
         self.assertRaisesRegexp(CloudifyClientError, '401: user unauthorized',
                                 client.manager.get_status)
