@@ -9,11 +9,11 @@
 handler: openstack_handler
 
 ######################################################
-# full path to manager blueprint inputs (or provider cloudify-config)
+# full path to manager blueprint inputs
 inputs: ~/path/to/inputs.yaml
 
 ######################################################
-# full path to manager blueprint (not required for providers)
+# full path to manager blueprint
 manager_blueprint: ~/path/to/manager-blueprint.yaml
 
 ######################################################
@@ -37,7 +37,7 @@ properties: hp_openstack_region_b_properties
 # this feature is used extensively in suites.yaml
 # though it is less useful when running tests locally.
 # any entry specified here will override (or add) an entry
-# to the inputs.yaml file (or provider cloudify-config).
+# to the inputs.yaml file.
 # dot notation may be used to override nested fields
 # (uses YamlPatcher internally)
 # inputs_override: {}
@@ -52,11 +52,6 @@ properties: hp_openstack_region_b_properties
 # and after teardown (this only applies if the used
 # handler implemented this)
 # skip_cleanup: false
-
-######################################################
-# if set to true, will use providers instead of manager
-# blueprints
-# bootstrap_using_providers: false
 
 ######################################################
 # set to false to prevent the --install-plugins

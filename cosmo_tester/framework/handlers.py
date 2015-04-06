@@ -36,30 +36,10 @@ class BaseCleanupContext(object):
         pass
 
 
-class BaseCloudifyConfigReader(object):
-
-    def __init__(self, cloudify_config, **kwargs):
-        self.config = cloudify_config
-
-
-class BaseCloudifyProviderConfigReader(BaseCloudifyConfigReader):
-
-    def __init__(self, cloudify_config, **kwargs):
-        super(BaseCloudifyProviderConfigReader, self).__init__(cloudify_config)
-
-    @property
-    def cloudify_agent_user(self):
-        return self.config['cloudify']['agents']['config']['user']
-
-    @property
-    def resources_prefix(self):
-        return self.config['cloudify'].get('resources_prefix', '')
-
-
-class BaseCloudifyInputsConfigReader(BaseCloudifyConfigReader):
+class BaseCloudifyInputsConfigReader(object):
 
     def __init__(self, cloudify_config, manager_blueprint_path, **kwargs):
-        super(BaseCloudifyInputsConfigReader, self).__init__(cloudify_config)
+        self.config = cloudify_config
         self.manager_blueprint = yaml.load(path(manager_blueprint_path).text())
 
     @property
@@ -81,11 +61,7 @@ class BaseHandler(object):
 
     # The following attributes are mainly for documentation
     # purposes. Handler subclasses should override them
-    # to have the appropriate config read loaded
-    # This might have to happen in the constructor in case
-    # The config reader could be either cloudify-config or
-    # inputs based
-    provider = 'base'
+    # to have the appropriate inputs file read loaded
     CleanupContext = BaseCleanupContext
     CloudifyConfigReader = BaseCloudifyInputsConfigReader
 
@@ -111,8 +87,7 @@ class BaseHandler(object):
 
     @property
     def is_docker_bootstrap(self):
-        return (not self.env.is_provider_bootstrap and
-                self.env._config_reader.docker_url is not None)
+        return self.env._config_reader.docker_url is not None
 
     def before_bootstrap(self):
         pass

@@ -20,9 +20,6 @@ variables:
   lab_openstack_ubuntu_precise: d81ccdfe-7482-460e-a7ce-69ea29aa129b
   lab_openstack_ubuntu_trusty: c6d36e11-f4d5-4221-b6e8-4e97914c67e9
 
-  system_tests_cfy_username: user1
-  system_tests_cfy_password: pass1
-
   ######################################################
 
   # These values are updated by the version tool
@@ -343,18 +340,6 @@ handler_configurations:
     properties: pclab47_devstack_nova_net
 
   ###############################################################################
-
-  aws_ec2:
-    inputs: cloudify-config-ec2.yaml
-    handler: ec2
-    bootstrap_using_providers: true
-    properties: aws_ec2
-    inputs_override:
-      <<: *manager_blueprint_override
-      connection.access_id: '{{system_test_ec2_access_id}}'
-      connection.secret_key: '{{system_test_ec2_secret_key}}'
-
-  ################################################################################
 
   vsphere:
     inputs: inputs-vsphere.yaml

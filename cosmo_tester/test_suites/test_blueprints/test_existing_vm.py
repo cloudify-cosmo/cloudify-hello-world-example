@@ -47,16 +47,6 @@ class ExistingVMTest(TestCase):
         agents_security_group = self.env.agents_security_group
         management_network_name = self.env.management_network_name
 
-        if self.env.is_provider_bootstrap:
-            # using existing resources - manager blueprints currently don't
-            # use the prefix feature for the resources brought up during
-            # bootstrap, and thus this section is only relevant if providers
-            # have been used
-            agents_security_group = '{}{}'.format(
-                prefix, self.env.agents_security_group)
-            management_network_name = '{}{}'.format(
-                prefix, self.env.management_network_name)
-
         nova_client, _, _ = self.env.handler.openstack_clients()
         self.create_keypair_and_copy_to_manager(
             nova_client=nova_client,

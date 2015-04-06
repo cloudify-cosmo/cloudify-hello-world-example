@@ -59,9 +59,6 @@ logger.setLevel(logging.DEBUG)
 HANDLER_CONFIGURATION = 'HANDLER_CONFIGURATION'
 SUITES_YAML_PATH = 'SUITES_YAML_PATH'
 
-TESTS_CFY_USERNAME_FIELD = 'system_tests_cfy_username'
-TESTS_CFY_PASSWORD_FIELD = 'system_tests_cfy_password'
-
 test_environment = None
 
 
@@ -136,31 +133,25 @@ class TestEnvironment(object):
                                'configuration does not seem to exist: {0}'
                                .format(self.cloudify_config_path))
 
-        self.is_provider_bootstrap = self.handler_configuration.get(
-            'bootstrap_using_providers', False)
-
-        if not self.is_provider_bootstrap and not (
-                'manager_blueprint' in self.handler_configuration):
+        if 'manager_blueprint' not in self.handler_configuration:
             raise RuntimeError(
                 'manager blueprint must be configured in handler '
-                'configuration in order to run non-provider bootstraps')
+                'configuration')
 
-        if not self.is_provider_bootstrap:
-            manager_blueprint = self.handler_configuration['manager_blueprint']
-            self._manager_blueprint_path = os.path.expanduser(
-                manager_blueprint)
+        manager_blueprint = self.handler_configuration['manager_blueprint']
+        self._manager_blueprint_path = os.path.expanduser(
+            manager_blueprint)
 
         # make a temp config files than can be modified freely
         self._generate_unique_configurations()
 
-        if not self.is_provider_bootstrap:
-            with YamlPatcher(self._manager_blueprint_path) as patch:
-                manager_blueprint_override = process_variables(
-                    self.suites_yaml,
-                    self.handler_configuration.get(
-                        'manager_blueprint_override', {}))
-                for key, value in manager_blueprint_override.items():
-                    patch.set_value(key, value)
+        with YamlPatcher(self._manager_blueprint_path) as patch:
+            manager_blueprint_override = process_variables(
+                self.suites_yaml,
+                self.handler_configuration.get(
+                    'manager_blueprint_override', {}))
+            for key, value in manager_blueprint_override.items():
+                patch.set_value(key, value)
 
         handler = self.handler_configuration['handler']
         try:
@@ -196,8 +187,7 @@ class TestEnvironment(object):
         inputs_path, manager_blueprint_path = generate_unique_configurations(
             workdir=self._workdir,
             original_inputs_path=self.cloudify_config_path,
-            original_manager_blueprint_path=self._manager_blueprint_path,
-            is_provider_bootstrap=self.is_provider_bootstrap)
+            original_manager_blueprint_path=self._manager_blueprint_path)
         self.cloudify_config_path = inputs_path
         self._manager_blueprint_path = manager_blueprint_path
 
@@ -215,22 +205,13 @@ class TestEnvironment(object):
         cfy = CfyHelper(cfy_workdir=self._workdir)
 
         self.handler.before_bootstrap()
-        if self.is_provider_bootstrap:
-            cfy.bootstrap_with_providers(
-                self.cloudify_config_path,
-                self.handler.provider,
-                keep_up_on_failure=False,
-                verbose=True,
-                dev_mode=False)
-        else:
-
-            cfy.bootstrap(
-                self._manager_blueprint_path,
-                inputs_file=self.cloudify_config_path,
-                install_plugins=self.install_plugins,
-                keep_up_on_failure=False,
-                task_retries=task_retries,
-                verbose=True)
+        cfy.bootstrap(
+            self._manager_blueprint_path,
+            inputs_file=self.cloudify_config_path,
+            install_plugins=self.install_plugins,
+            keep_up_on_failure=False,
+            task_retries=task_retries,
+            verbose=True)
         self._running_env_setup(cfy.get_management_ip())
         self.handler.after_bootstrap(cfy.get_provider_context())
 
@@ -240,13 +221,8 @@ class TestEnvironment(object):
         self.setup()
         cfy = CfyHelper(cfy_workdir=self._workdir)
         try:
-            cfy.use(self.management_ip, provider=self.is_provider_bootstrap)
-            if self.is_provider_bootstrap:
-                cfy.teardown_with_providers(
-                    self.cloudify_config_path,
-                    verbose=True)
-            else:
-                cfy.teardown(verbose=True)
+            cfy.use(self.management_ip)
+            cfy.teardown(verbose=True)
         finally:
             self._global_cleanup_context.cleanup()
             self.handler.after_teardown()
@@ -267,9 +243,16 @@ class TestEnvironment(object):
                                .format(self.management_ip))
         self._management_running = True
 
-    # Will return provider specific handler/config properties if not found in
-    # test env.
     def __getattr__(self, item):
+        """Every attribute access on this env (usually from tests doing
+        self.env, has the following semantics:
+        First if env contains this attribute, use it, then
+        if the handler has this attribute configured on it (this also includes
+        handler_properties configured in the handler configuration), then
+        use that, finally, check this attribute in the config reader.
+        only then fail
+        """
+
         if hasattr(self.handler, item):
             return getattr(self.handler, item)
         elif hasattr(self._config_reader, item):
