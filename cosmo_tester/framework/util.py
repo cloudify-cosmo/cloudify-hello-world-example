@@ -143,7 +143,7 @@ def check_port(ip, port):
     return result == 0
 
 
-def get_auth_header(username, password, token):
+def get_auth_header(username=None, password=None, token=None):
 
     if username and password:
         credentials = '{0}:{1}'.format(username, password)

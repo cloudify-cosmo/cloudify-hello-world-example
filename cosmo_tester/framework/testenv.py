@@ -234,8 +234,8 @@ class TestEnvironment(object):
         self.rest_client = \
             CloudifyClient(host=self.management_ip,
                            headers=get_auth_header(
-                               os.environ.get(CLOUDIFY_USERNAME_ENV),
-                               os.environ.get(CLOUDIFY_PASSWORD_ENV)))
+                               username=os.environ.get(CLOUDIFY_USERNAME_ENV),
+                               password=os.environ.get(CLOUDIFY_PASSWORD_ENV)))
 
         response = self.rest_client.manager.get_status()
         if not response['status'] == 'running':

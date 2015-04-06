@@ -79,7 +79,8 @@ class TokenAuthenticationTest(SecurityTestBase):
 
     def _assert_invalid_user_fails(self):
         client = CloudifyClient(host=self.env.management_ip,
-                                headers=util.get_auth_header('user1', 'pass2'))
+                                headers=util.get_auth_header(username='user1',
+                                                             password='pass2'))
         self.assertRaisesRegexp(CloudifyClientError, '401: user unauthorized',
                                 client.manager.get_status)
 

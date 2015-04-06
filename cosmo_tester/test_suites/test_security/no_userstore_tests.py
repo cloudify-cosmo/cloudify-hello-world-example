@@ -69,6 +69,7 @@ class NoUserstoreTests(SecurityTestBase):
 
     def _assert_unauthorized_user_fails(self):
         client = CloudifyClient(host=self.env.management_ip,
-                                headers=util.get_auth_header('user2', 'pass2'))
+                                headers=util.get_auth_header(username='user2',
+                                                             password='pass2'))
         self.assertRaisesRegexp(CloudifyClientError, '401: user unauthorized',
                                 client.manager.get_status)
