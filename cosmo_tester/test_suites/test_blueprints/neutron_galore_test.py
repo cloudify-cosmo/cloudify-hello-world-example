@@ -63,13 +63,6 @@ class NeutronGaloreTest(TestCase):
 
         management_network_name = self.env.management_network_name
         agents_security_group = self.env.agents_security_group
-        if self.env.is_provider_bootstrap:
-            # using existing resources - manager blueprints currently don't
-            # use the prefix feature for the resources brought up during
-            # bootstrap, and thus this section is only relevant if providers
-            # have been used
-            management_network_name = p(management_network_name)
-            agents_security_group = p(agents_security_group)
 
         time.sleep(5)  # actually waiting for Openstack to update...
         openstack = self.get_openstack_components(node_states)

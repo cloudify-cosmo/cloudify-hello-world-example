@@ -73,8 +73,6 @@ class SuiteRunner(object):
 
         self.handler_configuration = self.suites_yaml[
             'handler_configurations'][self.test_suite['handler_configuration']]
-        self.bootstrap_using_providers = self.handler_configuration.get(
-            'bootstrap_using_providers', False)
 
         inputs = self.handler_configuration['inputs']
         self.inputs_path = os.path.join(self.base_dir, 'configurations',
@@ -144,12 +142,6 @@ class SuiteRunner(object):
                     requirements=self.handler_package.requirements_path)
 
             handler = self.handler_package.handler
-            if self.bootstrap_using_providers:
-                provider_repo = handler.provider_repo
-                self._clone_and_checkout_repo(repo=provider_repo,
-                                              branch=self.branch_name_plugins)
-                self._pip_install(provider_repo)
-
             if plugin_repo and getattr(handler, 'has_manager_blueprint',
                                        False):
                 self.manager_blueprints_dir = os.path.join(

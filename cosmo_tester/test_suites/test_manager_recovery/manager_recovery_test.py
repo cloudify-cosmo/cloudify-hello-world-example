@@ -94,8 +94,7 @@ class ManagerRecoveryTest(TestCase):
     def _kill_and_recover_manager(self):
 
         def _kill_and_recover():
-            self.cfy.use(management_ip=self.env.management_ip,
-                         provider=False)
+            self.cfy.use(management_ip=self.env.management_ip)
             with settings(**self.fabric_env):
                 sudo('docker kill cfy')
             self.cfy.recover()
