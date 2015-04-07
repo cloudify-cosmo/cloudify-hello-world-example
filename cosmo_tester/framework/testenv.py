@@ -37,7 +37,8 @@ from cosmo_tester.framework.cfy_helper import (CfyHelper,
 from cosmo_tester.framework.util import (get_blueprint_path,
                                          process_variables,
                                          YamlPatcher,
-                                         generate_unique_configurations)
+                                         generate_unique_configurations,
+                                         get_auth_header)
 
 root = logging.getLogger()
 ch = logging.StreamHandler(sys.stdout)
@@ -231,9 +232,10 @@ class TestEnvironment(object):
     def _running_env_setup(self, management_ip):
         self.management_ip = management_ip
         self.rest_client = \
-            CloudifyClient(self.management_ip,
-                           user=os.environ.get(CLOUDIFY_USERNAME_ENV),
-                           password=os.environ.get(CLOUDIFY_PASSWORD_ENV))
+            CloudifyClient(host=self.management_ip,
+                           headers=get_auth_header(
+                               username=os.environ.get(CLOUDIFY_USERNAME_ENV),
+                               password=os.environ.get(CLOUDIFY_PASSWORD_ENV)))
 
         response = self.rest_client.manager.get_status()
         if not response['status'] == 'running':

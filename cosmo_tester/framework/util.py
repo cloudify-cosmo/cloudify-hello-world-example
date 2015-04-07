@@ -24,8 +24,13 @@ import shutil
 import jinja2
 from path import path
 import yaml
+from itsdangerous import base64_encode
 
 from cosmo_tester import resources
+
+
+CLOUDIFY_AUTHORIZATION_HEADER = 'Authorization'
+CLOUDIFY_AUTH_TOKEN_HEADER = 'Authentication-Token'
 
 
 def process_variables(suites_yaml, unprocessed_dict):
@@ -136,6 +141,19 @@ def check_port(ip, port):
     except socket.error:
         pass
     return result == 0
+
+
+def get_auth_header(username=None, password=None, token=None):
+
+    if username and password:
+        credentials = '{0}:{1}'.format(username, password)
+        header = {CLOUDIFY_AUTHORIZATION_HEADER: base64_encode(credentials)}
+    elif token:
+        header = {CLOUDIFY_AUTH_TOKEN_HEADER: token}
+    else:
+        raise ValueError('Invalid method arguments, expected a pair of '
+                         'username and password, OR a token')
+    return header
 
 
 class YamlPatcher(object):

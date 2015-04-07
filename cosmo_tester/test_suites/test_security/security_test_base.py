@@ -69,9 +69,9 @@ class SecurityTestBase(TestCase):
     def _running_env_setup(self):
         self.env.management_ip = self.cfy.get_management_ip()
         self.client = CloudifyClient(
-            self.env.management_ip,
-            user=TEST_CFY_USERNAME,
-            password=TEST_CFY_PASSWORD)
+            host=self.env.management_ip,
+            headers=util.get_auth_header(username=TEST_CFY_USERNAME,
+                                         password=TEST_CFY_PASSWORD))
 
         response = self.client.manager.get_status()
         if not response['status'] == 'running':
