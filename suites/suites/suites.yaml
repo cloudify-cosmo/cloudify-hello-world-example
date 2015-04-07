@@ -162,13 +162,13 @@ templates:
   - &hp_openstack_handler_configuration
     <<: *openstack_handler_configuration
     inputs: inputs-hp-openstack.yaml
-    manager_blueprint: openstack/openstack.yaml
+    manager_blueprint: openstack/openstack-manager-blueprint.yaml
     manager_blueprint_override: *openstack_manager_blueprint_override
 
   - &lab_openstack_handler_configuration
     <<: *openstack_handler_configuration
     inputs: inputs-lab-openstack.yaml
-    manager_blueprint: openstack/openstack.yaml
+    manager_blueprint: openstack/openstack-manager-blueprint.yaml
     manager_blueprint_override: *openstack_manager_blueprint_override
     properties: lab_openstack_properties
 
@@ -333,7 +333,7 @@ handler_configurations:
     <<: *openstack_handler_configuration
     handler: openstack_nova_net_handler
     inputs: inputs-nova-net-devstack.yaml
-    manager_blueprint: openstack-nova-net/openstack.yaml
+    manager_blueprint: openstack-nova-net/openstack-nova-net-manager-blueprint.yaml
     manager_blueprint_override:
       <<: *manager_blueprint_override
       <<: *openstack_nova_manager_blueprint_sg_override
@@ -345,7 +345,7 @@ handler_configurations:
     inputs: inputs-vsphere.yaml
     handler: vsphere_handler
     external: *vsphere_plugin_external
-    manager_blueprint: manager_blueprint/vsphere.yaml
+    manager_blueprint: manager_blueprint/vsphere-manager-blueprint.yaml
     properties: vsphere
     manager_blueprint_override: *manager_blueprint_override
     inputs_override:
@@ -360,7 +360,7 @@ handler_configurations:
     inputs: inputs-softlayer.yaml
     handler: softlayer_handler
     external: *softlayer_plugin_external
-    manager_blueprint: softlayer/softlayer.yaml
+    manager_blueprint: softlayer/softlayer-manager-blueprint.yaml
     manager_blueprint_override: *softlayer_manager_blueprint_override
     inputs_override:
       username: '{{system_tests_softlayer_username}}'
