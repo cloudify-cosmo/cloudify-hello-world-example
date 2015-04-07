@@ -82,6 +82,12 @@ templates:
     node_templates.manager.properties.cloudify_packages.docker.docker_url: '{{docker_image_url}}'
     node_templates.manager.properties.cloudify.workflows.task_retries: 20
 
+  - &manager_blueprint_commercial_override
+    <<: *manager_blueprint_override
+    # override packages derived from 'manager_blueprint_override' with commercial ones
+    node_templates.manager.properties.cloudify_packages.docker.docker_url: '{{docker_image_commercial_url}}'
+    node_templates.manager.properties.cloudify_packages.agents.ubuntu_agent_url: '{{ubuntu_package_agent_commercial_url}}'
+
   - &openstack_manager_blueprint_sg_override
     'node_templates.management_security_group.properties.rules[append]':
       port: 8086
@@ -97,7 +103,7 @@ templates:
     <<: *openstack_manager_blueprint_sg_override
 
   - &softlayer_manager_blueprint_override
-    <<: *manager_blueprint_override
+    <<: *manager_blueprint_commercial_override
     node_templates.manager.properties.cloudify.workflows.task_retries: 100
 
   ######################################################
