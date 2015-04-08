@@ -20,6 +20,7 @@ import json
 
 import sh
 from path import path
+from cloudify_cli.constants import DEFAULT_REST_PORT
 
 from cloudify_cli.utils import load_cloudify_working_dir_settings
 from cosmo_tester.framework.util import sh_bake
@@ -35,7 +36,8 @@ class CfyHelper(object):
 
     def __init__(self,
                  cfy_workdir=None,
-                 management_ip=None):
+                 management_ip=None,
+                 port=DEFAULT_REST_PORT):
         self._cfy_workdir = cfy_workdir
         self.tmpdir = False
         if cfy_workdir is None:
@@ -43,7 +45,7 @@ class CfyHelper(object):
             self._cfy_workdir = tempfile.mkdtemp(prefix='cfy-')
         self.workdir = path(self._cfy_workdir)
         if management_ip is not None:
-            self.use(management_ip)
+            self.use(management_ip, port)
 
     def bootstrap(self,
                   blueprint_path,
@@ -176,9 +178,9 @@ class CfyHelper(object):
         with self.workdir:
             cfy.blueprints.download(blueprint_id=blueprint_id).wait()
 
-    def use(self, management_ip):
+    def use(self, management_ip, port):
         with self.workdir:
-            cfy.use(management_ip=management_ip).wait()
+            cfy.use(management_ip=management_ip, port=port).wait()
 
     def get_management_ip(self):
         with self.workdir:

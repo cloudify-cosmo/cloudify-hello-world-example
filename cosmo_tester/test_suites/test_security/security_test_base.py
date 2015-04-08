@@ -36,8 +36,9 @@ class SecurityTestBase(TestCase):
             prop_path='node_templates.manager.properties.cloudify.security',
             new_value=self.get_security_settings()
         )
-        self._bootstrap()
+        # self._bootstrap()
         self._set_credentials_env_vars()
+        self._set_ssl_env_vars()
         self._running_env_setup()
 
     def _copy_manager_blueprint(self):
@@ -66,13 +67,18 @@ class SecurityTestBase(TestCase):
         os.environ[CLOUDIFY_USERNAME_ENV] = TEST_CFY_USERNAME
         os.environ[CLOUDIFY_PASSWORD_ENV] = TEST_CFY_PASSWORD
 
-    def _running_env_setup(self):
-        self.env.management_ip = self.cfy.get_management_ip()
+    def _set_ssl_env_vars(self):
+        pass
+
+    def set_rest_client(self):
         self.client = CloudifyClient(
             host=self.env.management_ip,
             headers=util.get_auth_header(username=TEST_CFY_USERNAME,
                                          password=TEST_CFY_PASSWORD))
 
+    def _running_env_setup(self):
+        self.env.management_ip = self.cfy.get_management_ip()
+        self.set_rest_client()
         response = self.client.manager.get_status()
         if not response['status'] == 'running':
             raise RuntimeError('Manager at {0} is not running.'
