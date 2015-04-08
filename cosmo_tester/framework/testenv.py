@@ -28,17 +28,13 @@ import json
 import yaml
 from path import path
 
-from cloudify_rest_client import CloudifyClient
-from cloudify_cli.constants import (CLOUDIFY_USERNAME_ENV,
-                                    CLOUDIFY_PASSWORD_ENV)
-
 from cosmo_tester.framework.cfy_helper import (CfyHelper,
                                                DEFAULT_EXECUTE_TIMEOUT)
 from cosmo_tester.framework.util import (get_blueprint_path,
                                          process_variables,
                                          YamlPatcher,
                                          generate_unique_configurations,
-                                         get_auth_header)
+                                         create_rest_client)
 
 root = logging.getLogger()
 ch = logging.StreamHandler(sys.stdout)
@@ -231,12 +227,7 @@ class TestEnvironment(object):
 
     def _running_env_setup(self, management_ip):
         self.management_ip = management_ip
-        self.rest_client = \
-            CloudifyClient(host=self.management_ip,
-                           headers=get_auth_header(
-                               username=os.environ.get(CLOUDIFY_USERNAME_ENV),
-                               password=os.environ.get(CLOUDIFY_PASSWORD_ENV)))
-
+        self.rest_client = create_rest_client(management_ip)
         response = self.rest_client.manager.get_status()
         if not response['status'] == 'running':
             raise RuntimeError('Manager at {0} is not running.'
