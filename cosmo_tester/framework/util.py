@@ -26,6 +26,9 @@ from path import path
 import yaml
 from itsdangerous import base64_encode
 
+from cloudify_rest_client import CloudifyClient
+from cloudify_cli import constants
+
 from cosmo_tester import resources
 
 
@@ -144,16 +147,21 @@ def check_port(ip, port):
 
 
 def get_auth_header(username=None, password=None, token=None):
-
+    header = {}
     if username and password:
         credentials = '{0}:{1}'.format(username, password)
-        header = {CLOUDIFY_AUTHORIZATION_HEADER: base64_encode(credentials)}
+        header[CLOUDIFY_AUTHORIZATION_HEADER] = base64_encode(credentials)
     elif token:
-        header = {CLOUDIFY_AUTH_TOKEN_HEADER: token}
-    else:
-        raise ValueError('Invalid method arguments, expected a pair of '
-                         'username and password, OR a token')
+        header[CLOUDIFY_AUTH_TOKEN_HEADER] = token
     return header
+
+
+def create_rest_client(manager_ip):
+    return CloudifyClient(
+        host=manager_ip,
+        headers=get_auth_header(
+            username=os.environ.get(constants.CLOUDIFY_USERNAME_ENV),
+            password=os.environ.get(constants.CLOUDIFY_PASSWORD_ENV)))
 
 
 class YamlPatcher(object):
