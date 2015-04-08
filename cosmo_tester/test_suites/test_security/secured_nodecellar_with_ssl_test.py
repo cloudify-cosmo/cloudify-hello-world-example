@@ -46,3 +46,37 @@ class SecuredWithSSLOpenstackNodecellarTest(SecuredOpenstackNodecellarTest):
 
     def get_security_settings(self):
         super(SecuredWithSSLOpenstackNodecellarTest, self).get_security_settings()
+
+    def create_floating_ip(self):
+        _, neutron, _ = self.env.handler.openstack_clients()
+        ext_network_id = [
+            n for n in neutron.list_networks()['networks']
+            if n['name'] == self.env.external_network_name][0]['id']
+
+        floating_ip = neutron.create_floatingip({
+            'floatingip': {'floating_network_id': ext_network_id}
+        })['floatingip']
+        return floating_ip['floating_ip_address']
+
+    @staticmethod
+    def create_self_signed_certificate(target_certificate_path,
+                                       target_key_path,
+                                       common_name):
+        from OpenSSL import crypto
+        from os import path
+
+        key = crypto.PKey()
+        key.generate_key(crypto.TYPE_RSA, 2048)
+        certificate = crypto.X509()
+        subject = certificate.get_subject()
+        subject.commonName = common_name
+        certificate.gmtime_adj_notBefore(0)
+        certificate.gmtime_adj_notAfter(10 * 365 * 24 * 60 * 60)
+        certificate.set_issuer(subject)
+        certificate.set_pubkey(key)
+        certificate.sign(key, 'SHA1')
+
+        with open(path.expanduser(target_certificate_path), 'w') as f:
+            f.write(crypto.dump_certificate(crypto.FILETYPE_PEM, certificate))
+        with open(path.expanduser(target_key_path), 'w') as f:
+            f.write(crypto.dump_privatekey(crypto.FILETYPE_PEM, key))
