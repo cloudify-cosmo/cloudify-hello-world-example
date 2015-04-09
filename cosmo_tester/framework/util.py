@@ -165,9 +165,11 @@ def get_auth_header(username=None, password=None, token=None):
 def create_rest_client(manager_ip):
     return CloudifyClient(
         host=manager_ip,
+        protocol='https',
         headers=get_auth_header(
             username=os.environ.get(constants.CLOUDIFY_USERNAME_ENV),
-            password=os.environ.get(constants.CLOUDIFY_PASSWORD_ENV)))
+            password=os.environ.get(constants.CLOUDIFY_PASSWORD_ENV)),
+        trust_all=True)
 
 
 class YamlPatcher(object):

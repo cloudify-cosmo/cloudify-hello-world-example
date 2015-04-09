@@ -18,12 +18,26 @@ from cloudify_cli.constants import CLOUDIFY_SSL_CERT
 from cloudify_cli.constants import CLOUDIFY_SSL_TRUST_ALL
 from cloudify_rest_client import CloudifyClient
 from cosmo_tester.framework import util
-from cosmo_tester.test_suites.test_security import TEST_CFY_USERNAME, TEST_CFY_PASSWORD
+from cosmo_tester.test_suites.test_blueprints.nodecellar_test import OpenStackNodeCellarTestBase
+from cosmo_tester.test_suites.test_security.security_test_base import \
+    SecurityTestBase, TEST_CFY_USERNAME, TEST_CFY_PASSWORD
 
-from cosmo_tester.test_suites.test_security.secured_nodecellar_test import SecuredOpenstackNodecellarTest
 
+class SecuredWithSSLOpenstackNodecellarTest(OpenStackNodeCellarTestBase,
+                                            SecurityTestBase):
 
-class SecuredWithSSLOpenstackNodecellarTest(SecuredOpenstackNodecellarTest):
+    def setUp(self):
+        super(SecuredWithSSLOpenstackNodecellarTest, self).setUp()
+        self.enabled = 'true'
+        self.cert = None
+        self.key = None
+        self.ssl_dict = {
+            'enabled': self.enabled
+        }
+
+    @property
+    def repo_branch(self):
+        return 'tags/3.2m8'
 
     def test_secured_openstack_nodecellar_with_ssl_without_cert(self):
         self.setup_secured_manager()
@@ -34,7 +48,6 @@ class SecuredWithSSLOpenstackNodecellarTest(SecuredOpenstackNodecellarTest):
         os.environ[CLOUDIFY_SSL_TRUST_ALL] = 'trust'
 
     def set_rest_client(self):
-        self.env.port = 443
         self.client = CloudifyClient(
             host=self.env.management_ip,
             port=443,
@@ -45,7 +58,46 @@ class SecuredWithSSLOpenstackNodecellarTest(SecuredOpenstackNodecellarTest):
             trust_all=os.environ.get(CLOUDIFY_SSL_TRUST_ALL))
 
     def get_security_settings(self):
-        super(SecuredWithSSLOpenstackNodecellarTest, self).get_security_settings()
+
+        return {
+            'enabled': 'true',
+            'userstore_driver': {
+                'implementation':
+                    'flask_securest.userstores.simple:SimpleUserstore',
+                'properties': {
+                    'userstore': {
+                        'user1': {
+                            'username': 'user1',
+                            'password': 'pass1',
+                            'email': 'user1@domain.dom'
+                        },
+                        'user2': {
+                            'username': 'user2',
+                            'password': 'pass2',
+                            'email': 'user2@domain.dom'
+                        },
+                        'user3': {
+                            'username': 'user3',
+                            'password': 'pass3',
+                            'email': 'user3@domain.dom'
+                        },
+                        },
+                    'identifying_attribute': 'username'
+                }
+            },
+            'authentication_providers': [
+                {
+                    'name': 'password',
+                    'implementation': 'flask_securest.'
+                                      'authentication_providers.password:'
+                                      'PasswordAuthenticator',
+                    'properties': {
+                        'password_hash': 'plaintext'
+                    }
+                }
+            ],
+            'ssl': self.ssl_dict
+        }
 
     def create_floating_ip(self):
         _, neutron, _ = self.env.handler.openstack_clients()
