@@ -20,7 +20,7 @@ from cosmo_tester.test_suites.test_blueprints.nodecellar_test import (
 class DockerPluginNodecellarTest(NodecellarAppTest):
 
     def test_docker_plugin_openstack_nodecellar(self):
-        self._test_nodecellar_impl('blueprint/openstack.yaml')
+        self._test_nodecellar_impl('openstack-blueprint.yaml')
 
     def get_inputs(self):
 
