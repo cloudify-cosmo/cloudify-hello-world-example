@@ -120,6 +120,12 @@ templates:
     username: opencm
     password: '{{opencm_git_pwd}}'
 
+  - &watchdog_external
+    repo: cloudify-watchdog
+    private: true
+    username: opencm
+    password: '{{opencm_git_pwd}}'
+
   - &cli_packager_external
     repo: cloudify-cli-packager
     branch: '{{core_branch}}'
@@ -427,6 +433,11 @@ tests:
     tests:
       - system_tests/test_vsphere_blueprints
 
+  watchdog_tests:
+    external: *watchdog_external
+    tests:
+      - system_tests/test_watchdog
+
   softlayer_blueprints:
     external: *softlayer_plugin_external
     tests:
@@ -493,6 +504,11 @@ test_suites:
     handler_configuration: lab_openstack_system_tests5
     tests:
       - cli_packager
+
+  lab_openstack_watchdog:
+    handler_configuration: lab_openstack_system_tests2  # TODO: change this
+    tests:
+      - watchdog_tests
 
   #####################################################################
 
