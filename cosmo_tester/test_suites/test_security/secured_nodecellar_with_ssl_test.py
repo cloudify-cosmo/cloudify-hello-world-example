@@ -44,7 +44,7 @@ class SecuredWithSSLOpenstackNodecellarTest(OpenStackNodeCellarTestBase,
     def get_ssl_enabled(self):
         return True
 
-    def _set_ssl_env_vars(self):
+    def set_ssl_env_vars(self):
         os.environ[constants.CLOUDIFY_SSL_TRUST_ALL] = 'trust'
 
     def get_security_settings(self):
