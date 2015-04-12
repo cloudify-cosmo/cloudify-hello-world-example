@@ -16,9 +16,9 @@
 import os
 from path import path
 
+from cloudify import constants
+
 from cloudify_rest_client.client import CloudifyClient
-from cloudify_cli.constants import (CLOUDIFY_USERNAME_ENV,
-                                    CLOUDIFY_PASSWORD_ENV)
 
 from cosmo_tester.framework import util
 from cosmo_tester.framework.testenv import TestCase
@@ -36,9 +36,18 @@ class SecurityTestBase(TestCase):
             prop_path='node_templates.manager.properties.cloudify.security',
             new_value=self.get_security_settings()
         )
-        # self._bootstrap()
+        if self.ssl_enabled():
+            self._update_manager_blueprint(
+                prop_path='node_templates.management_security_group'
+                          '.properties.rules[append]',
+                new_value={
+                    'port': 443,
+                    'remote_ip_prefix': '0.0.0.0/0​'
+                })
+            self._set_ssl_env_vars()
+
+        self._bootstrap()
         self._set_credentials_env_vars()
-        self._set_ssl_env_vars()
         self._running_env_setup()
 
     def _copy_manager_blueprint(self):
@@ -64,11 +73,8 @@ class SecurityTestBase(TestCase):
         self.addCleanup(self.cfy.teardown)
 
     def _set_credentials_env_vars(self):
-        os.environ[CLOUDIFY_USERNAME_ENV] = TEST_CFY_USERNAME
-        os.environ[CLOUDIFY_PASSWORD_ENV] = TEST_CFY_PASSWORD
-
-    def _set_ssl_env_vars(self):
-        pass
+        os.environ[constants.CLOUDIFY_USERNAME_ENV] = TEST_CFY_USERNAME
+        os.environ[constants.CLOUDIFY_PASSWORD_ENV] = TEST_CFY_PASSWORD
 
     def set_rest_client(self):
         self.client = CloudifyClient(
@@ -83,3 +89,17 @@ class SecurityTestBase(TestCase):
         if not response['status'] == 'running':
             raise RuntimeError('Manager at {0} is not running.'
                                .format(self.management_ip))
+
+    def ssl_enabled(self):
+        return False
+
+    def get_ssl_configuration(self):
+
+        return {
+            constants.SLL_ENABLED_PROPERTY_NAME: self.ssl_enabled,
+            constants.CERTIFICATE_PATH_PROPERTY_NAME: None,
+            constants.PRIVATE_KEY_PROPERTY_NAME: None
+        }
+
+    def _set_ssl_env_vars(self):
+        pass
