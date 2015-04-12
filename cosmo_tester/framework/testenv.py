@@ -100,7 +100,6 @@ class TestEnvironment(object):
         self._global_cleanup_context = None
         self._management_running = False
         self.rest_client = None
-        self.port = constants.DEFAULT_REST_PORT
         self.management_ip = None
         self.handler = None
         self._manager_blueprint_path = None
@@ -220,7 +219,7 @@ class TestEnvironment(object):
         self.setup()
         cfy = CfyHelper(cfy_workdir=self._workdir)
         try:
-            cfy.use(self.management_ip, port=self.port)
+            cfy.use(self.management_ip)
             cfy.teardown(verbose=True)
         finally:
             self._global_cleanup_context.cleanup()
@@ -273,10 +272,8 @@ class TestCase(unittest.TestCase):
         self.logger.info('Starting test setUp')
         self.workdir = tempfile.mkdtemp(prefix='cosmo-test-')
         self.client = self.env.rest_client
-        port = self.client._client.port
         self.cfy = CfyHelper(cfy_workdir=self.workdir,
-                             management_ip=self.env.management_ip,
-                             port=port)
+                             management_ip=self.env.management_ip)
         self.test_id = 'system-test-{0}'.format(time.strftime("%Y%m%d-%H%M"))
         self.blueprint_yaml = None
         self._test_cleanup_context = self.env.handler.CleanupContext(

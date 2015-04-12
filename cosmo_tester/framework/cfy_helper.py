@@ -36,8 +36,7 @@ class CfyHelper(object):
 
     def __init__(self,
                  cfy_workdir=None,
-                 management_ip=None,
-                 port=DEFAULT_REST_PORT):
+                 management_ip=None):
         self._cfy_workdir = cfy_workdir
         self.tmpdir = False
         if cfy_workdir is None:
@@ -45,7 +44,7 @@ class CfyHelper(object):
             self._cfy_workdir = tempfile.mkdtemp(prefix='cfy-')
         self.workdir = path(self._cfy_workdir)
         if management_ip is not None:
-            self.use(management_ip, port)
+            self.use(management_ip)
 
     def bootstrap(self,
                   blueprint_path,
@@ -178,9 +177,9 @@ class CfyHelper(object):
         with self.workdir:
             cfy.blueprints.download(blueprint_id=blueprint_id).wait()
 
-    def use(self, management_ip, port):
+    def use(self, management_ip):
         with self.workdir:
-            cfy.use(management_ip=management_ip, port=port).wait()
+            cfy.use(management_ip=management_ip).wait()
 
     def get_management_ip(self):
         with self.workdir:
