@@ -17,7 +17,6 @@ import os
 from path import path
 
 from cloudify import constants
-
 from cloudify_rest_client.client import CloudifyClient
 
 from cosmo_tester.framework import util
