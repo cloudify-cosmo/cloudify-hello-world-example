@@ -478,6 +478,11 @@ test_suites:
       - openstack_plugin
       - openstack_blueprints_persistence_recovery
 
+  lab_openstack_watchdog:
+      handler_configuration: hp_openstack_system_tests3_region_b
+      tests:
+        - watchdog_tests
+
   #####################################################################
 
   lab_openstack_chef_puppet:
@@ -504,11 +509,6 @@ test_suites:
     handler_configuration: lab_openstack_system_tests5
     tests:
       - cli_packager
-
-  lab_openstack_watchdog:
-    handler_configuration: lab_openstack_system_tests2  # TODO: change this
-    tests:
-      - watchdog_tests
 
   #####################################################################
 
