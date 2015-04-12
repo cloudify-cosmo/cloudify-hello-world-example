@@ -18,7 +18,8 @@ import os
 from cloudify_cli import constants
 from cloudify_rest_client import CloudifyClient
 from cosmo_tester.framework import util
-from cosmo_tester.test_suites.test_blueprints.nodecellar_test import OpenStackNodeCellarTestBase
+from cosmo_tester.test_suites.test_blueprints.nodecellar_test import \
+    OpenStackNodeCellarTestBase
 from cosmo_tester.test_suites.test_security.security_test_base import \
     SecurityTestBase, TEST_CFY_USERNAME, TEST_CFY_PASSWORD
 
