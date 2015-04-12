@@ -90,15 +90,21 @@ class SecurityTestBase(TestCase):
             raise RuntimeError('Manager at {0} is not running.'
                                .format(self.management_ip))
 
-    def ssl_enabled(self):
+    def get_ssl_enabled(self):
         return False
+
+    def get_cert_path(self):
+        return None
+
+    def get_key_path(self):
+        return None
 
     def get_ssl_configuration(self):
 
         return {
-            constants.SLL_ENABLED_PROPERTY_NAME: self.ssl_enabled,
-            constants.CERTIFICATE_PATH_PROPERTY_NAME: None,
-            constants.PRIVATE_KEY_PROPERTY_NAME: None
+            constants.SLL_ENABLED_PROPERTY_NAME: self.get_ssl_enabled(),
+            constants.CERTIFICATE_PATH_PROPERTY_NAME: self.get_cert_path(),
+            constants.PRIVATE_KEY_PROPERTY_NAME: self.get_key_path()
         }
 
     def _set_ssl_env_vars(self):
