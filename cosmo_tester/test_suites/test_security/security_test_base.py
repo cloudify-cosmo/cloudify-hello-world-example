@@ -41,7 +41,7 @@ class SecurityTestBase(TestCase):
                           '.properties.rules[append]',
                 new_value={
                     'port': 443,
-                    'remote_ip_prefix': '0.0.0.0/0​'
+                    'remote_ip_prefix': '0.0.0.0/0'
                 })
             self.set_ssl_env_vars()
 
@@ -91,20 +91,6 @@ class SecurityTestBase(TestCase):
 
     def get_ssl_enabled(self):
         return False
-
-    def get_cert_path(self):
-        return None
-
-    def get_key_path(self):
-        return None
-
-    def get_ssl_configuration(self):
-
-        return {
-            constants.SLL_ENABLED_PROPERTY_NAME: self.get_ssl_enabled(),
-            constants.CERTIFICATE_PATH_PROPERTY_NAME: self.get_cert_path(),
-            constants.PRIVATE_KEY_PROPERTY_NAME: self.get_key_path()
-        }
 
     def set_ssl_env_vars(self):
         pass

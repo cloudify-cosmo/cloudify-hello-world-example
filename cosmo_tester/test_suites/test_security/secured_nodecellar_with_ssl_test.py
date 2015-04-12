@@ -38,8 +38,7 @@ class SecuredWithSSLOpenstackNodecellarTest(OpenStackNodeCellarTestBase,
             protocol=constants.SECURED_PROTOCOL,
             headers=util.get_auth_header(username=TEST_CFY_USERNAME,
                                          password=TEST_CFY_PASSWORD),
-            cert=os.environ.get(constants.CLOUDIFY_SSL_CERT),
-            trust_all=os.environ.get(constants.CLOUDIFY_SSL_TRUST_ALL))
+            trust_all=True)
 
     def get_ssl_enabled(self):
         return True
@@ -86,8 +85,18 @@ class SecuredWithSSLOpenstackNodecellarTest(OpenStackNodeCellarTestBase,
                     }
                 }
             ],
-            'ssl': self.get_ssl_configuration()
+            'ssl': {
+                constants.SLL_ENABLED_PROPERTY_NAME: True,
+                constants.CERTIFICATE_PATH_PROPERTY_NAME: self.get_cert_path(),
+                constants.PRIVATE_KEY_PROPERTY_NAME: self.get_key_path()
+            }
         }
+
+    def get_cert_path(self):
+        return util.get_resource_path('ssl/server.crt')
+
+    def get_key_path(self):
+        return util.get_resource_path('ssl/server.key')
 
     def create_floating_ip(self):
         _, neutron, _ = self.env.handler.openstack_clients()
