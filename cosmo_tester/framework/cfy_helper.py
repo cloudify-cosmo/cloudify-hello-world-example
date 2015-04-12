@@ -20,7 +20,6 @@ import json
 
 import sh
 from path import path
-from cloudify_cli.constants import DEFAULT_REST_PORT
 
 from cloudify_cli.utils import load_cloudify_working_dir_settings
 from cosmo_tester.framework.util import sh_bake

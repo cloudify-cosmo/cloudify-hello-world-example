@@ -28,8 +28,6 @@ import json
 import yaml
 from path import path
 
-from cloudify_cli import constants
-
 from cosmo_tester.framework.cfy_helper import (CfyHelper,
                                                DEFAULT_EXECUTE_TIMEOUT)
 from cosmo_tester.framework.util import (get_blueprint_path,
@@ -271,9 +269,9 @@ class TestCase(unittest.TestCase):
         self.logger.setLevel(logging.INFO)
         self.logger.info('Starting test setUp')
         self.workdir = tempfile.mkdtemp(prefix='cosmo-test-')
-        self.client = self.env.rest_client
         self.cfy = CfyHelper(cfy_workdir=self.workdir,
                              management_ip=self.env.management_ip)
+        self.client = self.env.rest_client
         self.test_id = 'system-test-{0}'.format(time.strftime("%Y%m%d-%H%M"))
         self.blueprint_yaml = None
         self._test_cleanup_context = self.env.handler.CleanupContext(
