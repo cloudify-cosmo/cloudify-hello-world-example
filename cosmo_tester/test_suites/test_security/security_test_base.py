@@ -81,4 +81,3 @@ class SecurityTestBase(TestCase):
 
     def get_ssl_enabled(self):
         return False
-
