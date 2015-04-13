@@ -28,6 +28,7 @@ class SecuredWithSSLOpenstackNodecellarTest(OpenStackNodeCellarTestBase,
                                             SecurityTestBase):
 
     def test_secured_openstack_nodecellar_with_ssl_without_cert(self):
+        os.environ[constants.CLOUDIFY_SSL_TRUST_ALL] = 'trust'
         self.setup_secured_manager()
         self._test_openstack_nodecellar('openstack-blueprint.yaml')
 
@@ -42,9 +43,6 @@ class SecuredWithSSLOpenstackNodecellarTest(OpenStackNodeCellarTestBase,
 
     def get_ssl_enabled(self):
         return True
-
-    def set_ssl_env_vars(self):
-        os.environ[constants.CLOUDIFY_SSL_TRUST_ALL] = 'trust'
 
     def get_security_settings(self):
 
@@ -86,7 +84,7 @@ class SecuredWithSSLOpenstackNodecellarTest(OpenStackNodeCellarTestBase,
                 }
             ],
             'ssl': {
-                constants.SLL_ENABLED_PROPERTY_NAME: True,
+                constants.SLL_ENABLED_PROPERTY_NAME: self.get_ssl_enabled(),
                 constants.CERTIFICATE_PATH_PROPERTY_NAME: self.get_cert_path(),
                 constants.PRIVATE_KEY_PROPERTY_NAME: self.get_key_path()
             }

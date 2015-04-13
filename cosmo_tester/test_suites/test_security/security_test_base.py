@@ -35,16 +35,6 @@ class SecurityTestBase(TestCase):
             prop_path='node_templates.manager.properties.cloudify.security',
             new_value=self.get_security_settings()
         )
-        if self.get_ssl_enabled():
-            self._update_manager_blueprint(
-                prop_path='node_templates.management_security_group'
-                          '.properties.rules[append]',
-                new_value={
-                    'port': 443,
-                    'remote_ip_prefix': '0.0.0.0/0'
-                })
-            self.set_ssl_env_vars()
-
         self._bootstrap()
         self._set_credentials_env_vars()
         self._running_env_setup()
@@ -92,5 +82,3 @@ class SecurityTestBase(TestCase):
     def get_ssl_enabled(self):
         return False
 
-    def set_ssl_env_vars(self):
-        pass
