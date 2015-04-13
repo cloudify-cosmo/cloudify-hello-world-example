@@ -24,6 +24,7 @@ from path import path
 from cloudify_cli.utils import load_cloudify_working_dir_settings
 from cosmo_tester.framework.util import sh_bake
 
+
 cfy = sh_bake(sh.cfy)
 
 
