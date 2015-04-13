@@ -17,6 +17,7 @@ import os
 
 from fabric.api import sudo
 from fabric.api import settings
+from cloudify_rest_client import CloudifyClient
 
 from cosmo_tester.framework.testenv import TestCase
 from cosmo_tester.resources import blueprints
@@ -26,8 +27,7 @@ from cosmo_tester.framework import util
 
 class ManagerRecoveryTest(TestCase):
 
-    def setUp(self):
-        super(ManagerRecoveryTest, self).setUp()
+    def _install_blueprint(self):
         self.blueprint_yaml = os.path.join(
             os.path.dirname(blueprints.__file__),
             'recovery',
@@ -61,6 +61,10 @@ class ManagerRecoveryTest(TestCase):
         }
 
     def test_manager_recovery(self):
+
+        # bootstrap and install
+        self._bootstrap()
+        self._install_blueprint()
 
         # this will verify that all the data is actually persisted.
         before, after = self._kill_and_recover_manager()
@@ -98,12 +102,23 @@ class ManagerRecoveryTest(TestCase):
             with settings(**self.fabric_env):
                 sudo('docker kill cfy')
             self.cfy.recover()
-            self._fix_management_server_id()
 
         return self._make_operation_with_before_after_states(
             _kill_and_recover,
             fetch_state=True)
 
-    def _fix_management_server_id(self):
-        management_server_name = self.env.management_server_name
-        self._test_cleanup_context.update_server_id(management_server_name)
+    def _bootstrap(self):
+        self.cfy.bootstrap(blueprint_path=self.env._manager_blueprint_path,
+                           inputs_file=self.env.cloudify_config_path,
+                           task_retries=5,
+                           install_plugins=self.env.install_plugins)
+
+        # explicitly set the management_ip from our bootstrap
+        # this is needed because the initialization of the env was done
+        # without bootstrap, so management_ip is None
+        self.env.management_ip = self.cfy.get_management_ip()
+
+        # also override the client instance to use the correct ip
+        self.client = CloudifyClient(host=self.env.management_ip)
+
+        self.addCleanup(self.cfy.teardown)
