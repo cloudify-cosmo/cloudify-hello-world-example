@@ -51,6 +51,18 @@ class BaseCloudifyInputsConfigReader(object):
         return self.config['resources_prefix']
 
     @property
+    def management_user_name(self):
+        raise NotImplementedError('management_user_name property must be '
+                                  'implemented by concrete handler config '
+                                  'reader')
+
+    @property
+    def management_key_path(self):
+        raise NotImplementedError('management_key_path property must be '
+                                  'implemented by concrete handler config '
+                                  'reader')
+
+    @property
     def docker_url(self):
         manager = self.manager_blueprint['node_templates'].get('manager', {})
         packages = manager.get('properties', {}).get('cloudify_packages', {})
