@@ -23,7 +23,6 @@ from path import path
 
 from cloudify_cli.utils import load_cloudify_working_dir_settings
 from cosmo_tester.framework.util import sh_bake
-import time
 
 cfy = sh_bake(sh.cfy)
 
@@ -103,7 +102,6 @@ class CfyHelper(object):
                 deployment_id=deployment_id,
                 verbose=verbose,
                 inputs=inputs)
-            time.sleep(8)
             self.execute_install(
                 deployment_id=deployment_id,
                 execute_timeout=execute_timeout,
