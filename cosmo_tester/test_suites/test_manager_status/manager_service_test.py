@@ -61,7 +61,7 @@ class RebootManagerTest(TestCase):
                              'undefined services: {0}'
                              .format(','.join(undefined)))
         stopped = self._get_stopped_services()
-        self.assertEqual(stopped, [], 'stopped services: {0}'
+        self.assertEqual(stopped, ['Cloudify UI'], 'stopped services: {0}'
                          .format(','.join(stopped)))
 
     def test_01_during_reboot(self):
@@ -119,5 +119,5 @@ class RebootManagerTest(TestCase):
                              'undefined services: {0}'
                              .format(','.join(undefined)))
         stopped = self._get_stopped_services()
-        self.assertEqual(stopped, [], 'stopped services: {0}'
+        self.assertEqual(stopped, ['Cloudify UI'], 'stopped services: {0}'
                          .format(','.join(stopped)))
