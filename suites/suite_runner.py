@@ -70,6 +70,8 @@ class SuiteRunner(object):
             'cli_branch', self.branch_name_core)
         self.windows_cli_package_url = \
             self.variables['windows_cli_package_url']
+        self.cloudify_automation_token = \
+            self.variables['cloudify_automation_token']
 
         self.handler_configuration = self.suites_yaml[
             'handler_configurations'][self.test_suite['handler_configuration']]
@@ -92,6 +94,8 @@ class SuiteRunner(object):
         os.environ['BRANCH_NAME_PLUGINS'] = self.branch_name_plugins
         os.environ['BRANCH_NAME_CORE'] = self.branch_name_core
         os.environ['WINDOWS_CLI_PACKAGE_URL'] = self.windows_cli_package_url
+        os.environ['CLOUDIFY_AUTOMATION_TOKEN'] = \
+            self.cloudify_automation_token
 
     def clone_and_install_packages(self):
         with path(self.work_dir):

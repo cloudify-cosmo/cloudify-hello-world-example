@@ -76,4 +76,4 @@ class SecurityTestBase(TestCase):
         response = self.client.manager.get_status()
         if not response['status'] == 'running':
             raise RuntimeError('Manager at {0} is not running.'
-                               .format(self.management_ip))
+                               .format(self.env.management_ip))
