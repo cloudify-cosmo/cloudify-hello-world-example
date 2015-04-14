@@ -216,10 +216,6 @@ handler_properties:
     ubuntu_image_id: eada2fe8-894a-4b26-ac8d-cedab010f185
     small_flavor_id: 3
 
-  aws_ec2:
-    medium_instance_type: m1.medium
-    ubuntu_agent_ami: ami-a73264ce
-
   vsphere:
     template: ubuntu-configured-template
 
@@ -525,13 +521,6 @@ test_suites:
       - cosmo_tester/test_suites/test_docker_centos_env
 
   ######################################################################
-
-  aws_ec2:
-    handler_configuration: aws_ec2
-    tests:
-      - ec2_blueprints
-
-  ########################################################################
 
   vsphere:
     handler_configuration: vsphere
