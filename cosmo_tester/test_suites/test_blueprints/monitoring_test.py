@@ -15,9 +15,6 @@
 import requests
 from cosmo_tester.framework.testenv import TestCase
 
-import os
-os.environ['HANDLER_CONFIGURATION'] = '/home/elip/dev/system-tests-handlers/hp-openstack-region-b-dev2-handler.yaml'
-
 
 class MonitoringTest(TestCase):
 
