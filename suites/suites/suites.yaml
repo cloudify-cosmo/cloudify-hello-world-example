@@ -130,6 +130,13 @@ templates:
     repo: cloudify-cli-packager
     branch: '{{core_branch}}'
 
+  - &diamond_snmp_extension_external
+    repo: cloudify-diamond-snmp-extension
+    branch: '{{core_branch}}'
+
+  - &docker_plugin_external
+    repo: cloudify-docker-plugin
+
   #######################################################
 
   - &hp_openstack_properties
@@ -215,10 +222,6 @@ handler_properties:
     flavor_name: m1.small
     ubuntu_image_id: eada2fe8-894a-4b26-ac8d-cedab010f185
     small_flavor_id: 3
-
-  aws_ec2:
-    medium_instance_type: m1.medium
-    ubuntu_agent_ami: ami-a73264ce
 
   vsphere:
     template: ubuntu-configured-template
@@ -453,6 +456,16 @@ tests:
     tests:
       - system_tests
 
+  diamond_snmp_extension:
+    external: *diamond_snmp_extension_external
+    tests:
+      - system_tests
+
+  docker_plugin:
+    external: *docker_plugin_external
+    tests:
+      - system_tests/manager
+
 #####################################################################################
 
 test_suites:
@@ -495,20 +508,22 @@ test_suites:
     tests:
       - openstack_blueprints_windows
 
-  lab_openstack_rest_plugins:
+  lab_openstack_rest_plugins_diamond_snmp:
     handler_configuration: lab_openstack_system_tests3
     tests:
       - openstack_rest_plugins
+      - diamond_snmp_extension
 
   lab_openstack_security:
     handler_configuration: lab_openstack_system_tests4
     tests:
       - openstack_security
 
-  lab_openstack_cli_packager:
+  lab_openstack_cli_packager_docker_plugin:
     handler_configuration: lab_openstack_system_tests5
     tests:
       - cli_packager
+      - docker_plugin
 
   #####################################################################
 
@@ -525,13 +540,6 @@ test_suites:
       - cosmo_tester/test_suites/test_docker_centos_env
 
   ######################################################################
-
-  aws_ec2:
-    handler_configuration: aws_ec2
-    tests:
-      - ec2_blueprints
-
-  ########################################################################
 
   vsphere:
     handler_configuration: vsphere
