@@ -478,7 +478,7 @@ test_suites:
       - openstack_plugin
       - openstack_blueprints_persistence_recovery
 
-  lab_openstack_watchdog:
+  hp_openstack_watchdog:
       handler_configuration: hp_openstack_system_tests3_region_a
       tests:
         - watchdog_tests
