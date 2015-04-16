@@ -15,6 +15,7 @@
 
 import os
 
+from path import path
 from fabric.api import sudo
 from fabric.api import settings
 
@@ -94,11 +95,18 @@ class ManagerRecoveryTest(TestCase):
     def _kill_and_recover_manager(self):
 
         def _kill_and_recover():
-            self.cfy.use(management_ip=self.env.management_ip)
-            with settings(**self.fabric_env):
-                sudo('docker kill cfy')
-            self.cfy.recover()
-            self._fix_management_server_id()
+            # run the recovery from the same directory the bootstrap was
+            # executed from
+            original = self.cfy.workdir
+            try:
+                self.cfy.workdir = path(self.env._workdir)
+                self.cfy.use(management_ip=self.env.management_ip)
+                with settings(**self.fabric_env):
+                    sudo('docker kill cfy')
+                self.cfy.recover()
+                self._fix_management_server_id()
+            finally:
+                self.cfy.workdir = original
 
         return self._make_operation_with_before_after_states(
             _kill_and_recover,
