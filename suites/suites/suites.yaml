@@ -574,6 +574,13 @@ test_suites:
     tests:
       - softlayer_blueprints
 
+  ########################################################################
+
+  ec2:
+    handler_configuration: ec2
+    tests:
+      - ec2
+
 # these files are created on the client container before executing the tests
 # only applies in quickbuild runs, not when running locally
 files:
