@@ -577,7 +577,7 @@ test_suites:
   ########################################################################
 
   ec2:
-    handler_configuration: ec2
+    handler_configuration: aws_ec2
     tests:
       - ec2
 
