@@ -137,7 +137,7 @@ templates:
   - &docker_plugin_external
     repo: cloudify-docker-plugin
 
-  - &aws_plugin_external
+  - &aws_ec2_plugin_external
     repo: cloudify-aws-plugin
 
   #######################################################
@@ -394,7 +394,7 @@ handler_configurations:
   aws_ec2:
     inputs: inputs-aws-ec2.yaml
     handler: ec2_handler
-    external: *aws_plugin_external
+    external: *aws_ec2_plugin_external
     manager_blueprint: aws-ec2/aws-ec2-manager-blueprint.yaml
     inputs_override:
       aws_access_key_id: '{{system_tests_aws_access_key_id}}'
