@@ -23,7 +23,7 @@ logger.setLevel(logging.INFO)
 git = sh_bake(sh.git)
 pip = sh_bake(sh.pip)
 nosetests = sh_bake(sh.nosetests)
-
+suite_reports_dir = path(__file__).dirname() / 'xunit-reports'
 
 CLOUDIFY_SYSTEM_TESTS = 'cloudify-system-tests'
 
@@ -250,10 +250,8 @@ class SuiteRunner(object):
 
         for test_group, tests in test_groups.items():
             tests_dir = test_group
-            report_file = os.path.join(
-                self.base_dir, 'xunit-reports',
-                '{0}-{1}-report.xml'.format(self.test_suite_name,
-                                            tests_dir))
+            report_file = suite_reports_dir / '{0}-{1}-report.xml'.format(
+                self.test_suite_name, tests_dir)
             processed_tests = []
             for test in tests:
                 processed_tests += test.split(' ')
