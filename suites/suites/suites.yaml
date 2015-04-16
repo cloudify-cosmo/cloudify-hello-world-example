@@ -447,7 +447,7 @@ tests:
       - cosmo_tester/test_suites/test_docker_centos_env
 
   ec2:
-    external: *aws_plugin_external
+    external: *aws_ec2_plugin_external
     tests:
       - system_tests/manager
       - system_tests/local
