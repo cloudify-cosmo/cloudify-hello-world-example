@@ -226,6 +226,11 @@ handler_properties:
   vsphere:
     template: ubuntu-configured-template
 
+  aws_ec2:
+    ubuntu_trusty_image_id: ami-3cf8b154
+    medium_instance_type: m3.medium
+    micro_instance_type: t1.micro
+
 #####################################################################################
 
 handler_configurations:
@@ -381,7 +386,18 @@ handler_configurations:
       username: '{{system_tests_softlayer_username}}'
       api_key: '{{system_tests_softlayer_api_key}}'
 
-#####################################################################################
+  ################################################################################
+
+  aws_ec2:
+    inputs: inputs-aws-ec2.yaml
+    handler: ec2_handler
+    external: *aws_ec2_plugin_external
+    manager_blueprint: aws-ec2/aws-ec2-manager-blueprint.yaml
+    inputs_override:
+      aws_access_key_id: '{{system_tests_aws_access_key_id}}'
+      aws_secret_access_key: '{{system_tests_aws_secret_access_key}}'
+
+  ################################################################################
 
 tests:
 
