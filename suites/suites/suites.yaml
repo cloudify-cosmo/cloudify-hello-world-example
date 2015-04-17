@@ -402,6 +402,7 @@ handler_configurations:
     handler: ec2_handler
     external: *aws_ec2_plugin_external
     manager_blueprint: aws-ec2/aws-ec2-manager-blueprint.yaml
+    properties: aws_ec2
     inputs_override:
       aws_access_key_id: '{{system_tests_aws_access_key_id}}'
       aws_secret_access_key: '{{system_tests_aws_secret_access_key}}'
