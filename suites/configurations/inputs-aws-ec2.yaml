@@ -7,8 +7,8 @@ agent_keypair_name: 'shared-systemt-tests-key'
 
 use_existing_manager_group: false
 use_existing_agent_group: false
-use_existing_manager_keypair: false
-use_existing_agent_keypair: false
+use_existing_manager_keypair: true
+use_existing_agent_keypair: true
 manager_key_pair_file_path: ~/.ssh/shared-systemt-tests-key.pem
 agent_key_pair_file_path: ~/.ssh/shared-systemt-tests-key.pem
 mananger_security_group_name: systemt-cloudify-sg-manager
