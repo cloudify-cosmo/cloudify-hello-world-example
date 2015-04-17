@@ -20,6 +20,10 @@ variables:
   lab_openstack_ubuntu_precise: d81ccdfe-7482-460e-a7ce-69ea29aa129b
   lab_openstack_ubuntu_trusty: c6d36e11-f4d5-4221-b6e8-4e97914c67e9
 
+  aws_ami_ubuntu_trusty_image_id: ami-3cf8b154
+  aws_ec2_medium_instance_type: m3.medium
+  aws_ec2_micro_instance_type: t1.micro
+
   ######################################################
 
   # These values are updated by the version tool
@@ -48,8 +52,8 @@ variables:
   system_tests_lab_os_username: _
   system_tests_lab_os_password: _
 
-  system_test_ec2_access_id: _
-  system_test_ec2_secret_key: _
+  system_tests_aws_access_key_id: _
+  system_tests_aws_secret_access_key: _
 
   system_test_vsphere_username: _
   system_test_vsphere_password: _
@@ -139,6 +143,9 @@ templates:
   - &docker_plugin_external
     repo: cloudify-docker-plugin
 
+  - &aws_ec2_plugin_external
+    repo: cloudify-aws-plugin
+
   #######################################################
 
   - &hp_openstack_properties
@@ -227,6 +234,11 @@ handler_properties:
 
   vsphere:
     template: ubuntu-configured-template
+
+  aws_ec2:
+    ubuntu_trusty_image_id: '{{aws_ami_ubuntu_trusty_image_id}}'
+    medium_instance_type: '{{aws_ec2_medium_instance_type}}'
+    micro_instance_type: '{{aws_ec2_micro_instance_type}}'
 
 #####################################################################################
 
@@ -383,7 +395,20 @@ handler_configurations:
       username: '{{system_tests_softlayer_username}}'
       api_key: '{{system_tests_softlayer_api_key}}'
 
-#####################################################################################
+  ################################################################################
+
+  aws_ec2:
+    inputs: inputs-aws-ec2.yaml
+    handler: ec2_handler
+    external: *aws_ec2_plugin_external
+    manager_blueprint: aws-ec2/aws-ec2-manager-blueprint.yaml
+    inputs_override:
+      aws_access_key_id: '{{system_tests_aws_access_key_id}}'
+      aws_secret_access_key: '{{system_tests_aws_secret_access_key}}'
+      image_id: '{{aws_ami_ubuntu_trusty_image_id}}'
+      instance_type: '{{aws_ec2_medium_instance_type}}'
+
+################################################################################
 
 tests:
 
@@ -429,9 +454,11 @@ tests:
     tests:
       - cosmo_tester/test_suites/test_docker_centos_env
 
-  ec2_blueprints:
+  ec2:
+    external: *aws_ec2_plugin_external
     tests:
-      - cosmo_tester/test_suites/ec2_test_blueprints
+      - system_tests/manager
+      - system_tests/local
 
   vsphere_blueprints:
     external: *vsphere_plugin_external
@@ -554,6 +581,13 @@ test_suites:
     handler_configuration: softlayer
     tests:
       - softlayer_blueprints
+
+  ########################################################################
+
+  ec2:
+    handler_configuration: aws_ec2
+    tests:
+      - ec2
 
 # these files are created on the client container before executing the tests
 # only applies in quickbuild runs, not when running locally
