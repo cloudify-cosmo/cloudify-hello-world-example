@@ -393,7 +393,7 @@ handler_configurations:
       username: '{{system_tests_softlayer_username}}'
       api_key: '{{system_tests_softlayer_api_key}}'
 
-        ################################################################################
+  ################################################################################
 
   aws_ec2:
     inputs: inputs-aws-ec2.yaml
