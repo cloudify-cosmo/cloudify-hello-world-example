@@ -73,6 +73,10 @@ class SecurityTestBase(TestCase):
             headers=util.get_auth_header(username=TEST_CFY_USERNAME,
                                          password=TEST_CFY_PASSWORD))
 
+        def clean_mgmt_ip():
+            self.env.management_ip = None
+        self.addCleanup(clean_mgmt_ip)
+
         response = self.client.manager.get_status()
         if not response['status'] == 'running':
             raise RuntimeError('Manager at {0} is not running.'
