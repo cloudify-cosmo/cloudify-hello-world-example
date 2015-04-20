@@ -36,9 +36,12 @@ class MonitoringTest(TestCase):
             expected_metric,
             timeout=300)
 
-        url = "http://{0}/#/deployment/{1}/monitoring" \
-              .format(self.env.management_ip, self.test_id)
-        self.assert_grafana_path_active(url)
+        # commented out because the non-commercial package now does not
+        # contain the UI. This test should probably be converted to be
+        # tested on softlayer, which tests the commercial packages.
+        # url = "http://{0}/#/deployment/{1}/monitoring" \
+        #       .format(self.env.management_ip, self.test_id)
+        # self.assert_grafana_path_active(url)
 
         self.execute_uninstall()
 

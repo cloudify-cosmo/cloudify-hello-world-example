@@ -24,9 +24,12 @@ import copy
 import os
 import importlib
 import json
+from contextlib import contextmanager
 
 import yaml
 from path import path
+import fabric.api
+import fabric.context_managers
 
 from cosmo_tester.framework.cfy_helper import (CfyHelper,
                                                DEFAULT_EXECUTE_TIMEOUT)
@@ -406,3 +409,12 @@ class TestCase(unittest.TestCase):
                 if time.time() > deadline:
                     raise
                 time.sleep(1)
+
+    @contextmanager
+    def manager_env_fabric(self, **kwargs):
+        with fabric.context_managers.settings(
+                host_string=self.cfy.get_management_ip(),
+                user=self.env.management_user_name,
+                key_filename=self.env.management_key_path,
+                **kwargs):
+            yield fabric.api

@@ -23,7 +23,7 @@ logger.setLevel(logging.INFO)
 git = sh_bake(sh.git)
 pip = sh_bake(sh.pip)
 nosetests = sh_bake(sh.nosetests)
-
+suite_reports_dir = path(__file__).dirname() / 'xunit-reports'
 
 CLOUDIFY_SYSTEM_TESTS = 'cloudify-system-tests'
 
@@ -250,10 +250,8 @@ class SuiteRunner(object):
 
         for test_group, tests in test_groups.items():
             tests_dir = test_group
-            report_file = os.path.join(
-                self.base_dir, 'xunit-reports',
-                '{0}-{1}-report.xml'.format(self.test_suite_name,
-                                            tests_dir))
+            report_file = suite_reports_dir / '{0}-{1}-report.xml'.format(
+                self.test_suite_name, tests_dir)
             processed_tests = []
             for test in tests:
                 processed_tests += test.split(' ')
@@ -265,10 +263,7 @@ class SuiteRunner(object):
                               nologcapture=True,
                               with_xunit=True,
                               xunit_file=report_file,
-                              # https://github.com/nose-devs/nose/pull/860
-                              # has been merged to master, uncomment when
-                              # version is greater than 1.3.4
-                              # xunit_testsuite_name=self.test_suite_name,
+                              xunit_testsuite_name=self.test_suite_name,
                               *processed_tests).wait()
                 except sh.ErrorReturnCode:
                     failed_groups.append(test_group)

@@ -74,6 +74,11 @@ class SecurityTestBase(TestCase):
     def _running_env_setup(self):
         self.env.management_ip = self.cfy.get_management_ip()
         self.set_rest_client()
+
+        def clean_mgmt_ip():
+            self.env.management_ip = None
+        self.addCleanup(clean_mgmt_ip)
+
         response = self.client.manager.get_status()
         if not response['status'] == 'running':
             raise RuntimeError('Manager at {0} is not running.'

@@ -75,12 +75,10 @@ class CfyHelper(object):
 
     def teardown(self,
                  ignore_deployments=True,
-                 ignore_validation=False,
                  verbose=False):
         with self.workdir:
             cfy.teardown(
                 ignore_deployments=ignore_deployments,
-                ignore_validation=ignore_validation,
                 force=True,
                 verbose=verbose).wait()
 
