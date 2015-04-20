@@ -20,11 +20,15 @@ import os
 import re
 import json
 import shutil
+import string
+import random
+import tempfile
 
 import jinja2
-from path import path
 import yaml
+from path import path
 from itsdangerous import base64_encode
+from jinja2 import Template
 
 from cloudify_rest_client import CloudifyClient
 from cloudify_cli import constants
@@ -122,6 +126,29 @@ def get_actual_keypath(env, keypath, raise_on_missing=True):
         else:
             return None
     return keypath
+
+
+def render_template_to_file(template_path, file_path=None, **values):
+    with open(template_path) as f:
+        template = f.read()
+    rendered = Template(template).render(**values)
+    return content_to_file(rendered, file_path)
+
+
+def render_template(template_path, **values):
+    with open(template_path) as f:
+        template = f.read()
+    rendered = Template(template).render(**values)
+    return rendered
+
+
+def content_to_file(content, file_path=None):
+    if not file_path:
+        file_path = tempfile.NamedTemporaryFile(mode='w', delete=False).name
+    with open(file_path, 'w') as f:
+        f.write(content)
+        f.write(os.linesep)
+    return file_path
 
 
 def wait_for_open_port(ip, port, timeout):
@@ -253,3 +280,10 @@ class YamlPatcher(object):
     @staticmethod
     def _raise_illegal(prop_path):
         raise RuntimeError('illegal path: {0}'.format(prop_path))
+
+
+def generate_password():
+    length = 13
+    chars = string.ascii_letters + string.digits + '!@#$%^&*()'
+    random.seed = (os.urandom(1024))
+    return ''.join(random.choice(chars) for i in range(length))
