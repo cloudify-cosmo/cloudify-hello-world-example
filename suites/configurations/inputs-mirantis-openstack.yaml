@@ -7,7 +7,7 @@ keystone_url: http://198.11.218.66:5000/v2.0
 manager_public_key_name: shared-systemt-tests
 agent_public_key_name: shared-systemt-tests
 flavor_id: 3
-external_network_name: public
+external_network_name: net04_ext
 
 use_existing_manager_keypair: true
 use_existing_agent_keypair: true
