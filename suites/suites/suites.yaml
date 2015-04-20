@@ -395,7 +395,7 @@ handler_configurations:
     inputs_override:
       <<: *mirantis_openstack_credentials_inputs
       <<: *mirantis_openstack_inputs
-      keystone_tenant_name: system_tests
+      keystone_tenant_name: system-tests
 
   ###############################################################################
 
