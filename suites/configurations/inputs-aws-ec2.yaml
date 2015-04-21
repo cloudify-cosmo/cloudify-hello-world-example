@@ -1,0 +1,18 @@
+aws_access_key_id: ''
+aws_secret_access_key: ''
+image_id: ''
+instance_type: ''
+manager_keypair_name: 'shared-systemt-tests-key'
+agent_keypair_name: 'shared-systemt-tests-key'
+
+use_existing_manager_group: false
+use_existing_agent_group: false
+use_existing_manager_keypair: true
+use_existing_agent_keypair: true
+manager_key_pair_file_path: ~/.ssh/shared-systemt-tests-key.pem
+agent_key_pair_file_path: ~/.ssh/shared-systemt-tests-key.pem
+mananger_security_group_name: systemt-cloudify-sg-manager
+agent_security_group_name: systemt-cloudify-sg-agents
+manager_server_name: systemt-cloudify-manager
+manager_server_user: ubuntu
+agents_user: ubuntu

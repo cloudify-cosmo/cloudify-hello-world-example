@@ -25,6 +25,9 @@ from cosmo_tester.framework.cfy_helper import cfy as cli
 from cosmo_tester.framework import util
 
 
+os.environ['HANDLER_CONFIGURATION'] = '/home/elip/dev/system-tests-handlers/hp-openstack-region-b-dev2-handler.yaml'
+
+
 class ManagerRecoveryTest(TestCase):
 
     def _install_blueprint(self):
@@ -98,6 +101,8 @@ class ManagerRecoveryTest(TestCase):
     def _kill_and_recover_manager(self):
 
         def _kill_and_recover():
+            # run the recovery from the same directory the bootstrap was
+            # executed from
             self.cfy.use(management_ip=self.env.management_ip)
             with settings(**self.fabric_env):
                 sudo('docker kill cfy')

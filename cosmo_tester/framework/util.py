@@ -49,19 +49,25 @@ def process_variables(suites_yaml, unprocessed_dict):
     return result
 
 
-def generate_unique_configurations(workdir,
-                                   original_inputs_path,
-                                   original_manager_blueprint_path):
+def generate_unique_configurations(
+        workdir,
+        original_inputs_path,
+        original_manager_blueprint_path,
+        manager_blueprint_dir_name='manager-blueprint'):
     inputs_path = path(os.path.join(workdir, 'inputs.yaml'))
     shutil.copy(original_inputs_path, inputs_path)
     manager_blueprint_base = os.path.basename(
         original_manager_blueprint_path)
     source_manager_blueprint_dir = os.path.dirname(
         original_manager_blueprint_path)
-    target_manager_blueprint_dir = os.path.join(workdir,
-                                                'manager-blueprint')
+    target_manager_blueprint_dir = os.path.join(
+        workdir, manager_blueprint_dir_name)
+
+    def ignore(src, names):
+        return names if os.path.basename(src) == '.git' else set()
     shutil.copytree(source_manager_blueprint_dir,
-                    target_manager_blueprint_dir)
+                    target_manager_blueprint_dir,
+                    ignore=ignore)
     manager_blueprint_path = path(
         os.path.join(target_manager_blueprint_dir,
                      manager_blueprint_base))

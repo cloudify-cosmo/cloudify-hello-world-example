@@ -16,9 +16,8 @@
 import os
 from path import path
 
+from cloudify import constants
 from cloudify_rest_client.client import CloudifyClient
-from cloudify_cli.constants import (CLOUDIFY_USERNAME_ENV,
-                                    CLOUDIFY_PASSWORD_ENV)
 
 from cosmo_tester.framework import util
 from cosmo_tester.framework.testenv import TestCase
@@ -63,17 +62,27 @@ class SecurityTestBase(TestCase):
         self.addCleanup(self.cfy.teardown)
 
     def _set_credentials_env_vars(self):
-        os.environ[CLOUDIFY_USERNAME_ENV] = TEST_CFY_USERNAME
-        os.environ[CLOUDIFY_PASSWORD_ENV] = TEST_CFY_PASSWORD
+        os.environ[constants.CLOUDIFY_USERNAME_ENV] = TEST_CFY_USERNAME
+        os.environ[constants.CLOUDIFY_PASSWORD_ENV] = TEST_CFY_PASSWORD
 
-    def _running_env_setup(self):
-        self.env.management_ip = self.cfy.get_management_ip()
+    def set_rest_client(self):
         self.client = CloudifyClient(
             host=self.env.management_ip,
             headers=util.get_auth_header(username=TEST_CFY_USERNAME,
                                          password=TEST_CFY_PASSWORD))
 
+    def _running_env_setup(self):
+        self.env.management_ip = self.cfy.get_management_ip()
+        self.set_rest_client()
+
+        def clean_mgmt_ip():
+            self.env.management_ip = None
+        self.addCleanup(clean_mgmt_ip)
+
         response = self.client.manager.get_status()
         if not response['status'] == 'running':
             raise RuntimeError('Manager at {0} is not running.'
-                               .format(self.management_ip))
+                               .format(self.env.management_ip))
+
+    def get_ssl_enabled(self):
+        return False

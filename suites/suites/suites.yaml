@@ -20,11 +20,15 @@ variables:
   lab_openstack_ubuntu_precise: d81ccdfe-7482-460e-a7ce-69ea29aa129b
   lab_openstack_ubuntu_trusty: c6d36e11-f4d5-4221-b6e8-4e97914c67e9
 
+  aws_ami_ubuntu_trusty_image_id: ami-3cf8b154
+  aws_ec2_medium_instance_type: m3.medium
+  aws_ec2_micro_instance_type: t1.micro
+
   ######################################################
 
   # These values are updated by the version tool
-  core_branch: '3.2rc'
-  plugins_branch: '1.2rc'
+  core_branch: '3.2rc1'
+  plugins_branch: '1.2rc1'
 
   # These values are injected by quickbuild and are here mainly
   # for reference (i.e. they will exist in runtime either way)
@@ -48,8 +52,8 @@ variables:
   system_tests_lab_os_username: _
   system_tests_lab_os_password: _
 
-  system_test_ec2_access_id: _
-  system_test_ec2_secret_key: _
+  system_tests_aws_access_key_id: _
+  system_tests_aws_secret_access_key: _
 
   system_test_vsphere_username: _
   system_test_vsphere_password: _
@@ -66,14 +70,16 @@ variables:
 # That can later be used by YAML aliases (*) and merges (<<)
 templates:
 
-  - &hp_openstack_centos7_0_overrides
+  - &centos_install_docker_create_overrides
     node_templates.manager.interfaces.cloudify\.interfaces\.lifecycle.start.inputs.task_properties.privileged: true
-    node_templates.manager_server.properties.server.userdata: |
-      #!/bin/bash
-      yum install -y docker wget && \
-      service docker stop && \
-      wget https://get.docker.com/builds/Linux/x86_64/docker-latest -O /usr/bin/docker && \
-      service docker start
+    node_templates.manager.interfaces.cloudify\.interfaces\.lifecycle.create:
+      implementation: fabric.fabric_plugin.tasks.run_module_task
+      inputs:
+        task_mapping: cosmo_tester.resources.scripts.install_docker_centos.create
+        fabric_env:
+          user: { get_input: manager_server_user }
+          key_filename: { get_property: [management_keypair, private_key_path] }
+          host_string: { get_attribute: [manager_server_ip, floating_ip_address] }
 
   - &manager_blueprint_override
     node_templates.manager.properties.cloudify_packages.agents.ubuntu_agent_url: '{{ubuntu_package_agent_url}}'
@@ -120,9 +126,25 @@ templates:
     username: opencm
     password: '{{opencm_git_pwd}}'
 
+  - &watchdog_external
+    repo: cloudify-watchdog
+    private: true
+    username: opencm
+    password: '{{opencm_git_pwd}}'
+
   - &cli_packager_external
     repo: cloudify-cli-packager
     branch: '{{core_branch}}'
+
+  - &diamond_snmp_extension_external
+    repo: cloudify-diamond-snmp-extension
+    branch: '{{core_branch}}'
+
+  - &docker_plugin_external
+    repo: cloudify-docker-plugin
+
+  - &aws_ec2_plugin_external
+    repo: cloudify-aws-plugin
 
   #######################################################
 
@@ -210,12 +232,13 @@ handler_properties:
     ubuntu_image_id: eada2fe8-894a-4b26-ac8d-cedab010f185
     small_flavor_id: 3
 
-  aws_ec2:
-    medium_instance_type: m1.medium
-    ubuntu_agent_ami: ami-a73264ce
-
   vsphere:
     template: ubuntu-configured-template
+
+  aws_ec2:
+    ubuntu_trusty_image_id: '{{aws_ami_ubuntu_trusty_image_id}}'
+    medium_instance_type: '{{aws_ec2_medium_instance_type}}'
+    micro_instance_type: '{{aws_ec2_micro_instance_type}}'
 
 #####################################################################################
 
@@ -283,7 +306,7 @@ handler_configurations:
     properties: hp_openstack_region_b_properties
     manager_blueprint_override:
       <<: *openstack_manager_blueprint_override
-      <<: *hp_openstack_centos7_0_overrides
+      <<: *centos_install_docker_create_overrides
     inputs_override:
       <<: *hp_openstack_credentials_inputs
       <<: *hp_openstack_region_b_inputs
@@ -372,7 +395,21 @@ handler_configurations:
       username: '{{system_tests_softlayer_username}}'
       api_key: '{{system_tests_softlayer_api_key}}'
 
-#####################################################################################
+  ################################################################################
+
+  aws_ec2:
+    inputs: inputs-aws-ec2.yaml
+    handler: ec2_handler
+    external: *aws_ec2_plugin_external
+    manager_blueprint: aws-ec2/aws-ec2-manager-blueprint.yaml
+    properties: aws_ec2
+    inputs_override:
+      aws_access_key_id: '{{system_tests_aws_access_key_id}}'
+      aws_secret_access_key: '{{system_tests_aws_secret_access_key}}'
+      image_id: '{{aws_ami_ubuntu_trusty_image_id}}'
+      instance_type: '{{aws_ec2_medium_instance_type}}'
+
+################################################################################
 
 tests:
 
@@ -418,14 +455,21 @@ tests:
     tests:
       - cosmo_tester/test_suites/test_docker_centos_env
 
-  ec2_blueprints:
+  ec2:
+    external: *aws_ec2_plugin_external
     tests:
-      - cosmo_tester/test_suites/ec2_test_blueprints
+      - system_tests/manager
+      - system_tests/local
 
   vsphere_blueprints:
     external: *vsphere_plugin_external
     tests:
       - system_tests/test_vsphere_blueprints
+
+  watchdog_tests:
+    external: *watchdog_external
+    tests:
+      - system_tests/test_watchdog
 
   softlayer_blueprints:
     external: *softlayer_plugin_external
@@ -441,6 +485,16 @@ tests:
     external: *cli_packager_external
     tests:
       - system_tests
+
+  diamond_snmp_extension:
+    external: *diamond_snmp_extension_external
+    tests:
+      - system_tests
+
+  docker_plugin:
+    external: *docker_plugin_external
+    tests:
+      - system_tests/manager
 
 #####################################################################################
 
@@ -467,6 +521,11 @@ test_suites:
       - openstack_plugin
       - openstack_blueprints_persistence_recovery
 
+  hp_openstack_watchdog:
+      handler_configuration: hp_openstack_system_tests3_region_a
+      tests:
+        - watchdog_tests
+
   #####################################################################
 
   lab_openstack_chef_puppet:
@@ -479,20 +538,22 @@ test_suites:
     tests:
       - openstack_blueprints_windows
 
-  lab_openstack_rest_plugins:
+  lab_openstack_rest_plugins_diamond_snmp:
     handler_configuration: lab_openstack_system_tests3
     tests:
       - openstack_rest_plugins
+      - diamond_snmp_extension
 
   lab_openstack_security:
     handler_configuration: lab_openstack_system_tests4
     tests:
       - openstack_security
 
-  lab_openstack_cli_packager:
+  lab_openstack_cli_packager_docker_plugin:
     handler_configuration: lab_openstack_system_tests5
     tests:
       - cli_packager
+      - docker_plugin
 
   #####################################################################
 
@@ -510,13 +571,6 @@ test_suites:
 
   ######################################################################
 
-  aws_ec2:
-    handler_configuration: aws_ec2
-    tests:
-      - ec2_blueprints
-
-  ########################################################################
-
   vsphere:
     handler_configuration: vsphere
     tests:
@@ -528,6 +582,13 @@ test_suites:
     handler_configuration: softlayer
     tests:
       - softlayer_blueprints
+
+  ########################################################################
+
+  ec2:
+    handler_configuration: aws_ec2
+    tests:
+      - ec2
 
 # these files are created on the client container before executing the tests
 # only applies in quickbuild runs, not when running locally

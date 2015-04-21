@@ -90,7 +90,7 @@ class TokenAuthenticationTest(SecurityTestBase):
         client = CloudifyClient(host=self.env.management_ip,
                                 headers=user_pass_header)
 
-        token_header = util.get_auth_header(token=client.tokens.get())
+        token_header = util.get_auth_header(token=client.tokens.get().value)
         client = CloudifyClient(self.env.management_ip, headers=token_header)
 
         response = client.manager.get_status()

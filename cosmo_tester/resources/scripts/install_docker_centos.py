@@ -1,5 +1,5 @@
 ########
-# Copyright (c) 2013 GigaSpaces Technologies Ltd. All rights reserved
+# Copyright (c) 2015 GigaSpaces Technologies Ltd. All rights reserved
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,12 +13,11 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
+import fabric.api
 
-from setuptools import setup
 
-setup(
-    name='windows-host-plugin',
-    version='3.2rc1',
-    packages=['windows_host_plugin'],
-    zip_safe=False,
-)
+def create():
+    install_docker_cmd = 'sudo yum install -y docker && ' \
+                         'sudo yum update -y device-mapper-libs && ' \
+                         'sudo service docker restart'
+    fabric.api.run(install_docker_cmd)
