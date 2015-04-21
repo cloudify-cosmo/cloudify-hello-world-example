@@ -20,10 +20,10 @@ variables:
   lab_openstack_ubuntu_precise: d81ccdfe-7482-460e-a7ce-69ea29aa129b
   lab_openstack_ubuntu_trusty: c6d36e11-f4d5-4221-b6e8-4e97914c67e9
 
-  aws_ec2_eu_central_1_ami_ubuntu_trusty_image_id: ami-00dae61d
+  aws_ec2_eu_central_1_ami_ubuntu_trusty_image_id: ami-3cdae621
   aws_ec2_medium_instance_type: m3.medium
   aws_ec2_micro_instance_type: t1.micro
-  aws_ec2_region_name: eu-central-1
+  aws_ec2_eu_central_1_region_name: eu-central-1
 
   ######################################################
 
@@ -240,7 +240,6 @@ handler_properties:
     ubuntu_trusty_image_id: '{{aws_ec2_eu_central_1_ami_ubuntu_trusty_image_id}}'
     medium_instance_type: '{{aws_ec2_medium_instance_type}}'
     micro_instance_type: '{{aws_ec2_micro_instance_type}}'
-    ec2_region_name: '{{aws_ec2_region_name}}'
 
 #####################################################################################
 
@@ -410,7 +409,7 @@ handler_configurations:
       aws_secret_access_key: '{{system_tests_aws_secret_access_key}}'
       image_id: '{{aws_ec2_eu_central_1_ami_ubuntu_trusty_image_id}}'
       instance_type: '{{aws_ec2_medium_instance_type}}'
-      ec2_region_name: '{{aws_ec2_region_name}}'
+      ec2_region_name: '{{aws_ec2_eu_central_1_region_name}}'
 
 ################################################################################
 
