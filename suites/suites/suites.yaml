@@ -395,7 +395,31 @@ handler_configurations:
     inputs_override:
       <<: *mirantis_openstack_credentials_inputs
       <<: *mirantis_openstack_inputs
-      keystone_tenant_name: system-tests
+      keystone_tenant_name: system-tests-1
+
+  mirantis_openstack_system_tests2:
+    <<: *mirantis_openstack_handler_configuration
+    env: mirantis_openstack_2
+    inputs_override:
+      <<: *mirantis_openstack_credentials_inputs
+      <<: *mirantis_openstack_inputs
+      keystone_tenant_name: system-tests-2
+
+  mirantis_openstack_system_tests3:
+    <<: *mirantis_openstack_handler_configuration
+    env: mirantis_openstack_3
+    inputs_override:
+      <<: *mirantis_openstack_credentials_inputs
+      <<: *mirantis_openstack_inputs
+      keystone_tenant_name: system-tests-3
+
+  mirantis_openstack_system_tests4:
+    <<: *mirantis_openstack_handler_configuration
+    env: mirantis_openstack_4
+    inputs_override:
+      <<: *mirantis_openstack_credentials_inputs
+      <<: *mirantis_openstack_inputs
+      keystone_tenant_name: system-tests-4
 
   ###############################################################################
 
