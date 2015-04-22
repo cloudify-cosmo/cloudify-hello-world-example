@@ -113,6 +113,13 @@ templates:
       port: 8086
       cidr: 0.0.0.0/0
 
+  - &aws_ec2_manager_blueprint_sg_override
+    'node_templates.management_security_group.properties.rules[append]':
+      ip_protocol: tcp
+      from_port: 8086
+      to_port: 8086
+      cidr_ip: 0.0.0.0/0
+
   - &openstack_manager_blueprint_override
     <<: *manager_blueprint_override
     <<: *openstack_manager_blueprint_sg_override
@@ -124,13 +131,6 @@ templates:
   - &aws_ec2_manager_blueprint_override
     <<: *manager_blueprint_override
     <<: *aws_ec2_manager_blueprint_sg_override
-
-  - &aws_ec2_manager_blueprint_sg_override
-    'node_templates.management_security_group.properties.rules[append]':
-      ip_protocol: tcp
-      from_port: 8086
-      to_port: 8086
-      cidr_ip: 0.0.0.0/0
 
   ######################################################
 
