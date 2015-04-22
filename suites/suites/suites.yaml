@@ -25,9 +25,9 @@ variables:
   mirantis_openstack_ubuntu_precise: 6d90a96d-4c53-41b2-98b9-36986f622c2a
   mirantis_openstack_ubuntu_trusty: e6d6681b-46fe-4325-861e-f56ffb3e4fbc
 
-  aws_ec2_eu_central_1_ami_ubuntu_trusty_image_id: ami-3cdae621
+  aws_ec2_eu_central_1_ami_ubuntu_trusty_image_id: ami-00dae61d
   aws_ec2_medium_instance_type: m3.medium
-  aws_ec2_micro_instance_type: t1.micro
+  aws_ec2_micro_instance_type: t2.micro
   aws_ec2_eu_central_1_region_name: eu-central-1
 
   ######################################################
