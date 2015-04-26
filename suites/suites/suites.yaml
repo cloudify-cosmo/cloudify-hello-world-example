@@ -25,9 +25,9 @@ variables:
   mirantis_openstack_ubuntu_precise: 6d90a96d-4c53-41b2-98b9-36986f622c2a
   mirantis_openstack_ubuntu_trusty: e6d6681b-46fe-4325-861e-f56ffb3e4fbc
 
-  aws_ec2_eu_central_1_ami_ubuntu_trusty_image_id: ami-3cdae621
+  aws_ec2_eu_central_1_ami_ubuntu_trusty_image_id: ami-00dae61d
   aws_ec2_medium_instance_type: m3.medium
-  aws_ec2_micro_instance_type: t1.micro
+  aws_ec2_micro_instance_type: t2.micro
   aws_ec2_eu_central_1_region_name: eu-central-1
 
   ######################################################
@@ -113,6 +113,13 @@ templates:
       port: 8086
       cidr: 0.0.0.0/0
 
+  - &aws_ec2_manager_blueprint_sg_override
+    'node_templates.management_security_group.properties.rules[append]':
+      ip_protocol: tcp
+      from_port: 8086
+      to_port: 8086
+      cidr_ip: 0.0.0.0/0
+
   - &openstack_manager_blueprint_override
     <<: *manager_blueprint_override
     <<: *openstack_manager_blueprint_sg_override
@@ -120,6 +127,10 @@ templates:
   - &softlayer_manager_blueprint_override
     <<: *manager_blueprint_commercial_override
     node_templates.manager.properties.cloudify.workflows.task_retries: 100
+
+  - &aws_ec2_manager_blueprint_override
+    <<: *manager_blueprint_override
+    <<: *aws_ec2_manager_blueprint_sg_override
 
   ######################################################
 
@@ -469,6 +480,7 @@ handler_configurations:
     handler: ec2_handler
     external: *aws_ec2_plugin_external
     manager_blueprint: aws-ec2/aws-ec2-manager-blueprint.yaml
+    manager_blueprint_override: *aws_ec2_manager_blueprint_override
     properties: aws_ec2
     inputs_override:
       aws_access_key_id: '{{system_tests_aws_access_key_id}}'

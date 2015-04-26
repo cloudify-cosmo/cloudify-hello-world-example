@@ -23,7 +23,7 @@ from cosmo_tester.test_suites.test_security.security_test_base import \
 
 class TokenAuthenticationTest(SecurityTestBase):
 
-    def test_secured_openstack_nodecellar(self):
+    def test_token_authentication(self):
         self.setup_secured_manager()
         self._assert_invalid_user_fails()
         self._assert_valid_token_authenticates()
@@ -52,7 +52,7 @@ class TokenAuthenticationTest(SecurityTestBase):
                     'TokenAuthenticator',
                 'properties': {
                     'secret_key': 'my_secret',
-                    'expires_in': 600
+                    'expires_in_seconds': 600
                 }
             },
             'authentication_providers': [
