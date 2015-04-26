@@ -140,6 +140,7 @@ templates:
     private: true
     username: opencm
     password: '{{opencm_git_pwd}}'
+    branch: '{{core_branch}}'
 
   - &cli_packager_external
     repo: cloudify-cli-packager
