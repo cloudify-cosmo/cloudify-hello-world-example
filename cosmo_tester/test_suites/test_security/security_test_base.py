@@ -70,7 +70,7 @@ class SecurityTestBase(TestCase):
         return settings
 
     def get_enabled(self):
-        True
+        return 'true'
 
     def get_userstore_driver_implementation(self):
         return 'flask_securest.userstores.simple:SimpleUserstore'
@@ -92,9 +92,8 @@ class SecurityTestBase(TestCase):
         return [
             {
                 'name': 'password',
-                'implementation': 'flask_securest.'
-                                  'authentication_providers.password:'
-                                  'PasswordAuthenticator',
+                'implementation': 'flask_securest.authentication_providers'
+                                  '.password:PasswordAuthenticator',
                 'properties': {
                     'password_hash': 'plaintext'
                 }

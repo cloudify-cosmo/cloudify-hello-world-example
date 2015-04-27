@@ -31,9 +31,9 @@ class TokenAuthenticationTest(SecurityTestBase):
 
     def get_auth_token_generator(self):
         return {
-            'implementation':
-                'flask_securest.authentication_providers.token:'
-                'TokenAuthenticator',
+            'implementation': 'flask_securest'
+                              '.authentication_providers.token'
+                              ':TokenAuthenticator',
             'properties': {
                 'secret_key': 'my_secret',
                 'expires_in_seconds': 600
@@ -45,14 +45,12 @@ class TokenAuthenticationTest(SecurityTestBase):
             TokenAuthenticationTest, self).get_authentication_providers_list()
         list_authentication_providers.append(
             {
-                {
-                    'name': 'token',
-                    'implementation': 'flask_securest.'
-                                      'authentication_providers.token:'
-                                      'TokenAuthenticator',
-                    'properties': {
-                        'secret_key': 'my_secret'
-                    }
+                'name': 'token',
+                'implementation': 'flask_securest.'
+                                  'authentication_providers.token:'
+                                  'TokenAuthenticator',
+                'properties': {
+                    'secret_key': 'my_secret'
                 }
             }
         )

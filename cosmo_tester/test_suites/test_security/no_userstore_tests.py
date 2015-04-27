@@ -34,7 +34,7 @@ class NoUserstoreTests(SecurityTestBase):
         self.setup_secured_manager()
         self._assert_unauthorized_user_fails()
 
-    def _update_manager_blueprint(self, prop_path, new_value):
+    def _update_manager_blueprint(self, props):
         src_plugin_dir = util.get_plugin_path(CUSTOM_AUTH_PROVIDER_PLUGIN)
         shutil.copytree(src_plugin_dir,
                         self.test_manager_blueprint_path.dirname() /
@@ -55,9 +55,8 @@ class NoUserstoreTests(SecurityTestBase):
         return [
             {
                 'name': 'password',
-                'implementation': 'mock_auth_provider_with_no_userstore.'
-                                  'auth_without_userstore:'
-                                  'AuthorizeUser1',
+                'implementation': 'mock_auth_provider_with_no_userstore'
+                                  '.auth_without_userstore:AuthorizeUser1',
                 'properties': {
                     'dummy_param': 'dumdum'
                 }
