@@ -549,7 +549,7 @@ tests:
   watchdog_tests:
     external: *watchdog_external
     tests:
-      - system_tests/manager/test_watchdog
+      - system_tests/manager
 
   softlayer_blueprints:
     external: *softlayer_plugin_external
