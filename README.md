@@ -14,32 +14,47 @@ In addition, plugins functionality is tested and Cloudify's examples.
 
 ## Running System Tests
 
-System tests are written as standard Python unit tests and should be ran using nose.
+The following example demonstrates how to run Cloudify's node cellar example system test on an OpenStack environment:
 
-The following environment variables should be set before running a system test:
-
+* Create a new Python 2.7 virtualenv:
 ```
-# Path to a bootstrap configuration file (mandatory)
-export CLOUDIFY_TEST_CONFIG_PATH="/some_path/cloudify-config.yaml"
-
-# Cloudify manager IP address (should be usage if test should run with an existing manager)
-export CLOUDIFY_TEST_MANAGEMENT_IP="10.0.0.1"
-
-# Specifies whether to cleanup cloud resources on test termination (if set)
-export CLOUDIFY_TEST_NO_CLEANUP="true"
-
-# Cloud handler for the test (default: openstack)
-export CLOUDIFY_TEST_HANDLER_MODULE="CLOUDIFY_TEST_HANDLER_MODULE"
-
+virtualenv venv
+source venv/bin/activate
 ```
 
-Running a test:
-
+* Install Cloudify's CLI:
 ```
-# Make sure you have nose installed
-pip install nose
-
-# Run a test
-nosetests -s <path-to-test-file>
+git clone https://github.com/cloudify-cosmo/cloudify-cli.git
+pip install -e cloudify-cli -r cloudify-cli/dev-requirements.txt
 ```
 
+* Install Cloudify's system tests framework:
+```
+git clone https://github.com/cloudify-cosmo/cloudify-system-tests.git
+pip install -e cloudify-system-tests
+```
+
+* Install Cloudify's OpenStack plugin:
+```
+git clone https://github.com/cloudify-cosmo/cloudify-openstack-plugin.git
+pip install -e cloudify-openstack-plugin
+```
+
+* Clone the cloudify-manager-blueprints repository (for the framework to be able to bootstrap a Cloudify manager):
+```git clone https://github.com/cloudify-cosmo/cloudify-manager-blueprints.git```
+
+* Create an inputs file for your environment (based on cloudify-manager-blueprints/openstack/inputs.yaml.template)
+
+* Copy the sample handler configuration to your work dir (cloudify-system-tests/suites/suites/sample-handler-configuration.yaml).
+
+* Set values for the following keys in the handler configuration file:
+  - handler
+  - inputs
+  - manager_blueprint
+  - properties
+
+* Run the test using `nosetests`:
+```
+export HANDLER_CONFIGURATION=/path/to/sample-handler-configuration.yaml
+nosetests -s cosmo_tester/test_suites/test_blueprints/nodecellar_test.py:OpenStackNodeCellarTest
+```

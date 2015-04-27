@@ -61,7 +61,7 @@ class RebootManagerTest(TestCase):
                              'undefined services: {0}'
                              .format(','.join(undefined)))
         stopped = self._get_stopped_services()
-        self.assertEqual(stopped, ['Cloudify UI'], 'stopped services: {0}'
+        self.assertEqual(stopped, [], 'stopped services: {0}'
                          .format(','.join(stopped)))
 
     def test_01_during_reboot(self):
@@ -83,15 +83,12 @@ class RebootManagerTest(TestCase):
                     self.assertEqual(pre_display_name, post_display_name,
                                      'pre and post reboot service names '
                                      'should be identical')
-                    # compare all service states except UI which is absent from
-                    # the non-commercial distro
-                    if pre_display_name != 'Cloudify UI':
-                        self.assertEqual(pre.get('instances')[0].get('state'),
-                                         post.get('instances')[0].get('state'),
-                                         'pre and post reboot status is not '
-                                         'equal:{0}\n{1}'
-                                         .format(pre.get('display_name'),
-                                                 post.get('display_name')))
+                    self.assertEqual(pre.get('instances')[0].get('state'),
+                                     post.get('instances')[0].get('state'),
+                                     'pre and post reboot status is not '
+                                     'equal:{0}\n{1}'
+                                     .format(pre.get('display_name'),
+                                             post.get('display_name')))
                 else:
                     self.assertEqual(pre.get('name'), post.get('name'),
                                      'pre and post reboot status is not equal:'
@@ -127,5 +124,5 @@ class RebootManagerTest(TestCase):
                              'undefined services: {0}'
                              .format(','.join(undefined)))
         stopped = self._get_stopped_services()
-        self.assertEqual(stopped, ['Cloudify UI'], 'stopped services: {0}'
+        self.assertEqual(stopped, [], 'stopped services: {0}'
                          .format(','.join(stopped)))

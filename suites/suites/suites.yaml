@@ -20,9 +20,15 @@ variables:
   lab_openstack_ubuntu_precise: d81ccdfe-7482-460e-a7ce-69ea29aa129b
   lab_openstack_ubuntu_trusty: c6d36e11-f4d5-4221-b6e8-4e97914c67e9
 
-  aws_ami_ubuntu_trusty_image_id: ami-3cf8b154
+  mirantis_openstack_ubuntu_precise_image_name: Ubuntu 12.04 x64 (pre installed DevStack)
+  mirantis_openstack_ubuntu_trusty_image_name: Ubuntu 14.04 x64 LTS
+  mirantis_openstack_ubuntu_precise: 6d90a96d-4c53-41b2-98b9-36986f622c2a
+  mirantis_openstack_ubuntu_trusty: e6d6681b-46fe-4325-861e-f56ffb3e4fbc
+
+  aws_ec2_eu_central_1_ami_ubuntu_trusty_image_id: ami-00dae61d
   aws_ec2_medium_instance_type: m3.medium
-  aws_ec2_micro_instance_type: t1.micro
+  aws_ec2_micro_instance_type: t2.micro
+  aws_ec2_eu_central_1_region_name: eu-central-1
 
   ######################################################
 
@@ -51,6 +57,9 @@ variables:
 
   system_tests_lab_os_username: _
   system_tests_lab_os_password: _
+
+  system_tests_mirantis_os_username: _
+  system_tests_mirantis_os_password: _
 
   system_tests_aws_access_key_id: _
   system_tests_aws_secret_access_key: _
@@ -104,6 +113,13 @@ templates:
       port: 8086
       cidr: 0.0.0.0/0
 
+  - &aws_ec2_manager_blueprint_sg_override
+    'node_templates.management_security_group.properties.rules[append]':
+      ip_protocol: tcp
+      from_port: 8086
+      to_port: 8086
+      cidr_ip: 0.0.0.0/0
+
   - &openstack_manager_blueprint_override
     <<: *manager_blueprint_override
     <<: *openstack_manager_blueprint_sg_override
@@ -111,6 +127,10 @@ templates:
   - &softlayer_manager_blueprint_override
     <<: *manager_blueprint_commercial_override
     node_templates.manager.properties.cloudify.workflows.task_retries: 100
+
+  - &aws_ec2_manager_blueprint_override
+    <<: *manager_blueprint_override
+    <<: *aws_ec2_manager_blueprint_sg_override
 
   ######################################################
 
@@ -131,6 +151,7 @@ templates:
     private: true
     username: opencm
     password: '{{opencm_git_pwd}}'
+    branch: '{{core_branch}}'
 
   - &cli_packager_external
     repo: cloudify-cli-packager
@@ -168,6 +189,10 @@ templates:
     keystone_username: '{{system_tests_lab_os_username}}'
     keystone_password: '{{system_tests_lab_os_password}}'
 
+  - &mirantis_openstack_credentials_inputs
+    keystone_username: '{{system_tests_mirantis_os_username}}'
+    keystone_password: '{{system_tests_mirantis_os_password}}'
+
   #######################################################
 
   - &hp_openstack_region_a_inputs
@@ -180,6 +205,9 @@ templates:
 
   - &lab_openstack_inputs
     image_id: '{{lab_openstack_ubuntu_trusty}}'
+
+  - &mirantis_openstack_inputs
+    image_id: '{{mirantis_openstack_ubuntu_trusty}}'
 
   #######################################################
 
@@ -199,6 +227,13 @@ templates:
     manager_blueprint: openstack/openstack-manager-blueprint.yaml
     manager_blueprint_override: *openstack_manager_blueprint_override
     properties: lab_openstack_properties
+
+  - &mirantis_openstack_handler_configuration
+    <<: *openstack_handler_configuration
+    inputs: inputs-mirantis-openstack.yaml
+    manager_blueprint: openstack/openstack-manager-blueprint.yaml
+    manager_blueprint_override: *openstack_manager_blueprint_override
+    properties: mirantis_openstack_properties
 
 #####################################################################################
 
@@ -226,6 +261,15 @@ handler_properties:
     small_flavor_id: ba4e08fd-e4c5-4233-a906-f1bb31cb659d
     medium_flavor_id: 8b5be402-98e6-461c-8425-56f708187c13
 
+  mirantis_openstack_properties:
+    ubuntu_image_name: '{{mirantis_openstack_ubuntu_precise_image_name}}'
+    ubuntu_trusty_image_name: '{{mirantis_openstack_ubuntu_trusty_image_name}}'
+    ubuntu_image_id: '{{mirantis_openstack_ubuntu_precise}}'
+    ubuntu_trusty_image_id: '{{mirantis_openstack_ubuntu_trusty}}'
+    flavor_name: m1.small
+    small_flavor_id: 2
+    medium_flavor_id: 3
+
   pclab47_devstack_nova_net:
     ubuntu_image_name: ubuntu
     flavor_name: m1.small
@@ -236,7 +280,7 @@ handler_properties:
     template: ubuntu-configured-template
 
   aws_ec2:
-    ubuntu_trusty_image_id: '{{aws_ami_ubuntu_trusty_image_id}}'
+    ubuntu_trusty_image_id: '{{aws_ec2_eu_central_1_ami_ubuntu_trusty_image_id}}'
     medium_instance_type: '{{aws_ec2_medium_instance_type}}'
     micro_instance_type: '{{aws_ec2_micro_instance_type}}'
 
@@ -358,6 +402,40 @@ handler_configurations:
 
   ###############################################################################
 
+  mirantis_openstack_system_tests1:
+    <<: *mirantis_openstack_handler_configuration
+    env: mirantis_openstack_1
+    inputs_override:
+      <<: *mirantis_openstack_credentials_inputs
+      <<: *mirantis_openstack_inputs
+      keystone_tenant_name: system-tests-1
+
+  mirantis_openstack_system_tests2:
+    <<: *mirantis_openstack_handler_configuration
+    env: mirantis_openstack_2
+    inputs_override:
+      <<: *mirantis_openstack_credentials_inputs
+      <<: *mirantis_openstack_inputs
+      keystone_tenant_name: system-tests-2
+
+  mirantis_openstack_system_tests3:
+    <<: *mirantis_openstack_handler_configuration
+    env: mirantis_openstack_3
+    inputs_override:
+      <<: *mirantis_openstack_credentials_inputs
+      <<: *mirantis_openstack_inputs
+      keystone_tenant_name: system-tests-3
+
+  mirantis_openstack_system_tests4:
+    <<: *mirantis_openstack_handler_configuration
+    env: mirantis_openstack_4
+    inputs_override:
+      <<: *mirantis_openstack_credentials_inputs
+      <<: *mirantis_openstack_inputs
+      keystone_tenant_name: system-tests-4
+
+  ###############################################################################
+
   pclab47_devstack_nova_net:
     <<: *openstack_handler_configuration
     handler: openstack_nova_net_handler
@@ -402,12 +480,14 @@ handler_configurations:
     handler: ec2_handler
     external: *aws_ec2_plugin_external
     manager_blueprint: aws-ec2/aws-ec2-manager-blueprint.yaml
+    manager_blueprint_override: *aws_ec2_manager_blueprint_override
     properties: aws_ec2
     inputs_override:
       aws_access_key_id: '{{system_tests_aws_access_key_id}}'
       aws_secret_access_key: '{{system_tests_aws_secret_access_key}}'
-      image_id: '{{aws_ami_ubuntu_trusty_image_id}}'
+      image_id: '{{aws_ec2_eu_central_1_ami_ubuntu_trusty_image_id}}'
       instance_type: '{{aws_ec2_medium_instance_type}}'
+      ec2_region_name: '{{aws_ec2_eu_central_1_region_name}}'
 
 ################################################################################
 
@@ -469,7 +549,7 @@ tests:
   watchdog_tests:
     external: *watchdog_external
     tests:
-      - system_tests/test_watchdog
+      - system_tests/manager
 
   softlayer_blueprints:
     external: *softlayer_plugin_external
