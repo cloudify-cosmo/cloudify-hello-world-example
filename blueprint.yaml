@@ -5,38 +5,30 @@
 # and simple web server started using Cloudify's script plugin.
 # In addition, an OpenStack floating ip and security group are created and associated with the created vm.
 #
-
-tosca_definitions_version: cloudify_dsl_1_0
-
+tosca_definitions_version: cloudify_dsl_1_1
 imports:
   - http://www.getcloudify.org/spec/cloudify/3.2rc1/types.yaml
   - http://www.getcloudify.org/spec/openstack-plugin/1.2rc1/plugin.yaml
-
+  - http://www.getcloudify.org/spec/diamond-plugin/1.2rc1/plugin.yaml
 inputs:
   webserver_port:
     description: The HTTP web server port
     default: 8080
-
   agent_user:
     description: User name used when SSH-ing into the started machine
-
   image:
     description: Openstack image name or id to use for the new server
-
   flavor:
     description: Openstack flavor name or id to use for the new server
-
 node_templates:
   virtual_ip:
     type: cloudify.openstack.nodes.FloatingIP
-
   security_group:
     type: cloudify.openstack.nodes.SecurityGroup
     properties:
       rules:
         - remote_ip_prefix: 0.0.0.0/0
           port: { get_property: [ http_web_server, port ] }
-
   vm:
     type: cloudify.openstack.nodes.Server
     properties:
@@ -49,7 +41,35 @@ node_templates:
         target: virtual_ip
       - type: cloudify.openstack.server_connected_to_security_group
         target: security_group
-
+    interfaces:
+      ###########################################################
+      # We are infact telling cloudify to install a diamond
+      # monitoring agent on the server.
+      #
+      # (see https://github.com/BrightcoveOS/Diamond)
+      ###########################################################
+      cloudify.interfaces.monitoring_agent:
+          install:
+            implementation: diamond.diamond_agent.tasks.install
+            inputs:
+              diamond_config:
+                default:
+                  interval: 1
+          start: diamond.diamond_agent.tasks.start
+          stop: diamond.diamond_agent.tasks.stop
+          uninstall: diamond.diamond_agent.tasks.uninstall
+      cloudify.interfaces.monitoring:
+          start:
+            implementation: diamond.diamond_agent.tasks.add_collectors
+            inputs:
+              collectors_config:
+                  CPUCollector: {}
+                  MemoryCollector: {}
+                  LoadAverageCollector: {}
+                  DiskUsageCollector:
+                    config:
+                      devices: x?vd[a-z]+[0-9]*$
+                  NetworkCollector: {}
   http_web_server:
     type: cloudify.nodes.WebServer
     properties:
@@ -65,5 +85,6 @@ node_templates:
 
 outputs:
   http_endpoint:
-    description: HTTP web server endpoint.
-    value: { get_attribute: [ vm, ip ] }
+    description: Web server external endpoint
+    value: { concat: ['http://', { get_attribute: [virtual_ip, floating_ip_address] }, 
+                      ':', { get_property: [http_web_server, port] }] }
