@@ -16,10 +16,10 @@
 import os
 from path import path
 
-from cloudify import constants
+from cloudify_cli import constants
 from cloudify_rest_client.client import CloudifyClient
-
 from cosmo_tester.framework import util
+
 from cosmo_tester.framework.testenv import TestCase
 
 
@@ -31,10 +31,9 @@ class SecurityTestBase(TestCase):
 
     def setup_secured_manager(self):
         self._copy_manager_blueprint()
-        self._update_manager_blueprint(
-            prop_path='node_templates.manager.properties.cloudify.security',
-            new_value=self.get_security_settings()
-        )
+        prop_path = 'node_templates.manager.properties.cloudify.security'
+        new_value = self.get_security_settings()
+        self._update_manager_blueprint({prop_path: new_value})
         self._bootstrap()
         self._set_credentials_env_vars()
         self._running_env_setup()
@@ -48,11 +47,69 @@ class SecurityTestBase(TestCase):
         self.test_inputs_path = path(inputs_path)
 
     def get_security_settings(self):
-        raise RuntimeError('Must be implemented by Subclasses')
+        settings = {
+            'enabled': self.get_enabled(),
+            'authentication_providers': self.get_authentication_providers_list()
+        }
+        userstore = self.get_userstore()
+        if userstore:
+            settings['userstore_driver'] = {
+                'implementation': self.get_userstore_driver_implementation(),
+                'properties': {
+                    'userstore': userstore,
+                    },
+                'identifying_attribute': self.get_identifying_attribute()
+            }
+        auth_token_generator = self.get_auth_token_generator()
+        if auth_token_generator:
+            settings['auth_token_generator'] = auth_token_generator
+        ssl_settings = self.get_ssl_settings()
+        if ssl_settings:
+            settings['ssl'] = ssl_settings
+        return settings
 
-    def _update_manager_blueprint(self, prop_path, new_value):
+    def get_enabled(self):
+        True
+
+    def get_userstore_driver_implementation(self):
+        return 'flask_securest.userstores.simple:SimpleUserstore'
+
+    def get_userstore(self):
+        return {
+            'user1':
+                {
+                    'username': 'user1',
+                    'password': 'pass1',
+                    'email': 'user1@domain.dom'
+                }
+        }
+
+    def get_identifying_attribute(self):
+        return 'username'
+
+    def get_authentication_providers_list(self):
+        return [
+            {
+                'name': 'password',
+                'implementation': 'flask_securest.'
+                                  'authentication_providers.password:'
+                                  'PasswordAuthenticator',
+                'properties': {
+                    'password_hash': 'plaintext'
+                }
+            }
+        ]
+
+    def get_auth_token_generator(self):
+        return ''
+
+    def get_ssl_settings(self):
+        return ''
+
+    def _update_manager_blueprint(self, props):
         with util.YamlPatcher(self.test_manager_blueprint_path) as patch:
-            patch.set_value(prop_path, new_value)
+            for key, value in props.items():
+                patch.set_value(key, value)
 
     def _bootstrap(self):
         self.cfy.bootstrap(blueprint_path=self.test_manager_blueprint_path,
@@ -84,5 +141,3 @@ class SecurityTestBase(TestCase):
             raise RuntimeError('Manager at {0} is not running.'
                                .format(self.env.management_ip))
 
-    def get_ssl_enabled(self):
-        return False

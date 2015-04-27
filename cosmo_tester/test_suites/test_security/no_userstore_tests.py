@@ -51,21 +51,21 @@ class NoUserstoreTests(SecurityTestBase):
             }
         }
 
-    def get_security_settings(self):
-        return {
-            'enabled': 'true',
-            'authentication_providers': [
-                {
-                    'name': 'password',
-                    'implementation': 'mock_auth_provider_with_no_userstore.'
-                                      'auth_without_userstore:'
-                                      'AuthorizeUser1',
-                    'properties': {
-                        'dummy_param': 'dumdum'
-                    }
+    def get_authentication_providers_list(self):
+        return [
+            {
+                'name': 'password',
+                'implementation': 'mock_auth_provider_with_no_userstore.'
+                                  'auth_without_userstore:'
+                                  'AuthorizeUser1',
+                'properties': {
+                    'dummy_param': 'dumdum'
                 }
-            ]
-        }
+            }
+        ]
+
+    def get_userstore(self):
+        return ''
 
     def _assert_unauthorized_user_fails(self):
         client = CloudifyClient(host=self.env.management_ip,
