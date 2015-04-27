@@ -47,4 +47,3 @@ class SecuredOpenstackNodecellarTest(OpenStackNodeCellarTestBase,
                     'email': 'user3@domain.dom'
                 },
             }
-

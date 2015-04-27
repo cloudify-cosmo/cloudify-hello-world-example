@@ -46,7 +46,8 @@ class SSLTests(SecurityTestBase):
         self.addCleanup(clean_mgmt_ip)
 
     def get_security_settings(self):
-        security_settings_with_ssl = super(SSLTests, self).get_security_settings()
+        security_settings_with_ssl = \
+            super(SSLTests, self).get_security_settings()
         security_settings_with_ssl['ssl'] = {
             constants.SLL_ENABLED_PROPERTY_NAME: self.get_ssl_enabled(),
             constants.CERTIFICATE_PATH_PROPERTY_NAME: self.get_cert_path(),
@@ -99,5 +100,3 @@ class SSLTests(SecurityTestBase):
             f.write(crypto.dump_certificate(crypto.FILETYPE_PEM, certificate))
         with open(path.expanduser(target_key_path), 'w') as f:
             f.write(crypto.dump_privatekey(crypto.FILETYPE_PEM, key))
-
-

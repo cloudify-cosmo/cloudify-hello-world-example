@@ -49,7 +49,8 @@ class SecurityTestBase(TestCase):
     def get_security_settings(self):
         settings = {
             'enabled': self.get_enabled(),
-            'authentication_providers': self.get_authentication_providers_list()
+            'authentication_providers':
+                self.get_authentication_providers_list()
         }
         userstore = self.get_userstore()
         if userstore:
@@ -140,4 +141,3 @@ class SecurityTestBase(TestCase):
         if not response['status'] == 'running':
             raise RuntimeError('Manager at {0} is not running.'
                                .format(self.env.management_ip))
-

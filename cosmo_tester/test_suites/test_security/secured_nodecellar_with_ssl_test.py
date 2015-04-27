@@ -38,10 +38,11 @@ class SecuredWithSSLManagerTests(OpenStackNodeCellarTestBase,
             'default': self.floating_ip_id,
             'type': 'string'
         }
-        props['node_templates.manager_server_ip.properties' \
-              '.use_external_resource'] = '{ get_input: use_existing_floating_ip }'
-        props['node_templates.manager_server_ip.properties.' \
-              'resource_id'] = '{ get_input: floating_ip_id }'
+        props[
+            'node_templates.manager_server_ip.properties.use_external_resource'] = \
+            '{ get_input: use_existing_floating_ip }'
+        props['node_templates.manager_server_ip.properties.resource_id'] = \
+            '{ get_input: floating_ip_id }'
 
         super(SSLTests, self)._update_manager_blueprint(props)
 
@@ -156,6 +157,3 @@ class SecuredWithSSLManagerTests(OpenStackNodeCellarTestBase,
         if not response['status'] == 'running':
             raise RuntimeError('Manager at {0} is not running.'
                                .format(self.env.management_ip))
-
-
-
