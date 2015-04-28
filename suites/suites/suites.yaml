@@ -139,6 +139,10 @@ templates:
 
   - &softlayer_plugin_external
     repo: cloudify-softlayer-plugin
+    private: true
+    username: opencm
+    password: '{{opencm_git_pwd}}'
+    branch: '{{plugins_branch}}'
 
   - &vsphere_plugin_external
     repo: cloudify-vsphere-plugin
