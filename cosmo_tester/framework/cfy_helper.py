@@ -101,8 +101,6 @@ class CfyHelper(object):
                 deployment_id=deployment_id,
                 verbose=verbose,
                 inputs=inputs)
-            import time
-            time.sleep(5)
             self.execute_install(
                 deployment_id=deployment_id,
                 execute_timeout=execute_timeout,
