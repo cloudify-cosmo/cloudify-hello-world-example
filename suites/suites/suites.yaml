@@ -168,6 +168,9 @@ templates:
   - &docker_plugin_external
     repo: cloudify-docker-plugin
 
+  - &host_pool_plugin_external
+    repo: cloudify-host-pool-plugin
+
   - &aws_ec2_plugin_external
     repo: cloudify-aws-plugin
 
@@ -580,6 +583,11 @@ tests:
     tests:
       - system_tests/manager
 
+  host_pool_plugin:
+    external: *host_pool_plugin_external
+    tests:
+      - system_tests/manager
+
 #####################################################################################
 
 test_suites:
@@ -588,6 +596,7 @@ test_suites:
     handler_configuration: hp_openstack_system_tests_region_b
     tests:
       - openstack_blueprints_without_chef_puppet_docker_windows
+      - host_pool_plugin
 
   hp_openstack_manager_status:
     handler_configuration: hp_openstack_system_tests2_region_a
