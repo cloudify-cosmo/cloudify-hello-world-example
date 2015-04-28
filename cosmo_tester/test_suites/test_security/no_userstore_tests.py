@@ -54,9 +54,9 @@ class NoUserstoreTests(SecurityTestBase):
     def get_authentication_providers_list(self):
         return [
             {
-                'name': 'password',
                 'implementation': 'mock_auth_provider_with_no_userstore'
                                   '.auth_without_userstore:AuthorizeUser1',
+                'name': 'password',
                 'properties': {
                     'dummy_param': 'dumdum'
                 }

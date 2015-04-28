@@ -58,8 +58,8 @@ class SecurityTestBase(TestCase):
                 'implementation': self.get_userstore_driver_implementation(),
                 'properties': {
                     'userstore': userstore,
-                    },
-                'identifying_attribute': self.get_identifying_attribute()
+                    'identifying_attribute': self.get_identifying_attribute()
+                },
             }
         auth_token_generator = self.get_auth_token_generator()
         if auth_token_generator:
