@@ -40,13 +40,13 @@ class SecuredWithSSLManagerTests(OpenStackNodeCellarTestBase,
         }
         props[
             'node_templates.manager_server_ip.properties.use_external_resource'] = \
-            '{ get_input: use_existing_floating_ip }'
+            {'get_input': 'use_existing_floating_ip'}
         props['node_templates.manager_server_ip.properties.resource_id'] = \
-            '{ get_input: floating_ip_id }'
+            {'get_input': 'floating_ip_id'}
 
         super(SSLTests, self)._update_manager_blueprint(props)
 
-    def test_ssl_manager(self):
+    def test_secured_manager_with_certificate(self):
         # setup and bootstrap manager with ssl enabled configured
         self._setup_secured_manager_with_ssl()
         # send request and verify certificate
