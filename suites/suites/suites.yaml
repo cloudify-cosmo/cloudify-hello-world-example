@@ -139,6 +139,10 @@ templates:
 
   - &softlayer_plugin_external
     repo: cloudify-softlayer-plugin
+    private: true
+    username: opencm
+    password: '{{opencm_git_pwd}}'
+    branch: '{{plugins_branch}}'
 
   - &vsphere_plugin_external
     repo: cloudify-vsphere-plugin
@@ -151,6 +155,7 @@ templates:
     private: true
     username: opencm
     password: '{{opencm_git_pwd}}'
+    branch: '{{core_branch}}'
 
   - &cli_packager_external
     repo: cloudify-cli-packager
@@ -548,7 +553,7 @@ tests:
   watchdog_tests:
     external: *watchdog_external
     tests:
-      - system_tests/test_watchdog
+      - system_tests/manager
 
   softlayer_blueprints:
     external: *softlayer_plugin_external
