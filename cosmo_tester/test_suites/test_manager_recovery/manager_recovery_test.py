@@ -25,9 +25,6 @@ from cosmo_tester.framework.cfy_helper import cfy as cli
 from cosmo_tester.framework import util
 
 
-os.environ['HANDLER_CONFIGURATION'] = '/home/elip/dev/system-tests-handlers/lab-openstack-eli-handler.yaml'
-
-
 class ManagerRecoveryTest(TestCase):
 
     def test_manager_recovery(self):
