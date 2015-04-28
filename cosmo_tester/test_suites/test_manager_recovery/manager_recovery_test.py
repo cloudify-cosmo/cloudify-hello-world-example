@@ -30,39 +30,6 @@ os.environ['HANDLER_CONFIGURATION'] = '/home/elip/dev/system-tests-handlers/lab-
 
 class ManagerRecoveryTest(TestCase):
 
-    def _install_blueprint(self):
-        self.blueprint_yaml = os.path.join(
-            os.path.dirname(blueprints.__file__),
-            'recovery',
-            'blueprint.yaml'
-        )
-
-        inputs = {
-            'image': self.env.ubuntu_image_id,
-            'flavor': self.env.small_flavor_id
-        }
-
-        blueprint_id = 'recovery-{0}'.format(self.test_id)
-        self.deployment_id = blueprint_id
-        self.upload_deploy_and_execute_install(
-            inputs=inputs,
-            deployment_id=self.deployment_id,
-            blueprint_id=blueprint_id
-        )
-        self.fabric_env = self._setup_fabric_env()
-
-    def _setup_fabric_env(self):
-        return {
-            'host_string': self.env.management_ip,
-            'port': 22,
-            'user': self.env.management_user_name,
-            'key_filename': util.get_actual_keypath(
-                self.env,
-                self.env.management_key_path
-            ),
-            'connection_attempts': 5
-        }
-
     def test_manager_recovery(self):
 
         # bootstrap and install
@@ -98,6 +65,39 @@ class ManagerRecoveryTest(TestCase):
         # this will test the management worker is still responding
         self.cfy.delete_deployment(self.deployment_id)
 
+    def _install_blueprint(self):
+        self.blueprint_yaml = os.path.join(
+            os.path.dirname(blueprints.__file__),
+            'recovery',
+            'blueprint.yaml'
+        )
+
+        inputs = {
+            'image': self.env.ubuntu_image_id,
+            'flavor': self.env.small_flavor_id
+        }
+
+        blueprint_id = 'recovery-{0}'.format(self.test_id)
+        self.deployment_id = blueprint_id
+        self.upload_deploy_and_execute_install(
+            inputs=inputs,
+            deployment_id=self.deployment_id,
+            blueprint_id=blueprint_id
+        )
+        self.fabric_env = self._setup_fabric_env()
+
+    def _setup_fabric_env(self):
+        return {
+            'host_string': self.cfy.get_management_ip(),
+            'port': 22,
+            'user': self.env.management_user_name,
+            'key_filename': util.get_actual_keypath(
+                self.env,
+                self.env.management_key_path
+            ),
+            'connection_attempts': 5
+        }
+
     def _kill_and_recover_manager(self):
 
         def _kill_and_recover():
@@ -115,12 +115,7 @@ class ManagerRecoveryTest(TestCase):
                            task_retries=5,
                            install_plugins=self.env.install_plugins)
 
-        # explicitly set the management_ip from our bootstrap
-        # this is needed because the initialization of the env was done
-        # without bootstrap, so management_ip is None
-        self.env.management_ip = self.cfy.get_management_ip()
-
-        # also override the client instance to use the correct ip
-        self.client = CloudifyClient(host=self.env.management_ip)
+        # override the client instance to use the correct ip
+        self.client = CloudifyClient(self.cfy.get_management_ip())
 
         self.addCleanup(self.cfy.teardown)
