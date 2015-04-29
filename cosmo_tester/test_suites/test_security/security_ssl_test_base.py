@@ -21,10 +21,10 @@ from cosmo_tester.test_suites.test_security.security_test_base import \
     SecurityTestBase, TEST_CFY_USERNAME, TEST_CFY_PASSWORD
 
 
-class SSLTests(SecurityTestBase):
+class SSLTestBase(SecurityTestBase):
 
     def setUp(self):
-        super(SSLTests, self).setUp()
+        super(SSLTestBase, self).setUp()
         self.cert_path = ''
         self.key_path = ''
 
@@ -37,23 +37,13 @@ class SSLTests(SecurityTestBase):
                                          password=TEST_CFY_PASSWORD),
             trust_all=True)
 
-    def _running_env_setup(self):
-        self.env.management_ip = self.cfy.get_management_ip()
-        self.set_rest_client()
+    # def _running_env_setup(self):
+    #     self.env.management_ip = self.cfy.get_management_ip()
+    #     self.set_rest_client()
 
         def clean_mgmt_ip():
             self.env.management_ip = None
         self.addCleanup(clean_mgmt_ip)
-
-    def get_security_settings(self):
-        security_settings_with_ssl = \
-            super(SSLTests, self).get_security_settings()
-        security_settings_with_ssl['ssl'] = {
-            constants.SLL_ENABLED_PROPERTY_NAME: self.get_ssl_enabled(),
-            constants.CERTIFICATE_PATH_PROPERTY_NAME: self.get_cert_path(),
-            constants.PRIVATE_KEY_PROPERTY_NAME: self.get_key_path()
-        }
-        return security_settings_with_ssl
 
     def get_ssl_enabled(self):
         return True

@@ -25,15 +25,14 @@ from cosmo_tester.framework.testenv import TestCase
 
 TEST_CFY_USERNAME = 'user1'
 TEST_CFY_PASSWORD = 'pass1'
+SECURITY_PROP_PATH = 'node_templates.manager.properties.cloudify.security'
 
 
 class SecurityTestBase(TestCase):
 
     def setup_secured_manager(self):
         self._copy_manager_blueprint()
-        prop_path = 'node_templates.manager.properties.cloudify.security'
-        new_value = self.get_security_settings()
-        self._update_manager_blueprint({prop_path: new_value})
+        self._update_manager_blueprint()
         self._bootstrap()
         self._set_credentials_env_vars()
         self._running_env_setup()
@@ -52,41 +51,41 @@ class SecurityTestBase(TestCase):
             'authentication_providers':
                 self.get_authentication_providers_list()
         }
-        userstore = self.get_userstore()
-        if userstore:
-            settings['userstore_driver'] = {
-                'implementation': self.get_userstore_driver_implementation(),
-                'properties': {
-                    'userstore': userstore,
-                    'identifying_attribute': self.get_identifying_attribute()
-                },
-            }
+
+        userstore_drive = self.get_userstore_drive()
+        if userstore_drive:
+            settings['userstore_driver'] = userstore_drive
+
         auth_token_generator = self.get_auth_token_generator()
         if auth_token_generator:
             settings['auth_token_generator'] = auth_token_generator
-        ssl_settings = self.get_ssl_settings()
-        if ssl_settings:
-            settings['ssl'] = ssl_settings
+
+        settings['ssl'] = {
+            constants.SLL_ENABLED_PROPERTY_NAME: self.get_ssl_enabled(),
+            constants.CERTIFICATE_PATH_PROPERTY_NAME: self.get_cert_path(),
+            constants.PRIVATE_KEY_PROPERTY_NAME: self.get_key_path()
+        }
+
         return settings
 
     def get_enabled(self):
         return 'true'
 
-    def get_userstore_driver_implementation(self):
-        return 'flask_securest.userstores.simple:SimpleUserstore'
-
-    def get_userstore(self):
+    def get_userstore_drive(self):
         return {
-            'user1':
-                {
-                    'username': 'user1',
-                    'password': 'pass1',
-                    'email': 'user1@domain.dom'
+            'implementation':
+                'flask_securest.userstores.simple:SimpleUserstore',
+            'properties': {
+                'userstore': {
+                    'user1': {
+                        'username': 'user1',
+                        'password': 'pass1',
+                        'email': 'user1@domain.dom'
+                    },
+                    'identifying_attribute': 'username'
                 }
+            }
         }
-
-    def get_identifying_attribute(self):
-        return 'username'
 
     def get_authentication_providers_list(self):
         return [
@@ -103,13 +102,24 @@ class SecurityTestBase(TestCase):
     def get_auth_token_generator(self):
         return ''
 
-    def get_ssl_settings(self):
+    def get_ssl_enabled(self):
+        return 'false'
+
+    def get_cert_path(self):
         return ''
 
-    def _update_manager_blueprint(self, props):
+    def get_key_path(self):
+        return ''
+
+    def _update_manager_blueprint(self):
+        props = self.get_manager_blueprint_additional_props_override()
         with util.YamlPatcher(self.test_manager_blueprint_path) as patch:
+            patch.set_value(SECURITY_PROP_PATH, self.get_security_settings())
             for key, value in props.items():
                 patch.set_value(key, value)
+
+    def get_manager_blueprint_additional_props_override(self):
+        pass
 
     def _bootstrap(self):
         self.cfy.bootstrap(blueprint_path=self.test_manager_blueprint_path,

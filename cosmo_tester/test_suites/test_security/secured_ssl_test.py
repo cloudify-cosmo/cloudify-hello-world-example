@@ -12,6 +12,7 @@
 #    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
+
 import os
 from requests.exceptions import SSLError, ConnectionError
 from cloudify_cli import constants
@@ -21,30 +22,40 @@ from cosmo_tester.framework import util
 from cosmo_tester.test_suites.test_blueprints.nodecellar_test import \
     OpenStackNodeCellarTestBase
 from cosmo_tester.test_suites.test_security.security_ssl_test_base import \
-    SSLTests
+    SSLTestBase
 from cosmo_tester.test_suites.test_security.security_test_base import \
     TEST_CFY_USERNAME, TEST_CFY_PASSWORD
 
 
+USE_EXISTING_FLOATING_IP_INPUT = 'inputs.use_existing_floating_ip'
+FLOATING_IP_ID_INPUT = 'inputs.floating_ip_id'
+
+USE_EXTERNAL_RESOURCE_PROPERTY = \
+    'node_templates.manager_server_ip.properties.use_external_resource'
+RESOURCE_ID_PROPERTY = \
+    'node_templates.manager_server_ip.properties.resource_id'
+
+
 class SecuredWithSSLManagerTests(OpenStackNodeCellarTestBase,
-                                 SSLTests):
+                                 SSLTestBase):
 
-    def _update_manager_blueprint(self, props):
-        props['inputs.use_existing_floating_ip'] = {
-            'default': 'true',
-            'type': 'boolean'
+    def get_manager_blueprint_additional_props_override(self):
+        return {
+            USE_EXISTING_FLOATING_IP_INPUT: {
+                'default': 'true',
+                'type': 'boolean'
+            },
+            FLOATING_IP_ID_INPUT: {
+                'default': self.floating_ip_id,
+                'type': 'string'
+            },
+            USE_EXTERNAL_RESOURCE_PROPERTY: {
+                'get_input': 'use_existing_floating_ip'
+            },
+            RESOURCE_ID_PROPERTY: {
+                'get_input': 'floating_ip_id'
+            }
         }
-        props['inputs.floating_ip_id'] = {
-            'default': self.floating_ip_id,
-            'type': 'string'
-        }
-        props[
-            'node_templates.manager_server_ip.properties.use_external_resource'] = \
-            {'get_input': 'use_existing_floating_ip'}
-        props['node_templates.manager_server_ip.properties.resource_id'] = \
-            {'get_input': 'floating_ip_id'}
-
-        super(SSLTests, self)._update_manager_blueprint(props)
 
     def test_secured_manager_with_certificate(self):
         # setup and bootstrap manager with ssl enabled configured
@@ -74,7 +85,7 @@ class SecuredWithSSLManagerTests(OpenStackNodeCellarTestBase,
         self.floating_ip_id = floating_ip_id
 
         # create certificate with the ip intended to be used for this manager
-        SSLTests.create_self_signed_certificate(
+        SSLTestBase.create_self_signed_certificate(
             target_certificate_path=self.cert_path,
             target_key_path=self.key_path,
             common_name=floating_ip)
