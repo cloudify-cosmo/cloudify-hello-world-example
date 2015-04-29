@@ -81,6 +81,27 @@ class NodecellarAppTest(TestCase):
         return requests.get('http://{0}:{1}/wines'.format(
             self.public_ip, self.nodecellar_port))
 
+    def get_public_ip(self, nodes_state):
+        public_ip = None
+        entrypoint_node_name = self.entrypoint_node_name
+        entrypoint_runtime_property_name = self.entrypoint_property_name
+        for key, value in nodes_state.items():
+            if '_host' in key:
+                expected = self.host_expected_runtime_properties
+                for expected_property in expected:
+                    self.assertTrue(
+                        expected_property in value['runtime_properties'],
+                        'Missing {0} in runtime_properties: {1}'
+                        .format(expected_property, value))
+
+                self.assertEqual(value['state'], 'started',
+                                 'vm node should be started: {0}'
+                                 .format(nodes_state))
+            if key.startswith(entrypoint_node_name):
+                public_ip = value['runtime_properties'][
+                    entrypoint_runtime_property_name]
+        return public_ip
+
     def post_install_assertions(self, before_state, after_state):
         delta = self.get_manager_state_delta(before_state, after_state)
 
@@ -126,30 +147,13 @@ class NodecellarAppTest(TestCase):
         self.assertEqual(len(nodes_state), self.expected_nodes_count,
                          'nodes_state: {0}'.format(nodes_state))
         self.assert_monitoring_data_exists()
-        self.public_ip = None
-        entrypoint_node_name = self.entrypoint_node_name
-        entrypoint_runtime_property_name = self.entrypoint_property_name
-        for key, value in nodes_state.items():
-            if '_host' in key:
-                expected = self.host_expected_runtime_properties
-                for expected_property in expected:
-                    self.assertTrue(
-                        expected_property in value['runtime_properties'],
-                        'Missing {0} in runtime_properties: {1}'
-                        .format(expected_property, value))
-
-                self.assertEqual(value['state'], 'started',
-                                 'vm node should be started: {0}'
-                                 .format(nodes_state))
-            if key.startswith(entrypoint_node_name):
-                self.public_ip = value['runtime_properties'][
-                    entrypoint_runtime_property_name]
+        self.public_ip = self.get_public_ip(nodes_state)
 
         self.assertIsNotNone(self.public_ip,
                              'Could not find the '
                              '"{0}" node for '
                              'retrieving the public IP'
-                             .format(entrypoint_node_name))
+                             .format(self.entrypoint_node_name))
 
         events, total_events = self.client.events.get(execution_by_id.id)
 
