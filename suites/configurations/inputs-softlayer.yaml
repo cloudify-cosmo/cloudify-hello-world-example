@@ -16,7 +16,7 @@ private_network_only: false
 port_speed: 187
 private_vlan: ''
 public_vlan: ''
-provision_scripts: ['https://raw.githubusercontent.com/cloudify-cosmo/cloudify-softlayer-plugin/master/softlayer_plugin/scripts/postprov.sh']
+provision_scripts: ['https://raw.githubusercontent.com/cloudify-cosmo/cloudify-system-tests/master/cosmo_tester/resources/scripts/install_curl_ubuntu.sh']
 ssh_keys: [156067]
 ssh_key_filename: ~/.ssh/shared-systemt-tests-key.pem
 agents_user: root
