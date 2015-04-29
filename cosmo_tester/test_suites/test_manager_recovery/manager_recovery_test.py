@@ -15,9 +15,9 @@
 
 import os
 
-from path import path
 from fabric.api import sudo
 from fabric.api import settings
+from cloudify_rest_client import CloudifyClient
 
 from cosmo_tester.framework.testenv import TestCase
 from cosmo_tester.resources import blueprints
@@ -27,41 +27,11 @@ from cosmo_tester.framework import util
 
 class ManagerRecoveryTest(TestCase):
 
-    def setUp(self):
-        super(ManagerRecoveryTest, self).setUp()
-        self.blueprint_yaml = os.path.join(
-            os.path.dirname(blueprints.__file__),
-            'recovery',
-            'blueprint.yaml'
-        )
-
-        inputs = {
-            'image': self.env.ubuntu_image_id,
-            'flavor': self.env.small_flavor_id
-        }
-
-        blueprint_id = 'recovery-{0}'.format(self.test_id)
-        self.deployment_id = blueprint_id
-        self.upload_deploy_and_execute_install(
-            inputs=inputs,
-            deployment_id=self.deployment_id,
-            blueprint_id=blueprint_id
-        )
-        self.fabric_env = self._setup_fabric_env()
-
-    def _setup_fabric_env(self):
-        return {
-            'host_string': self.env.management_ip,
-            'port': 22,
-            'user': self.env.management_user_name,
-            'key_filename': util.get_actual_keypath(
-                self.env,
-                self.env.management_key_path
-            ),
-            'connection_attempts': 5
-        }
-
     def test_manager_recovery(self):
+
+        # bootstrap and install
+        self._bootstrap()
+        self._install_blueprint()
 
         # this will verify that all the data is actually persisted.
         before, after = self._kill_and_recover_manager()
@@ -92,26 +62,57 @@ class ManagerRecoveryTest(TestCase):
         # this will test the management worker is still responding
         self.cfy.delete_deployment(self.deployment_id)
 
+    def _install_blueprint(self):
+        self.blueprint_yaml = os.path.join(
+            os.path.dirname(blueprints.__file__),
+            'recovery',
+            'blueprint.yaml'
+        )
+
+        inputs = {
+            'image': self.env.ubuntu_image_id,
+            'flavor': self.env.small_flavor_id
+        }
+
+        blueprint_id = 'recovery-{0}'.format(self.test_id)
+        self.deployment_id = blueprint_id
+        self.upload_deploy_and_execute_install(
+            inputs=inputs,
+            deployment_id=self.deployment_id,
+            blueprint_id=blueprint_id
+        )
+        self.fabric_env = self._setup_fabric_env()
+
+    def _setup_fabric_env(self):
+        return {
+            'host_string': self.cfy.get_management_ip(),
+            'port': 22,
+            'user': self.env.management_user_name,
+            'key_filename': util.get_actual_keypath(
+                self.env,
+                self.env.management_key_path
+            ),
+            'connection_attempts': 5
+        }
+
     def _kill_and_recover_manager(self):
 
         def _kill_and_recover():
-            # run the recovery from the same directory the bootstrap was
-            # executed from
-            original = self.cfy.workdir
-            try:
-                self.cfy.workdir = path(self.env._workdir)
-                self.cfy.use(management_ip=self.env.management_ip)
-                with settings(**self.fabric_env):
-                    sudo('docker kill cfy')
-                self.cfy.recover()
-                self._fix_management_server_id()
-            finally:
-                self.cfy.workdir = original
+            with settings(**self.fabric_env):
+                sudo('docker kill cfy')
+            self.cfy.recover()
 
         return self._make_operation_with_before_after_states(
             _kill_and_recover,
             fetch_state=True)
 
-    def _fix_management_server_id(self):
-        management_server_name = self.env.management_server_name
-        self._test_cleanup_context.update_server_id(management_server_name)
+    def _bootstrap(self):
+        self.cfy.bootstrap(blueprint_path=self.env._manager_blueprint_path,
+                           inputs_file=self.env.cloudify_config_path,
+                           task_retries=5,
+                           install_plugins=self.env.install_plugins)
+
+        # override the client instance to use the correct ip
+        self.client = CloudifyClient(self.cfy.get_management_ip())
+
+        self.addCleanup(self.cfy.teardown)
