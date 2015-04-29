@@ -220,7 +220,7 @@ class NodecellarAppTest(TestCase):
 
     @property
     def repo_branch(self):
-        return 'temp-mongo-broken'
+        return None  # will use git_helper.clone default branch
 
     @property
     def expected_nodes_count(self):
