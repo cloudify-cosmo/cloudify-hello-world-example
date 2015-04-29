@@ -18,6 +18,7 @@ import requests
 import json
 from requests.exceptions import ConnectionError
 from influxdb import InfluxDBClient
+from influxdb.client import InfluxDBClientError
 
 from cosmo_tester.framework.testenv import TestCase
 from cosmo_tester.framework.git_helper import clone
@@ -162,17 +163,8 @@ class NodecellarAppTest(TestCase):
     def assert_monitoring_data_exists(self):
         client = InfluxDBClient(self.env.management_ip, 8086, 'root', 'root',
                                 'cloudify')
-        try:
-            # select monitoring events for deployment from the past 5 seconds.
-            # a NameError will be thrown only if NO deployment events exist
-            # in the DB regardless of time-span in query.
-            client.query('select * from /^{0}\./i '
-                         'where time > now() - 5s'
-                         .format(self.deployment_id))
-        except NameError as e:
-            self.fail('monitoring events list for deployment with ID {0} were'
-                      ' not found on influxDB. error is: {1}'
-                      .format(self.deployment_id, e))
+        self._assert_general_deployment_data(client)
+        self._assert_mongodb_collector_data(client)
 
     def post_uninstall_assertions(self):
         nodes_instances = self.client.node_instances.list(self.deployment_id)
@@ -186,6 +178,40 @@ class NodecellarAppTest(TestCase):
                       'but no error was raised.')
         except ConnectionError:
             pass
+
+    def _assert_general_deployment_data(self, influx_client):
+
+        try:
+            # select monitoring events for deployment from
+            # the past 5 seconds. a NameError will be thrown only if NO
+            # deployment events exist in the DB regardless of time-span
+            # in query.
+            influx_client.query('select * from /^{0}\./i '
+                                'where time > now() - 5s'
+                                .format(self.deployment_id))
+        except NameError as e:
+            self.fail('monitoring events list for deployment with ID {0} were'
+                      ' not found on influxDB. error is: {1}'
+                      .format(self.deployment_id, e))
+
+    def _assert_mongodb_collector_data(self, influx_client):
+
+        # retrieve some instance id of the mongodb node
+        instance_id = self.client.node_instances.list(
+            self.deployment_id, self.mongo_node_name)[0].id
+
+        try:
+            # select metrics from the mongo collector explicitly to verify
+            # it is working properly
+            query = 'select sum(value) from /{0}\.{1}\.{' \
+                    '2}\.mongo_connections_totalCreated/' \
+                .format(self.deployment_id, self.mongo_node_name,
+                        instance_id)
+            influx_client.query(query)
+        except InfluxDBClientError as e:
+            self.fail('monitoring events for {0} node instance '
+                      'with id {1} were not found on influxDB. error is: {2}'
+                      .format(self.mongo_node_name, instance_id, e))
 
     @property
     def repo_url(self):
@@ -215,6 +241,10 @@ class NodecellarAppTest(TestCase):
     @property
     def nodecellar_port(self):
         return 8080
+
+    @property
+    def mongo_node_name(self):
+        return 'mongod'
 
 
 class OpenStackNodeCellarTestBase(NodecellarAppTest):
