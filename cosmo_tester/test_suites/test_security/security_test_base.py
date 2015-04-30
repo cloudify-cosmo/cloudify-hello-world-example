@@ -69,7 +69,7 @@ class SecurityTestBase(TestCase):
         return settings
 
     def get_enabled(self):
-        return 'true'
+        return 'false'
 
     def get_userstore_drive(self):
         return {
@@ -81,9 +81,9 @@ class SecurityTestBase(TestCase):
                         'username': 'user1',
                         'password': 'pass1',
                         'email': 'user1@domain.dom'
-                    },
-                    'identifying_attribute': 'username'
-                }
+                    }
+                },
+                'identifying_attribute': 'username'
             }
         }
 
@@ -103,7 +103,7 @@ class SecurityTestBase(TestCase):
         return ''
 
     def get_ssl_enabled(self):
-        return 'false'
+        return False
 
     def get_cert_path(self):
         return ''
@@ -119,7 +119,7 @@ class SecurityTestBase(TestCase):
                 patch.set_value(key, value)
 
     def get_manager_blueprint_additional_props_override(self):
-        pass
+        return {}
 
     def _bootstrap(self):
         self.cfy.bootstrap(blueprint_path=self.test_manager_blueprint_path,

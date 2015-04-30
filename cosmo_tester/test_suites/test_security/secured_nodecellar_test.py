@@ -29,12 +29,12 @@ class SecuredOpenstackNodecellarTest(OpenStackNodeCellarTestBase,
     def get_userstore_drive(self):
         userstore_drive = \
             super(SecuredOpenstackNodecellarTest, self).get_userstore_drive()
-        userstore_drive['userstore']['user2'] = {
+        userstore_drive['properties']['userstore']['user2'] = {
             'username': 'user2',
             'password': 'pass2',
             'email': 'user2@domain.dom'
         }
-        userstore_drive['userstore']['user3'] = {
+        userstore_drive['properties']['userstore']['user3'] = {
             'username': 'user3',
             'password': 'pass3',
             'email': 'user3@domain.dom'

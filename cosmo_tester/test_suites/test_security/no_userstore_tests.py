@@ -34,6 +34,10 @@ class NoUserstoreTests(SecurityTestBase):
         self._assert_unauthorized_user_fails()
 
     def get_manager_blueprint_additional_props_override(self):
+        src_plugin_dir = util.get_plugin_path(CUSTOM_AUTH_PROVIDER_PLUGIN)
+        shutil.copytree(src_plugin_dir,
+                        self.test_manager_blueprint_path.dirname() /
+                        CUSTOM_AUTH_PROVIDER_PLUGIN)
         return {PLUGINS_PROP_PATH: self.get_plugins_settings()}
 
     def get_plugins_settings(self):
