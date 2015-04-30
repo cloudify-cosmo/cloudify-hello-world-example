@@ -474,7 +474,7 @@ handler_configurations:
     inputs: inputs-softlayer.yaml
     handler: softlayer_handler
     external: *softlayer_plugin_external
-    manager_blueprint: softlayer/softlayer-manager-blueprint.yaml
+    manager_blueprint: manager-blueprint/softlayer-manager-blueprint.yaml
     manager_blueprint_override: *softlayer_manager_blueprint_override
     inputs_override:
       username: '{{system_tests_softlayer_username}}'
