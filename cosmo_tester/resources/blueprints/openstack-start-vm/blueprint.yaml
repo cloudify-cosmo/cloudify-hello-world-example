@@ -107,11 +107,9 @@ node_templates:
   simple_server:
     type: cloudify.openstack.nodes.Server
     properties:
-      #resource_id: { get_input: manager_server_name }
       install_agent: false
-      server:
-        image: { get_input: image_id }
-        flavor: { get_input: flavor }
+      image: { get_input: image_id }
+      flavor: { get_input: flavor }
       management_network_name: { get_property: [network, resource_id] }
       openstack_config: *OPENSTACK_CONFIG
     relationships:

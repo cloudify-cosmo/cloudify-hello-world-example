@@ -86,6 +86,13 @@ class NodecellarAppTest(TestCase):
         entrypoint_node_name = self.entrypoint_node_name
         entrypoint_runtime_property_name = self.entrypoint_property_name
         for key, value in nodes_state.items():
+            if key.startswith(entrypoint_node_name):
+                public_ip = value['runtime_properties'][
+                    entrypoint_runtime_property_name]
+        return public_ip
+
+    def assert_host_state_and_runtime_properties(self, nodes_state):
+        for key, value in nodes_state.items():
             if '_host' in key:
                 expected = self.host_expected_runtime_properties
                 for expected_property in expected:
@@ -97,10 +104,6 @@ class NodecellarAppTest(TestCase):
                 self.assertEqual(value['state'], 'started',
                                  'vm node should be started: {0}'
                                  .format(nodes_state))
-            if key.startswith(entrypoint_node_name):
-                public_ip = value['runtime_properties'][
-                    entrypoint_runtime_property_name]
-        return public_ip
 
     def post_install_assertions(self, before_state, after_state):
         delta = self.get_manager_state_delta(before_state, after_state)
@@ -148,6 +151,7 @@ class NodecellarAppTest(TestCase):
                          'nodes_state: {0}'.format(nodes_state))
         self.assert_monitoring_data_exists()
         self.public_ip = self.get_public_ip(nodes_state)
+        self.assert_host_state_and_runtime_properties(nodes_state)
 
         self.assertIsNotNone(self.public_ip,
                              'Could not find the '
