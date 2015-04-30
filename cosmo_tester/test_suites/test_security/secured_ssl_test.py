@@ -26,9 +26,10 @@ from cosmo_tester.test_suites.test_security.security_ssl_test_base import \
 from cosmo_tester.test_suites.test_security.security_test_base import \
     TEST_CFY_USERNAME, TEST_CFY_PASSWORD
 
-
-USE_EXISTING_FLOATING_IP_INPUT = 'inputs.use_existing_floating_ip'
-FLOATING_IP_ID_INPUT = 'inputs.floating_ip_id'
+USE_EXISTING_FLOATING_IP_INPUT_PROP = 'inputs.use_existing_floating_ip'
+USE_EXISTING_FLOATING_IP_INPUT = 'use_existing_floating_ip'
+FLOATING_IP_INPUT_PROP = 'inputs.floating_ip'
+FLOATING_IP_INPUT = 'floating_ip'
 
 USE_EXTERNAL_RESOURCE_PROPERTY = \
     'node_templates.manager_server_ip.properties.use_external_resource'
@@ -41,19 +42,19 @@ class SecuredWithSSLManagerTests(OpenStackNodeCellarTestBase,
 
     def get_manager_blueprint_additional_props_override(self):
         return {
-            USE_EXISTING_FLOATING_IP_INPUT: {
+            USE_EXISTING_FLOATING_IP_INPUT_PROP: {
                 'default': 'true',
                 'type': 'boolean'
             },
-            FLOATING_IP_ID_INPUT: {
-                'default': self.floating_ip_id,
+            FLOATING_IP_INPUT_PROP: {
+                'default': self.floating_ip,
                 'type': 'string'
             },
             USE_EXTERNAL_RESOURCE_PROPERTY: {
-                'get_input': 'use_existing_floating_ip'
+                'get_input': USE_EXISTING_FLOATING_IP_INPUT
             },
             RESOURCE_ID_PROPERTY: {
-                'get_input': 'floating_ip_id'
+                'get_input': FLOATING_IP_INPUT
             }
         }
 
@@ -81,14 +82,13 @@ class SecuredWithSSLManagerTests(OpenStackNodeCellarTestBase,
         self.key_path = os.path.join(ssl_dir, 'server.key')
 
         # create floating ip
-        floating_ip, floating_ip_id = self.create_floating_ip()
-        self.floating_ip_id = floating_ip_id
+        self.floating_ip = self.create_floating_ip()
 
         # create certificate with the ip intended to be used for this manager
         SSLTestBase.create_self_signed_certificate(
             target_certificate_path=self.cert_path,
             target_key_path=self.key_path,
-            common_name=floating_ip)
+            common_name=self.floating_ip)
 
         # bootstrap
         self.setup_secured_manager()

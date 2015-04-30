@@ -66,7 +66,7 @@ class SSLTestBase(SecurityTestBase):
                 'floatingip': {'floating_network_id': ext_network_id}
             })['floatingip']
 
-        return floating_ip['floating_ip_address'], floating_ip['id']
+        return floating_ip['floating_ip_address']
 
     @staticmethod
     def create_self_signed_certificate(target_certificate_path,
