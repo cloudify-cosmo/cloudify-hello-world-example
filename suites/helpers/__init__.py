@@ -5,7 +5,7 @@ def _write(stream, s):
     try:
         s = unicode(s)
     except UnicodeDecodeError:
-        s = str(s).decode(encoding, 'replace')
+        s = str(s).decode('utf-8', 'replace')
     stream.write(s)
 
 
