@@ -542,6 +542,10 @@ tests:
     tests:
       - cosmo_tester/test_suites/test_docker_centos_env
 
+  simple_manager_blueprint:
+    tests:
+      - cosmo_tester/test_suites/test_simple_manager_blueprint
+
   ec2:
     external: *aws_ec2_plugin_external
     tests:
@@ -614,10 +618,11 @@ test_suites:
       - openstack_plugin
       - openstack_blueprints_persistence_recovery
 
-  hp_openstack_watchdog:
+  hp_openstack_watchdog_simple_manager:
       handler_configuration: hp_openstack_system_tests3_region_a
       tests:
         - watchdog_tests
+        - simple_manager_blueprint
 
   #####################################################################
 
