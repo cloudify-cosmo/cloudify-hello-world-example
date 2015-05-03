@@ -3,9 +3,9 @@ import sys
 
 def _write(stream, s):
     try:
-        s = unicode(s)
+        s = s.encode('utf-8')
     except UnicodeDecodeError:
-        s = str(s).decode('utf-8', 'replace')
+        pass
     stream.write(s)
 
 
