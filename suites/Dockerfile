@@ -7,3 +7,4 @@ RUN pip install pip --upgrade
 RUN pip install virtualenv
 
 ENV HOME /root
+ENV LANG C.UTF-8
