@@ -145,7 +145,8 @@ class HelloWorldBashTest(TestCase):
         self.assertEquals(expected_node_state, server_node.state)
         self.assertEquals(0, len(floatingip_node.runtime_properties))
         self.assertEquals(0, len(security_group_node.runtime_properties))
-        self.assertEquals(0, len(server_node.runtime_properties))
+        # CFY-2670 - diamond plugin leaves one runtime property at this time
+        self.assertEquals(1, len(server_node.runtime_properties))
 
     def _instances(self):
         return get_instances(client=self.client, deployment_id=self.test_id)
