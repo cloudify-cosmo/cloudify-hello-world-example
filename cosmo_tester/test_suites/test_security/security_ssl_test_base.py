@@ -13,24 +13,20 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
-
-import os
 from cloudify_cli import constants
 from cloudify_rest_client import CloudifyClient
+
 from cosmo_tester.framework import util
-from cosmo_tester.test_suites.test_blueprints.nodecellar_test import \
-    OpenStackNodeCellarTestBase
 from cosmo_tester.test_suites.test_security.security_test_base import \
     SecurityTestBase, TEST_CFY_USERNAME, TEST_CFY_PASSWORD
 
 
-class SecuredWithSSLOpenstackNodecellarTest(OpenStackNodeCellarTestBase,
-                                            SecurityTestBase):
+class SSLTestBase(SecurityTestBase):
 
-    def test_secured_openstack_nodecellar_with_ssl_without_cert(self):
-        os.environ[constants.CLOUDIFY_SSL_TRUST_ALL] = 'trust'
-        self.setup_secured_manager()
-        self._test_openstack_nodecellar('openstack-blueprint.yaml')
+    def setUp(self):
+        super(SSLTestBase, self).setUp()
+        self.cert_path = ''
+        self.key_path = ''
 
     def set_rest_client(self):
         self.client = CloudifyClient(
@@ -41,70 +37,35 @@ class SecuredWithSSLOpenstackNodecellarTest(OpenStackNodeCellarTestBase,
                                          password=TEST_CFY_PASSWORD),
             trust_all=True)
 
+    # def _running_env_setup(self):
+    #     self.env.management_ip = self.cfy.get_management_ip()
+    #     self.set_rest_client()
+
+        def clean_mgmt_ip():
+            self.env.management_ip = None
+        self.addCleanup(clean_mgmt_ip)
+
     def get_ssl_enabled(self):
         return True
 
-    def get_security_settings(self):
-
-        return {
-            'enabled': 'true',
-            'userstore_driver': {
-                'implementation':
-                    'flask_securest.userstores.simple:SimpleUserstore',
-                'properties': {
-                    'userstore': {
-                        'user1': {
-                            'username': 'user1',
-                            'password': 'pass1',
-                            'email': 'user1@domain.dom'
-                        },
-                        'user2': {
-                            'username': 'user2',
-                            'password': 'pass2',
-                            'email': 'user2@domain.dom'
-                        },
-                        'user3': {
-                            'username': 'user3',
-                            'password': 'pass3',
-                            'email': 'user3@domain.dom'
-                        },
-                        },
-                    'identifying_attribute': 'username'
-                }
-            },
-            'authentication_providers': [
-                {
-                    'name': 'password',
-                    'implementation': 'flask_securest.'
-                                      'authentication_providers.password:'
-                                      'PasswordAuthenticator',
-                    'properties': {
-                        'password_hash': 'plaintext'
-                    }
-                }
-            ],
-            'ssl': {
-                constants.SLL_ENABLED_PROPERTY_NAME: self.get_ssl_enabled(),
-                constants.CERTIFICATE_PATH_PROPERTY_NAME: self.get_cert_path(),
-                constants.PRIVATE_KEY_PROPERTY_NAME: self.get_key_path()
-            }
-        }
-
     def get_cert_path(self):
-        return util.get_resource_path('ssl/server.crt')
+        return self.cert_path
 
     def get_key_path(self):
-        return util.get_resource_path('ssl/server.key')
+        return self.key_path
 
     def create_floating_ip(self):
         _, neutron, _ = self.env.handler.openstack_clients()
+
         ext_network_id = [
             n for n in neutron.list_networks()['networks']
             if n['name'] == self.env.external_network_name][0]['id']
 
-        floating_ip = neutron.create_floatingip({
-            'floatingip': {'floating_network_id': ext_network_id}
-        })['floatingip']
+        floating_ip = neutron.create_floatingip(
+            {
+                'floatingip': {'floating_network_id': ext_network_id}
+            })['floatingip']
+
         return floating_ip['floating_ip_address']
 
     @staticmethod

@@ -25,7 +25,6 @@ from cosmo_tester.framework import util
 
 CUSTOM_AUTH_PROVIDER_PLUGIN = 'mock-auth-provider-with-no-userstore'
 PLUGINS_PROP_PATH = 'node_templates.manager.properties.cloudify.plugins'
-SECURITY_PROP_PATH = 'node_templates.manager.properties.cloudify.security'
 
 
 class NoUserstoreTests(SecurityTestBase):
@@ -34,15 +33,12 @@ class NoUserstoreTests(SecurityTestBase):
         self.setup_secured_manager()
         self._assert_unauthorized_user_fails()
 
-    def _update_manager_blueprint(self, prop_path, new_value):
+    def get_manager_blueprint_additional_props_override(self):
         src_plugin_dir = util.get_plugin_path(CUSTOM_AUTH_PROVIDER_PLUGIN)
         shutil.copytree(src_plugin_dir,
                         self.test_manager_blueprint_path.dirname() /
                         CUSTOM_AUTH_PROVIDER_PLUGIN)
-
-        with util.YamlPatcher(self.test_manager_blueprint_path) as patch:
-            patch.set_value(PLUGINS_PROP_PATH, self.get_plugins_settings())
-            patch.set_value(SECURITY_PROP_PATH, self.get_security_settings())
+        return {PLUGINS_PROP_PATH: self.get_plugins_settings()}
 
     def get_plugins_settings(self):
         return {
@@ -51,21 +47,20 @@ class NoUserstoreTests(SecurityTestBase):
             }
         }
 
-    def get_security_settings(self):
-        return {
-            'enabled': 'true',
-            'authentication_providers': [
-                {
-                    'name': 'password',
-                    'implementation': 'mock_auth_provider_with_no_userstore.'
-                                      'auth_without_userstore:'
-                                      'AuthorizeUser1',
-                    'properties': {
-                        'dummy_param': 'dumdum'
-                    }
+    def get_authentication_providers_list(self):
+        return [
+            {
+                'implementation': 'mock_auth_provider_with_no_userstore'
+                                  '.auth_without_userstore:AuthorizeUser1',
+                'name': 'password',
+                'properties': {
+                    'dummy_param': 'dumdum'
                 }
-            ]
-        }
+            }
+        ]
+
+    def get_userstore_drive(self):
+        return ''
 
     def _assert_unauthorized_user_fails(self):
         client = CloudifyClient(host=self.env.management_ip,

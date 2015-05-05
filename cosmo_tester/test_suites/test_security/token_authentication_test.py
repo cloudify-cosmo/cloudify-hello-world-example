@@ -29,53 +29,32 @@ class TokenAuthenticationTest(SecurityTestBase):
         self._assert_valid_token_authenticates()
         self._assert_invalid_token_fails()
 
-    def get_security_settings(self):
+    def get_auth_token_generator(self):
         return {
-            'enabled': 'true',
-            'userstore_driver': {
-                'implementation':
-                    'flask_securest.userstores.simple:SimpleUserstore',
-                'properties': {
-                    'userstore': {
-                        'user1': {
-                            'username': 'user1',
-                            'password': 'pass1',
-                            'email': 'user1@domain.dom'
-                        }
-                    },
-                    'identifying_attribute': 'username'
-                }
-            },
-            'auth_token_generator': {
-                'implementation':
-                    'flask_securest.authentication_providers.token:'
-                    'TokenAuthenticator',
-                'properties': {
-                    'secret_key': 'my_secret',
-                    'expires_in_seconds': 600
-                }
-            },
-            'authentication_providers': [
-                {
-                    'name': 'password',
-                    'implementation': 'flask_securest.'
-                                      'authentication_providers.password:'
-                                      'PasswordAuthenticator',
-                    'properties': {
-                        'password_hash': 'plaintext'
-                    }
-                },
-                {
-                    'name': 'token',
-                    'implementation': 'flask_securest.'
-                                      'authentication_providers.token:'
-                                      'TokenAuthenticator',
-                    'properties': {
-                        'secret_key': 'my_secret'
-                    }
-                }
-            ]
+            'implementation': 'flask_securest'
+                              '.authentication_providers.token'
+                              ':TokenAuthenticator',
+            'properties': {
+                'secret_key': 'my_secret',
+                'expires_in_seconds': 600
+            }
         }
+
+    def get_authentication_providers_list(self):
+        list_authentication_providers = super(
+            TokenAuthenticationTest, self).get_authentication_providers_list()
+        list_authentication_providers.append(
+            {
+                'name': 'token',
+                'implementation': 'flask_securest.'
+                                  'authentication_providers.token:'
+                                  'TokenAuthenticator',
+                'properties': {
+                    'secret_key': 'my_secret'
+                }
+            }
+        )
+        return list_authentication_providers
 
     def _assert_invalid_user_fails(self):
         client = CloudifyClient(host=self.env.management_ip,

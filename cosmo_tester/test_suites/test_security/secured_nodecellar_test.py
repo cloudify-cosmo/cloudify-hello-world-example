@@ -26,42 +26,17 @@ class SecuredOpenstackNodecellarTest(OpenStackNodeCellarTestBase,
         self.setup_secured_manager()
         self._test_openstack_nodecellar('openstack-blueprint.yaml')
 
-    def get_security_settings(self):
-        return {
-            'enabled': 'true',
-            'userstore_driver': {
-                'implementation':
-                    'flask_securest.userstores.simple:SimpleUserstore',
-                'properties': {
-                    'userstore': {
-                        'user1': {
-                            'username': 'user1',
-                            'password': 'pass1',
-                            'email': 'user1@domain.dom'
-                        },
-                        'user2': {
-                            'username': 'user2',
-                            'password': 'pass2',
-                            'email': 'user2@domain.dom'
-                        },
-                        'user3': {
-                            'username': 'user3',
-                            'password': 'pass3',
-                            'email': 'user3@domain.dom'
-                        },
-                    },
-                    'identifying_attribute': 'username'
-                }
-            },
-            'authentication_providers': [
-                {
-                    'name': 'password',
-                    'implementation': 'flask_securest.'
-                                      'authentication_providers.password:'
-                                      'PasswordAuthenticator',
-                    'properties': {
-                        'password_hash': 'plaintext'
-                    }
-                }
-            ]
+    def get_userstore_drive(self):
+        userstore_drive = \
+            super(SecuredOpenstackNodecellarTest, self).get_userstore_drive()
+        userstore_drive['properties']['userstore']['user2'] = {
+            'username': 'user2',
+            'password': 'pass2',
+            'email': 'user2@domain.dom'
         }
+        userstore_drive['properties']['userstore']['user3'] = {
+            'username': 'user3',
+            'password': 'pass3',
+            'email': 'user3@domain.dom'
+        }
+        return userstore_drive
