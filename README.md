@@ -14,10 +14,11 @@ In addition, plugins functionality is tested and Cloudify's examples.
 
 ## Installing System Tests Requirements
 
-The System Tests installation requirements include `pyOpenSSL==0.14` which on Trusty requires installing libffi-dev and libssl-dev:
+The System Tests installation requirements include `pyOpenSSL==0.14`.
+On Trusty, it requires installing libffi-dev and libssl-dev:
 ```
-sudo apt-get install libffi-dev  
-sudo apt-get install libssl-dev  
+apt-get install libffi-dev  
+apt-get install libssl-dev  
 ```
 
 ## Running System Tests
