@@ -34,9 +34,9 @@ git clone https://github.com/cloudify-cosmo/cloudify-system-tests.git
 pip install -e cloudify-system-tests
 ```
 
-  > ##### Note
-    The System Tests installation requirements include `pyOpenSSL==0.14`.<br>
-    On Trusty, it requires installing libffi-dev and libssl-dev:<br>
+> ##### Note
+  The System Tests installation requirements include `pyOpenSSL==0.14`.<br>
+  On Trusty, it requires installing libffi-dev and libssl-dev:<br>
 ```
 apt-get install libffi-dev  
 apt-get install libssl-dev  
