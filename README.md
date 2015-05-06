@@ -12,15 +12,6 @@ This repository contains Cloudify's system tests which in most cases mean that t
 
 In addition, plugins functionality is tested and Cloudify's examples.
 
-## Installing System Tests Requirements
-
-The System Tests installation requirements include `pyOpenSSL==0.14`.<br>
-On Trusty, it requires installing libffi-dev and libssl-dev:
-```
-apt-get install libffi-dev  
-apt-get install libssl-dev  
-```
-
 ## Running System Tests
 
 The following example demonstrates how to run Cloudify's node cellar example system test on an OpenStack environment:
@@ -42,6 +33,12 @@ pip install -e cloudify-cli -r cloudify-cli/dev-requirements.txt
 git clone https://github.com/cloudify-cosmo/cloudify-system-tests.git
 pip install -e cloudify-system-tests
 ```
+
+  > The System Tests installation requirements include `pyOpenSSL==0.14`.<br>
+    On Trusty, it requires installing libffi-dev and libssl-dev:<br>
+```
+apt-get install libffi-dev  
+apt-get install libssl-dev  
 
 * Install Cloudify's OpenStack plugin:
 ```
