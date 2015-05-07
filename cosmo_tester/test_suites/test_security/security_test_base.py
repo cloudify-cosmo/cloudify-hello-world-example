@@ -61,9 +61,9 @@ class SecurityTestBase(TestCase):
             settings['auth_token_generator'] = auth_token_generator
 
         settings['ssl'] = {
-            constants.SLL_ENABLED_PROPERTY_NAME: self.get_ssl_enabled(),
-            constants.CERTIFICATE_PATH_PROPERTY_NAME: self.get_cert_path(),
-            constants.PRIVATE_KEY_PROPERTY_NAME: self.get_key_path()
+            constants.SSL_ENABLED_PROPERTY_NAME: self.get_ssl_enabled(),
+            constants.SSL_CERTIFICATE_PATH_PROPERTY_NAME: self.get_cert_path(),
+            constants.SSL_PRIVATE_KEY_PROPERTY_NAME: self.get_key_path()
         }
 
         return settings

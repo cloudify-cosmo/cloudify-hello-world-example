@@ -72,21 +72,12 @@ class SSLTestBase(SecurityTestBase):
     def create_self_signed_certificate(target_certificate_path,
                                        target_key_path,
                                        common_name):
-        from OpenSSL import crypto
-        from os import path
-
-        key = crypto.PKey()
-        key.generate_key(crypto.TYPE_RSA, 2048)
-        certificate = crypto.X509()
-        subject = certificate.get_subject()
-        subject.commonName = common_name
-        certificate.gmtime_adj_notBefore(0)
-        certificate.gmtime_adj_notAfter(10 * 365 * 24 * 60 * 60)
-        certificate.set_issuer(subject)
-        certificate.set_pubkey(key)
-        certificate.sign(key, 'SHA1')
-
-        with open(path.expanduser(target_certificate_path), 'w') as f:
-            f.write(crypto.dump_certificate(crypto.FILETYPE_PEM, certificate))
-        with open(path.expanduser(target_key_path), 'w') as f:
-            f.write(crypto.dump_privatekey(crypto.FILETYPE_PEM, key))
+        import sh
+        openssl = util.sh_bake(sh.openssl)
+        openssl.req(
+            '-x509', '-newkey', 'rsa:2048',
+            '-keyout', '{0}'.format(target_key_path),
+            '-out', '{0}'.format(target_certificate_path),
+            '-days', '365', '-nodes',
+            '-subj', '/CN={0}'.format(common_name)) \
+            .wait()
