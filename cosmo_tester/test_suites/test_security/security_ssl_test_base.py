@@ -13,12 +13,16 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
+import sh
+
 from cloudify_cli import constants
 from cloudify_rest_client import CloudifyClient
 
 from cosmo_tester.framework import util
 from cosmo_tester.test_suites.test_security.security_test_base import \
     SecurityTestBase, TEST_CFY_USERNAME, TEST_CFY_PASSWORD
+
+openssl = util.sh_bake(sh.openssl)
 
 
 class SSLTestBase(SecurityTestBase):
@@ -72,12 +76,9 @@ class SSLTestBase(SecurityTestBase):
     def create_self_signed_certificate(target_certificate_path,
                                        target_key_path,
                                        common_name):
-        import sh
-        openssl = util.sh_bake(sh.openssl)
         openssl.req(
             '-x509', '-newkey', 'rsa:2048',
-            '-keyout', '{0}'.format(target_key_path),
-            '-out', '{0}'.format(target_certificate_path),
+            '-keyout', target_key_path,
+            '-out', target_certificate_path,
             '-days', '365', '-nodes',
-            '-subj', '/CN={0}'.format(common_name)) \
-            .wait()
+            '-subj', '/CN={0}'.format(common_name)).wait()
