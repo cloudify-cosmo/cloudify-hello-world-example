@@ -17,7 +17,7 @@
 from influxdb import InfluxDBClient
 
 
-def _assert_general_deployment_data(instance, influx_client):
+def _assert_general_deployment_data(self, influx_client):
 
     try:
         # select monitoring events for deployment from
@@ -26,19 +26,20 @@ def _assert_general_deployment_data(instance, influx_client):
         # in query.
         influx_client.query('select * from /^{0}\./i '
                             'where time > now() - 5s'
-                            .format(instance.test_id))
+                            .format(self.test_id))
     except NameError as e:
-        instance.fail('monitoring events list for deployment with ID {0} were'
+        self.fail('monitoring events list for deployment with ID {0} were'
                       ' not found on influxDB. error is: {1}'
-                      .format(instance.deployment_id, e))
-0
+                      .format(self.deployment_id, e))
 
-def assert_monitoring_data_exists(instance):
-    client = InfluxDBClient(instance.env.management_ip, 8086, 'root', 'root',
+
+def assert_monitoring_data_exists(self):
+    client = InfluxDBClient(self.env.management_ip, 8086, 'root', 'root',
                             'cloudify')
-    _assert_general_deployment_data(instance, client)
+    _assert_general_deployment_data(self, client)
 
-def assert_outputs(instance,expected_output)
-    outputs = instance.client.deployments.outputs.get(instance.test_id)
+
+def assert_outputs(self, expected_output)
+    outputs = self.client.deployments.outputs.get(self.test_id)
     outputs = outputs['outputs']
-    instance.assertEqual(expected_output, outputs)
+    self.assertEqual(expected_output, outputs)
