@@ -19,10 +19,10 @@ import nose.tools
 from neutronclient.common.exceptions import NeutronException
 from novaclient.exceptions import NotFound
 from retrying import retry
-from influxdb import InfluxDBClient
 
 from cosmo_tester.framework.testenv import TestCase
 from cosmo_tester.framework.git_helper import clone
+from cosmo_tester.framework.assertions import assert_monitoring_data_exists
 
 
 CLOUDIFY_HELLO_WORLD_EXAMPLE_URL = "https://github.com/cloudify-cosmo/" \
@@ -94,7 +94,7 @@ class HelloWorldBashTest(TestCase):
         floating_ip_id, neutron, nova, sg_id, server_id =\
             self._verify_deployment_installed()
 
-        self.assert_monitoring_data_exists()
+        assert_monitoring_data_exists(self)
         self._uninstall_and_make_assertions(floating_ip_id, neutron, nova,
                                             sg_id, server_id)
 
@@ -149,26 +149,6 @@ class HelloWorldBashTest(TestCase):
         self.assertEquals(0, len(security_group_node.runtime_properties))
         # CFY-2670 - diamond plugin leaves one runtime property at this time
         self.assertEquals(1, len(server_node.runtime_properties))
-
-    def assert_monitoring_data_exists(self):
-        client = InfluxDBClient(self.env.management_ip, 8086, 'root', 'root',
-                                'cloudify')
-        self._assert_general_deployment_data(client)
-
-    def _assert_general_deployment_data(self, influx_client):
-
-        try:
-            # select monitoring events for deployment from
-            # the past 5 seconds. a NameError will be thrown only if NO
-            # deployment events exist in the DB regardless of time-span
-            # in query.
-            influx_client.query('select * from /^{0}\./i '
-                                'where time > now() - 5s'
-                                .format(self.test_id))
-        except NameError as e:
-            self.fail('monitoring events list for deployment with ID {0} were'
-                      ' not found on influxDB. error is: {1}'
-                      .format(self.deployment_id, e))
 
     def _instances(self):
         return get_instances(client=self.client, deployment_id=self.test_id)
