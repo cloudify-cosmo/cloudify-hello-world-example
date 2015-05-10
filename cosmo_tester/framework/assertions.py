@@ -13,7 +13,9 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
+
 from influxdb import InfluxDBClient
+
 
 def _assert_general_deployment_data(self, influx_client):
 
@@ -34,4 +36,3 @@ def assert_monitoring_data_exists(self):
     client = InfluxDBClient(self.env.management_ip, 8086, 'root', 'root',
                             'cloudify')
     self._assert_general_deployment_data(client)
-
