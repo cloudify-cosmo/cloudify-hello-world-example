@@ -151,7 +151,6 @@ class NodecellarAppTest(TestCase):
         nodes_state = delta['node_state'].values()[0]
         self.assertEqual(len(nodes_state), self.expected_nodes_count,
                          'nodes_state: {0}'.format(nodes_state))
-        assert_monitoring_data_exists(self)
         self.public_ip = self.get_public_ip(nodes_state)
         self.assert_host_state_and_runtime_properties(nodes_state)
 
@@ -173,8 +172,9 @@ class NodecellarAppTest(TestCase):
         client = InfluxDBClient(self.env.management_ip, 8086, 'root', 'root',
                                 'cloudify')
         self._assert_mongodb_collector_data(client)
+        assert_monitoring_data_exists(self)
 
-    def post_uninstall_assertions(self):
+def post_uninstall_assertions(self):
         nodes_instances = self.client.node_instances.list(self.deployment_id)
         self.assertFalse(any(node_ins for node_ins in nodes_instances if
                              node_ins.state != 'deleted'))
