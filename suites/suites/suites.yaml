@@ -298,6 +298,7 @@ handler_configurations:
   hp_openstack_system_tests_region_a:
     <<: *hp_openstack_handler_configuration
     env: hp_openstack_system_tests_region_a
+    tags: [openstack, hp]
     properties: hp_openstack_region_a_properties
     inputs_override:
       <<: *hp_openstack_credentials_inputs
@@ -307,6 +308,7 @@ handler_configurations:
   hp_openstack_system_tests_region_b:
     <<: *hp_openstack_handler_configuration
     env: hp_openstack_system_tests_region_b
+    tags: [openstack, hp]
     properties: hp_openstack_region_b_properties
     inputs_override:
       <<: *hp_openstack_credentials_inputs
@@ -316,6 +318,7 @@ handler_configurations:
   hp_openstack_system_tests2_region_a:
     <<: *hp_openstack_handler_configuration
     env: hp_openstack_system_tests2_region_a
+    tags: [openstack, hp]
     properties: hp_openstack_region_a_properties
     inputs_override:
       <<: *hp_openstack_credentials_inputs
@@ -325,6 +328,7 @@ handler_configurations:
   hp_openstack_system_tests2_region_b:
     <<: *hp_openstack_handler_configuration
     env: hp_openstack_system_tests2_region_b
+    tags: [openstack, hp]
     properties: hp_openstack_region_b_properties
     inputs_override:
       <<: *hp_openstack_credentials_inputs
@@ -334,6 +338,7 @@ handler_configurations:
   hp_openstack_system_tests3_region_a:
     <<: *hp_openstack_handler_configuration
     env: hp_openstack_system_tests3_region_a
+    tags: [openstack, hp]
     properties: hp_openstack_region_a_properties
     inputs_override:
       <<: *hp_openstack_credentials_inputs
@@ -343,6 +348,7 @@ handler_configurations:
   hp_openstack_system_tests3_region_b:
     <<: *hp_openstack_handler_configuration
     env: hp_openstack_system_tests3_region_b
+    tags: [openstack, hp]
     properties: hp_openstack_region_b_properties
     inputs_override:
       <<: *hp_openstack_credentials_inputs
@@ -370,6 +376,7 @@ handler_configurations:
   lab_openstack_system_tests1:
     <<: *lab_openstack_handler_configuration
     env: lab_openstack_1
+    tags: [openstack, lab]
     inputs_override:
       <<: *lab_openstack_credentials_inputs
       <<: *lab_openstack_inputs
@@ -378,6 +385,7 @@ handler_configurations:
   lab_openstack_system_tests2:
     <<: *lab_openstack_handler_configuration
     env: lab_openstack_2
+    tags: [openstack, lab]
     inputs_override:
       <<: *lab_openstack_credentials_inputs
       <<: *lab_openstack_inputs
@@ -386,6 +394,7 @@ handler_configurations:
   lab_openstack_system_tests3:
     <<: *lab_openstack_handler_configuration
     env: lab_openstack_3
+    tags: [openstack, lab]
     inputs_override:
       <<: *lab_openstack_credentials_inputs
       <<: *lab_openstack_inputs
@@ -394,6 +403,7 @@ handler_configurations:
   lab_openstack_system_tests4:
     <<: *lab_openstack_handler_configuration
     env: lab_openstack_4
+    tags: [openstack, lab]
     inputs_override:
       <<: *lab_openstack_credentials_inputs
       <<: *lab_openstack_inputs
@@ -402,6 +412,7 @@ handler_configurations:
   lab_openstack_system_tests5:
     <<: *lab_openstack_handler_configuration
     env: lab_openstack_5
+    tags: [openstack, lab]
     inputs_override:
       <<: *lab_openstack_credentials_inputs
       <<: *lab_openstack_inputs
@@ -412,6 +423,7 @@ handler_configurations:
   mirantis_openstack_system_tests1:
     <<: *mirantis_openstack_handler_configuration
     env: mirantis_openstack_1
+    tags: [openstack, mirantis]
     inputs_override:
       <<: *mirantis_openstack_credentials_inputs
       <<: *mirantis_openstack_inputs
@@ -420,6 +432,7 @@ handler_configurations:
   mirantis_openstack_system_tests2:
     <<: *mirantis_openstack_handler_configuration
     env: mirantis_openstack_2
+    tags: [openstack, mirantis]
     inputs_override:
       <<: *mirantis_openstack_credentials_inputs
       <<: *mirantis_openstack_inputs
@@ -428,6 +441,7 @@ handler_configurations:
   mirantis_openstack_system_tests3:
     <<: *mirantis_openstack_handler_configuration
     env: mirantis_openstack_3
+    tags: [openstack, mirantis]
     inputs_override:
       <<: *mirantis_openstack_credentials_inputs
       <<: *mirantis_openstack_inputs
@@ -436,6 +450,7 @@ handler_configurations:
   mirantis_openstack_system_tests4:
     <<: *mirantis_openstack_handler_configuration
     env: mirantis_openstack_4
+    tags: [openstack, mirantis]
     inputs_override:
       <<: *mirantis_openstack_credentials_inputs
       <<: *mirantis_openstack_inputs
@@ -446,6 +461,7 @@ handler_configurations:
   pclab47_devstack_nova_net:
     <<: *openstack_handler_configuration
     handler: openstack_nova_net_handler
+    env: pclab47_devstack_nova_net
     inputs: inputs-nova-net-devstack.yaml
     manager_blueprint: openstack-nova-net/openstack-nova-net-manager-blueprint.yaml
     manager_blueprint_override:
@@ -458,6 +474,7 @@ handler_configurations:
   vsphere:
     inputs: inputs-vsphere.yaml
     handler: vsphere_handler
+    env: vsphere
     external: *vsphere_plugin_external
     manager_blueprint: manager_blueprint/vsphere-manager-blueprint.yaml
     properties: vsphere
@@ -473,6 +490,7 @@ handler_configurations:
   softlayer:
     inputs: inputs-softlayer.yaml
     handler: softlayer_handler
+    env: softlayer
     external: *softlayer_plugin_external
     manager_blueprint: manager-blueprint/softlayer-manager-blueprint.yaml
     manager_blueprint_override: *softlayer_manager_blueprint_override
@@ -485,6 +503,7 @@ handler_configurations:
   aws_ec2:
     inputs: inputs-aws-ec2.yaml
     handler: ec2_handler
+    env: aws_ec2
     external: *aws_ec2_plugin_external
     manager_blueprint: aws-ec2/aws-ec2-manager-blueprint.yaml
     manager_blueprint_override: *aws_ec2_manager_blueprint_override
@@ -597,58 +616,58 @@ tests:
 test_suites:
 
   hp_openstack_blueprints_no_chef_puppet_docker_windows:
-    handler_configuration: hp_openstack_system_tests_region_b
+    requires: [openstack, hp]
     tests:
       - openstack_blueprints_without_chef_puppet_docker_windows
       - host_pool_plugin
 
   hp_openstack_manager_status:
-    handler_configuration: hp_openstack_system_tests2_region_a
+    requires: [openstack, hp]
     tests:
       - manager_status
 
   hp_openstack_manager_recovery:
-    handler_configuration: hp_openstack_system_tests_region_a
+    requires: [openstack, hp]
     tests:
       - manager_recovery
 
   hp_openstack_plugin_and_docker_tests:
-    handler_configuration: hp_openstack_system_tests2_region_b
+    requires: [openstack, hp]
     tests:
       - openstack_plugin
       - openstack_blueprints_persistence_recovery
 
   hp_openstack_watchdog_simple_manager:
-      handler_configuration: hp_openstack_system_tests3_region_a
-      tests:
-        - watchdog_tests
-        - simple_manager_blueprint
+    requires: [openstack, hp]
+    tests:
+      - watchdog_tests
+      - simple_manager_blueprint
 
   #####################################################################
 
   lab_openstack_chef_puppet:
-    handler_configuration: lab_openstack_system_tests2
+    requires: [openstack, lab]
     tests:
       - openstack_blueprints_chef_puppet
 
   lab_openstack_windows:
-    handler_configuration: lab_openstack_system_tests1
+    requires: [openstack, lab]
     tests:
       - openstack_blueprints_windows
 
   lab_openstack_rest_plugins_diamond_snmp:
-    handler_configuration: lab_openstack_system_tests3
+    requires: [openstack, lab]
     tests:
       - openstack_rest_plugins
       - diamond_snmp_extension
 
   lab_openstack_security:
-    handler_configuration: lab_openstack_system_tests4
+    requires: [openstack, lab]
     tests:
       - openstack_security
 
   lab_openstack_cli_packager_docker_plugin:
-    handler_configuration: lab_openstack_system_tests5
+    requires: [openstack, lab]
     tests:
       - cli_packager
       - docker_plugin
