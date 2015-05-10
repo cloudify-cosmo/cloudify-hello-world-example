@@ -17,7 +17,7 @@
 from influxdb import InfluxDBClient
 
 
-def assert_general_deployment_data(self, influx_client):
+def _assert_general_deployment_data(self, influx_client):
 
     try:
         # select monitoring events for deployment from
@@ -36,4 +36,4 @@ def assert_general_deployment_data(self, influx_client):
 def assert_monitoring_data_exists(self):
     client = InfluxDBClient(self.env.management_ip, 8086, 'root', 'root',
                             'cloudify')
-    assert_general_deployment_data(self, client)
+    _assert_general_deployment_data(self, client)
