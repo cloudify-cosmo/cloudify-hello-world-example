@@ -29,8 +29,8 @@ def _assert_general_deployment_data(instance, influx_client):
                             .format(instance.test_id))
     except NameError as e:
         instance.fail('monitoring events list for deployment with ID {0} were'
-                  ' not found on influxDB. error is: {1}'
-                  .format(instance.deployment_id, e))
+                      ' not found on influxDB. error is: {1}'
+                      .format(instance.deployment_id, e))
 
 
 def assert_monitoring_data_exists(instance):
