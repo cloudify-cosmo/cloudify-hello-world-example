@@ -174,7 +174,7 @@ class NodecellarAppTest(TestCase):
         self._assert_mongodb_collector_data(client)
         assert_monitoring_data_exists(self)
 
-def post_uninstall_assertions(self):
+    def post_uninstall_assertions(self):
         nodes_instances = self.client.node_instances.list(self.deployment_id)
         self.assertFalse(any(node_ins for node_ins in nodes_instances if
                              node_ins.state != 'deleted'))
