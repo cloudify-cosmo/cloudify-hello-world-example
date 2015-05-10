@@ -22,7 +22,7 @@ from influxdb.client import InfluxDBClientError
 
 from cosmo_tester.framework.testenv import TestCase
 from cosmo_tester.framework.git_helper import clone
-from cosmo_tester.framework.assertions import assert_monitoring_data_exists
+from cosmo_tester.framework.test_cases import assert_monitoring_data_exists
 
 
 class NodecellarAppTest(TestCase):

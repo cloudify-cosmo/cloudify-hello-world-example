@@ -31,9 +31,14 @@ def _assert_general_deployment_data(instance, influx_client):
         instance.fail('monitoring events list for deployment with ID {0} were'
                       ' not found on influxDB. error is: {1}'
                       .format(instance.deployment_id, e))
-
+0
 
 def assert_monitoring_data_exists(instance):
     client = InfluxDBClient(instance.env.management_ip, 8086, 'root', 'root',
                             'cloudify')
     _assert_general_deployment_data(instance, client)
+
+def assert_outputs(instance,expected_output)
+    outputs = instance.client.deployments.outputs.get(instance.test_id)
+    outputs = outputs['outputs']
+    instance.assertEqual(expected_output, outputs)
