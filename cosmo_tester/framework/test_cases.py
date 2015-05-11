@@ -29,8 +29,8 @@ def _assert_general_deployment_data(self, influx_client):
                             .format(self.test_id))
     except NameError as e:
         self.fail('monitoring events list for deployment with ID {0} were'
-                      ' not found on influxDB. error is: {1}'
-                      .format(self.deployment_id, e))
+                  ' not found on influxDB. error is: {1}'
+                  .format(self.deployment_id, e))
 
 
 def assert_monitoring_data_exists(self):
@@ -39,7 +39,7 @@ def assert_monitoring_data_exists(self):
     _assert_general_deployment_data(self, client)
 
 
-def assert_outputs(self, expected_output)
+def assert_outputs(self, expected_output):
     outputs = self.client.deployments.outputs.get(self.test_id)
     outputs = outputs['outputs']
     self.assertEqual(expected_output, outputs)
