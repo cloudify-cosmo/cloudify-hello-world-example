@@ -20,12 +20,12 @@ from requests.exceptions import ConnectionError
 from influxdb import InfluxDBClient
 from influxdb.client import InfluxDBClientError
 
-from cosmo_tester.framework.testenv import TestCase
+# from cosmo_tester.framework.testenv import TestCase
 from cosmo_tester.framework.git_helper import clone
-from cosmo_tester.framework.test_cases import assert_monitoring_data_exists
+from cosmo_tester.framework.test_cases import MonitoringTestCase
 
 
-class NodecellarAppTest(TestCase):
+class NodecellarAppTest(MonitoringTestCase):
 
     def _test_nodecellar_impl(self, blueprint_file):
         self.repo_dir = clone(self.repo_url, self.workdir, self.repo_branch)
@@ -172,7 +172,7 @@ class NodecellarAppTest(TestCase):
         client = InfluxDBClient(self.env.management_ip, 8086, 'root', 'root',
                                 'cloudify')
         self._assert_mongodb_collector_data(client)
-        assert_monitoring_data_exists(self)
+        self.assert_monitoring_data_exists()
 
     def post_uninstall_assertions(self):
         nodes_instances = self.client.node_instances.list(self.deployment_id)

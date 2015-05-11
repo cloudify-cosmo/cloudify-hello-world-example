@@ -15,31 +15,27 @@
 
 
 from influxdb import InfluxDBClient
+from cosmo_tester.framework.testenv import TestCase
 
 
-def _assert_general_deployment_data(self, influx_client):
+class MonitoringTestCase(TestCase):
 
-    try:
-        # select monitoring events for deployment from
-        # the past 5 seconds. a NameError will be thrown only if NO
-        # deployment events exist in the DB regardless of time-span
-        # in query.
-        influx_client.query('select * from /^{0}\./i '
-                            'where time > now() - 5s'
-                            .format(self.test_id))
-    except NameError as e:
-        self.fail('monitoring events list for deployment with ID {0} were'
-                  ' not found on influxDB. error is: {1}'
-                  .format(self.deployment_id, e))
+    def _assert_general_deployment_data(self, influx_client):
 
+        try:
+            # select monitoring events for deployment from
+            # the past 5 seconds. a NameError will be thrown only if NO
+            # deployment events exist in the DB regardless of time-span
+            # in query.
+            influx_client.query('select * from /^{0}\./i '
+                                'where time > now() - 5s'
+                                .format(self.test_id))
+        except NameError as e:
+            self.fail('monitoring events list for deployment with ID {0} were'
+                      ' not found on influxDB. error is: {1}'
+                      .format(self.deployment_id, e))
 
-def assert_monitoring_data_exists(self):
-    client = InfluxDBClient(self.env.management_ip, 8086, 'root', 'root',
-                            'cloudify')
-    _assert_general_deployment_data(self, client)
-
-
-def assert_outputs(self, expected_output):
-    outputs = self.client.deployments.outputs.get(self.test_id)
-    outputs = outputs['outputs']
-    self.assertEqual(expected_output, outputs)
+    def assert_monitoring_data_exists(self):
+        client = InfluxDBClient(self.env.management_ip, 8086, 'root', 'root',
+                                'cloudify')
+        self._assert_general_deployment_data(self, client)
