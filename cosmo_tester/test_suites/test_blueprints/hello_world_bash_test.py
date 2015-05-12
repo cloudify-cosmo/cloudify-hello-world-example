@@ -20,7 +20,6 @@ from neutronclient.common.exceptions import NeutronException
 from novaclient.exceptions import NotFound
 from retrying import retry
 
-# from cosmo_tester.framework.testenv import TestCase
 from cosmo_tester.framework.git_helper import clone
 from cosmo_tester.framework.test_cases import MonitoringTestCase
 
@@ -93,7 +92,7 @@ class HelloWorldBashTest(MonitoringTestCase):
 
         floating_ip_id, neutron, nova, sg_id, server_id =\
             self._verify_deployment_installed()
-        self.assert_monitoring_data_exists(self)
+        self.assert_monitoring_data_exists()
         self._uninstall_and_make_assertions(floating_ip_id, neutron, nova,
                                             sg_id, server_id)
 

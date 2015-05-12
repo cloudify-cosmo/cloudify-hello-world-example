@@ -38,4 +38,4 @@ class MonitoringTestCase(TestCase):
     def assert_monitoring_data_exists(self):
         client = InfluxDBClient(self.env.management_ip, 8086, 'root', 'root',
                                 'cloudify')
-        self._assert_general_deployment_data(self, client)
+        self._assert_general_deployment_data(client)
