@@ -95,7 +95,6 @@ templates:
     node_templates.manager.properties.cloudify_packages.agents.centos_agent_url: '{{centos_package_agent_url}}'
     node_templates.manager.properties.cloudify_packages.agents.windows_agent_url: '{{windows_package_agent_url}}'
     node_templates.manager.properties.cloudify_packages.docker.docker_url: '{{docker_image_url}}'
-    node_templates.manager_data.relationships.source_interfaces.cloudify\.interfaces\.relationship_lifecycle.establish.inputs.script_path: 'https://raw.githubusercontent.com/cloudify-cosmo/cloudify-manager/CFY-2727-docker-pre-installed/resources/rest-service/cloudify/fs/mount.sh'
     node_templates.manager.properties.cloudify.workflows.task_retries: 20
 
   - &manager_blueprint_commercial_override
@@ -549,6 +548,7 @@ tests:
   manager_recovery:
     tests:
       - cosmo_tester/test_suites/test_manager_recovery
+      - cosmo_tester/test_suites/test_manager_recovery_docker_installed
 
   openstack_plugin:
     tests:
@@ -628,7 +628,7 @@ test_suites:
       - manager_status
 
   hp_openstack_manager_recovery:
-    requires: [openstack, hp]
+    handler_configuration: hp_openstack_centos_system_tests3_region_b
     tests:
       - manager_recovery
 
