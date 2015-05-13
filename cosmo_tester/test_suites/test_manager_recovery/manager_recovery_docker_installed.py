@@ -31,9 +31,7 @@ class ManagerRecoveryWithDockerTest(ManagerRecoveryTest):
 
         with YamlPatcher(self.env._manager_blueprint_path) as inputs_patch:
             inputs_patch.set_value(
-                'node_templates.manager_data.relationships[1].source_'
-                'interfaces.cloudify\.interfaces\.relationship_lifecycle.'
-                'establish.inputs.script_path',
+                self.env._manager_blueprint_path,
                 'https://raw.githubusercontent.com/cloudify-cosmo/'
                 'cloudify-manager/CFY-2727-docker-pre-installed/'
                 'resources/rest-service/cloudify/fs/mount.sh')
