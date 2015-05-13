@@ -548,7 +548,6 @@ tests:
   manager_recovery:
     tests:
       - cosmo_tester/test_suites/test_manager_recovery
-      - cosmo_tester/test_suites/test_manager_recovery_docker_installed
 
   openstack_plugin:
     tests:
