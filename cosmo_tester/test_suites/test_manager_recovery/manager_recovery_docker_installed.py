@@ -25,6 +25,9 @@ UBUNTU_DOCKER_IMAGE_ID = 'fe72a6c5-1e20-42ec-98e9-9471e2d12ca0'
 # that contains an ubuntu image running docker.
 class ManagerRecoveryWithDockerTest(ManagerRecoveryTest):
 
+    def test_manager_recovery_with_docker_installed(self):
+        self.test_manager_recovery()
+
     def _bootstrap(self):
         with YamlPatcher(self.env.cloudify_config_path) as inputs_patch:
             inputs_patch.set_value('image_id', UBUNTU_DOCKER_IMAGE_ID)
