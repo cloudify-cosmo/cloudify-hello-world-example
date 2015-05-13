@@ -20,11 +20,11 @@ from requests.exceptions import ConnectionError
 from influxdb import InfluxDBClient
 from influxdb.client import InfluxDBClientError
 
-from cosmo_tester.framework.testenv import TestCase
 from cosmo_tester.framework.git_helper import clone
+from cosmo_tester.framework.test_cases import MonitoringTestCase
 
 
-class NodecellarAppTest(TestCase):
+class NodecellarAppTest(MonitoringTestCase):
 
     def _test_nodecellar_impl(self, blueprint_file):
         self.repo_dir = clone(self.repo_url, self.workdir, self.repo_branch)
@@ -150,10 +150,9 @@ class NodecellarAppTest(TestCase):
         nodes_state = delta['node_state'].values()[0]
         self.assertEqual(len(nodes_state), self.expected_nodes_count,
                          'nodes_state: {0}'.format(nodes_state))
-        self.assert_monitoring_data_exists()
         self.public_ip = self.get_public_ip(nodes_state)
         self.assert_host_state_and_runtime_properties(nodes_state)
-
+        self._assert_monitoring_data_exists()
         self.assertIsNotNone(self.public_ip,
                              'Could not find the '
                              '"{0}" node for '
@@ -168,11 +167,11 @@ class NodecellarAppTest(TestCase):
 
         self.assert_nodecellar_working(self.public_ip)
 
-    def assert_monitoring_data_exists(self):
+    def _assert_monitoring_data_exists(self):
         client = InfluxDBClient(self.env.management_ip, 8086, 'root', 'root',
                                 'cloudify')
-        self._assert_general_deployment_data(client)
         self._assert_mongodb_collector_data(client)
+        self.assert_monitoring_data_exists()
 
     def post_uninstall_assertions(self):
         nodes_instances = self.client.node_instances.list(self.deployment_id)
@@ -186,21 +185,6 @@ class NodecellarAppTest(TestCase):
                       'but no error was raised.')
         except ConnectionError:
             pass
-
-    def _assert_general_deployment_data(self, influx_client):
-
-        try:
-            # select monitoring events for deployment from
-            # the past 5 seconds. a NameError will be thrown only if NO
-            # deployment events exist in the DB regardless of time-span
-            # in query.
-            influx_client.query('select * from /^{0}\./i '
-                                'where time > now() - 5s'
-                                .format(self.deployment_id))
-        except NameError as e:
-            self.fail('monitoring events list for deployment with ID {0} were'
-                      ' not found on influxDB. error is: {1}'
-                      .format(self.deployment_id, e))
 
     def _assert_mongodb_collector_data(self, influx_client):
 
