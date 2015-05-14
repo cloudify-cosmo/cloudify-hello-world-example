@@ -40,8 +40,8 @@ class ManagerRecoveryWithDockerTest(BaseManagerRecoveryTest):
                 'interfaces.cloudify\.interfaces\.relationship_lifecycle.'
                 'establish.inputs.script_path',
                 'https://raw.githubusercontent.com/cloudify-cosmo/'
-                'cloudify-manager/CFY-2727-docker-pre-installed/'
-                'resources/rest-service/cloudify/fs/mount-docker.sh')
+                'cloudify-manager/master/resources/rest-service/cloudify/'
+                'fs/mount-docker.sh')
         self.cfy.bootstrap(blueprint_path=self.env._manager_blueprint_path,
                            inputs_file=self.env.cloudify_config_path,
                            task_retries=5,
