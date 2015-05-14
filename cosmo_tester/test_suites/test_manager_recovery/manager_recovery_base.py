@@ -31,10 +31,6 @@ class BaseManagerRecoveryTest(TestCase):
 
     __test__ = False
 
-
-def setUp():
-    initialize_without_bootstrap()
-
     def test_manager_recovery(self):
 
         # bootstrap and install
@@ -119,6 +115,8 @@ def setUp():
             fetch_state=True)
 
     def _bootstrap(self):
+        clear_environment()
+        initialize_without_bootstrap()
         self.cfy.bootstrap(blueprint_path=self.env._manager_blueprint_path,
                            inputs_file=self.env.cloudify_config_path,
                            task_retries=5,
@@ -128,7 +126,3 @@ def setUp():
         self.client = CloudifyClient(self.cfy.get_management_ip())
 
         self.addCleanup(self.cfy.teardown)
-
-
-def tearDown():
-    clear_environment()
