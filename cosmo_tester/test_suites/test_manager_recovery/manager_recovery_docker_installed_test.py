@@ -30,7 +30,6 @@ class ManagerRecoveryWithDockerTest(BaseManagerRecoveryTest):
         self.check_recovery()
 
     def _bootstrap(self):
-        print self.env.cloudify_config_path
         with YamlPatcher(self.env.cloudify_config_path) as inputs_patch:
             inputs_patch.set_value('image_id', UBUNTU_DOCKER_IMAGE_ID)
 
