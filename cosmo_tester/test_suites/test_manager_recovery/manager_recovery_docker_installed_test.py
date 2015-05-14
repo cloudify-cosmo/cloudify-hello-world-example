@@ -16,28 +16,32 @@
 from cloudify_rest_client import CloudifyClient
 
 from cosmo_tester.framework.util import YamlPatcher
-from manager_recovery_test import ManagerRecoveryTest
+from recovery_base import BaseManagerRecoveryTest
 
-UBUNTU_DOCKER_IMAGE_ID = 'fe72a6c5-1e20-42ec-98e9-9471e2d12ca0'
+# cloudify-cosmo-system-tests3 region a
+UBUNTU_DOCKER_IMAGE_ID = 'b3322ff7-5e72-4459-b164-bdb800848289'
 
 
 # This test can only run on a specific hp tenant
 # that contains an ubuntu image running docker.
-class ManagerRecoveryWithDockerTest(ManagerRecoveryTest):
+class ManagerRecoveryWithDockerTest(BaseManagerRecoveryTest):
 
-    def test_manager_recovery_with_docker_installed(self):
-        self.test_manager_recovery()
+    def test_manager_recovery(self):
+        self.run_check()
 
     def _bootstrap(self):
+        print self.env.cloudify_config_path
         with YamlPatcher(self.env.cloudify_config_path) as inputs_patch:
             inputs_patch.set_value('image_id', UBUNTU_DOCKER_IMAGE_ID)
 
         with YamlPatcher(self.env._manager_blueprint_path) as inputs_patch:
             inputs_patch.set_value(
-                self.env._manager_blueprint_path,
+                'node_templates.manager_data.relationships[1].source_'
+                'interfaces.cloudify\.interfaces\.relationship_lifecycle.'
+                'establish.inputs.script_path',
                 'https://raw.githubusercontent.com/cloudify-cosmo/'
                 'cloudify-manager/CFY-2727-docker-pre-installed/'
-                'resources/rest-service/cloudify/fs/mount.sh')
+                'resources/rest-service/cloudify/fs/mount-docker.sh')
         self.cfy.bootstrap(blueprint_path=self.env._manager_blueprint_path,
                            inputs_file=self.env.cloudify_config_path,
                            task_retries=5,
