@@ -17,6 +17,8 @@ from cloudify_rest_client import CloudifyClient
 
 from cosmo_tester.framework.util import YamlPatcher
 from manager_recovery_base import BaseManagerRecoveryTest
+from cosmo_tester.framework.testenv import initialize_without_bootstrap
+from cosmo_tester.framework.testenv import clear_environment
 
 
 class ManagerRecoveryTest(BaseManagerRecoveryTest):
@@ -24,6 +26,8 @@ class ManagerRecoveryTest(BaseManagerRecoveryTest):
     __test__ = True
 
     def _bootstrap(self):
+        clear_environment()
+        initialize_without_bootstrap()
         with YamlPatcher(self.env._manager_blueprint_path) as inputs_patch:
             inputs_patch.set_value(
                 'node_templates.manager_data.relationships[1].source_'
