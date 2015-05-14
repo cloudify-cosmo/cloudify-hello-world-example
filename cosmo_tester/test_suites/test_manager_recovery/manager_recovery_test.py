@@ -18,5 +18,4 @@ from manager_recovery_base import BaseManagerRecoveryTest
 
 class ManagerRecoveryTest(BaseManagerRecoveryTest):
 
-    def test_manager_recovery(self):
-        self.check_recovery()
+    __test__ = True
