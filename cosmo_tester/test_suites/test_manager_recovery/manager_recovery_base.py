@@ -132,4 +132,3 @@ def setUp():
 
 def tearDown():
     clear_environment()
-
