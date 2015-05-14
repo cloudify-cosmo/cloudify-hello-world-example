@@ -50,3 +50,10 @@ class ManagerRecoveryWithDockerTest(BaseManagerRecoveryTest):
         self.client = CloudifyClient(self.cfy.get_management_ip())
 
         self.addCleanup(self.cfy.teardown)
+
+    def get_blueprint_inputs(self):
+        inputs = {
+            'image': UBUNTU_DOCKER_IMAGE_ID,
+            'flavor': self.env.small_flavor_id
+        }
+        return inputs

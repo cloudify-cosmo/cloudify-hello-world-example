@@ -71,10 +71,7 @@ class BaseManagerRecoveryTest(TestCase):
             'blueprint.yaml'
         )
 
-        inputs = {
-            'image': self.env.ubuntu_image_id,
-            'flavor': self.env.small_flavor_id
-        }
+        inputs = self.get_blueprint_inputs()
 
         blueprint_id = 'recovery-{0}'.format(self.test_id)
         self.deployment_id = blueprint_id
@@ -96,6 +93,13 @@ class BaseManagerRecoveryTest(TestCase):
             ),
             'connection_attempts': 5
         }
+
+    def get_blueprint_inputs(self):
+        inputs = {
+            'image': self.env.ubuntu_image_id,
+            'flavor': self.env.small_flavor_id
+        }
+        return inputs
 
     def _kill_and_recover_manager(self):
 
