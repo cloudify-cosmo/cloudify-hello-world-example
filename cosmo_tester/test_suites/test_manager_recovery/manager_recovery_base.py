@@ -27,7 +27,7 @@ from cosmo_tester.framework.cfy_helper import cfy as cli
 
 class BaseManagerRecoveryTest(TestCase):
 
-    def run_check(self):
+    def check_recovery(self):
 
         # bootstrap and install
         self._bootstrap()

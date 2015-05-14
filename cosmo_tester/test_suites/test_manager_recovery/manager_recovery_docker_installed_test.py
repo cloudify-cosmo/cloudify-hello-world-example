@@ -16,7 +16,7 @@
 from cloudify_rest_client import CloudifyClient
 
 from cosmo_tester.framework.util import YamlPatcher
-from recovery_base import BaseManagerRecoveryTest
+from manager_recovery_base import BaseManagerRecoveryTest
 
 # cloudify-cosmo-system-tests3 region a
 UBUNTU_DOCKER_IMAGE_ID = 'b3322ff7-5e72-4459-b164-bdb800848289'
@@ -27,7 +27,7 @@ UBUNTU_DOCKER_IMAGE_ID = 'b3322ff7-5e72-4459-b164-bdb800848289'
 class ManagerRecoveryWithDockerTest(BaseManagerRecoveryTest):
 
     def test_manager_recovery(self):
-        self.run_check()
+        self.check_recovery()
 
     def _bootstrap(self):
         print self.env.cloudify_config_path
