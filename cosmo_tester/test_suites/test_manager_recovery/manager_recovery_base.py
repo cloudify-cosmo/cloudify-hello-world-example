@@ -23,11 +23,17 @@ from cosmo_tester.framework.testenv import TestCase
 from cosmo_tester.resources import blueprints
 from cosmo_tester.framework import util
 from cosmo_tester.framework.cfy_helper import cfy as cli
+from cosmo_tester.framework.testenv import initialize_without_bootstrap
+from cosmo_tester.framework.testenv import clear_environment
 
 
 class BaseManagerRecoveryTest(TestCase):
 
     __test__ = False
+
+
+def setUp():
+    initialize_without_bootstrap()
 
     def test_manager_recovery(self):
 
@@ -122,3 +128,8 @@ class BaseManagerRecoveryTest(TestCase):
         self.client = CloudifyClient(self.cfy.get_management_ip())
 
         self.addCleanup(self.cfy.teardown)
+
+
+def tearDown():
+    clear_environment()
+
