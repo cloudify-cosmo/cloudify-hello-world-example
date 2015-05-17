@@ -23,8 +23,6 @@ from cosmo_tester.framework.testenv import TestCase
 from cosmo_tester.resources import blueprints
 from cosmo_tester.framework import util
 from cosmo_tester.framework.cfy_helper import cfy as cli
-from cosmo_tester.framework.testenv import initialize_without_bootstrap
-from cosmo_tester.framework.testenv import clear_environment
 
 
 class BaseManagerRecoveryTest(TestCase):
@@ -34,7 +32,7 @@ class BaseManagerRecoveryTest(TestCase):
     def test_manager_recovery(self):
 
         # bootstrap and install
-        self._bootstrap()
+        self.bootstrap()
         self._install_blueprint()
 
         # this will verify that all the data is actually persisted.
@@ -114,9 +112,7 @@ class BaseManagerRecoveryTest(TestCase):
             _kill_and_recover,
             fetch_state=True)
 
-    def _bootstrap(self):
-        clear_environment()
-        initialize_without_bootstrap()
+    def bootstrap(self):
         self.cfy.bootstrap(blueprint_path=self.env._manager_blueprint_path,
                            inputs_file=self.env.cloudify_config_path,
                            task_retries=5,

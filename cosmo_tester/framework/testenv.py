@@ -192,7 +192,8 @@ class TestEnvironment(object):
 
     def setup(self):
         os.chdir(self._initial_cwd)
-        return self
+        return TestEnvironment()
+        # return self
 
     def bootstrap(self, task_retries=5):
         if self._management_running:
