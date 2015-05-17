@@ -36,7 +36,7 @@ class ManagerRecoveryTest(BaseManagerRecoveryTest):
 
         self.cfy.bootstrap(blueprint_path=self.test_manager_blueprint_path,
                            inputs_file=self.test_inputs_path,
-                           task_retries=10,
+                           task_retries=5,
                            install_plugins=self.env.install_plugins)
 
         # override the client instance to use the correct ip
