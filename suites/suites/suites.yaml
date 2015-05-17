@@ -627,7 +627,7 @@ test_suites:
       - manager_status
 
   hp_openstack_manager_recovery:
-    requires: [openstack, hp]
+    handler_configuration: hp_openstack_system_tests3_region_a
     tests:
       - manager_recovery
 
