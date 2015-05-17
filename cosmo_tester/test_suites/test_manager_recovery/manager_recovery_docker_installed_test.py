@@ -26,7 +26,7 @@ UBUNTU_DOCKER_IMAGE_ID = 'b3322ff7-5e72-4459-b164-bdb800848289'
 # that contains an ubuntu image running docker.
 class ManagerRecoveryWithDockerTest(BaseManagerRecoveryTest):
 
-    def test(self):
+    def test_manager_recovery(self):
         self._test_manager_recovery_impl()
 
     def bootstrap(self):
