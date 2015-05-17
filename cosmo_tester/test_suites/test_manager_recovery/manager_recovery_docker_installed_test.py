@@ -26,7 +26,8 @@ UBUNTU_DOCKER_IMAGE_ID = 'b3322ff7-5e72-4459-b164-bdb800848289'
 # that contains an ubuntu image running docker.
 class ManagerRecoveryWithDockerTest(BaseManagerRecoveryTest):
 
-    __test__ = True
+    def test(self):
+        self._test_manager_recovery_impl()
 
     def bootstrap(self):
         with YamlPatcher(self.test_inputs_path) as inputs_patch:
@@ -43,17 +44,10 @@ class ManagerRecoveryWithDockerTest(BaseManagerRecoveryTest):
 
         self.cfy.bootstrap(blueprint_path=self.test_manager_blueprint_path,
                            inputs_file=self.test_inputs_path,
-                           task_retries=5,
+                           task_retries=10,
                            install_plugins=self.env.install_plugins)
 
         # override the client instance to use the correct ip
         self.client = CloudifyClient(self.cfy.get_management_ip())
 
         self.addCleanup(self.cfy.teardown)
-
-    def get_blueprint_inputs(self):
-        inputs = {
-            'image': UBUNTU_DOCKER_IMAGE_ID,
-            'flavor': self.env.small_flavor_id
-        }
-        return inputs

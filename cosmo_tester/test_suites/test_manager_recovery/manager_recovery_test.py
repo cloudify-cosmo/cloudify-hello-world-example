@@ -21,7 +21,8 @@ from manager_recovery_base import BaseManagerRecoveryTest
 
 class ManagerRecoveryTest(BaseManagerRecoveryTest):
 
-    __test__ = True
+    def test(self):
+        self._test_manager_recovery_impl()
 
     def bootstrap(self):
         with YamlPatcher(self.test_manager_blueprint_path) as inputs_patch:
@@ -35,7 +36,7 @@ class ManagerRecoveryTest(BaseManagerRecoveryTest):
 
         self.cfy.bootstrap(blueprint_path=self.test_manager_blueprint_path,
                            inputs_file=self.test_inputs_path,
-                           task_retries=5,
+                           task_retries=10,
                            install_plugins=self.env.install_plugins)
 
         # override the client instance to use the correct ip

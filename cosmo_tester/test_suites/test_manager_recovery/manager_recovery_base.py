@@ -28,9 +28,7 @@ from cosmo_tester.framework.cfy_helper import cfy as cli
 
 class BaseManagerRecoveryTest(TestCase):
 
-    __test__ = False
-
-    def test_manager_recovery(self):
+    def _test_manager_recovery_impl(self):
 
         self._copy_manager_blueprint()
 
@@ -82,7 +80,10 @@ class BaseManagerRecoveryTest(TestCase):
             'blueprint.yaml'
         )
 
-        inputs = self.get_blueprint_inputs()
+        inputs = {
+            'image': self.env.ubuntu_image_id,
+            'flavor': self.env.small_flavor_id
+        }
 
         blueprint_id = 'recovery-{0}'.format(self.test_id)
         self.deployment_id = blueprint_id
@@ -105,19 +106,12 @@ class BaseManagerRecoveryTest(TestCase):
             'connection_attempts': 5
         }
 
-    def get_blueprint_inputs(self):
-        inputs = {
-            'image': self.env.ubuntu_image_id,
-            'flavor': self.env.small_flavor_id
-        }
-        return inputs
-
     def _kill_and_recover_manager(self):
 
         def _kill_and_recover():
             with settings(**self.fabric_env):
                 sudo('docker kill cfy')
-            self.cfy.recover()
+            self.cfy.recover(task_retries=10)
 
         return self._make_operation_with_before_after_states(
             _kill_and_recover,
