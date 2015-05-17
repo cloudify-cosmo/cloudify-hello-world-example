@@ -29,10 +29,10 @@ class ManagerRecoveryWithDockerTest(BaseManagerRecoveryTest):
     __test__ = True
 
     def bootstrap(self):
-        with YamlPatcher(self.env.cloudify_config_path) as inputs_patch:
+        with YamlPatcher(self.test_inputs_path) as inputs_patch:
             inputs_patch.set_value('image_id', UBUNTU_DOCKER_IMAGE_ID)
 
-        with YamlPatcher(self.env._manager_blueprint_path) as inputs_patch:
+        with YamlPatcher(self.test_manager_blueprint_path) as inputs_patch:
             inputs_patch.set_value(
                 'node_templates.manager_data.relationships[1].source_'
                 'interfaces.cloudify\.interfaces\.relationship_'
@@ -41,8 +41,8 @@ class ManagerRecoveryWithDockerTest(BaseManagerRecoveryTest):
                 'cloudify-manager/CFY-2727-docker-pre-installed/'
                 'resources/rest-service/cloudify/fs/mount-docker.sh')
 
-        self.cfy.bootstrap(blueprint_path=self.env._manager_blueprint_path,
-                           inputs_file=self.env.cloudify_config_path,
+        self.cfy.bootstrap(blueprint_path=self.test_manager_blueprint_path,
+                           inputs_file=self.test_inputs_path,
                            task_retries=5,
                            install_plugins=self.env.install_plugins)
 

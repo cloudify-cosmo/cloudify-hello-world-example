@@ -14,6 +14,7 @@
 #    * limitations under the License.
 
 import os
+from path import path
 
 from fabric.api import sudo
 from fabric.api import settings
@@ -30,6 +31,8 @@ class BaseManagerRecoveryTest(TestCase):
     __test__ = False
 
     def test_manager_recovery(self):
+
+        self._copy_manager_blueprint()
 
         # bootstrap and install
         self.bootstrap()
@@ -63,6 +66,14 @@ class BaseManagerRecoveryTest(TestCase):
 
         # this will test the management worker is still responding
         self.cfy.delete_deployment(self.deployment_id)
+
+    def _copy_manager_blueprint(self):
+        inputs_path, mb_path = util.generate_unique_configurations(
+            workdir=self.workdir,
+            original_inputs_path=self.env.cloudify_config_path,
+            original_manager_blueprint_path=self.env._manager_blueprint_path)
+        self.test_manager_blueprint_path = path(mb_path)
+        self.test_inputs_path = path(inputs_path)
 
     def _install_blueprint(self):
         self.blueprint_yaml = os.path.join(
@@ -113,8 +124,8 @@ class BaseManagerRecoveryTest(TestCase):
             fetch_state=True)
 
     def bootstrap(self):
-        self.cfy.bootstrap(blueprint_path=self.env._manager_blueprint_path,
-                           inputs_file=self.env.cloudify_config_path,
+        self.cfy.bootstrap(blueprint_path=self.test_manager_blueprint_path,
+                           inputs_file=self.test_inputs_path,
                            task_retries=5,
                            install_plugins=self.env.install_plugins)
 
