@@ -13,9 +13,6 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
-from cloudify_rest_client import CloudifyClient
-
-from cosmo_tester.framework.util import YamlPatcher
 from manager_recovery_base import BaseManagerRecoveryTest
 
 
@@ -23,23 +20,3 @@ class ManagerRecoveryTest(BaseManagerRecoveryTest):
 
     def test(self):
         self._test_manager_recovery_impl()
-
-    def bootstrap(self):
-        with YamlPatcher(self.test_manager_blueprint_path) as inputs_patch:
-            inputs_patch.set_value(
-                'node_templates.manager_data.relationships[1].source_'
-                'interfaces.cloudify\.interfaces\.relationship_'
-                'lifecycle.establish.inputs.script_path',
-                'https://raw.githubusercontent.com/cloudify-cosmo/'
-                'cloudify-manager/CFY-2727-docker-pre-installed/'
-                'resources/rest-service/cloudify/fs/mount-docker.sh')
-
-        self.cfy.bootstrap(blueprint_path=self.test_manager_blueprint_path,
-                           inputs_file=self.test_inputs_path,
-                           task_retries=5,
-                           install_plugins=self.env.install_plugins)
-
-        # override the client instance to use the correct ip
-        self.client = CloudifyClient(self.cfy.get_management_ip())
-
-        self.addCleanup(self.cfy.teardown)
