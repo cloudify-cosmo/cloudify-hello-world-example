@@ -93,10 +93,10 @@ class HelloWorldBashTest(MonitoringTestCase):
         floating_ip_id, neutron, nova, sg_id, server_id =\
             self._verify_deployment_installed()
         self.assert_monitoring_data_exists()
-        floating_ip_dict = neutron.show_floatingip(floating_ip_id)
-        expected_output = '{{u\'http_endpoint\': u\'http://{0}:8080\'}}' \
-            .format(floating_ip_dict['floatingip']['floating_ip_address'])
-        self.wait_for_expected_outputs(expected_output)
+        ip = neutron.show_floatingip(floating_ip_id)['floatingip']['floating_ip_address']
+        port = get_web_server_node(self.client, self.test_id).properties['port']
+        expected_output = {u'http_endpoint' : u'http://{0}:{1}'.format(ip, port)}
+        self.assertOutputs(expected_output)
         self._uninstall_and_make_assertions(floating_ip_id, neutron, nova,
                                             sg_id, server_id)
 

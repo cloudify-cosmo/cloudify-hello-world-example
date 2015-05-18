@@ -265,12 +265,10 @@ class TestCase(unittest.TestCase):
     def tearDownClass(cls):
         pass
 
-    def wait_for_expected_outputs(self, expected_outputs, timeout=3):
-        def assertion():
-            outputs = self.client.deployments.outputs.get(self.test_id)
-            outputs = outputs['outputs']
-            self.assertEqual(str(expected_outputs), str(outputs))
-        self.repetitive(assertion, timeout=timeout)
+    def assertOutputs(self, expected_outputs):
+        outputs = self.client.deployments.outputs.get(self.test_id)
+        outputs = outputs['outputs']
+        self.assertEqual(expected_outputs, outputs)
 
     def setUp(self):
         global test_environment
