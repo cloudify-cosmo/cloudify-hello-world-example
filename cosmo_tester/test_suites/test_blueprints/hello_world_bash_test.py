@@ -92,7 +92,7 @@ class HelloWorldBashTest(MonitoringTestCase):
 
         floating_ip_id, neutron, nova, sg_id, server_id =\
             self._verify_deployment_installed()
-        self.assert_monitoring_data_exists()
+        self.assert_deployment_monitoring_data_exists(self.test_id)
         floating_ip = neutron.show_floatingip(floating_ip_id)
         ip = floating_ip['floatingip']['floating_ip_address']
         web_server_node = get_web_server_node(self.client, self.test_id)
