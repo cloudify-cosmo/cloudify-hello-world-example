@@ -20,7 +20,7 @@ from cosmo_tester.framework.testenv import TestCase
 
 class MonitoringTestCase(TestCase):
 
-    def assert_deployment_monitoring_data_exists(self, deployment_id):
+    def assert_deployment_monitoring_data_exists(self, deployment_id=self.test_id):
         influx_client = InfluxDBClient(self.env.management_ip, 8086,
                                        'root', 'root', 'cloudify')
         try:
