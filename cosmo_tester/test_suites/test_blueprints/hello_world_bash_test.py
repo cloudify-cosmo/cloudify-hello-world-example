@@ -99,7 +99,7 @@ class HelloWorldBashTest(MonitoringTestCase):
         port = web_server_node.properties['port']
         expected_output = \
             {u'http_endpoint': u'http://{0}:{1}'.format(ip, port)}
-        self.assertOutputs(expected_output)
+        self.assert_outputs(expected_output)
         self._uninstall_and_make_assertions(floating_ip_id, neutron, nova,
                                             sg_id, server_id)
 

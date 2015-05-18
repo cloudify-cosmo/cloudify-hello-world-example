@@ -265,7 +265,7 @@ class TestCase(unittest.TestCase):
     def tearDownClass(cls):
         pass
 
-    def assertOutputs(self, expected_outputs):
+    def assert_outputs(self, expected_outputs):
         outputs = self.client.deployments.outputs.get(self.test_id)
         outputs = outputs['outputs']
         self.assertEqual(expected_outputs, outputs)
