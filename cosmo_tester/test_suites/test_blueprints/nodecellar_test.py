@@ -152,7 +152,7 @@ class NodecellarAppTest(MonitoringTestCase):
                          'nodes_state: {0}'.format(nodes_state))
         self.public_ip = self.get_public_ip(nodes_state)
         self.assert_host_state_and_runtime_properties(nodes_state)
-        self._assert_monitoring_data_exists()
+        self.assert_monitoring_data_exists()
         self.assertIsNotNone(self.public_ip,
                              'Could not find the '
                              '"{0}" node for '
@@ -167,7 +167,7 @@ class NodecellarAppTest(MonitoringTestCase):
 
         self.assert_nodecellar_working(self.public_ip)
 
-    def _assert_monitoring_data_exists(self):
+    def assert_monitoring_data_exists(self):
         client = InfluxDBClient(self.env.management_ip, 8086, 'root', 'root',
                                 'cloudify')
         self._assert_mongodb_collector_data(client)
