@@ -126,7 +126,7 @@ templates:
 
   - &softlayer_manager_blueprint_override
     <<: *manager_blueprint_commercial_override
-    node_templates.manager.properties.cloudify.workflows.task_retries: 100
+    node_templates.manager.properties.cloudify.workflows.task_retries: 35
 
   - &aws_ec2_manager_blueprint_override
     <<: *manager_blueprint_override
