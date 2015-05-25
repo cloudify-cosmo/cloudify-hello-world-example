@@ -265,6 +265,13 @@ class TestCase(unittest.TestCase):
     def tearDownClass(cls):
         pass
 
+    def assert_outputs(self, expected_outputs, deployment_id=None):
+        if deployment_id is None:
+            deployment_id = self.test_id
+        outputs = self.client.deployments.outputs.get(deployment_id)
+        outputs = outputs['outputs']
+        self.assertEqual(expected_outputs, outputs)
+
     def setUp(self):
         global test_environment
         self.env = test_environment.setup()
