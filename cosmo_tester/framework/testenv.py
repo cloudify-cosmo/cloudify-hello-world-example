@@ -366,6 +366,40 @@ class TestCase(unittest.TestCase):
             execute_timeout=execute_timeout,
             inputs=inputs)
 
+    def upload_deploy_and_execute_install_multiple_deployments(
+            self,
+            blueprint_id=None,
+            deployment_id=None,
+            fetch_state=True,
+            execute_timeout=20*DEFAULT_EXECUTE_TIMEOUT,
+            inputs=None,
+            number_of_deployments=1):
+
+        if deployment_id is None:
+            deployment_id = self.test_id
+        if blueprint_id is None:
+            blueprint_id = self.test_id
+
+        for i in range(1,number_of_deployments):
+            self._make_operation_with_before_after_states(
+                self.cfy.upload_deploy_and_execute_install,
+                fetch_state,
+                str(self.blueprint_yaml),
+                blueprint_id=blueprint_id + str(i),
+                deployment_id=deployment_id + str(i),
+                execute_timeout=execute_timeout,
+                inputs=inputs)
+
+        return self._make_operation_with_before_after_states(
+            self.cfy.upload_deploy_and_execute_install,
+            fetch_state,
+            str(self.blueprint_yaml),
+            blueprint_id=blueprint_id,
+            deployment_id=deployment_id + '0',
+            execute_timeout=execute_timeout,
+            inputs=inputs)
+
+
     def _make_operation_with_before_after_states(self, operation, fetch_state,
                                                  *args, **kwargs):
         before_state = None
