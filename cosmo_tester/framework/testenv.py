@@ -380,7 +380,7 @@ class TestCase(unittest.TestCase):
         if blueprint_id is None:
             blueprint_id = self.test_id
 
-        for i in range(1,number_of_deployments):
+        for i in range(1, number_of_deployments):
             self._make_operation_with_before_after_states(
                 self.cfy.upload_deploy_and_execute_install,
                 fetch_state,
@@ -398,7 +398,6 @@ class TestCase(unittest.TestCase):
             deployment_id=deployment_id + '0',
             execute_timeout=execute_timeout,
             inputs=inputs)
-
 
     def _make_operation_with_before_after_states(self, operation, fetch_state,
                                                  *args, **kwargs):

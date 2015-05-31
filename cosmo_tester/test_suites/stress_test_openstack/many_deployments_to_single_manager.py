@@ -78,12 +78,12 @@ class HelloWorldBashTest(MonitoringTestCase):
                                   self.workdir)
             self.blueprint_yaml = self.repo_dir / 'blueprint.yaml'
             self.upload_deploy_and_execute_install_multiple_deployments(
-                    fetch_state=False,
-                    inputs=dict(
-                        agent_user=user,
-                        image=image_name,
-                        flavor=self.env.flavor_name),
-                        number_of_deployments=number_of_deployments)
+                fetch_state=False,
+                inputs=dict(
+                    agent_user=user,
+                    image=image_name,
+                    flavor=self.env.flavor_name),
+                number_of_deployments=number_of_deployments)
         else:
             self.execute_install(deployment_id=self.test_id, fetch_state=False)
 
