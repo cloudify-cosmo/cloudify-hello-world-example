@@ -279,6 +279,8 @@ class SuiteRunner(object):
                               with_xunit=True,
                               xunit_file=report_file,
                               xunit_testsuite_name=self.test_suite_name,
+                              processes=1,
+                              process_timeout=300*60,
                               *processed_tests).wait()
                 except sh.ErrorReturnCode:
                     failed_groups.append(test_group)
