@@ -31,7 +31,7 @@ setup(
         'sh==1.09',
         'path.py==5.1',
         'nose',
-        'retrying==1.2.2',
+        'retrying==1.3.3',
         'cloudify==3.3a1',
         'elasticsearch',
         'Jinja2==2.7.2',
