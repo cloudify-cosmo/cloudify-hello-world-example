@@ -5,7 +5,8 @@ variables:
 
   hp_openstack_ubuntu_precise_image_name: Ubuntu Server 12.04.5 LTS (amd64 20150127) - Partner Image
   hp_openstack_ubuntu_trusty_image_name: Ubuntu Server 14.04.1 LTS (amd64 20140927) - Partner Image
-  hp_openstack_centos_image_name: CentOS 6.3 Server 64-bit 20130116
+  hp_openstack_centos_6_3_image_name: CentOS 6.3 Server 64-bit 20130116
+  hp_openstack_centos_7_image_name: CentOS 7 x86_64 (2014-09-29) - Partner Image
   hp_openstack_windows_image_name: Windows Server 2008 R2 Enterprise SP1 x64 Volume License 20140415 (b)
   hp_openstack_region_a_ubuntu_precise: 8ca068c5-6fde-4701-bab8-322b3e7c8d81
   hp_openstack_region_a_ubuntu_trusty: bec3cab5-4722-40b9-a78a-3489218e22fe
@@ -15,7 +16,8 @@ variables:
 
   lab_openstack_ubuntu_precise_image_name: ubuntu_12.04
   lab_openstack_ubuntu_trusty_image_name: ubuntu_14.04
-  lab_openstack_centos_image_name: centos_6.5
+  lab_openstack_centos_6_5_image_name: centos_6.5
+  lab_openstack_centos_7_image_name: centos_7
   lab_openstack_windows_image_name: windows-server-2012
   lab_openstack_ubuntu_precise: d81ccdfe-7482-460e-a7ce-69ea29aa129b
   lab_openstack_ubuntu_trusty: c6d36e11-f4d5-4221-b6e8-4e97914c67e9
@@ -157,8 +159,8 @@ templates:
     password: '{{opencm_git_pwd}}'
     branch: '{{core_branch}}'
 
-  - &cli_packager_external
-    repo: cloudify-cli-packager
+  - &packager_external
+    repo: cloudify-packager
     branch: '{{core_branch}}'
 
   - &diamond_snmp_extension_external
@@ -179,9 +181,11 @@ templates:
   - &hp_openstack_properties
     ubuntu_image_name: '{{hp_openstack_ubuntu_precise_image_name}}'
     ubuntu_trusty_image_name: '{{hp_openstack_ubuntu_trusty_image_name}}'
-    centos_image_name: '{{hp_openstack_centos_image_name}}'
+    centos_image_name: '{{hp_openstack_centos_6_3_image_name}}'
+    centos_7_image_name: '{{hp_openstack_centos_7_image_name}}'
     windows_image_name: '{{hp_openstack_windows_image_name}}'
     centos_image_user: root
+    centos_7_image_user: centos
     flavor_name: standard.small
     small_flavor_id: 101
     medium_flavor_id: 102
@@ -259,11 +263,13 @@ handler_properties:
   lab_openstack_properties:
     ubuntu_image_name: '{{lab_openstack_ubuntu_precise_image_name}}'
     ubuntu_trusty_image_name: '{{lab_openstack_ubuntu_trusty_image_name}}'
-    centos_image_name: '{{lab_openstack_centos_image_name}}'
+    centos_image_name: '{{lab_openstack_centos_6_5_image_name}}'
+    centos_7_image_name: '{{lab_openstack_centos_7_image_name}}'
     windows_image_name: '{{lab_openstack_windows_image_name}}'
     ubuntu_image_id: '{{lab_openstack_ubuntu_precise}}'
     ubuntu_trusty_image_id: '{{lab_openstack_ubuntu_trusty}}'
     centos_image_user: cloud-user
+    centos_7_image_user: centos
     flavor_name: m1.small
     small_flavor_id: ba4e08fd-e4c5-4233-a906-f1bb31cb659d
     medium_flavor_id: 8b5be402-98e6-461c-8425-56f708187c13
@@ -591,10 +597,16 @@ tests:
     tests:
       - cosmo_tester/test_suites/test_security
 
-  cli_packager:
-    external: *cli_packager_external
+  cli_packager_windows_centos7:
+    external: *packager_external
     tests:
-      - system_tests
+      - system_tests/test_centos7_bootstrap.py
+      - system_tests/test_windows_bootstrap.py
+
+  cli_packager_centos6_5:
+    external: *packager_external
+    tests:
+      - system_tests/test_centos6_5_bootstrap.py
 
   diamond_snmp_extension:
     external: *diamond_snmp_extension_external
@@ -621,10 +633,11 @@ test_suites:
       - openstack_blueprints_without_chef_puppet_docker_windows
       - host_pool_plugin
 
-  hp_openstack_manager_status:
+  hp_openstack_manager_status_cli_packager_centos6_5:
     requires: [openstack, hp]
     tests:
       - manager_status
+      - cli_packager_centos6_5
 
   hp_openstack_manager_recovery:
     handler_configuration: hp_openstack_system_tests3_region_a
@@ -666,10 +679,10 @@ test_suites:
     tests:
       - openstack_security
 
-  lab_openstack_cli_packager_docker_plugin:
+  lab_openstack_cli_packager_windows_centos7_docker_plugin:
     requires: [openstack, lab]
     tests:
-      - cli_packager
+      - cli_packager_windows_centos7
       - docker_plugin
 
   #####################################################################
