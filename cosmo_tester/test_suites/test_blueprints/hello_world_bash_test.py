@@ -159,7 +159,7 @@ class HelloWorldBashTest(MonitoringTestCase):
         return get_instances(client=self.client, deployment_id=self.test_id)
 
 
-@retry(stop_max_attempt_number=5, wait_fixed=3000)
+@retry(stop_max_attempt_number=10, wait_fixed=5000)
 def verify_webserver_running(web_server_node, floatingip_node_instance):
     """
     This method is also used by two_deployments_test!
