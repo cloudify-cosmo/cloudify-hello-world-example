@@ -35,7 +35,7 @@ class MockTestSuite(TestSuite):
 
     def _do_something(self):
         deadline = time.time() + self.run_for
-        while time.time() < deadline:
+        while time.time() < deadline and self._running:
             time.sleep(1)
         self._running = False
 
@@ -43,6 +43,9 @@ class MockTestSuite(TestSuite):
         self._running = True
         t = threading.Thread(target=self._do_something)
         t.start()
+
+    def terminate(self):
+        self._running = False
 
     @property
     def is_running(self):
@@ -173,3 +176,25 @@ class TestSuiteScheduler(unittest.TestCase):
         self.assertTrue(suites[0].started > suites[1].started)
         self.assertTrue(suites[0].started > suites[2].started)
         self.assertTrue(suites[2].terminated < suites[0].started)
+
+    def test_timed_out_suite(self):
+        suite_time = 10
+        suites = [
+            self._new_test_suite('suite1',
+                                 requires=['env1'],
+                                 run_for=suite_time)
+        ]
+        handler_configurations = {
+            'config1': {'env': 'env1_id', 'tags': ['env1']}
+        }
+        scheduler = SuitesScheduler(
+            suites,
+            handler_configurations,
+            suite_timeout=3)
+        start = time.time()
+        scheduler.run()
+        delta = time.time() - start
+        self.assertTrue(
+            delta < suite_time,
+            msg='Scheduler running time should be less than {0} seconds but '
+                'was {1} seconds.'.format(suite_time, delta))

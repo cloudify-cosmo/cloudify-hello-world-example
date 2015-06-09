@@ -34,8 +34,8 @@ logging.basicConfig()
 logger = logging.getLogger('suites_runner')
 logger.setLevel(logging.INFO)
 
-docker = sh_bake(sh.docker)
-vagrant = sh_bake(sh.vagrant)
+docker = None
+vagrant = None
 
 reports_dir = path(__file__).dirname() / 'xunit-reports'
 
@@ -57,6 +57,7 @@ class TestSuite(object):
         self.process = None
         self.started = None
         self.terminated = None
+        self.timed_out = False
 
     @property
     def handler_configuration(self):
@@ -69,6 +70,10 @@ class TestSuite(object):
     @property
     def requires(self):
         return self.suite_def.get('requires', [])
+
+    @property
+    def running_time(self):
+        return time.time() - self.started
 
     def create_env(self):
         self.suite_work_dir.makedirs()
@@ -115,12 +120,20 @@ class TestSuite(object):
         finally:
             os.chdir(cwd)
 
+    def terminate(self):
+        logger.info('Stopping docker container: {0}'.format(self.suite_name))
+        docker.stop(self.suite_name).wait()
+        logger.info('Docker container stopped: {0}'.format(self.suite_name))
+
     def copy_xunit_reports(self):
-        report_files = self.suite_reports_dir.files('*.xml')
-        logger.info('Suite [{0}] reports: {1}'.format(
-            self.suite_name, [r.name for r in report_files]))
-        for report in report_files:
-            report.copy(reports_dir / report.name)
+        if self.timed_out:
+            pass
+        else:
+            report_files = self.suite_reports_dir.files('*.xml')
+            logger.info('Suite [{0}] reports: {1}'.format(
+                self.suite_name, [r.name for r in report_files]))
+            for report in report_files:
+                report.copy(reports_dir / report.name)
 
 
 class SuitesScheduler(object):
@@ -130,7 +143,8 @@ class SuitesScheduler(object):
                  handler_configurations,
                  scheduling_interval=1,
                  optimize=False,
-                 after_suite_callback=None):
+                 after_suite_callback=None,
+                 suite_timeout=-1):
         self._test_suites = test_suites
         if optimize:
             self._test_suites = sorted(
@@ -140,6 +154,7 @@ class SuitesScheduler(object):
         self._locked_envs = set()
         self._scheduling_interval = scheduling_interval
         self._after_suite_callback = after_suite_callback
+        self._suite_timeout = suite_timeout
         self._validate()
         self._log_test_suites()
 
@@ -195,21 +210,48 @@ class SuitesScheduler(object):
                     suite.terminated = time.time()
                     logger.info(
                         'Suite terminated: {0}'.format(suite.suite_name))
-                    try:
-                        if self._after_suite_callback:
-                            self._after_suite_callback(suite)
-                    except Exception as e:
-                        logger.error(
-                            'After suite callback failed for suite: {0} - '
-                            'error: {1}'.format(suite.suite_name, str(e)))
+                    self._invoke_after_suite_callback(suite)
                     config = self._handler_configurations[
                         suite.handler_configuration]
                     self._release_env(config['env'])
                 else:
+                    if self._suite_timeout != -1 \
+                            and suite.running_time > self._suite_timeout:
+                        suite.timed_out = True
+                        config = self._handler_configurations[
+                            suite.handler_configuration]
+                        logger.warn(
+                            'Suite timed out: {0} [handler_configuration={1}, '
+                            'suite_running_time={2}s]'.format(
+                                suite.suite_name,
+                                config,
+                                int(suite.running_time)))
+                        logger.warn(
+                            'Terminating suite: {0}'.format(suite.suite_name))
+                        try:
+                            suite.terminate()
+                        except Exception as e:
+                            logger.error(
+                                'Error on suite termination [suite={0}, error'
+                                '={1}]'.format(suite.suite_name, str(e)))
+                        suite.terminated = time.time()
+                        self._invoke_after_suite_callback(suite)
                     remaining_suites.append(suite)
             suites_list = remaining_suites
             time.sleep(self._scheduling_interval)
         logger.info('Test suites scheduler stopped')
+
+    def _invoke_after_suite_callback(self, suite):
+        try:
+            if self._after_suite_callback:
+                logger.info(
+                    'Invoking after suite callback for suite: {0}'.format(
+                        suite.suite_name))
+                self._after_suite_callback(suite)
+        except Exception as e:
+            logger.error(
+                'After suite callback failed for suite: {0} - '
+                'error: {1}'.format(suite.suite_name, str(e)))
 
     def _find_matching_handler_configurations(self, suite):
         if suite.handler_configuration:
@@ -370,6 +412,9 @@ def get_containers_names():
 
 def main():
     variables_path = sys.argv[1]
+    global docker, vagrant
+    docker = sh_bake(sh.docker)
+    vagrant = sh_bake(sh.vagrant)
     setenv(variables_path)
     cleanup()
     validate()
