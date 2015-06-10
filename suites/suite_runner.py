@@ -85,6 +85,10 @@ class SuiteRunner(object):
             'cli_branch', self.branch_name_core)
         self.windows_cli_package_url = \
             self.variables['windows_cli_package_url']
+        self.centos7_cli_package_url = \
+            self.variables['centos_7_cli_package_url']
+        self.centos6_5_cli_package_url = \
+            self.variables['centos_6_5_cli_package_url']
         self.cloudify_automation_token = \
             self.variables['cloudify_automation_token']
 
@@ -109,6 +113,8 @@ class SuiteRunner(object):
         os.environ['BRANCH_NAME_PLUGINS'] = self.branch_name_plugins
         os.environ['BRANCH_NAME_CORE'] = self.branch_name_core
         os.environ['WINDOWS_CLI_PACKAGE_URL'] = self.windows_cli_package_url
+        os.environ['CENTOS_7_CLI_PACKAGE_URL'] = self.centos7_cli_package_url
+        os.environ['CENTOS_6_5_CLI_PACKAGE_URL'] = self.centos6_5_cli_package_url
         os.environ['CLOUDIFY_AUTOMATION_TOKEN'] = \
             self.cloudify_automation_token
 
