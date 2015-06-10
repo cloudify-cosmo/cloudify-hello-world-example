@@ -33,8 +33,8 @@ variables:
   ######################################################
 
   # These values are updated by the version tool
-  core_branch: '3.2'
-  plugins_branch: '1.2'
+  core_branch: '3.3m1'
+  plugins_branch: '1.3m1'
 
   # These values are injected by quickbuild and are here mainly
   # for reference (i.e. they will exist in runtime either way)
@@ -263,7 +263,7 @@ handler_properties:
     windows_image_name: '{{lab_openstack_windows_image_name}}'
     ubuntu_image_id: '{{lab_openstack_ubuntu_precise}}'
     ubuntu_trusty_image_id: '{{lab_openstack_ubuntu_trusty}}'
-    centos_image_user: root
+    centos_image_user: cloud-user
     flavor_name: m1.small
     small_flavor_id: ba4e08fd-e4c5-4233-a906-f1bb31cb659d
     medium_flavor_id: 8b5be402-98e6-461c-8425-56f708187c13
