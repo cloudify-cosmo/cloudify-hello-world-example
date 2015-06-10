@@ -124,10 +124,6 @@ templates:
     <<: *manager_blueprint_override
     <<: *openstack_manager_blueprint_sg_override
 
-  - &softlayer_manager_blueprint_override
-    <<: *manager_blueprint_commercial_override
-    node_templates.manager.properties.cloudify.workflows.task_retries: 35
-
   - &aws_ec2_manager_blueprint_override
     <<: *manager_blueprint_override
     <<: *aws_ec2_manager_blueprint_sg_override
@@ -493,7 +489,7 @@ handler_configurations:
     env: softlayer
     external: *softlayer_plugin_external
     manager_blueprint: manager-blueprint/softlayer-manager-blueprint.yaml
-    manager_blueprint_override: *softlayer_manager_blueprint_override
+    manager_blueprint_override: *manager_blueprint_commercial_override
     inputs_override:
       username: '{{system_tests_softlayer_username}}'
       api_key: '{{system_tests_softlayer_api_key}}'
