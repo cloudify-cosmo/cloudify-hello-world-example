@@ -190,7 +190,7 @@ class TestSuiteScheduler(unittest.TestCase):
         scheduler = SuitesScheduler(
             suites,
             handler_configurations,
-            suite_timeout=3)
+            suite_timeout=1)
         start = time.time()
         scheduler.run()
         delta = time.time() - start
@@ -198,3 +198,29 @@ class TestSuiteScheduler(unittest.TestCase):
             delta < suite_time,
             msg='Scheduler running time should be less than {0} seconds but '
                 'was {1} seconds.'.format(suite_time, delta))
+        self.assertTrue(suites[0].timed_out)
+
+    def test_timed_out_env_removed_from_envs_list(self):
+        suite_time = 10
+        suites = [
+            self._new_test_suite('suite1',
+                                 requires=['env1'],
+                                 run_for=suite_time),
+            self._new_test_suite('suite2',
+                                 requires=['env1'],
+                                 run_for=suite_time),
+            self._new_test_suite('suite3',
+                                 handler_configuration='config1',
+                                 run_for=suite_time)
+        ]
+        handler_configurations = {
+            'config1': {'env': 'env1_id', 'tags': ['env1']}
+        }
+        scheduler = SuitesScheduler(
+            suites,
+            handler_configurations,
+            suite_timeout=1)
+        scheduler.run()
+        self.assertIsNone(suites[1].started)
+        self.assertIsNone(suites[2].started)
+        self.assertEqual(2, len(scheduler.skipped_suites))

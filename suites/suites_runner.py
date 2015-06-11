@@ -25,6 +25,7 @@ import jinja2
 import yaml
 import sh
 from path import path
+from nose.plugins import xunit
 
 from helpers import sh_bake
 from helpers.suites_builder import build_suites_yaml
@@ -54,6 +55,7 @@ class TestSuite(object):
         self.suite_work_dir = suite_work_dir
         self.suite_reports_dir = suite_work_dir / 'xunit-reports'
         self.variables = variables
+        self._handler_configuration_def = None
         self.process = None
         self.started = None
         self.terminated = None
@@ -64,8 +66,9 @@ class TestSuite(object):
         return self.suite_def.get('handler_configuration')
 
     @handler_configuration.setter
-    def handler_configuration(self, value):
-        self.suite_def['handler_configuration'] = value
+    def handler_configuration(self, (config_name, config_def)):
+        self.suite_def['handler_configuration'] = config_name
+        self._handler_configuration_def = config_def
 
     @property
     def requires(self):
@@ -73,7 +76,12 @@ class TestSuite(object):
 
     @property
     def running_time(self):
-        return time.time() - self.started
+        if self.terminated:
+            return self.terminated - self.started
+        elif self.started:
+            return time.time() - self.started
+        else:
+            return 0
 
     def create_env(self):
         self.suite_work_dir.makedirs()
@@ -125,9 +133,56 @@ class TestSuite(object):
         docker.stop(self.suite_name).wait()
         logger.info('Docker container stopped: {0}'.format(self.suite_name))
 
+    def _generate_custom_xunit_report(self, text, error_type, error_message):
+        logger.info('Getting docker logs for container: {0}'.format(
+            self.suite_name))
+        logs = xunit.xml_safe(sh.docker.logs(self.suite_name).strip())
+        if self._handler_configuration_def:
+            env_id = self._handler_configuration_def['env']
+            config = {
+                self.handler_configuration: self._handler_configuration_def}
+        else:
+            env_id = None
+            config = None
+        err = """{0}
+
+Environment: {1}
+
+Handler configuration:
+{2}""".format(text,
+              env_id,
+              json.dumps(config, indent=2))
+        xunit_file_template = path('xunit-template.xml').text()
+        xunit_file_content = jinja2.Template(xunit_file_template).render({
+            'suite_name': self.suite_name,
+            'test_name': 'TEST-SUITE: {0} ENV-ID: {1}'.format(
+                self.suite_name,
+                env_id),
+            'time': self.running_time,
+            'error_type': error_type,
+            'error_message': error_message,
+            'system_out': logs,
+            'system_err': err
+        })
+        report_file = reports_dir / path(
+            '{0}-docker-container-report.xml'.format(self.suite_name))
+        logger.info('Writing xunit report file to: {0}'.format(
+            report_file.abspath()))
+        report_file.write_text(xunit_file_content, encoding='utf-8')
+
     def copy_xunit_reports(self):
         if self.timed_out:
-            pass
+            self._generate_custom_xunit_report(
+                'Suite {0} timed out after {1} seconds.'.format(
+                    self.suite_name, self.running_time),
+                error_type='TestSuiteTimeout',
+                error_message='Test suite timed out')
+        elif not self.started:
+            self._generate_custom_xunit_report(
+                "Suite {0} skipped (couldn't find a matching "
+                "environment).".format(self.suite_name),
+                error_type='TestSuiteSkipped',
+                error_message='Test suite skipped')
         else:
             report_files = self.suite_reports_dir.files('*.xml')
             logger.info('Suite [{0}] reports: {1}'.format(
@@ -157,6 +212,7 @@ class SuitesScheduler(object):
         self._suite_timeout = suite_timeout
         self._validate()
         self._log_test_suites()
+        self.skipped_suites = []
 
     def _log_test_suites(self):
         output = {x.suite_name: x.suite_def for x in self._test_suites}
@@ -182,66 +238,93 @@ class SuitesScheduler(object):
             remaining_suites = []
             for suite in suites_list:
                 logger.info('Processing suite: {0}'.format(suite.suite_name))
+                # Run suite
                 if not suite.started:
                     matches = self._find_matching_handler_configurations(suite)
-                    config_names = matches.keys()
-                    random.shuffle(config_names)
-                    logger.info(
-                        'Matching handler configurations for {0} are: {1}'
-                        .format(suite.suite_name, ', '.join(config_names)))
-                    for name in config_names:
-                        configuration = matches[name]
-                        if self._lock_env(configuration['env']):
-                            suite.handler_configuration = name
-                            suite.started = time.time()
-                            suite.run()
-                            break
-                    if suite.started:
-                        logger.info('Suite {0} will run using handler '
-                                    'configuration: {1}'.format(
-                                        suite.suite_name,
-                                        suite.handler_configuration))
+                    if not matches:
+                        logger.warn(
+                            'Suite: {0} has no matching handler configuration.'
+                            ' Suite will be skipped.'.format(suite.suite_name))
+                        self._after_suite(suite)
+                        self.skipped_suites.append(suite)
                     else:
+                        config_names = matches.keys()
+                        random.shuffle(config_names)
                         logger.info(
-                            'All matching handler configurations for '
-                            '{0} are currently taken'.format(suite.suite_name))
-                    remaining_suites.append(suite)
+                            'Matching handler configurations for {0} are: {1}'
+                            .format(suite.suite_name, ', '.join(config_names)))
+                        for name in config_names:
+                            configuration = matches[name]
+                            if self._lock_env(configuration['env']):
+                                suite.handler_configuration = (name,
+                                                               configuration)
+                                suite.started = time.time()
+                                suite.run()
+                                break
+                        if suite.started:
+                            logger.info('Suite {0} will run using handler '
+                                        'configuration: {1}'.format(
+                                            suite.suite_name,
+                                            suite.handler_configuration))
+                        else:
+                            logger.info(
+                                'All matching handler configurations for {0} '
+                                'are currently taken'.format(suite.suite_name))
+                        remaining_suites.append(suite)
+                # Suite terminated
                 elif not suite.is_running:
-                    suite.terminated = time.time()
                     logger.info(
                         'Suite terminated: {0}'.format(suite.suite_name))
-                    self._invoke_after_suite_callback(suite)
+                    self._after_suite(suite)
+                # Suite timed out
+                elif self._suite_timeout != -1 \
+                        and suite.running_time > self._suite_timeout:
+                    suite.timed_out = True
                     config = self._handler_configurations[
                         suite.handler_configuration]
-                    self._release_env(config['env'])
+                    logger.warn(
+                        'Suite timed out: {0} [handler_configuration={1}, '
+                        'suite_running_time={2}s]'.format(
+                            suite.suite_name,
+                            config,
+                            int(suite.running_time)))
+                    logger.warn(
+                        'Terminating suite: {0}'.format(suite.suite_name))
+                    try:
+                        suite.terminate()
+                    except Exception as e:
+                        logger.error(
+                            'Error on suite termination [suite={0}, error'
+                            '={1}]'.format(suite.suite_name, str(e)))
+                    self._after_suite(suite)
+                    self._remove_env(config['env'])
+                # Suite is running
                 else:
-                    if self._suite_timeout != -1 \
-                            and suite.running_time > self._suite_timeout:
-                        suite.timed_out = True
-                        config = self._handler_configurations[
-                            suite.handler_configuration]
-                        logger.warn(
-                            'Suite timed out: {0} [handler_configuration={1}, '
-                            'suite_running_time={2}s]'.format(
-                                suite.suite_name,
-                                config,
-                                int(suite.running_time)))
-                        logger.warn(
-                            'Terminating suite: {0}'.format(suite.suite_name))
-                        try:
-                            suite.terminate()
-                        except Exception as e:
-                            logger.error(
-                                'Error on suite termination [suite={0}, error'
-                                '={1}]'.format(suite.suite_name, str(e)))
-                        suite.terminated = time.time()
-                        self._invoke_after_suite_callback(suite)
                     remaining_suites.append(suite)
             suites_list = remaining_suites
             time.sleep(self._scheduling_interval)
         logger.info('Test suites scheduler stopped')
 
-    def _invoke_after_suite_callback(self, suite):
+    def _remove_env(self, env_id):
+        logger.warn(
+            'Removing all handler configurations which use '
+            'env: {0}'.format(env_id))
+        for k in self._handler_configurations.keys():
+            config = self._handler_configurations[k]
+            if config['env'] == env_id:
+                logger.warn(
+                    'Removing handler configuration: {0} '
+                    '[env_id={1}]'.format(k, env_id))
+                del self._handler_configurations[k]
+
+    def _after_suite(self, suite):
+        if suite.started:
+            suite.terminated = time.time()
+        if suite.handler_configuration:
+            config = self._handler_configurations.get(
+                suite.handler_configuration)
+            if config:
+                self._release_env(config['env'])
         try:
             if self._after_suite_callback:
                 logger.info(
@@ -255,10 +338,12 @@ class SuitesScheduler(object):
 
     def _find_matching_handler_configurations(self, suite):
         if suite.handler_configuration:
+            config = self._handler_configurations.get(
+                suite.handler_configuration)
             return {
                 suite.handler_configuration:
                     self._handler_configurations[suite.handler_configuration]
-            }
+            } if config else {}
         tags_match = lambda x, y: set(x) & set(y) == set(x)
         return {
             k: v for k, v in self._handler_configurations.iteritems()
@@ -340,12 +425,14 @@ def test_start():
                                 suites_yaml['handler_configurations'],
                                 scheduling_interval=SCHEDULER_INTERVAL,
                                 optimize=True,
-                                after_suite_callback=copy_xunit_report)
+                                after_suite_callback=copy_xunit_report,
+                                suite_timeout=15)#60*60*5)
     scheduler.run()
+    return scheduler
 
 
 def test_run():
-    test_start()
+    scheduler = test_start()
     logger.info('wait for containers exit status codes')
     containers = get_containers_names()
     exit_codes = [(c, container_exit_code(c)) for c in containers]
@@ -355,10 +442,12 @@ def test_run():
     failed_containers = [(c, exit_code)
                          for c, exit_code in exit_codes
                          if exit_code != 0]
-    if failed_containers:
-        logger.info('Failed test suites:')
+    if failed_containers or scheduler.skipped_suites:
+        logger.warn('Failed test suites:')
         for c, exit_code in failed_containers:
-            logger.info('\t{}: exit code: {}'.format(c, exit_code))
+            logger.warn('\t{}: exit code: {}'.format(c, exit_code))
+        logger.warn('Skipped test suites: {0}'.format(
+            x.suite_name for x in scheduler.skipped_suites))
         sys.exit(1)
 
 
