@@ -53,6 +53,8 @@ variables:
   centos_package_agent_url: _
   docker_image_url: _
   windows_cli_package_url: _
+  centos_7_cli_package_url: _
+  centos_6_5_cli_package_url: _
 
   system_tests_hp_username: _
   system_tests_hp_password: _
