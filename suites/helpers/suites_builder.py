@@ -52,5 +52,9 @@ def parse_descriptor(suites_yaml, custom_descriptor):
             else:
                 result[suite_id]['requires'] = handler_configuration
         else:
-            result[suite_descriptor] = preconfigured[suite_descriptor]
+            suite_id = suite_descriptor
+            result[suite_id] = preconfigured[suite_descriptor]
+
+        result[suite_id]['descriptor'] = suite_descriptor
+
     return result

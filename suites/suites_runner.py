@@ -62,6 +62,10 @@ class TestSuite(object):
         self.timed_out = False
 
     @property
+    def descriptor(self):
+        return self.suite_def.get('descriptor')
+
+    @property
     def handler_configuration(self):
         return self.suite_def.get('handler_configuration')
 
@@ -133,10 +137,17 @@ class TestSuite(object):
         docker.stop(self.suite_name).wait()
         logger.info('Docker container stopped: {0}'.format(self.suite_name))
 
-    def _generate_custom_xunit_report(self, text, error_type, error_message):
+    def _generate_custom_xunit_report(self,
+                                      text,
+                                      error_type,
+                                      error_message,
+                                      fetch_logs=True):
         logger.info('Getting docker logs for container: {0}'.format(
             self.suite_name))
-        logs = xunit.xml_safe(sh.docker.logs(self.suite_name).strip())
+        if fetch_logs:
+            logs = xunit.xml_safe(sh.docker.logs(self.suite_name).strip())
+        else:
+            logs = ''
         if self._handler_configuration_def:
             env_id = self._handler_configuration_def['env']
             config = {
@@ -146,17 +157,21 @@ class TestSuite(object):
             config = None
         err = """{0}
 
-Environment: {1}
+Suite definition:
+{1}
+
+Environment: {2}
 
 Handler configuration:
-{2}""".format(text,
+{3}""".format(text,
+              json.dumps(self.suite_def, indent=2),
               env_id,
               json.dumps(config, indent=2))
         xunit_file_template = path('xunit-template.xml').text()
         xunit_file_content = jinja2.Template(xunit_file_template).render({
             'suite_name': self.suite_name,
             'test_name': 'TEST-SUITE: {0} ENV-ID: {1}'.format(
-                self.suite_name,
+                self.descriptor,
                 env_id),
             'time': self.running_time,
             'error_type': error_type,
@@ -174,15 +189,16 @@ Handler configuration:
         if self.timed_out:
             self._generate_custom_xunit_report(
                 'Suite {0} timed out after {1} seconds.'.format(
-                    self.suite_name, self.running_time),
+                    self.descriptor, self.running_time),
                 error_type='TestSuiteTimeout',
                 error_message='Test suite timed out')
         elif not self.started:
             self._generate_custom_xunit_report(
                 "Suite {0} skipped (couldn't find a matching "
-                "environment).".format(self.suite_name),
+                "environment).".format(self.descriptor),
                 error_type='TestSuiteSkipped',
-                error_message='Test suite skipped')
+                error_message='Test suite skipped',
+                fetch_logs=False)
         else:
             report_files = self.suite_reports_dir.files('*.xml')
             logger.info('Suite [{0}] reports: {1}'.format(
@@ -426,7 +442,7 @@ def test_start():
                                 scheduling_interval=SCHEDULER_INTERVAL,
                                 optimize=True,
                                 after_suite_callback=copy_xunit_report,
-                                suite_timeout=15)#60*60*5)
+                                suite_timeout=60*60*5)
     scheduler.run()
     return scheduler
 
@@ -434,7 +450,8 @@ def test_start():
 def test_run():
     scheduler = test_start()
     logger.info('wait for containers exit status codes')
-    containers = get_containers_names()
+    containers = [x for x in get_containers_names()
+                  if x not in scheduler.skipped_suites]
     exit_codes = [(c, container_exit_code(c)) for c in containers]
     logger.info('removing containers')
     for c in containers:
