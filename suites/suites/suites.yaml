@@ -83,17 +83,6 @@ variables:
 # That can later be used by YAML aliases (*) and merges (<<)
 templates:
 
-  - &centos_install_docker_create_overrides
-    node_templates.manager.interfaces.cloudify\.interfaces\.lifecycle.start.inputs.task_properties.privileged: true
-    node_templates.manager.interfaces.cloudify\.interfaces\.lifecycle.create:
-      implementation: fabric.fabric_plugin.tasks.run_module_task
-      inputs:
-        task_mapping: cosmo_tester.resources.scripts.install_docker_centos.create
-        fabric_env:
-          user: { get_input: manager_server_user }
-          key_filename: { get_property: [management_keypair, private_key_path] }
-          host_string: { get_attribute: [manager_server_ip, floating_ip_address] }
-
   - &manager_blueprint_override
     node_templates.manager.properties.cloudify_packages.agents.ubuntu_agent_url: '{{ubuntu_package_agent_url}}'
     node_templates.manager.properties.cloudify_packages.agents.centos_agent_url: '{{centos_package_agent_url}}'
@@ -367,7 +356,6 @@ handler_configurations:
     properties: hp_openstack_region_b_properties
     manager_blueprint_override:
       <<: *openstack_manager_blueprint_override
-      <<: *centos_install_docker_create_overrides
     inputs_override:
       <<: *hp_openstack_credentials_inputs
       <<: *hp_openstack_region_b_inputs
