@@ -13,12 +13,13 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
-
+import time
 import requests
 import nose.tools
 from neutronclient.common.exceptions import NeutronException
 from novaclient.exceptions import NotFound
 from retrying import retry
+from time import sleep
 
 from cosmo_tester.framework.git_helper import clone
 from cosmo_tester.framework.test_cases import MonitoringTestCase
@@ -33,8 +34,8 @@ class HelloWorldBashTest(MonitoringTestCase):
     def test_hello_world_on_ubuntu(self):
         self._run(self.env.ubuntu_image_name, self.env.cloudify_agent_user)
         # checking reinstallation scenario
-        self._run(self.env.ubuntu_image_name, self.env.cloudify_agent_user,
-                  is_existing_deployment=True)
+        # self._run(self.env.ubuntu_image_name, self.env.cloudify_agent_user,
+        #           is_existing_deployment=True)
 
     # TODO: enable this test once the issue with validating agent plugins is
     #       resolved - right now it'll fail because the VM creation is where
@@ -57,8 +58,8 @@ class HelloWorldBashTest(MonitoringTestCase):
         self._uninstall_and_make_assertions(
             floating_ip_id, neutron, nova, sg_id)
 
-    def test_hello_world_on_centos(self):
-        self._run(self.env.centos_image_name, self.env.centos_image_user)
+    # def test_hello_world_on_centos(self):
+    #     self._run(self.env.centos_image_name, self.env.centos_image_user)
 
     def assert_events(self):
         deployment_by_id = self.client.deployments.get(self.test_id)
@@ -72,28 +73,42 @@ class HelloWorldBashTest(MonitoringTestCase):
                            .format(execution_by_id.id))
 
     def _run(self, image_name, user, is_existing_deployment=False):
-        number_of_deployments = 10
-        if not is_existing_deployment:
-            self.repo_dir = clone(CLOUDIFY_HELLO_WORLD_EXAMPLE_URL,
-                                  self.workdir)
-            self.blueprint_yaml = self.repo_dir / 'blueprint.yaml'
-            self.upload_deploy_and_execute_install_multiple_deployments(
-                fetch_state=False,
-                inputs=dict(
-                    agent_user=user,
-                    image=image_name,
-                    flavor=self.env.flavor_name),
-                number_of_deployments=number_of_deployments)
-        else:
-            self.execute_install(deployment_id=self.test_id, fetch_state=False)
+        number_of_deployments = 1
 
-        # We assert for events to test events are actually
-        # sent in a real world environment.
-        # This is the only test that needs to make this assertion.
-        # self.assert_events()
+        # self.repo_dir = clone(CLOUDIFY_HELLO_WORLD_EXAMPLE_URL,
+        #                       self.workdir)
+        # self.blueprint_yaml = self.repo_dir / 'blueprint.yaml'
+        self.blueprint_yaml = '/Users/gilzellner/empty_blueprint/blueprint.yaml'
+        self.upload_blueprint(blueprint_id=self.test_id)
+        for i in range(1, number_of_deployments+1):
+            start_time = time.time()
+            self.create_deployment(blueprint_id=self.test_id,
+                                   deployment_id=self.test_id+str(i), inputs='')
+            end_create_deployment_time = time.time()
+            self.logger.info("time to create deployment number {0} : {1}".format(i, end_create_deployment_time - start_time))
+            start_time = time.time()
+            while True:
+                try:
+                    self.client.executions.start(deployment_id=self.test_id+str(i), workflow_id="install")
+                except Exception as e:
+                    sleep(1)
+                    print e
+                    continue
+                break
+            end_execute_install_time = time.time()
+            self.logger.info("time to execute install number {0} : {1}".format(i, end_execute_install_time - start_time))
 
-        # floating_ip_id, neutron, nova, sg_id, server_id = \
-        #     self._verify_deployment_installed()
+        for i in range(1, number_of_deployments+1):
+            executions_list = self.client.executions.list(deployment_id=self.test_id+str(i))
+            while executions_list != []:
+                executions_list = self.client.executions.list(deployment_id=self.test_id+str(i))
+                executions_list = [execution for execution in executions_list if execution["status"] == "started"]
+                sleep(1)
+
+
+
+            # floating_ip_id, neutron, nova, sg_id, server_id = \
+            # self._verify_deployment_installed()
         # self.assert_deployment_monitoring_data_exists()
         # floating_ip = neutron.show_floatingip(floating_ip_id)
         # ip = floating_ip['floatingip']['floating_ip_address']

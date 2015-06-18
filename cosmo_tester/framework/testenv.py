@@ -40,8 +40,9 @@ from cosmo_tester.framework.util import (get_blueprint_path,
                                          create_rest_client)
 
 root = logging.getLogger()
+root.setLevel(logging.INFO)
 ch = logging.StreamHandler(sys.stdout)
-ch.setLevel(logging.DEBUG)
+ch.setLevel(logging.INFO)
 formatter = logging.Formatter(fmt='%(asctime)s [%(levelname)s] '
                                   '[%(name)s] %(message)s',
                               datefmt='%H:%M:%S')
@@ -53,7 +54,7 @@ for logging_handler in root.handlers:
 
 root.addHandler(ch)
 logger = logging.getLogger('TESTENV')
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 HANDLER_CONFIGURATION = 'HANDLER_CONFIGURATION'
 SUITES_YAML_PATH = 'SUITES_YAML_PATH'
@@ -366,38 +367,23 @@ class TestCase(unittest.TestCase):
             execute_timeout=execute_timeout,
             inputs=inputs)
 
-    def upload_deploy_and_execute_install_multiple_deployments(
+    def upload_blueprint(
             self,
-            blueprint_id=None,
-            deployment_id=None,
-            fetch_state=True,
-            execute_timeout=20*DEFAULT_EXECUTE_TIMEOUT,
-            inputs=None,
-            number_of_deployments=1):
+            blueprint_id):
 
-        if deployment_id is None:
-            deployment_id = self.test_id
-        if blueprint_id is None:
-            blueprint_id = self.test_id
-
-        for i in range(1, number_of_deployments):
-            self._make_operation_with_before_after_states(
-                self.cfy.upload_deploy_and_execute_install,
-                fetch_state,
-                str(self.blueprint_yaml),
-                blueprint_id=blueprint_id + str(i),
-                deployment_id=deployment_id + str(i),
-                execute_timeout=execute_timeout,
-                inputs=inputs)
-
-        return self._make_operation_with_before_after_states(
-            self.cfy.upload_deploy_and_execute_install,
-            fetch_state,
-            str(self.blueprint_yaml),
+        return self.cfy.upload_blueprint(
             blueprint_id=blueprint_id,
-            deployment_id=deployment_id + '0',
-            execute_timeout=execute_timeout,
-            inputs=inputs)
+            blueprint_path=str(self.blueprint_yaml))
+
+    def create_deployment(
+            self,
+            blueprint_id,
+            deployment_id,
+            inputs):
+
+        return self.cfy.create_deployment(blueprint_id=blueprint_id or self.test_id,
+                                       deployment_id=deployment_id or self.test_id,
+                                       inputs=inputs)
 
     def _make_operation_with_before_after_states(self, operation, fetch_state,
                                                  *args, **kwargs):
