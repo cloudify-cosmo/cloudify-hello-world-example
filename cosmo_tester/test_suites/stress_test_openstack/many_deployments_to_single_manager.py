@@ -20,6 +20,8 @@ from neutronclient.common.exceptions import NeutronException
 from novaclient.exceptions import NotFound
 from retrying import retry
 from time import sleep
+import fabric.api
+import json
 
 from cosmo_tester.framework.git_helper import clone
 from cosmo_tester.framework.test_cases import MonitoringTestCase
@@ -72,31 +74,56 @@ class HelloWorldBashTest(MonitoringTestCase):
                            'Expected at least 1 event for execution id: {0}'
                            .format(execution_by_id.id))
 
-    def _run(self, image_name, user, is_existing_deployment=False):
-        number_of_deployments = 1
+    def init_fabric(self):
+        manager_keypath = self.env._config_reader.management_key_path
+        fabric_env = fabric.api.env
+        fabric_env.update({
+            'timeout': 30,
+            'user': 'ubuntu',
+            'key_filename': manager_keypath,
+            'host_string': self.env.management_ip,
+            })
 
-        # self.repo_dir = clone(CLOUDIFY_HELLO_WORLD_EXAMPLE_URL,
-        #                       self.workdir)
-        # self.blueprint_yaml = self.repo_dir / 'blueprint.yaml'
-        self.blueprint_yaml = '/Users/gilzellner/empty_blueprint/blueprint.yaml'
+    def get_manager_memory_state(self):
+        self.logger.info('getting top for machine with ip {0}'
+                         .format(self.env.management_ip))
+        return fabric.api.run('free -t -m | egrep Mem | awk \'{print $4}\'')
+
+
+    def _run(self, image_name, user, is_existing_deployment=False):
+        number_of_deployments = 10
+        self.init_fabric()
+        blueprint_path = self.copy_blueprint('empty-tiny-blueprint')
+        self.blueprint_yaml = blueprint_path / 'blueprint.yaml'
+
         self.upload_blueprint(blueprint_id=self.test_id)
+        deployment_dict = { "deployment number" : 0,
+                            "manager memory state" : self.get_manager_memory_state()}
+        deployment_list = [deployment_dict]
         for i in range(1, number_of_deployments+1):
             start_time = time.time()
             self.create_deployment(blueprint_id=self.test_id,
                                    deployment_id=self.test_id+str(i), inputs='')
             end_create_deployment_time = time.time()
-            self.logger.info("time to create deployment number {0} : {1}".format(i, end_create_deployment_time - start_time))
-            start_time = time.time()
+            self.logger.debug("time to create deployment number {0} : {1}".format(i, end_create_deployment_time - start_time))
+            start_install_time = time.time()
             while True:
                 try:
                     self.client.executions.start(deployment_id=self.test_id+str(i), workflow_id="install")
                 except Exception as e:
                     sleep(1)
-                    print e
+                    self.logger.error(e)
                     continue
                 break
             end_execute_install_time = time.time()
-            self.logger.info("time to execute install number {0} : {1}".format(i, end_execute_install_time - start_time))
+            self.logger.debug("time to execute install number {0} : {1}".format(i, end_execute_install_time - start_install_time))
+            self.logger.debug("current memory state: {0}".format(self.get_manager_memory_state()))
+            deployment_dict = { "deployment number" : i,
+                                "time to create deployment" : end_create_deployment_time - start_time,
+                                "time to install" : end_execute_install_time - start_install_time,
+                                "manager memory state" : self.get_manager_memory_state()}
+            self.logger.info(deployment_dict)
+            deployment_list.append(deployment_dict)
 
         for i in range(1, number_of_deployments+1):
             executions_list = self.client.executions.list(deployment_id=self.test_id+str(i))
@@ -104,7 +131,7 @@ class HelloWorldBashTest(MonitoringTestCase):
                 executions_list = self.client.executions.list(deployment_id=self.test_id+str(i))
                 executions_list = [execution for execution in executions_list if execution["status"] == "started"]
                 sleep(1)
-
+        self.logger.debug(deployment_list)
 
 
             # floating_ip_id, neutron, nova, sg_id, server_id = \
