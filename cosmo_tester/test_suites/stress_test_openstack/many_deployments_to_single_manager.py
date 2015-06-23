@@ -27,7 +27,7 @@ def num(s):
 
 class ManyDeploymentsTest(MonitoringTestCase):
 
-    def many_deployments_test(self):
+    def many_deployments_stress_test(self):
         self._run()
 
     def init_fabric(self):
@@ -85,7 +85,7 @@ class ManyDeploymentsTest(MonitoringTestCase):
         prev_manager_memory_available = self.get_manager_memory_available()
         prev_space_available = self.get_manager_disk_available()
         self.upload_blueprint(blueprint_id=self.test_id)
-        deployment_dict = {"deployment number": 0,
+        deployment_dict = {"deployment_number": 0,
                            "manager_memory_available":
                                prev_manager_memory_available,
                            "manager_memory_total":
@@ -100,24 +100,25 @@ class ManyDeploymentsTest(MonitoringTestCase):
             self.create_deployment(blueprint_id=self.test_id,
                                    deployment_id=self.test_id+str(i),
                                    inputs='')
+            while [] != \
+                    [execution for execution in self.client.executions.list(
+                        deployment_id=self.test_id+str(i))
+                     if execution["status"] == "started"]:
+                sleep(1)
+            end_create_deployment_time = time.time()
             start_install_time = time.time()
-            while True:
-                try:
-                    self.client.executions.start(
-                        deployment_id=self.test_id+str(i),
-                        workflow_id="install")
-                    start_install_time = time.time()
-                except Exception as e:
-                    sleep(1)
-                    end_create_deployment_time = time.time()
-                    self.logger.error(e)
-                    continue
-                break
+            self.client.executions.start(
+                deployment_id=self.test_id+str(i),
+                workflow_id="install")
+            while [] != \
+                    [execution for execution in self.client.executions.list(
+                        deployment_id=self.test_id+str(i))
+                     if execution["status"] == "started"]:
+                sleep(1)
+            end_execute_install_time = time.time()
             self.logger.debug(
                 "time to create deployment number {0} : {1}".format(
                     i, end_create_deployment_time - start_time))
-
-            end_execute_install_time = time.time()
             self.logger.debug(
                 "time to execute install number {0} : {1}".format(
                     i, end_execute_install_time - start_install_time))
