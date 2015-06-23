@@ -21,6 +21,10 @@ import json
 from cosmo_tester.framework.test_cases import MonitoringTestCase
 
 
+def num(s):
+    return int(s)
+
+
 class ManyDeploymentsTest(MonitoringTestCase):
 
     def many_deployments_test(self):
@@ -37,41 +41,48 @@ class ManyDeploymentsTest(MonitoringTestCase):
             })
 
     def get_manager_memory_available(self):
-        self.logger.info('getting top for machine with ip {0}'
+        self.logger.info('get_manager_memory_available with ip {0}'
                          .format(self.env.management_ip))
-        return fabric.api.run('free -t -m | egrep Mem | awk \'{print $4}\'')
+        return int(fabric.api.run(
+            'free -t -m | egrep Mem | awk \'{print $4}\''))
 
     def get_manager_memory_total(self):
-        self.logger.info('getting top for machine with ip {0}'
+        self.logger.info('get_manager_memory_total with ip {0}'
                          .format(self.env.management_ip))
-        return fabric.api.run('free -t -m | egrep Mem | awk \'{print $2}\'')
+        return int(fabric.api.run(
+            'free -t -m | egrep Mem | awk \'{print $2}\''))
 
     def get_manager_disk_total(self):
-        self.logger.info('getting top for machine with ip {0}'
+        self.logger.info('get_manager_disk_total with ip {0}'
                          .format(self.env.management_ip))
-        return fabric.api.run('df -k /tmp | tail -1 | awk \'{print $2}\'')
+        return int(fabric.api.run(
+            'df -k /tmp | tail -1 | awk \'{print $2}\''))
 
     def get_manager_disk_available(self):
-        self.logger.info('getting top for machine with ip {0}'
+        self.logger.info('get_manager_disk_available with ip {0}'
                          .format(self.env.management_ip))
-        return fabric.api.run('df -k /tmp | tail -1 | awk \'{print $4}\'')
+        return int(fabric.api.run(
+            'df -k /tmp | tail -1 | awk \'{print $4}\''))
 
     def _run(self):
-        number_of_deployments = 1
+        number_of_deployments = 3
         self.init_fabric()
         blueprint_path = self.copy_blueprint('mocks')
         self.blueprint_yaml = blueprint_path / 'single-node-blueprint.yaml'
-
+        manager_disk_space_total = self.get_manager_disk_total()
+        manager_memory_total = self.get_manager_memory_total()
+        prev_manager_memory_available = self.get_manager_memory_available()
+        prev_space_available = self.get_manager_disk_available()
         self.upload_blueprint(blueprint_id=self.test_id)
         deployment_dict = {"deployment number": 0,
-                           "manager memory available":
-                               self.get_manager_memory_available(),
-                           "manager memory total":
-                               self.get_manager_memory_total(),
-                           "manager disk space available":
-                               self.get_manager_disk_available(),
-                           "manager disk space total":
-                               self.get_manager_disk_total()}
+                           "manager_memory_available":
+                               prev_manager_memory_available,
+                           "manager_memory_total":
+                               manager_memory_total,
+                           "manager_disk space_available":
+                               prev_space_available,
+                           "manager_disk_space_total":
+                               manager_disk_space_total}
         deployments_dict = {0: deployment_dict}
         for i in range(1, number_of_deployments+1):
             start_time = time.time()
@@ -99,6 +110,9 @@ class ManyDeploymentsTest(MonitoringTestCase):
             self.logger.debug(
                 "time to execute install number {0} : {1}".format(
                     i, end_execute_install_time - start_install_time))
+            manager_disk_space_available = self.get_manager_disk_available()
+            manager_memory_available = self.get_manager_memory_available()
+
             deployment_dict = {"deployment_number": i,
                                "nodes_active": str(self.client.nodes.list(
                                    _include=["deploy_number_of_instances",
@@ -109,13 +123,21 @@ class ManyDeploymentsTest(MonitoringTestCase):
                                    end_execute_install_time -
                                    start_install_time,
                                "manager_memory_available":
-                                   self.get_manager_memory_available(),
+                                   manager_memory_available,
                                "manager_memory_total":
-                                   self.get_manager_memory_total(),
+                                   manager_memory_total,
                                "manager_disk_space_available":
-                                   self.get_manager_disk_available(),
+                                   manager_disk_space_available,
                                "manager_disk_space_total":
-                                   self.get_manager_disk_total()}
+                                   manager_disk_space_total,
+                               "memory_change_in_deployment":
+                                   prev_manager_memory_available -
+                                   manager_memory_available,
+                               "disk_change_in_deployment":
+                                   prev_space_available -
+                                   manager_disk_space_available}
+            prev_space_available = manager_disk_space_available
+            prev_manager_memory_available = manager_memory_available
             self.logger.debug(deployment_dict)
             deployments_dict.update({i: deployment_dict})
         for i in range(1, number_of_deployments+1):
