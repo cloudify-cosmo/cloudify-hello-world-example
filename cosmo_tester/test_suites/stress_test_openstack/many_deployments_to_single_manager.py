@@ -14,65 +14,17 @@
 #    * limitations under the License.
 
 import time
-import requests
-import nose.tools
-from neutronclient.common.exceptions import NeutronException
-from novaclient.exceptions import NotFound
-from retrying import retry
 from time import sleep
 import fabric.api
 import json
 
-from cosmo_tester.framework.git_helper import clone
 from cosmo_tester.framework.test_cases import MonitoringTestCase
 
 
-CLOUDIFY_HELLO_WORLD_EXAMPLE_URL = "https://github.com/cloudify-cosmo/" \
-                                   "cloudify-hello-world-example.git"
+class ManyDeploymentsTest(MonitoringTestCase):
 
-
-class HelloWorldBashTest(MonitoringTestCase):
-
-    def test_hello_world_on_ubuntu(self):
-        self._run(self.env.ubuntu_image_name, self.env.cloudify_agent_user)
-        # checking reinstallation scenario
-        # self._run(self.env.ubuntu_image_name, self.env.cloudify_agent_user,
-        #           is_existing_deployment=True)
-
-    # TODO: enable this test once the issue with validating agent plugins is
-    #       resolved - right now it'll fail because the VM creation is where
-    #       the execution should fail
-    @nose.tools.nottest
-    def test_hello_world_uninstall_after_failure(self):
-        try:
-            self._run(self.env.ubuntu_image_name,
-                      self.env.cloudify_agent_user,
-                      vm_security_group='gibberish')
-            self.fail('Install should have failed!')
-        except Exception as e:
-            # verifying the install failed where we expected it to fail.
-            # TODO: verify the actual error is really the expected one
-            floating_ip_id, neutron, nova, sg_id, _ = \
-                self._verify_deployment_installed(with_server=False)
-            self.logger.info("failed to install, as expected ({0})"
-                             .format(e))
-
-        self._uninstall_and_make_assertions(
-            floating_ip_id, neutron, nova, sg_id)
-
-    # def test_hello_world_on_centos(self):
-    #     self._run(self.env.centos_image_name, self.env.centos_image_user)
-
-    def assert_events(self):
-        deployment_by_id = self.client.deployments.get(self.test_id)
-        executions = self.client.executions.list(
-            deployment_id=deployment_by_id.id)
-        execution_from_list = executions[0]
-        execution_by_id = self.client.executions.get(execution_from_list.id)
-        events, total_events = self.client.events.get(execution_by_id.id)
-        self.assertGreater(len(events), 0,
-                           'Expected at least 1 event for execution id: {0}'
-                           .format(execution_by_id.id))
+    def many_deployments_test(self):
+        self._run()
 
     def init_fabric(self):
         manager_keypath = self.env._config_reader.management_key_path
@@ -84,46 +36,69 @@ class HelloWorldBashTest(MonitoringTestCase):
             'host_string': self.env.management_ip,
             })
 
-    def get_manager_memory_state(self):
+    def get_manager_memory_available(self):
         self.logger.info('getting top for machine with ip {0}'
                          .format(self.env.management_ip))
         return fabric.api.run('free -t -m | egrep Mem | awk \'{print $4}\'')
 
+    def get_manager_memory_total(self):
+        self.logger.info('getting top for machine with ip {0}'
+                         .format(self.env.management_ip))
+        return fabric.api.run('free -t -m | egrep Mem | awk \'{print $2}\'')
 
-    def _run(self, image_name, user, is_existing_deployment=False):
-        number_of_deployments = 10
+    def get_manager_disk_total(self):
+        self.logger.info('getting top for machine with ip {0}'
+                         .format(self.env.management_ip))
+        return fabric.api.run('df -k /tmp | tail -1 | awk \'{print $2}\'')
+
+    def get_manager_disk_available(self):
+        self.logger.info('getting top for machine with ip {0}'
+                         .format(self.env.management_ip))
+        return fabric.api.run('df -k /tmp | tail -1 | awk \'{print $4}\'')
+
+    def _run(self):
+        number_of_deployments = 1
         self.init_fabric()
-        blueprint_path = self.copy_blueprint('empty-tiny-blueprint')
-        self.blueprint_yaml = blueprint_path / 'blueprint.yaml'
+        blueprint_path = self.copy_blueprint('mocks')
+        self.blueprint_yaml = blueprint_path / 'single-node-blueprint.yaml'
 
         self.upload_blueprint(blueprint_id=self.test_id)
         deployment_dict = { "deployment number" : 0,
-                            "manager memory state" : self.get_manager_memory_state()}
-        deployment_list = [deployment_dict]
+                            "manager memory available": self.get_manager_memory_available(),
+                            "manager memory total": self.get_manager_memory_total(),
+                            "manager disk space available": self.get_manager_disk_available(),
+                            "manager disk space total": self.get_manager_disk_total()}
+        deployments_dict = {0: deployment_dict}
         for i in range(1, number_of_deployments+1):
             start_time = time.time()
             self.create_deployment(blueprint_id=self.test_id,
                                    deployment_id=self.test_id+str(i), inputs='')
-            end_create_deployment_time = time.time()
-            self.logger.debug("time to create deployment number {0} : {1}".format(i, end_create_deployment_time - start_time))
             start_install_time = time.time()
             while True:
                 try:
                     self.client.executions.start(deployment_id=self.test_id+str(i), workflow_id="install")
+                    start_install_time = time.time()
                 except Exception as e:
                     sleep(1)
+                    end_create_deployment_time = time.time()
                     self.logger.error(e)
                     continue
                 break
+            self.logger.debug("time to create deployment number {0} : {1}".format(i, end_create_deployment_time - start_time))
+
             end_execute_install_time = time.time()
             self.logger.debug("time to execute install number {0} : {1}".format(i, end_execute_install_time - start_install_time))
-            self.logger.debug("current memory state: {0}".format(self.get_manager_memory_state()))
-            deployment_dict = { "deployment number" : i,
-                                "time to create deployment" : end_create_deployment_time - start_time,
-                                "time to install" : end_execute_install_time - start_install_time,
-                                "manager memory state" : self.get_manager_memory_state()}
-            self.logger.info(deployment_dict)
-            deployment_list.append(deployment_dict)
+            deployment_dict = { "deployment_number": i,
+                                "nodes_active": str(self.client.nodes.list(_include=["deploy_number_of_instances",
+                                                                                     "deployment_id"])),
+                                "time_to_create_deployment": end_create_deployment_time - start_time,
+                                "time_to_install": end_execute_install_time - start_install_time,
+                                "manager_memory_available": self.get_manager_memory_available(),
+                                "manager_memory_total": self.get_manager_memory_total(),
+                                "manager_disk_space_available": self.get_manager_disk_available(),
+                                "manager_disk_space_total": self.get_manager_disk_total()}
+            self.logger.debug(deployment_dict)
+            deployments_dict.update({i: deployment_dict})
 
         for i in range(1, number_of_deployments+1):
             executions_list = self.client.executions.list(deployment_id=self.test_id+str(i))
@@ -131,115 +106,4 @@ class HelloWorldBashTest(MonitoringTestCase):
                 executions_list = self.client.executions.list(deployment_id=self.test_id+str(i))
                 executions_list = [execution for execution in executions_list if execution["status"] == "started"]
                 sleep(1)
-        self.logger.debug(deployment_list)
-
-
-            # floating_ip_id, neutron, nova, sg_id, server_id = \
-            # self._verify_deployment_installed()
-        # self.assert_deployment_monitoring_data_exists()
-        # floating_ip = neutron.show_floatingip(floating_ip_id)
-        # ip = floating_ip['floatingip']['floating_ip_address']
-        # web_server_node = get_web_server_node(self.client, self.test_id)
-        # port = web_server_node.properties['port']
-        # expected_output = \
-        #     {u'http_endpoint': u'http://{0}:{1}'.format(ip, port)}
-        # self.assert_outputs(expected_output)
-        # self._uninstall_and_make_assertions(floating_ip_id, neutron, nova,
-        #                                     sg_id, server_id)
-
-    def _verify_deployment_installed(self, with_server=True):
-        (floatingip_node, security_group_node, server_node) = self._instances()
-
-        nova, neutron, _ = self.env.handler.openstack_clients()
-
-        server_id = None
-        if with_server:
-            verify_webserver_running(
-                web_server_node=get_web_server_node(
-                    self.client, self.test_id),
-                floatingip_node_instance=floatingip_node)
-
-            server_id = server_node.runtime_properties['external_id']
-            nova_server = nova.servers.get(server_id)
-            self.logger.info("Agent server : {0}".format(nova_server))
-        else:
-            self.assertNotIn('external_id', server_node.runtime_properties)
-
-        floating_ip_id = floatingip_node.runtime_properties['external_id']
-        neutron_floating_ip = neutron.show_floatingip(floating_ip_id)
-        self.logger.info("Floating ip : {0}".format(neutron_floating_ip))
-        sg_id = security_group_node.runtime_properties['external_id']
-        neutron_sg = neutron.show_security_group(sg_id)
-        self.logger.info("Agent security group : {0}".format(neutron_sg))
-        return floating_ip_id, neutron, nova, sg_id, server_id
-
-    def _uninstall_and_make_assertions(self, floating_ip_id, neutron, nova,
-                                       sg_id, server_id=None):
-        self.execute_uninstall()
-        self._assert_components_cleared(floating_ip_id, neutron, nova,
-                                        sg_id, server_id)
-        self._assert_nodes_deleted()
-
-    def _assert_components_cleared(self, floating_ip_id, neutron, nova,
-                                   sg_id, server_id=None):
-        if server_id:
-            self.assertRaises(NotFound, nova.servers.get, server_id)
-        self.assertRaises(NeutronException, neutron.show_security_group, sg_id)
-        self.assertRaises(NeutronException, neutron.show_floatingip,
-                          floating_ip_id)
-
-    def _assert_nodes_deleted(self):
-        (floatingip_node, security_group_node, server_node) = self._instances()
-        expected_node_state = 'deleted'
-        self.assertEquals(expected_node_state, floatingip_node.state)
-        self.assertEquals(expected_node_state, security_group_node.state)
-        self.assertEquals(expected_node_state, server_node.state)
-        self.assertEquals(0, len(floatingip_node.runtime_properties))
-        self.assertEquals(0, len(security_group_node.runtime_properties))
-        # CFY-2670 - diamond plugin leaves one runtime property at this time
-        self.assertEquals(1, len(server_node.runtime_properties))
-
-    def _instances(self):
-        return get_instances(client=self.client, deployment_id=self.test_id)
-
-
-@retry(stop_max_attempt_number=5, wait_fixed=3000)
-def verify_webserver_running(web_server_node, floatingip_node_instance):
-    """
-    This method is also used by two_deployments_test!
-    """
-    server_port = web_server_node.properties['port']
-    server_ip = \
-        floatingip_node_instance.runtime_properties['floating_ip_address']
-    server_response = requests.get('http://{0}:{1}'.format(server_ip,
-                                                           server_port))
-    if server_response.status_code != 200:
-        raise AssertionError('Unexpected status code: {}'
-                             .format(server_response.status_code))
-
-
-def get_instances(client, deployment_id):
-    """
-    This method is also used by two_deployments_test!
-    """
-    server_node = None
-    security_group_node = None
-    floatingip_node = None
-    instances = client.node_instances.list(
-        deployment_id=deployment_id)
-    for instance in instances:
-        if instance.node_id == 'virtual_ip':
-            floatingip_node = instance
-        if instance.node_id == 'security_group':
-            security_group_node = instance
-        if instance.node_id == 'vm':
-            server_node = instance
-    return floatingip_node, security_group_node, server_node
-
-
-def get_web_server_node(client, deployment_id):
-    """
-    This method is also used by two_deployments_test!
-    """
-    return client.nodes.get(deployment_id=deployment_id,
-                            node_id='http_web_server')
+        self.logger.info(json.dumps(deployments_dict, indent=2))
