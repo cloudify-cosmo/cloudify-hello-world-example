@@ -63,20 +63,27 @@ class ManyDeploymentsTest(MonitoringTestCase):
         self.blueprint_yaml = blueprint_path / 'single-node-blueprint.yaml'
 
         self.upload_blueprint(blueprint_id=self.test_id)
-        deployment_dict = { "deployment number" : 0,
-                            "manager memory available": self.get_manager_memory_available(),
-                            "manager memory total": self.get_manager_memory_total(),
-                            "manager disk space available": self.get_manager_disk_available(),
-                            "manager disk space total": self.get_manager_disk_total()}
+        deployment_dict = {"deployment number": 0,
+                           "manager memory available":
+                               self.get_manager_memory_available(),
+                           "manager memory total":
+                               self.get_manager_memory_total(),
+                           "manager disk space available":
+                               self.get_manager_disk_available(),
+                           "manager disk space total":
+                               self.get_manager_disk_total()}
         deployments_dict = {0: deployment_dict}
         for i in range(1, number_of_deployments+1):
             start_time = time.time()
             self.create_deployment(blueprint_id=self.test_id,
-                                   deployment_id=self.test_id+str(i), inputs='')
+                                   deployment_id=self.test_id+str(i),
+                                   inputs='')
             start_install_time = time.time()
             while True:
                 try:
-                    self.client.executions.start(deployment_id=self.test_id+str(i), workflow_id="install")
+                    self.client.executions.start(
+                        deployment_id=self.test_id+str(i),
+                        workflow_id="install")
                     start_install_time = time.time()
                 except Exception as e:
                     sleep(1)
@@ -84,26 +91,41 @@ class ManyDeploymentsTest(MonitoringTestCase):
                     self.logger.error(e)
                     continue
                 break
-            self.logger.debug("time to create deployment number {0} : {1}".format(i, end_create_deployment_time - start_time))
+            self.logger.debug(
+                "time to create deployment number {0} : {1}".format(
+                    i, end_create_deployment_time - start_time))
 
             end_execute_install_time = time.time()
-            self.logger.debug("time to execute install number {0} : {1}".format(i, end_execute_install_time - start_install_time))
-            deployment_dict = { "deployment_number": i,
-                                "nodes_active": str(self.client.nodes.list(_include=["deploy_number_of_instances",
-                                                                                     "deployment_id"])),
-                                "time_to_create_deployment": end_create_deployment_time - start_time,
-                                "time_to_install": end_execute_install_time - start_install_time,
-                                "manager_memory_available": self.get_manager_memory_available(),
-                                "manager_memory_total": self.get_manager_memory_total(),
-                                "manager_disk_space_available": self.get_manager_disk_available(),
-                                "manager_disk_space_total": self.get_manager_disk_total()}
+            self.logger.debug(
+                "time to execute install number {0} : {1}".format(
+                    i, end_execute_install_time - start_install_time))
+            deployment_dict = {"deployment_number": i,
+                               "nodes_active": str(self.client.nodes.list(
+                                   _include=["deploy_number_of_instances",
+                                             "deployment_id"])),
+                               "time_to_create_deployment":
+                                   end_create_deployment_time - start_time,
+                               "time_to_install":
+                                   end_execute_install_time -
+                                   start_install_time,
+                               "manager_memory_available":
+                                   self.get_manager_memory_available(),
+                               "manager_memory_total":
+                                   self.get_manager_memory_total(),
+                               "manager_disk_space_available":
+                                   self.get_manager_disk_available(),
+                               "manager_disk_space_total":
+                                   self.get_manager_disk_total()}
             self.logger.debug(deployment_dict)
             deployments_dict.update({i: deployment_dict})
-
         for i in range(1, number_of_deployments+1):
-            executions_list = self.client.executions.list(deployment_id=self.test_id+str(i))
+            executions_list = self.client.executions.list(
+                deployment_id=self.test_id+str(i))
             while executions_list != []:
-                executions_list = self.client.executions.list(deployment_id=self.test_id+str(i))
-                executions_list = [execution for execution in executions_list if execution["status"] == "started"]
+                executions_list = self.client.executions.list(
+                    deployment_id=self.test_id+str(i))
+                executions_list = \
+                    [execution for execution in executions_list if
+                     execution["status"] == "started"]
                 sleep(1)
         self.logger.info(json.dumps(deployments_dict, indent=2))
