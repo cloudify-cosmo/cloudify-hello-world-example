@@ -64,8 +64,19 @@ class ManyDeploymentsTest(MonitoringTestCase):
         return int(fabric.api.run(
             'df -k /tmp | tail -1 | awk \'{print $4}\''))
 
+    def get_number_of_total_active_nodes(self):
+        return len((self.client.nodes.list(
+            _include=["deploy_number_of_instances",
+                      "deployment_id"])))
+
+    def get_number_of_active_nodes_per_deployment(self, deployment_id):
+        return len((self.client.nodes.list(
+            deployment_id=deployment_id,
+            _include=["deploy_number_of_instances",
+                      "deployment_id"])))
+
     def _run(self):
-        number_of_deployments = 3
+        number_of_deployments = 1
         self.init_fabric()
         blueprint_path = self.copy_blueprint('mocks')
         self.blueprint_yaml = blueprint_path / 'single-node-blueprint.yaml'
@@ -112,11 +123,14 @@ class ManyDeploymentsTest(MonitoringTestCase):
                     i, end_execute_install_time - start_install_time))
             manager_disk_space_available = self.get_manager_disk_available()
             manager_memory_available = self.get_manager_memory_available()
-
+            number_of_active_nodes = self.get_number_of_total_active_nodes()
+            number_of_my_active_nodes = \
+                self.get_number_of_active_nodes_per_deployment(
+                    deployment_id=self.test_id+str(i))
             deployment_dict = {"deployment_number": i,
-                               "nodes_active": str(self.client.nodes.list(
-                                   _include=["deploy_number_of_instances",
-                                             "deployment_id"])),
+                               "number_of_my_active_nodes":
+                                   number_of_my_active_nodes,
+                               "nodes_active": number_of_active_nodes,
                                "time_to_create_deployment":
                                    end_create_deployment_time - start_time,
                                "time_to_install":
