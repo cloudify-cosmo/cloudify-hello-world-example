@@ -381,9 +381,10 @@ class TestCase(unittest.TestCase):
             deployment_id,
             inputs):
 
-        return self.cfy.create_deployment(blueprint_id=blueprint_id or self.test_id,
-                                       deployment_id=deployment_id or self.test_id,
-                                       inputs=inputs)
+        return self.cfy.create_deployment(
+            blueprint_id=blueprint_id or self.test_id,
+            deployment_id=deployment_id or self.test_id,
+            inputs=inputs)
 
     def _make_operation_with_before_after_states(self, operation, fetch_state,
                                                  *args, **kwargs):
