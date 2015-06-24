@@ -21,6 +21,10 @@ import json
 from cosmo_tester.framework.test_cases import MonitoringTestCase
 
 
+def limit_dpoints(num):
+    return float("{0:.3f}".format(num))
+
+
 def num(s):
     return int(s)
 
@@ -40,11 +44,22 @@ class ManyDeploymentsTest(MonitoringTestCase):
             'host_string': self.env.management_ip,
             })
 
+    def get_manager_cpu_usage(self):
+        self.logger.info('get_manager_memory_total with ip {0}'
+                         .format(self.env.management_ip))
+        return (fabric.api.run(
+            'top -bn1 | grep \"Cpu(s)\" | \
+           sed \"s/.*, *\([0-9.]*\)%* id.*/\1/\" | \
+           awk \'{print 100 - $1\"%\"}\''))
+
     def get_manager_memory_available(self):
         self.logger.info('get_manager_memory_available with ip {0}'
                          .format(self.env.management_ip))
-        return int(fabric.api.run(
+        free = int(fabric.api.run(
             'free -t -m | egrep Mem | awk \'{print $4}\''))
+        cache = int(fabric.api.run(
+            'free -t -m | egrep buffers | awk \'{print $4}\' | sed -n 2p'))
+        return cache + free
 
     def get_manager_memory_total(self):
         self.logger.info('get_manager_memory_total with ip {0}'
@@ -76,7 +91,7 @@ class ManyDeploymentsTest(MonitoringTestCase):
                       "deployment_id"])))
 
     def _run(self):
-        number_of_deployments = 1
+        number_of_deployments = 20
         self.init_fabric()
         blueprint_path = self.copy_blueprint('mocks')
         self.blueprint_yaml = blueprint_path / 'single-node-blueprint.yaml'
@@ -90,6 +105,8 @@ class ManyDeploymentsTest(MonitoringTestCase):
                                prev_manager_memory_available,
                            "manager_memory_total":
                                manager_memory_total,
+                           "manager_cpu_usage":
+                               self.get_manager_cpu_usage(),
                            "manager_disk space_available":
                                prev_space_available,
                            "manager_disk_space_total":
@@ -103,7 +120,7 @@ class ManyDeploymentsTest(MonitoringTestCase):
             while [] != \
                     [execution for execution in self.client.executions.list(
                         deployment_id=self.test_id+str(i))
-                     if execution["status"] == "started"]:
+                     if execution["status"] in ["started", "pending"]]:
                 sleep(1)
             end_create_deployment_time = time.time()
             start_install_time = time.time()
@@ -113,7 +130,7 @@ class ManyDeploymentsTest(MonitoringTestCase):
             while [] != \
                     [execution for execution in self.client.executions.list(
                         deployment_id=self.test_id+str(i))
-                     if execution["status"] == "started"]:
+                     if execution["status"] in ["started", "pending"]]:
                 sleep(1)
             end_execute_install_time = time.time()
             self.logger.debug(
@@ -132,11 +149,12 @@ class ManyDeploymentsTest(MonitoringTestCase):
                                "number_of_my_active_nodes":
                                    number_of_my_active_nodes,
                                "nodes_active": number_of_active_nodes,
-                               "time_to_create_deployment":
-                                   end_create_deployment_time - start_time,
+                               "time_to_create_deployment": limit_dpoints(
+                                   end_create_deployment_time - start_time),
                                "time_to_install":
-                                   end_execute_install_time -
-                                   start_install_time,
+                                   limit_dpoints(
+                                       end_execute_install_time -
+                                       start_install_time),
                                "manager_memory_available":
                                    manager_memory_available,
                                "manager_memory_total":
@@ -148,6 +166,8 @@ class ManyDeploymentsTest(MonitoringTestCase):
                                "memory_change_in_deployment":
                                    prev_manager_memory_available -
                                    manager_memory_available,
+                               "manager_cpu_usage":
+                                   self.get_manager_cpu_usage(),
                                "disk_change_in_deployment":
                                    prev_space_available -
                                    manager_disk_space_available}
@@ -163,6 +183,6 @@ class ManyDeploymentsTest(MonitoringTestCase):
                     deployment_id=self.test_id+str(i))
                 executions_list = \
                     [execution for execution in executions_list if
-                     execution["status"] == "started"]
+                     execution["status"] in ["started", "pending"]]
                 sleep(1)
         self.logger.info(json.dumps(deployments_dict, indent=2))
