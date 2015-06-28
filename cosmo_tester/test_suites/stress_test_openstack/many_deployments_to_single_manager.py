@@ -70,14 +70,16 @@ class ManyDeploymentsTest(MonitoringTestCase):
     def get_manager_disk_total(self):
         self.logger.info('get_manager_disk_total with ip {0}'
                          .format(self.env.management_ip))
-        return int(fabric.api.run(
-            'df -k /tmp | tail -1 | awk \'{print $2}\''))
+        return int(
+            str(fabric.api.run(
+                'sudo docker exec cfy df -k | grep /dev/vdc1 | awk \'{print $2}\'')).replace("sudo: unable to resolve host cloudify-manager-server",""))
 
     def get_manager_disk_available(self):
         self.logger.info('get_manager_disk_available with ip {0}'
                          .format(self.env.management_ip))
-        return int(fabric.api.run(
-            'df -k /tmp | tail -1 | awk \'{print $4}\''))
+        return int(
+            str(fabric.api.run(
+                'sudo docker exec cfy df -k | grep /dev/vdc1 | awk \'{print $4}\'')).replace("sudo: unable to resolve host cloudify-manager-server",""))
 
     def get_number_of_total_active_nodes(self):
         return len((self.client.nodes.list(
@@ -91,7 +93,7 @@ class ManyDeploymentsTest(MonitoringTestCase):
                       "deployment_id"])))
 
     def _run(self):
-        number_of_deployments = 20
+        number_of_deployments = 117
         self.init_fabric()
         blueprint_path = self.copy_blueprint('mocks')
         self.blueprint_yaml = blueprint_path / 'single-node-blueprint.yaml'
