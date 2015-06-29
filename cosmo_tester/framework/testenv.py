@@ -40,8 +40,9 @@ from cosmo_tester.framework.util import (get_blueprint_path,
                                          create_rest_client)
 
 root = logging.getLogger()
+root.setLevel(logging.INFO)
 ch = logging.StreamHandler(sys.stdout)
-ch.setLevel(logging.DEBUG)
+ch.setLevel(logging.INFO)
 formatter = logging.Formatter(fmt='%(asctime)s [%(levelname)s] '
                                   '[%(name)s] %(message)s',
                               datefmt='%H:%M:%S')
@@ -53,7 +54,7 @@ for logging_handler in root.handlers:
 
 root.addHandler(ch)
 logger = logging.getLogger('TESTENV')
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 HANDLER_CONFIGURATION = 'HANDLER_CONFIGURATION'
 SUITES_YAML_PATH = 'SUITES_YAML_PATH'
@@ -364,6 +365,25 @@ class TestCase(unittest.TestCase):
             blueprint_id=blueprint_id or self.test_id,
             deployment_id=deployment_id or self.test_id,
             execute_timeout=execute_timeout,
+            inputs=inputs)
+
+    def upload_blueprint(
+            self,
+            blueprint_id):
+
+        return self.cfy.upload_blueprint(
+            blueprint_id=blueprint_id,
+            blueprint_path=str(self.blueprint_yaml))
+
+    def create_deployment(
+            self,
+            blueprint_id,
+            deployment_id,
+            inputs):
+
+        return self.cfy.create_deployment(
+            blueprint_id=blueprint_id or self.test_id,
+            deployment_id=deployment_id or self.test_id,
             inputs=inputs)
 
     def _make_operation_with_before_after_states(self, operation, fetch_state,
