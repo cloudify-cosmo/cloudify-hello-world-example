@@ -393,7 +393,7 @@ handler_configurations:
       <<: *hp_openstack_credentials_inputs
       <<: *hp_openstack_region_a_inputs
       keystone_tenant_name: cloudify-cosmo-system-tests3
-      flavor_id: 104
+      flavor_id: 103
 
   ############################################################################
 
