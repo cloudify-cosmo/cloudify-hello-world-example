@@ -124,6 +124,9 @@ templates:
   - &transient_deployment_workers_manager_blueprint_override
     node_templates.manager.properties.cloudify.transient_deployment_workers: true
 
+  - &stress_manager_blueprint_override
+    node_templates.volume.properties.volume.size: 30
+
   ######################################################
 
   - &openstack_plugin_external
@@ -379,6 +382,21 @@ handler_configurations:
 
   ############################################################################
 
+  stress_hp_openstack_system_tests3_region_a:
+    <<: *hp_openstack_handler_configuration
+    env: hp_openstack_system_tests3_region_a
+    properties: hp_openstack_region_a_properties
+    manager_blueprint_override:
+      <<: *openstack_manager_blueprint_override
+      <<: *stress_manager_blueprint_override
+    inputs_override:
+      <<: *hp_openstack_credentials_inputs
+      <<: *hp_openstack_region_a_inputs
+      keystone_tenant_name: cloudify-cosmo-system-tests3
+      flavor_id: 104
+
+  ############################################################################
+
   hp_openstack_centos_system_tests3_region_b:
     <<: *hp_openstack_handler_configuration
     env: hp_openstack_system_tests3_region_b
@@ -562,6 +580,10 @@ tests:
       tests:
         - cosmo_tester/test_suites/test_blueprints/nodecellar_test.py
 
+  stress:
+      tests:
+        - cosmo_tester/test_suites/stress_test_openstack
+
   manager_status:
     tests:
       - cosmo_tester/test_suites/test_manager_status
@@ -684,6 +706,13 @@ test_suites:
     handler_configuration: transient_deployment_workers_hp_openstack_system_tests2_region_b
     tests:
       - manager_recovery
+
+  #####################################################################
+
+  stress:
+    handler_configuration: stress_hp_openstack_system_tests3_region_a
+    tests:
+      - stress
 
   #####################################################################
 

@@ -13,10 +13,12 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
-import time
-from time import sleep
-import fabric.api
 import json
+import time
+
+import fabric.api
+
+from cloudify_rest_client.executions import Execution
 
 from cosmo_tester.framework.test_cases import MonitoringTestCase
 
@@ -34,8 +36,8 @@ class ManyDeploymentsTest(MonitoringTestCase):
     def wait_until_all_deployment_executions_end(self, deployment_id):
         while len([execution for execution in self.client.executions.list(
                 deployment_id=deployment_id)
-                if execution["status"] in ["started", "pending"]]) > 0:
-                        sleep(1)
+                if execution["status"] not in Execution.END_STATES]) > 0:
+                        time.sleep(1)
         return
 
     def many_deployments_stress_test(self):
