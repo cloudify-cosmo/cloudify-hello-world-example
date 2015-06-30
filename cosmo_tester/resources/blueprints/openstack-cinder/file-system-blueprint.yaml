@@ -26,6 +26,17 @@ inputs:
     description: >
       The mount point.
 
+relationships:
+  fs_contained_in_compute_with_failing_chown:
+    derived_from: cloudify.relationships.file_system_contained_in_compute
+    source_interfaces:
+      cloudify.interfaces.relationship_lifecycle:
+        preconfigure:
+          implementation: scripts/substitute_chown.sh
+          inputs:
+            mount_point:
+              default: { get_property: [volume_fs, fs_mount_path] }
+
 node_templates:
 
   test_vm:
@@ -51,7 +62,7 @@ node_templates:
     relationships:
       - type: cloudify.relationships.file_system_depends_on_volume
         target: test_volume
-      - type: cloudify.relationships.file_system_contained_in_compute
+      - type: fs_contained_in_compute_with_failing_chown
         target: test_vm
 
   volume_tester:
