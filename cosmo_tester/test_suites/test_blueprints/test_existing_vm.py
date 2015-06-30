@@ -18,6 +18,8 @@ import fabric.api
 import fabric.context_managers
 from path import path
 
+from retrying import retry
+
 from cosmo_tester.framework.util import get_actual_keypath
 from cosmo_tester.framework.testenv import TestCase
 
@@ -48,10 +50,14 @@ class ExistingVMTest(TestCase):
         management_network_name = self.env.management_network_name
 
         nova_client, _, _ = self.env.handler.openstack_clients()
+
+        self.logger.info('Creating keypair...')
         self.create_keypair_and_copy_to_manager(
             nova_client=nova_client,
             remote_key_path=remote_key_path,
             key_name=key_name)
+
+        self.logger.info('Creating server using nova API...')
         private_server_ip = self.create_server(
             name=server_name,
             nova_client=nova_client,
@@ -59,6 +65,7 @@ class ExistingVMTest(TestCase):
             security_groups=[agents_security_group],
             management_network_name=management_network_name)
 
+        self.logger.info('Installing deployment...')
         self.upload_deploy_and_execute_install(
             fetch_state=False,
             inputs=dict(
@@ -71,6 +78,8 @@ class ExistingVMTest(TestCase):
         middle_runtime_properties = [i.runtime_properties for i in instances
                                      if i.node_id == 'middle'][0]
         self.assertDictEqual({'working': True}, middle_runtime_properties)
+
+        self.logger.info('Uninstalling deployment...')
         self.execute_uninstall()
 
     def create_keypair_and_copy_to_manager(self,
@@ -125,6 +134,7 @@ class ExistingVMTest(TestCase):
             'name={}, vm networks={}]'.format(management_network_name,
                                               srv.networks))
 
+    @retry(stop_max_attempt_number=3, wait_fixed=5000)
     def _is_docker_manager(self):
         manager_key_path = get_actual_keypath(
             self.env, self.env.management_key_path)
@@ -137,7 +147,12 @@ class ExistingVMTest(TestCase):
             'host_string': self.env.management_ip
         })
         try:
-            fabric.api.sudo('which docker')
+            cmd = 'which docker'
+            self.logger.info('Executing "{0}" on host: {1}@{2}'.format(
+                cmd,
+                self.env.management_user_name,
+                self.env.management_ip))
+            fabric.api.sudo(cmd)
             return True
         except SystemExit:
             return False

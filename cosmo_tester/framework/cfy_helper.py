@@ -69,9 +69,9 @@ class CfyHelper(object):
                 task_retries=task_retries,
                 verbose=verbose).wait()
 
-    def recover(self):
+    def recover(self, task_retries=5):
         with self.workdir:
-            cfy.recover(force=True).wait()
+            cfy.recover(force=True, task_retries=task_retries).wait()
 
     def teardown(self,
                  ignore_deployments=True,

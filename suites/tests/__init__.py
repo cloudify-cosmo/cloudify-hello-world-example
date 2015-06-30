@@ -1,5 +1,5 @@
 ########
-# Copyright (c) 2014 GigaSpaces Technologies Ltd. All rights reserved
+# Copyright (c) 2015 GigaSpaces Technologies Ltd. All rights reserved
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,11 +12,3 @@
 #    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
-
-from manager_recovery_base import BaseManagerRecoveryTest
-
-
-class ManagerRecoveryTest(BaseManagerRecoveryTest):
-
-    def test_manager_recovery(self):
-        self._test_manager_recovery_impl()

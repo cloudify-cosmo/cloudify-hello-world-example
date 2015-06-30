@@ -33,6 +33,7 @@ def build_suites_yaml(all_suites_yaml_path,
 
 def parse_descriptor(suites_yaml, custom_descriptor):
     preconfigured = suites_yaml['test_suites']
+    configurations = suites_yaml['handler_configurations']
     result = {}
     suite_descriptors = [s.strip() for s in custom_descriptor.split('#')]
     for i, suite_descriptor in enumerate(suite_descriptors, start=1):
@@ -40,12 +41,20 @@ def parse_descriptor(suites_yaml, custom_descriptor):
             # custom suite
             tests, handler_configuration = suite_descriptor.split('@')
             tests = [s.strip() for s in tests.split(',')]
-            handler_configuration = handler_configuration.strip()
-            result['{0}_{1}'.format(handler_configuration, i)] = {
-                'handler_configuration': handler_configuration,
-                'tests': tests
-            }
-
+            handler_configuration = [
+                s.strip() for s in handler_configuration.split(',')]
+            suite_id = '{0}_{1}'.format('-'.join(handler_configuration), i)
+            result[suite_id] = {'tests': tests}
+            if len(handler_configuration) == 1 and handler_configuration[0] \
+                    in configurations:
+                result[suite_id]['handler_configuration'] = \
+                    handler_configuration[0]
+            else:
+                result[suite_id]['requires'] = handler_configuration
         else:
-            result[suite_descriptor] = preconfigured[suite_descriptor]
+            suite_id = suite_descriptor
+            result[suite_id] = preconfigured[suite_descriptor]
+
+        result[suite_id]['descriptor'] = suite_descriptor
+
     return result

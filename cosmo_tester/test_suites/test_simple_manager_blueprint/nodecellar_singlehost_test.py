@@ -39,6 +39,7 @@ class NodecellarSingleHostTest(NodecellarAppTest):
 
         self.inputs = {
             'prefix': self.prefix,
+            'external_network': self.env.external_network_name,
             'os_username': self.env.keystone_username,
             'os_password': self.env.keystone_password,
             'os_tenant_name': self.env.keystone_tenant_name,
@@ -58,7 +59,7 @@ class NodecellarSingleHostTest(NodecellarAppTest):
             name=self._testMethodName,
             ignored_modules=cli_constants.IGNORED_LOCAL_WORKFLOW_MODULES)
 
-        self.logger.info('starting vm to serve as the managmenet vm')
+        self.logger.info('starting vm to serve as the management vm')
         self.local_env.execute('install',
                                task_retries=10,
                                task_retry_interval=30)
@@ -140,7 +141,7 @@ class NodecellarSingleHostTest(NodecellarAppTest):
 
     def get_inputs(self):
         return {
-            'host_ip': self.public_ip_address,
+            'host_ip': self.private_ip_address,
             'agent_user': 'ubuntu',
             # default agent key location
             'agent_private_key_path': '~/.ssh/agent_key.pem'

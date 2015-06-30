@@ -20,15 +20,15 @@ from neutronclient.common.exceptions import NeutronException
 from novaclient.exceptions import NotFound
 from retrying import retry
 
-from cosmo_tester.framework.testenv import TestCase
 from cosmo_tester.framework.git_helper import clone
+from cosmo_tester.framework.test_cases import MonitoringTestCase
 
 
 CLOUDIFY_HELLO_WORLD_EXAMPLE_URL = "https://github.com/cloudify-cosmo/" \
                                    "cloudify-hello-world-example.git"
 
 
-class HelloWorldBashTest(TestCase):
+class HelloWorldBashTest(MonitoringTestCase):
 
     def test_hello_world_on_ubuntu(self):
         self._run(self.env.ubuntu_image_name, self.env.cloudify_agent_user)
@@ -92,7 +92,14 @@ class HelloWorldBashTest(TestCase):
 
         floating_ip_id, neutron, nova, sg_id, server_id =\
             self._verify_deployment_installed()
-
+        self.assert_deployment_monitoring_data_exists()
+        floating_ip = neutron.show_floatingip(floating_ip_id)
+        ip = floating_ip['floatingip']['floating_ip_address']
+        web_server_node = get_web_server_node(self.client, self.test_id)
+        port = web_server_node.properties['port']
+        expected_output = \
+            {u'http_endpoint': u'http://{0}:{1}'.format(ip, port)}
+        self.assert_outputs(expected_output)
         self._uninstall_and_make_assertions(floating_ip_id, neutron, nova,
                                             sg_id, server_id)
 
@@ -152,7 +159,7 @@ class HelloWorldBashTest(TestCase):
         return get_instances(client=self.client, deployment_id=self.test_id)
 
 
-@retry(stop_max_attempt_number=5, wait_fixed=3000)
+@retry(stop_max_attempt_number=10, wait_fixed=5000)
 def verify_webserver_running(web_server_node, floatingip_node_instance):
     """
     This method is also used by two_deployments_test!

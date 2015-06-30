@@ -1,3 +1,18 @@
+########
+# Copyright (c) 2014 GigaSpaces Technologies Ltd. All rights reserved
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#        http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+#    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#    * See the License for the specific language governing permissions and
+#    * limitations under the License.
+
 import importlib
 import os
 import json
@@ -70,6 +85,10 @@ class SuiteRunner(object):
             'cli_branch', self.branch_name_core)
         self.windows_cli_package_url = \
             self.variables['windows_cli_package_url']
+        self.centos7_cli_package_url = \
+            self.variables['centos_7_cli_package_url']
+        self.centos6_5_cli_package_url = \
+            self.variables['centos_6_5_cli_package_url']
         self.cloudify_automation_token = \
             self.variables['cloudify_automation_token']
 
@@ -94,6 +113,9 @@ class SuiteRunner(object):
         os.environ['BRANCH_NAME_PLUGINS'] = self.branch_name_plugins
         os.environ['BRANCH_NAME_CORE'] = self.branch_name_core
         os.environ['WINDOWS_CLI_PACKAGE_URL'] = self.windows_cli_package_url
+        os.environ['CENTOS_7_CLI_PACKAGE_URL'] = self.centos7_cli_package_url
+        os.environ['CENTOS_6_5_CLI_PACKAGE_URL'] = \
+            self.centos6_5_cli_package_url
         os.environ['CLOUDIFY_AUTOMATION_TOKEN'] = \
             self.cloudify_automation_token
 

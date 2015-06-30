@@ -2,13 +2,15 @@
 tosca_definitions_version: cloudify_dsl_1_1
 
 imports:
-  - http://www.getcloudify.org/spec/cloudify/3.2rc1/types.yaml
-  - http://www.getcloudify.org/spec/openstack-plugin/1.2rc1/plugin.yaml
+  - http://www.getcloudify.org/spec/cloudify/3.3m2/types.yaml
+  - http://www.getcloudify.org/spec/openstack-plugin/1.3m2/plugin.yaml
 
 inputs:
   prefix:
     description: >
       Unique test id to be added as a prefix for resource names.
+  external_network:
+    type: string
   os_username:
     type: string
   os_password:
@@ -31,7 +33,7 @@ node_templates:
     type: cloudify.openstack.nodes.Network
     properties:
       use_external_resource: true
-      resource_id: public
+      resource_id: { get_input: external_network }
       openstack_config: &OPENSTACK_CONFIG
         username: { get_input: os_username }
         password: { get_input: os_password }
@@ -80,12 +82,13 @@ node_templates:
     properties:
       resource_id: { concat: [{ get_input: prefix }, '-simple-vm-security-group'] }
       rules:
-      rules:
         - port: 80
           remote_ip_prefix: 0.0.0.0/0
         - port: 22
           remote_ip_prefix: 0.0.0.0/0
         - port: 8080
+          remote_ip_prefix: 0.0.0.0/0
+        - port: 8086
           remote_ip_prefix: 0.0.0.0/0
         - port: 8101
           remote_ip_prefix: { get_property: [subnet, subnet, cidr] }
