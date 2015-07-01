@@ -35,8 +35,8 @@ variables:
   ######################################################
 
   # These values are updated by the version tool
-  core_branch: '3.3m2'
-  plugins_branch: '1.3m2'
+  core_branch: '3.3m3'
+  plugins_branch: '1.3m3'
 
   # These values are injected by quickbuild and are here mainly
   # for reference (i.e. they will exist in runtime either way)
