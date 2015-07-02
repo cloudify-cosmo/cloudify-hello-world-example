@@ -53,6 +53,7 @@ class CfyHelper(object):
                   validate_only=False,
                   reset_config=False,
                   task_retries=5,
+                  task_retry_interval=90,
                   verbose=False):
         with self.workdir:
             cfy.init(reset_config=reset_config).wait()
@@ -67,6 +68,7 @@ class CfyHelper(object):
                 keep_up_on_failure=keep_up_on_failure,
                 validate_only=validate_only,
                 task_retries=task_retries,
+                task_retry_interval=task_retry_interval,
                 verbose=verbose).wait()
 
     def recover(self, task_retries=5):
