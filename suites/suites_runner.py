@@ -214,6 +214,7 @@ Handler configuration:
                     class_name = test.get('classname')
                     test.set('classname', '{0}.{1}'.format(self.suite_name,
                                                            class_name))
+                    logger.info('writing to {0}'.format(report.realpath()))
                     f = open(report.realpath(), 'w')
                     f.write(et.tostring(root, pretty_print=True))
                     f.close()
