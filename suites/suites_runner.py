@@ -186,7 +186,6 @@ Handler configuration:
         report_file.write_text(xunit_file_content, encoding='utf-8')
 
     def copy_xunit_reports(self):
-        logger.info('in copy reports')
         if self.timed_out:
             self._generate_custom_xunit_report(
                 'Suite {0} timed out after {1} seconds.'.format(
@@ -213,10 +212,11 @@ Handler configuration:
                 test_elements = root.findall('testcase')
                 for test in test_elements:
                     class_name = test.get('classname')
-                    logger.info('suite name is: {0}'.format(self.suite_name))
-                    logger.info('class name is: {0}'.format(class_name))
-                    # test.set('classname', '{0}.{1}'.format(self.suite_name,
-                    #                                        class_name))
+                    test.set('classname', '{0}.{1}'.format(self.suite_name,
+                                                           class_name))
+                    f = open(report.realpath(), 'w')
+                    f.write(et.tostring(root, pretty_print=True))
+                    f.close()
 
                 report.copy(reports_dir / report.name)
 
