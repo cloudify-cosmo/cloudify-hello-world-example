@@ -186,6 +186,7 @@ Handler configuration:
         report_file.write_text(xunit_file_content, encoding='utf-8')
 
     def copy_xunit_reports(self):
+        logger.info('in copy reports')
         if self.timed_out:
             self._generate_custom_xunit_report(
                 'Suite {0} timed out after {1} seconds.'.format(
