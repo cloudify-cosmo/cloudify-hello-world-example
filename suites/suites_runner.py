@@ -26,7 +26,6 @@ import yaml
 import sh
 from path import path
 from nose.plugins import xunit
-import lxml.etree as et
 
 from helpers import sh_bake
 from helpers.suites_builder import build_suites_yaml
@@ -201,6 +200,7 @@ Handler configuration:
                 error_message='Test suite skipped',
                 fetch_logs=False)
         else:
+            import lxml.etree as et
             report_files = self.suite_reports_dir.files('*.xml')
             logger.info('Suite [{0}] reports: {1}'.format(
                 self.suite_name, [r.name for r in report_files]))
