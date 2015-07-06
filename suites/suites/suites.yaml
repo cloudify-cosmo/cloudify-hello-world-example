@@ -457,6 +457,15 @@ handler_configurations:
       <<: *lab_openstack_inputs
       keystone_tenant_name: system-tests/system-test-5
 
+  lab_openstack_nirb:
+    <<: *lab_openstack_handler_configuration
+    env: lab_openstack_nirb
+    tags: [openstack, lab]
+    inputs_override:
+      <<: *lab_openstack_credentials_inputs
+      <<: *lab_openstack_inputs
+      keystone_tenant_name: nirb
+
   ###############################################################################
 
   mirantis_openstack_system_tests1:
