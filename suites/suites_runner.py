@@ -26,6 +26,7 @@ import yaml
 import sh
 from path import path
 from nose.plugins import xunit
+import lxml.etree as et
 
 from helpers import sh_bake
 from helpers.suites_builder import build_suites_yaml
@@ -203,7 +204,16 @@ Handler configuration:
             report_files = self.suite_reports_dir.files('*.xml')
             logger.info('Suite [{0}] reports: {1}'.format(
                 self.suite_name, [r.name for r in report_files]))
+
+            # adding suite name as a prefix to each test in each report
             for report in report_files:
+                parser = et.XMLParser(strip_cdata=False)
+                root = et.parse(report.realpath(), parser)
+                test_elements = root.findall('testcase')
+                for test in test_elements:
+                    class_name = test.get('classname')
+                    test.set('classname', '{0}.{1}'.format(self.suite_name, class_name))
+
                 report.copy(reports_dir / report.name)
 
 
