@@ -368,17 +368,17 @@ handler_configurations:
       <<: *hp_openstack_region_a_inputs
       keystone_tenant_name: cloudify-cosmo-system-tests2
 
-  transient_deployment_workers_hp_openstack_system_tests2_region_b:
+  transient_deployment_workers_hp_openstack_system_tests3_region_a:
     <<: *hp_openstack_handler_configuration
-    env: hp_openstack_system_tests2_region_b
-    properties: hp_openstack_region_b_properties
+    env: hp_openstack_system_tests3_region_a
+    properties: hp_openstack_region_a_properties
     manager_blueprint_override:
       <<: *openstack_manager_blueprint_override
       <<: *transient_deployment_workers_manager_blueprint_override
     inputs_override:
       <<: *hp_openstack_credentials_inputs
-      <<: *hp_openstack_region_b_inputs
-      keystone_tenant_name: cloudify-cosmo-system-tests2
+      <<: *hp_openstack_region_a_inputs
+      keystone_tenant_name: cloudify-cosmo-system-tests3
 
   ############################################################################
 
