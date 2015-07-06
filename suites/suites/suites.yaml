@@ -588,6 +588,7 @@ tests:
     tests:
       - cosmo_tester/test_suites/test_manager_status
 
+  # These tests must run on a specific HP tenant and region i.e: hp_openstack_system_tests3_region_a
   manager_recovery:
     tests:
       - cosmo_tester/test_suites/test_manager_recovery
@@ -703,7 +704,7 @@ test_suites:
       - cosmo_tester/test_suites/test_blueprints/nodecellar_test_scale.py
 
   transient_deployment_workers_hp_openstack_manager_recovery:
-    handler_configuration: transient_deployment_workers_hp_openstack_system_tests2_region_b
+    handler_configuration: transient_deployment_workers_hp_openstack_system_tests3_region_a
     tests:
       - manager_recovery
 
