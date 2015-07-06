@@ -36,6 +36,7 @@ setup(
         'elasticsearch',
         'Jinja2==2.7.2',
         'influxdb==0.1.13',
-        'pywinrm==0.0.3'
+        'pywinrm==0.0.3',
+        'lxml'
     ]
 )

@@ -212,7 +212,8 @@ Handler configuration:
                 test_elements = root.findall('testcase')
                 for test in test_elements:
                     class_name = test.get('classname')
-                    test.set('classname', '{0}.{1}'.format(self.suite_name, class_name))
+                    test.set('classname', '{0}.{1}'.format(self.suite_name,
+                                                           class_name))
 
                 report.copy(reports_dir / report.name)
 
