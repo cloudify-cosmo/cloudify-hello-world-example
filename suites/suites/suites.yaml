@@ -15,12 +15,12 @@ variables:
   hp_openstack_region_b_centos_7_0_selinux: a2859f14-ea12-55e7-8e39-cec9b59e56fb
 
   lab_openstack_ubuntu_precise_image_name: ubuntu_12.04
-  lab_openstack_ubuntu_trusty_image_name: ubuntu_14.04
+  lab_openstack_ubuntu_trusty_image_name: ubuntu-working14.04
   lab_openstack_centos_6_5_image_name: centos_6.5
   lab_openstack_centos_7_image_name: centos_7
   lab_openstack_windows_image_name: windows-server-2012
   lab_openstack_ubuntu_precise: d81ccdfe-7482-460e-a7ce-69ea29aa129b
-  lab_openstack_ubuntu_trusty: c6d36e11-f4d5-4221-b6e8-4e97914c67e9
+  lab_openstack_ubuntu_trusty: c5e4af44-f35d-4142-8db8-3145ac58eff5
 
   mirantis_openstack_ubuntu_precise_image_name: Ubuntu 12.04 x64 (pre installed DevStack)
   mirantis_openstack_ubuntu_trusty_image_name: Ubuntu 14.04 x64 LTS
