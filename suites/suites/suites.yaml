@@ -613,6 +613,10 @@ tests:
     tests:
       - cosmo_tester/test_suites/test_simple_manager_blueprint
 
+  openstack_nova_net:
+    tests:
+      - cosmo_tester/test_suites/test_openstack_nova_net
+
   ec2:
     external: *aws_ec2_plugin_external
     tests:
@@ -752,7 +756,7 @@ test_suites:
   pclab47_devstack_nova_net:
     handler_configuration: pclab47_devstack_nova_net
     tests:
-      - cosmo_tester/test_suites/test_openstack_nova_net
+      - openstack_nova_net
 
   #####################################################################
 
