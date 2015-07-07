@@ -218,8 +218,8 @@ Handler configuration:
                 tmp_file = tempfile.NamedTemporaryFile(suffix=".xml")
                 logger.info('writing to {0}'.format(tmp_file.name))
                 tmp_file.write(et.tostring(root, pretty_print=True))
-                logger.info('copying to {0}'.format(reports_dir / report.name))
-                tmp_file.copy(reports_dir / report.name)
+                logger.info('copying to {0}'.format(os.path.abspath(reports_dir)))
+                tmp_file.name.copy(reports_dir / report.name)
                 tmp_file.close()
 
 
