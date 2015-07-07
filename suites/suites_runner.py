@@ -215,7 +215,7 @@ Handler configuration:
                     class_name = test.get('classname')
                     test.set('classname', '{0}.{1}'.format(self.suite_name,
                                                            class_name))
-                tmp_file = tempfile.NamedTemporaryFile(suffix=".xml")
+                tmp_file = tempfile.NamedTemporaryFile()
                 logger.info('writing to {0}'.format(tmp_file.name))
                 tmp_file.write(et.tostring(root, pretty_print=True))
                 logger.info('copying to {0}'.format(
