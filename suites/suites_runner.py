@@ -215,12 +215,12 @@ Handler configuration:
                     class_name = test.get('classname')
                     test.set('classname', '{0}.{1}'.format(self.suite_name,
                                                            class_name))
-                tmp_file = tempfile.TemporaryFile()
-                logger.info('writing to {0}'.format(os.path.abspath(tmp_file)))
+                tmp_file = tempfile.NamedTemporaryFile(suffix=".xml")
+                logger.info('writing to {0}'.format(tmp_file.name))
                 tmp_file.write(et.tostring(root, pretty_print=True))
-                tmp_file.close()
                 logger.info('copying to {0}'.format(reports_dir / report.name))
                 tmp_file.copy(reports_dir / report.name)
+                tmp_file.close()
 
 
 class SuitesScheduler(object):
