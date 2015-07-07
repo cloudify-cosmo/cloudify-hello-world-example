@@ -580,6 +580,10 @@ tests:
       tests:
         - cosmo_tester/test_suites/test_blueprints/nodecellar_test.py
 
+  openstack_blueprints_autoheal_and_scale:
+        - cosmo_tester/test_suites/test_blueprints/nodecellar_test_autoheal.py
+        - cosmo_tester/test_suites/test_blueprints/nodecellar_test_scale.py
+
   stress:
       tests:
         - cosmo_tester/test_suites/stress_test_openstack
@@ -699,8 +703,7 @@ test_suites:
     handler_configuration: transient_deployment_workers_hp_openstack_system_tests2_region_a
     tests:
       - openstack_blueprints_nodecellar
-      - cosmo_tester/test_suites/test_blueprints/nodecellar_test_autoheal.py
-      - cosmo_tester/test_suites/test_blueprints/nodecellar_test_scale.py
+      - openstack_blueprints_autoheal_and_scale
 
   transient_deployment_workers_hp_openstack_manager_recovery:
     handler_configuration: transient_deployment_workers_hp_openstack_system_tests2_region_b
