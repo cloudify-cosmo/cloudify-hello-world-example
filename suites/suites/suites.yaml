@@ -580,6 +580,10 @@ tests:
       tests:
         - cosmo_tester/test_suites/test_blueprints/nodecellar_test.py
 
+  openstack_blueprints_autoheal_and_scale:
+        - cosmo_tester/test_suites/test_blueprints/nodecellar_test_autoheal.py
+        - cosmo_tester/test_suites/test_blueprints/nodecellar_test_scale.py
+
   stress:
       tests:
         - cosmo_tester/test_suites/stress_test_openstack
@@ -608,6 +612,10 @@ tests:
   simple_manager_blueprint:
     tests:
       - cosmo_tester/test_suites/test_simple_manager_blueprint
+
+  openstack_nova_net:
+    tests:
+      - cosmo_tester/test_suites/test_openstack_nova_net
 
   ec2:
     external: *aws_ec2_plugin_external
@@ -700,8 +708,7 @@ test_suites:
     handler_configuration: transient_deployment_workers_hp_openstack_system_tests2_region_a
     tests:
       - openstack_blueprints_nodecellar
-      - cosmo_tester/test_suites/test_blueprints/nodecellar_test_autoheal.py
-      - cosmo_tester/test_suites/test_blueprints/nodecellar_test_scale.py
+      - openstack_blueprints_autoheal_and_scale
 
   transient_deployment_workers_hp_openstack_manager_recovery:
     handler_configuration: transient_deployment_workers_hp_openstack_system_tests3_region_a
@@ -749,14 +756,14 @@ test_suites:
   pclab47_devstack_nova_net:
     handler_configuration: pclab47_devstack_nova_net
     tests:
-      - cosmo_tester/test_suites/test_openstack_nova_net
+      - openstack_nova_net
 
   #####################################################################
 
   docker_centos_on_openstack:
     handler_configuration: hp_openstack_centos_system_tests3_region_b
     tests:
-      - cosmo_tester/test_suites/test_docker_centos_env
+      - docker_centos
 
   ######################################################################
 
