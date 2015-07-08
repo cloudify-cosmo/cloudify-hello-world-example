@@ -22,6 +22,7 @@ import sh
 from path import path
 
 from cloudify_cli.utils import load_cloudify_working_dir_settings
+from cloudify_rest_client.executions import Execution
 from cosmo_tester.framework.util import sh_bake
 
 
@@ -35,8 +36,10 @@ class CfyHelper(object):
 
     def __init__(self,
                  cfy_workdir=None,
-                 management_ip=None):
+                 management_ip=None,
+                 testcase=None):
         self._cfy_workdir = cfy_workdir
+        self._testcase = testcase
         self.tmpdir = False
         if cfy_workdir is None:
             self.tmpdir = True
@@ -201,6 +204,16 @@ class CfyHelper(object):
                          include_logs=True,
                          execute_timeout=DEFAULT_EXECUTE_TIMEOUT,
                          parameters=None):
+
+        if self._testcase and \
+            self._testcase.env and \
+            self._testcase.env._config_reader and \
+                self._testcase.env.transient_deployment_workers:
+            # we're in transient deployment workers mode - need to verify
+            # there is no "stop deployment environment" execution
+            # running, and wait till it ends if there is one
+            self._wait_for_stop_dep_env_execution_to_end(deployment_id)
+
         params_file = self._get_inputs_in_temp_file(parameters, workflow)
         with self.workdir:
             cfy.executions.start(
@@ -219,3 +232,23 @@ class CfyHelper(object):
         with open(inputs_file, 'w') as f:
             f.write(json.dumps(inputs))
         return inputs_file
+
+    def _wait_for_stop_dep_env_execution_to_end(self, deployment_id,
+                                                timeout_seconds=240):
+        executions = self._testcase.client.executions.list(
+            deployment_id=deployment_id, include_system_workflows=True)
+        running_stop_executions = [e for e in executions if e.workflow_id ==
+                                   '_stop_deployment_environment' and
+                                   e.status not in Execution.END_STATES]
+
+        if not running_stop_executions:
+            return
+
+        if len(running_stop_executions) > 1:
+            raise RuntimeError('There is more than one running '
+                               '"_stop_deployment_environment" execution: {0}'
+                               .format(running_stop_executions))
+
+        execution = running_stop_executions[0]
+        return self._testcase.wait_for_execution(execution,
+                                                 timeout_seconds)
