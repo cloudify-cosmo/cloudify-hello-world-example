@@ -81,17 +81,16 @@ class ManyDeploymentsTest(MonitoringTestCase):
                          .format(self.env.management_ip))
         return int(
             str(fabric.api.run(
-                'sudo docker exec cfy df -k | grep /dev/vdc1 | '
-                'awk \'{print $2}\'')).replace(
+                'df -k | grep /var/lib/docker | awk \'{print $2}\'')).replace(
                 "sudo: unable to resolve host cloudify-manager-server", ""))
+
 
     def get_manager_disk_available(self):
         self.logger.info('get_manager_disk_available with ip {0}'
                          .format(self.env.management_ip))
         return int(
             str(fabric.api.run(
-                'sudo docker exec cfy df -k | grep /dev/vdc1 | '
-                'awk \'{print $4}\'')).replace(
+                'df -k | grep /var/lib/docker | awk \'{print $4}\'')).replace(
                 "sudo: unable to resolve host cloudify-manager-server", ""))
 
     def get_number_of_total_active_nodes(self):
