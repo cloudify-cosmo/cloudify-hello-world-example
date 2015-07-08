@@ -24,8 +24,8 @@ variables:
 
   mirantis_openstack_ubuntu_precise_image_name: Ubuntu 12.04 x64 (pre installed DevStack)
   mirantis_openstack_ubuntu_trusty_image_name: Ubuntu 14.04 x64 LTS
-  mirantis_openstack_ubuntu_precise: 6d90a96d-4c53-41b2-98b9-36986f622c2a
-  mirantis_openstack_ubuntu_trusty: e6d6681b-46fe-4325-861e-f56ffb3e4fbc
+  mirantis_openstack_ubuntu_precise: 8d3a543a-8757-43bc-b337-99ee23465dc4
+  mirantis_openstack_ubuntu_trusty: 798e43f2-252e-43f5-a0a8-97371a3c8afa
 
   aws_ec2_eu_central_1_ami_ubuntu_trusty_image_id: ami-00dae61d
   aws_ec2_medium_instance_type: m3.medium
@@ -466,7 +466,7 @@ handler_configurations:
     inputs_override:
       <<: *mirantis_openstack_credentials_inputs
       <<: *mirantis_openstack_inputs
-      keystone_tenant_name: system-tests-1
+      keystone_tenant_name: system-tests/system-tests-1
 
   mirantis_openstack_system_tests2:
     <<: *mirantis_openstack_handler_configuration
@@ -475,7 +475,7 @@ handler_configurations:
     inputs_override:
       <<: *mirantis_openstack_credentials_inputs
       <<: *mirantis_openstack_inputs
-      keystone_tenant_name: system-tests-2
+      keystone_tenant_name: system-tests/system-tests-2
 
   mirantis_openstack_system_tests3:
     <<: *mirantis_openstack_handler_configuration
@@ -484,7 +484,7 @@ handler_configurations:
     inputs_override:
       <<: *mirantis_openstack_credentials_inputs
       <<: *mirantis_openstack_inputs
-      keystone_tenant_name: system-tests-3
+      keystone_tenant_name: system-tests/system-tests-3
 
   mirantis_openstack_system_tests4:
     <<: *mirantis_openstack_handler_configuration
@@ -493,7 +493,7 @@ handler_configurations:
     inputs_override:
       <<: *mirantis_openstack_credentials_inputs
       <<: *mirantis_openstack_inputs
-      keystone_tenant_name: system-tests-4
+      keystone_tenant_name: system-tests/system-tests-4
 
   ###############################################################################
 

@@ -3,7 +3,7 @@ keystone_password: ''
 keystone_tenant_name: ''
 region: ''
 image_id: ''
-keystone_url: http://198.11.218.66:5000/v2.0
+keystone_url: http://37.58.99.2:5000/v2.0
 manager_public_key_name: shared-systemt-tests
 agent_public_key_name: shared-systemt-tests
 flavor_id: 3
