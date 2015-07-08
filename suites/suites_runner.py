@@ -212,13 +212,13 @@ Handler configuration:
                 root = et.parse(report.realpath(), parser)
                 test_elements = root.findall('testcase')
                 for test in test_elements:
-                    class_name = test.get('classname')
-                    test.set('classname', '{0}.{1}'.format(self.suite_name,
-                                                           class_name))
+                    test_name = test.get('name')
+                    test.set('name', '{0} @ {1}'.format(test_name,
+                                                        self.suite_name))
                 tmp_file = tempfile.NamedTemporaryFile()
                 logger.info('writing to {0}'.format(tmp_file.name))
                 tmp_file.write(et.tostring(root, pretty_print=True))
-                # need to flush remaining text in buffer before closing the file
+                # flushing remaining text in buffer before closing the file
                 tmp_file.flush()
                 logger.info('copying to {0}'.format(
                     os.path.abspath(reports_dir)))
