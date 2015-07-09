@@ -12,6 +12,11 @@ create_virtualenv_if_needed_and_source()
         source system_tests_controller_venv/bin/activate
         pip install pip --upgrade
         pip install -r requirements.txt
+
+        # This is not included in requirements.txt because it requires
+        # native extensions that are only installed on the quickbuild agent
+        # TODO: consider create two seperate requirements files
+        pip install lxml
     else
         source system_tests_controller_venv/bin/activate
     fi
