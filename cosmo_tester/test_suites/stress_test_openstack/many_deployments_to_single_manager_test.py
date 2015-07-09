@@ -84,7 +84,6 @@ class ManyDeploymentsTest(MonitoringTestCase):
                 'df -k | grep /var/lib/docker | awk \'{print $2}\'')).replace(
                 "sudo: unable to resolve host cloudify-manager-server", ""))
 
-
     def get_manager_disk_available(self):
         self.logger.info('get_manager_disk_available with ip {0}'
                          .format(self.env.management_ip))
