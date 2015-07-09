@@ -216,12 +216,9 @@ Handler configuration:
                     test.set('name', '{0} @ {1}'.format(test_name,
                                                         self.suite_name))
                 tmp_file = tempfile.NamedTemporaryFile()
-                logger.info('writing to {0}'.format(tmp_file.name))
                 tmp_file.write(et.tostring(root, pretty_print=True))
                 # flushing remaining text in buffer before closing the file
                 tmp_file.flush()
-                logger.info('copying to {0}'.format(
-                    os.path.abspath(reports_dir)))
                 shutil.copy(tmp_file.name, reports_dir / report.name)
                 tmp_file.close()
 
