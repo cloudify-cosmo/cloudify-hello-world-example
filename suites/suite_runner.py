@@ -22,6 +22,7 @@ import logging
 import sh
 import yaml
 from path import path
+import lxml.etree as et
 
 from helpers import sh_bake
 # don't put imports that may include system tests code here
@@ -34,7 +35,6 @@ logging.basicConfig()
 logger = logging.getLogger('suite_runner')
 logger.setLevel(logging.INFO)
 
-
 git = sh_bake(sh.git)
 pip = sh_bake(sh.pip)
 nosetests = sh_bake(sh.nosetests)
@@ -44,7 +44,6 @@ CLOUDIFY_SYSTEM_TESTS = 'cloudify-system-tests'
 
 
 class HandlerPackage(object):
-
     def __init__(self, handler, external, directory=None):
         if not external:
             requirements_path = os.path.join(
@@ -64,7 +63,6 @@ class HandlerPackage(object):
 
 
 class SuiteRunner(object):
-
     def __init__(self):
         self.base_dir = os.environ['BASE_HOST_DIR']
         self.work_dir = os.environ['WORK_DIR']
@@ -281,7 +279,15 @@ class SuiteRunner(object):
                 processed_tests += test.split(' ')
 
             with path(self.work_dir) / tests_dir:
+                tests_list_file_path = \
+                    suite_reports_dir / '{0}-{1}-tests_list.json'.format(
+                        self.test_suite_name, tests_dir)
                 try:
+                    nosetests(with_testnameextractor=True,
+                              verbose=True,
+                              tests_list_path=tests_list_file_path,
+                              *processed_tests)
+
                     nosetests(verbose=True,
                               nocapture=True,
                               nologcapture=True,
@@ -289,12 +295,59 @@ class SuiteRunner(object):
                               xunit_file=report_file,
                               xunit_testsuite_name=self.test_suite_name,
                               *processed_tests).wait()
+
                 except sh.ErrorReturnCode:
                     failed_groups.append(test_group)
+
+                self.add_missing_tests(report_file, tests_list_file_path)
 
         if failed_groups:
             raise AssertionError('Failed test groups: {}'.format(
                 failed_groups))
+
+    def add_missing_tests(self, report_file_path, expected_tests_file_path):
+
+        # comparing tests that should have run to tests that actually
+        # ran, and adding missing test to the xml report
+        parser = et.XMLParser(strip_cdata=False)
+        run_tests = set()
+        missing_tests = []
+
+        # preparing expected tests list
+        with open(expected_tests_file_path) as data_file:
+            expected_tests = json.load(data_file)
+
+        # preparing run tests set
+        root = et.parse(report_file_path.realpath(), parser)
+        test_elements = root.findall('testcase')
+        for test in test_elements:
+            run_test_name = test.get('name')
+            run_test_class = test.get('classname')
+            run_tests.add('{0}.{1}'.format(run_test_class, run_test_name))
+
+        # preparing missing tests list
+        for expected_test in expected_tests:
+            expected_test_module = expected_test['test_module']
+            expected_test_class = expected_test['test_class']
+            expected_test_name = expected_test['test_name']
+            expected_test_full_name = '{0}.{1}.{2}'.format(
+                expected_test_module,
+                expected_test_class,
+                expected_test_name)
+            if expected_test_full_name not in run_tests:
+                missing_tests.append(expected_test)
+
+        # writing missing tests to xml report
+        for missing_test in missing_tests:
+            testcase_elem = et.SubElement(root.getroot(), 'testcase',
+                                          classname='{0}.{1}'.
+                                          format(missing_test['test_module'],
+                                                 missing_test['test_class']),
+                                          name=missing_test['test_name'])
+            et.SubElement(testcase_elem, 'skipped',
+                          message='Test should have run, but did not')
+            with open(report_file_path, 'w') as report:
+                report.write(et.tostring(root, pretty_print=True))
 
 
 def _process_variables(suites_yaml, unprocessed_dict):
