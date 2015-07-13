@@ -35,6 +35,10 @@ class BaseCleanupContext(object):
     def cleanup(self):
         pass
 
+    @staticmethod
+    def clean_all(env):
+        pass
+
 
 class BaseCloudifyInputsConfigReader(object):
 
