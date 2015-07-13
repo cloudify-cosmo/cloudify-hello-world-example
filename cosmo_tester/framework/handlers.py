@@ -24,19 +24,20 @@ from cosmo_tester.framework.util import YamlPatcher, process_variables
 
 class BaseCleanupContext(object):
 
+    logger = logging.getLogger('CleanupContext')
+    logger.setLevel(logging.DEBUG)
+
     def __init__(self, context_name, env):
         self.context_name = context_name
         self.env = env
-        self.logger = logging.getLogger('CleanupContext')
-        self.logger.setLevel(logging.DEBUG)
         self.skip_cleanup = self.env.handler_configuration.get(
             'skip_cleanup', False)
 
     def cleanup(self):
         pass
 
-    @staticmethod
-    def clean_all(env):
+    @classmethod
+    def clean_all(cls, env):
         pass
 
 
