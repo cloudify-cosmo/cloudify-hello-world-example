@@ -180,6 +180,10 @@ class TestEnvironment(object):
         self.install_plugins = self.handler_configuration.get(
             'install_manager_blueprint_dependencies', True)
 
+        if self.handler_configuration.get('clean_env_on_init', False) is True:
+            logger.info('Cleaning environment on init..')
+            self.handler.CleanupContext.clean_all(self)
+
         global test_environment
         test_environment = self
 

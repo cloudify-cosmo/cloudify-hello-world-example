@@ -20,6 +20,7 @@ import json
 import random
 import shutil
 import time
+import tempfile
 
 import jinja2
 import yaml
@@ -200,11 +201,26 @@ Handler configuration:
                 error_message='Test suite skipped',
                 fetch_logs=False)
         else:
+            import lxml.etree as et
             report_files = self.suite_reports_dir.files('*.xml')
             logger.info('Suite [{0}] reports: {1}'.format(
                 self.suite_name, [r.name for r in report_files]))
+
+            # adding suite name as a prefix to each test in each report
+            parser = et.XMLParser(strip_cdata=False)
             for report in report_files:
-                report.copy(reports_dir / report.name)
+                root = et.parse(report.realpath(), parser)
+                test_elements = root.findall('testcase')
+                for test in test_elements:
+                    test_name = test.get('name')
+                    test.set('name', '{0} @ {1}'.format(test_name,
+                                                        self.suite_name))
+                tmp_file = tempfile.NamedTemporaryFile()
+                tmp_file.write(et.tostring(root, pretty_print=True))
+                # flushing remaining text in buffer before closing the file
+                tmp_file.flush()
+                shutil.copy(tmp_file.name, reports_dir / report.name)
+                tmp_file.close()
 
 
 class SuitesScheduler(object):
