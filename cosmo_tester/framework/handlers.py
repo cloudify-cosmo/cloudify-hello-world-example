@@ -51,10 +51,12 @@ class BaseCloudifyInputsConfigReader(object):
         return self.config['resources_prefix']
 
     @property
-    def transient_deployment_workers(self):
+    def transient_deployment_workers_mode_enabled(self):
         manager = self.manager_blueprint['node_templates'].get('manager', {})
         bootstrap_context = manager.get('properties', {}).get('cloudify', {})
-        return bootstrap_context.get('transient_deployment_workers', False)
+        transient_deployment_workers_config = bootstrap_context.get(
+            'transient_deployment_workers_mode', {})
+        return transient_deployment_workers_config.get('enabled', False)
 
     @property
     def management_user_name(self):
