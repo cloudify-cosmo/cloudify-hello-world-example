@@ -208,7 +208,7 @@ class CfyHelper(object):
         if self._testcase and \
             self._testcase.env and \
             self._testcase.env._config_reader and \
-                self._testcase.env.transient_deployment_workers:
+                self._testcase.env.transient_deployment_workers_mode_enabled:
             # we're in transient deployment workers mode - need to verify
             # there is no "stop deployment environment" execution
             # running, and wait till it ends if there is one
