@@ -594,6 +594,7 @@ tests:
         - cosmo_tester/test_suites/test_blueprints/nodecellar_test.py
 
   openstack_blueprints_autoheal_and_scale:
+    tests:
         - cosmo_tester/test_suites/test_blueprints/nodecellar_test_autoheal.py
         - cosmo_tester/test_suites/test_blueprints/nodecellar_test_scale.py
 
