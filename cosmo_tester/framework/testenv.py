@@ -31,6 +31,7 @@ from path import path
 import fabric.api
 import fabric.context_managers
 
+from cloudify_rest_client.executions import Execution
 from cosmo_tester.framework.cfy_helper import (CfyHelper,
                                                DEFAULT_EXECUTE_TIMEOUT)
 from cosmo_tester.framework.util import (get_blueprint_path,
@@ -428,6 +429,25 @@ class TestCase(unittest.TestCase):
         for event in events:
             self.logger.info(json.dumps(event))
         raise AssertionError('Execution "{}" timed out'.format(execution.id))
+
+    def wait_for_stop_dep_env_execution_to_end(self, deployment_id,
+                                               timeout_seconds=240):
+        executions = self.client.executions.list(
+            deployment_id=deployment_id, include_system_workflows=True)
+        running_stop_executions = [e for e in executions if e.workflow_id ==
+                                   '_stop_deployment_environment' and
+                                   e.status not in Execution.END_STATES]
+
+        if not running_stop_executions:
+            return
+
+        if len(running_stop_executions) > 1:
+            raise RuntimeError('There is more than one running '
+                               '"_stop_deployment_environment" execution: {0}'
+                               .format(running_stop_executions))
+
+        execution = running_stop_executions[0]
+        return self.wait_for_execution(execution, timeout_seconds)
 
     def repetitive(self, func, timeout=10, exception_class=Exception,
                    args=None, kwargs=None):

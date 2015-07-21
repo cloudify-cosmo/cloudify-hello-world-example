@@ -35,6 +35,7 @@ class BaseManagerRecoveryTest(TestCase):
         # bootstrap and install
         self.bootstrap()
         self._install_blueprint()
+        self.wait_for_stop_dep_env_execution_to_end(self.deployment_id)
 
         # this will verify that all the data is actually persisted.
         before, after = self._kill_and_recover_manager()
