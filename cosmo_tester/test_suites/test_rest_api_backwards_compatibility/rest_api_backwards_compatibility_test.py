@@ -89,7 +89,7 @@ class RestApiBackwardsCompatibilityTest(TestCase):
         permissions = os.stat(shell_script_name)
         os.chmod(shell_script_name, permissions.st_mode | 0111)
 
-    def test_32_client_on_new_server(self):
+    def test_old_client_vs_new_server(self):
         output = subprocess.check_output(
             '/bin/bash {0}'.format(SHELL_SCRIPT_NAME), shell=True)
         print('output: {0}'.format(output))
