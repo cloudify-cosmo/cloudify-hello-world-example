@@ -288,8 +288,8 @@ handler_properties:
   pclab47_devstack_nova_net:
     ubuntu_image_name: ubuntu
     flavor_name: m1.small
-    ubuntu_image_id: eada2fe8-894a-4b26-ac8d-cedab010f185
-    small_flavor_id: 3
+    ubuntu_image_id: 32533bad-fd76-42e8-91fb-93e5c9921498
+    small_flavor_id: 2
 
   vsphere:
     template: ubuntu-configured-template
