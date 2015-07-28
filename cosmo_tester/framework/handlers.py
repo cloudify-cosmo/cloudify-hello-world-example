@@ -84,6 +84,9 @@ class BaseCloudifyInputsConfigReader(object):
 
 class BaseHandler(object):
 
+    logger = logging.getLogger('EnvironmentHandler')
+    logger.setLevel(logging.DEBUG)
+
     # The following attributes are mainly for documentation
     # purposes. Handler subclasses should override them
     # to have the appropriate inputs file read loaded
