@@ -3,8 +3,8 @@
 # using `{{variable_name}}` syntax
 variables:
 
-  hp_openstack_ubuntu_precise_image_name: Ubuntu Server 12.04.5 LTS (amd64 20150127) - Partner Image
-  hp_openstack_ubuntu_trusty_image_name: Ubuntu Server 14.04.1 LTS (amd64 20140927) - Partner Image
+  hp_openstack_ubuntu_precise_image_name: Ubuntu Server 12.04.5 LTS (amd64 20150707) - Partner Image
+  hp_openstack_ubuntu_trusty_image_name: Ubuntu Server 14.04.1 LTS (amd64 20150706) - Partner Image
   hp_openstack_centos_6_3_image_name: CentOS 6.3 Server 64-bit 20130116
   hp_openstack_centos_7_image_name: CentOS 7 x86_64 (2014-09-29) - Partner Image
   hp_openstack_windows_image_name: Windows Server 2008 R2 Enterprise SP1 x64 Volume License 20140415 (b)
@@ -288,11 +288,11 @@ handler_properties:
   pclab47_devstack_nova_net:
     ubuntu_image_name: ubuntu
     flavor_name: m1.small
-    ubuntu_image_id: eada2fe8-894a-4b26-ac8d-cedab010f185
-    small_flavor_id: 3
+    ubuntu_image_id: 32533bad-fd76-42e8-91fb-93e5c9921498
+    small_flavor_id: 2
 
-  vsphere:
-    template: ubuntu-configured-template
+  vsphere_handler_props:
+    template: systemtests-ubuntu-1404
 
   aws_ec2:
     ubuntu_trusty_image_id: '{{aws_ec2_eu_central_1_ami_ubuntu_trusty_image_id}}'
@@ -531,19 +531,21 @@ handler_configurations:
 
   ###############################################################################
 
-  vsphere:
+  vsphere_handler_config:
     inputs: inputs-vsphere.yaml
     handler: vsphere_handler
     env: vsphere
     external: *vsphere_plugin_external
     manager_blueprint: manager_blueprint/vsphere-manager-blueprint.yaml
-    properties: vsphere
-    manager_blueprint_override: *manager_blueprint_override
+    properties: vsphere_handler_props
+    manager_blueprint_override: *manager_blueprint_commercial_override
     inputs_override:
       vsphere_username: '{{system_test_vsphere_username}}'
       vsphere_password: '{{system_test_vsphere_password}}'
-      vsphere_url: '{{system_test_vsphere_url}}'
+      vsphere_host: '{{system_test_vsphere_url}}'
       vsphere_datacenter_name: '{{system_test_vsphere_vcenter_name}}'
+      vsphere_resource_pool_name: 'system_tests'
+      manager_server_template: 'systemtests-ubuntu-1404'
 
   ################################################################################
 
@@ -806,7 +808,7 @@ test_suites:
   ######################################################################
 
   vsphere:
-    handler_configuration: vsphere
+    handler_configuration: vsphere_handler_config
     tests:
       - vsphere_blueprints
 
