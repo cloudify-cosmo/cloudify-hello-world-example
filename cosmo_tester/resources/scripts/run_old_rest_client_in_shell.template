@@ -1,0 +1,9 @@
+orig_dir=$(pwd)
+cd /tmp
+virtualenv {{ cfy_32_cli_env }} >/dev/null
+source {{ cfy_32_cli_env }}/bin/activate >/dev/null
+pip install cloudify=={{ 3.2 }} >/dev/null
+python "$orig_dir/{{ test_old_client.py }}"
+deactivate
+rm -rf /tmp/{{ cfy_32_cli_env }}
+cd $orig_dir
