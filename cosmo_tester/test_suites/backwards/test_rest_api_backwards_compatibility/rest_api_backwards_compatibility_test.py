@@ -16,12 +16,11 @@
 
 import json
 import os
-import shutil
-import subprocess
 import pkg_resources
-import cosmo_tester
-from jinja2.environment import Template
+import subprocess
+import jinja2
 
+import cosmo_tester
 from cosmo_tester.framework.testenv import TestCase
 
 
@@ -30,7 +29,6 @@ PYTHON_SCRIPT_TEMPLATE = 'use_old_rest_client.template'
 SHELL_SCRIPT_NAME = 'test_old_client.sh'
 PYTHON_SCRIPT_NAME = 'test_old_client.py'
 VENV_NAME = 'cfy_32_cli_env'
-VENV_FOLDER = '/tmp'
 CFY_CLIENT_VERSION = '3.2'
 
 
@@ -42,10 +40,6 @@ class RestApiBackwardsCompatibilityTest(TestCase):
         self._render_shell_script()
 
     def tearDown(self):
-        venv_path = os.path.join(VENV_FOLDER, VENV_NAME)
-        if os.path.exists(venv_path):
-            shutil.rmtree(venv_path)
-
         if os.path.exists(PYTHON_SCRIPT_NAME):
             os.remove(PYTHON_SCRIPT_NAME)
 
@@ -59,9 +53,9 @@ class RestApiBackwardsCompatibilityTest(TestCase):
             cosmo_tester.__name__,
             'resources/scripts/{0}'.format(PYTHON_SCRIPT_TEMPLATE)
         )
-        rendered_python_script = Template(python_script_template). \
+        rendered_python_script = jinja2.Template(python_script_template). \
             render(cfy_manager_ip=self.env.management_ip)
-        with open(PYTHON_SCRIPT_NAME, 'w') as f:
+        with open(os.path.join(self.workdir, PYTHON_SCRIPT_NAME), 'w') as f:
             f.write(rendered_python_script)
 
     def _render_shell_script(self):
@@ -69,23 +63,24 @@ class RestApiBackwardsCompatibilityTest(TestCase):
             cosmo_tester.__name__,
             'resources/scripts/{0}'.format(SHELL_SCRIPT_TEMPLATE)
         )
-        template_values = {'venv_name': VENV_NAME,
-                           'venv_folder': VENV_FOLDER,
+        template_values = {'work_dir': self.workdir,
+                           'venv_name': VENV_NAME,
                            'client_version': CFY_CLIENT_VERSION,
                            'python_script_name': PYTHON_SCRIPT_NAME}
-        rendered_shell_script = Template(shell_script_template).\
+        rendered_shell_script = jinja2.Template(shell_script_template).\
             render(template_values)
-        with open(SHELL_SCRIPT_NAME, 'w') as f:
+        shell_script_path = os.path.join(self.workdir, SHELL_SCRIPT_NAME)
+        with open(shell_script_path, 'w') as f:
             f.write(rendered_shell_script)
 
         # set permission to execute file
-        permissions = os.stat(SHELL_SCRIPT_NAME)
-        os.chmod(SHELL_SCRIPT_NAME, permissions.st_mode | 0111)
+        permissions = os.stat(shell_script_path)
+        os.chmod(shell_script_path, permissions.st_mode | 0111)
 
     def test_old_client_vs_new_server(self):
         output = subprocess.check_output(
-            '/bin/bash {0}'.format(SHELL_SCRIPT_NAME), shell=True)
-        print('output: {0}'.format(output))
+            '/bin/bash {0}'.format(
+                os.path.join(self.workdir, SHELL_SCRIPT_NAME)), shell=True)
         result = json.loads(output)
         self.assertEqual(result.get('exit_code'), 0,
                          'Failed to get manager status from old client, '
