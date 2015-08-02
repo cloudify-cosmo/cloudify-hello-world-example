@@ -39,15 +39,6 @@ class RestApiBackwardsCompatibilityTest(TestCase):
         self._render_python_script()
         self._render_shell_script()
 
-    def tearDown(self):
-        if os.path.exists(PYTHON_SCRIPT_NAME):
-            os.remove(PYTHON_SCRIPT_NAME)
-
-        if os.path.exists(SHELL_SCRIPT_NAME):
-            os.remove(SHELL_SCRIPT_NAME)
-
-        super(RestApiBackwardsCompatibilityTest, self).tearDown()
-
     def _render_python_script(self):
         python_script_template = pkg_resources.resource_string(
             cosmo_tester.__name__,
