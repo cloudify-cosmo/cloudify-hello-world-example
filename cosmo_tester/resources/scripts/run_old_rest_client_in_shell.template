@@ -1,8 +1,9 @@
+set -x
 orig_dir=$(pwd)
-cd {{ venv_folder }}
+cd {{ work_dir }}
 virtualenv {{ venv_name }} >/dev/null
 source {{ venv_name }}/bin/activate >/dev/null
 pip install cloudify=={{ client_version }} >/dev/null
-python "$orig_dir/{{ python_script_name }}"
+python "{{ python_script_name }}"
 deactivate
 cd $orig_dir

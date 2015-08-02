@@ -19,7 +19,7 @@ def run_test():
                 rest_client_url, expected_rest_client_url)
     except Exception as e:
         output["exit_code"] = 1
-        output["details"] = str(e.message)
+        output["details"] = str(e)
     return output
 
 out = run_test()
