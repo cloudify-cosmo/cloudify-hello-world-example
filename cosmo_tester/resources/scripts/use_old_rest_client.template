@@ -1,0 +1,26 @@
+import json
+from cloudify_rest_client.client import CloudifyClient
+
+
+def run_test():
+    output = {}
+    try:
+        rest_client = CloudifyClient(host="{0}".format('{{ cfy_manager_ip }}'))
+        rest_client_url = rest_client._client.url
+        expected_rest_client_url = "http://{0}:80".format(
+            '{{ cfy_manager_ip }}')
+        if rest_client_url == expected_rest_client_url:
+            status = rest_client.manager.get_status()
+            output["exit_code"] = 0
+            output["details"] = status
+        else:
+            output["exit_code"] = 1
+            output["details"] = "rest client url is {0} instead of {1}".format(
+                rest_client_url, expected_rest_client_url)
+    except Exception as e:
+        output["exit_code"] = 1
+        output["details"] = str(e)
+    return output
+
+out = run_test()
+print json.dumps(out)
