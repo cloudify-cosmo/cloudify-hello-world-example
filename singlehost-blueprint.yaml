@@ -1,0 +1,82 @@
+#######
+# Cloudify Hello World blueprint.
+#
+# This blueprint installs a simple web server on the manager VM using Cloudify's script plugin.
+#
+tosca_definitions_version: cloudify_dsl_1_2
+imports:
+  - http://www.getcloudify.org/spec/cloudify/3.3m3/types.yaml
+  - http://www.getcloudify.org/spec/openstack-plugin/1.3m3/plugin.yaml
+  - http://www.getcloudify.org/spec/diamond-plugin/1.3m3/plugin.yaml
+
+inputs:
+  server_ip:
+    description: >
+      The ip of the server the application will be deployed on.
+  agent_user:
+    description: >
+      User name used when SSH-ing into the started machine.
+  agent_private_key_path:
+    description: >
+      Path to a private key that resides on the management machine.
+      SSH-ing into agent machines will be done with this key.
+  webserver_port:
+    description: >
+      The HTTP web server port.
+    default: 8080
+
+node_templates:
+  vm:
+    type: cloudify.nodes.Compute
+    properties:
+      ip: { get_input: server_ip }
+      cloudify_agent:
+        user: { get_input: agent_user }
+        key: { get_input: agent_private_key_path }
+    interfaces:
+      ###########################################################
+      # We are infact telling cloudify to install a diamond
+      # monitoring agent on the server.
+      #
+      # (see https://github.com/BrightcoveOS/Diamond)
+      ###########################################################
+      cloudify.interfaces.monitoring_agent:
+        install:
+          implementation: diamond.diamond_agent.tasks.install
+          inputs:
+            diamond_config:
+              default:
+                interval: 1
+        start: diamond.diamond_agent.tasks.start
+        stop: diamond.diamond_agent.tasks.stop
+        uninstall: diamond.diamond_agent.tasks.uninstall
+      cloudify.interfaces.monitoring:
+        start:
+          implementation: diamond.diamond_agent.tasks.add_collectors
+          inputs:
+            collectors_config:
+                CPUCollector: {}
+                MemoryCollector: {}
+                LoadAverageCollector: {}
+                DiskUsageCollector:
+                  config:
+                    devices: x?vd[a-z]+[0-9]*$
+                NetworkCollector: {}
+  http_web_server:
+    type: cloudify.nodes.WebServer
+    properties:
+      port: { get_input: webserver_port }
+    relationships:
+      - type: cloudify.relationships.contained_in
+        target: vm
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        configure: scripts/configure.sh
+        start: scripts/start.sh
+        stop: scripts/stop.sh
+
+outputs:
+  http_endpoint:
+    description: Web server external endpoint
+    value: { concat: ['http://', { get_property: [ vm, ip ] },
+                      ':', { get_property: [http_web_server, port] }] }
