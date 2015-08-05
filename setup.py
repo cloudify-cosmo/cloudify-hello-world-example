@@ -37,5 +37,12 @@ setup(
         'Jinja2==2.7.2',
         'influxdb==0.1.13',
         'pywinrm==0.0.3'
-    ]
+    ],
+    entry_points={
+        'nose.plugins.0.10': [
+            'testnameextractor = cosmo_tester.framework'
+            '.tests_names_extractor:TestsNamesExtractor',
+            ]
+    },
+
 )

@@ -49,7 +49,6 @@ SCHEDULER_INTERVAL = 30
 
 
 class TestSuite(object):
-
     def __init__(self, suite_name, suite_def, suite_work_dir, variables):
         self.suite_name = suite_name
         self.suite_def = suite_def
@@ -202,6 +201,7 @@ Handler configuration:
                 fetch_logs=False)
         else:
             import lxml.etree as et
+
             report_files = self.suite_reports_dir.files('*.xml')
             logger.info('Suite [{0}] reports: {1}'.format(
                 self.suite_name, [r.name for r in report_files]))
@@ -224,7 +224,6 @@ Handler configuration:
 
 
 class SuitesScheduler(object):
-
     def __init__(self,
                  test_suites,
                  handler_configurations,
@@ -407,7 +406,8 @@ def get_docker_image_id():
 
 def build_docker_image():
     docker.build(
-        ['-t', '{0}:{1}'.format(DOCKER_REPOSITORY, DOCKER_TAG), '.']).wait()
+        ['-t',
+         '{0}:{1}'.format(DOCKER_REPOSITORY, DOCKER_TAG), '.']).wait()
     docker_image_id = get_docker_image_id()
     if not docker_image_id:
         raise RuntimeError(
@@ -458,7 +458,7 @@ def test_start():
                                 scheduling_interval=SCHEDULER_INTERVAL,
                                 optimize=True,
                                 after_suite_callback=copy_xunit_report,
-                                suite_timeout=60*60*5)
+                                suite_timeout=60 * 60 * 5)
     scheduler.run()
     return scheduler
 
@@ -541,6 +541,7 @@ def main():
     cleanup()
     validate()
     test_run()
+
 
 if __name__ == '__main__':
     main()
