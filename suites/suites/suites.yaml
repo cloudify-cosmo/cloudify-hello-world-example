@@ -173,6 +173,10 @@ templates:
   - &aws_ec2_plugin_external
     repo: cloudify-aws-plugin
 
+  - &agent_external
+    repo: cloudify-agent
+    branch: '{{core_branch}}'
+
   #######################################################
 
   - &hp_openstack_properties
@@ -693,6 +697,11 @@ tests:
     tests:
       - system_tests/manager
 
+  agent_tests:
+    external: *agent_external
+    tests:
+      - system_tests/manager
+
 #####################################################################################
 
 test_suites:
@@ -790,6 +799,11 @@ test_suites:
     requires: [openstack, mirantis]
     tests:
       - cli_packager_centos
+
+  agent:
+    requires: [openstack, mirantis]
+    tests:
+      - agent_tests
 
   #####################################################################
 
