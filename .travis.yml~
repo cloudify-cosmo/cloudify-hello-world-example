@@ -15,4 +15,3 @@ script:
     - cfy init
     - cfy blueprints validate -p blueprint.yaml
     - cfy blueprints validate -p singlehost-blueprint.yaml
-    - cfy blueprints validate -p windows-blueprint.yaml

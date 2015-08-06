@@ -1,0 +1,137 @@
+#######
+# Cloudify Hello World blueprint.
+#
+# The blueprint describes an OpenStack vm created using Cloudify's OpenStack plugin
+# and simple web server started using Cloudify's script plugin.
+# In addition, an OpenStack floating ip and security group are created and associated with the created vm.
+#
+tosca_definitions_version: cloudify_dsl_1_1
+
+imports:
+  - http://www.getcloudify.org/spec/cloudify/3.3m4/types.yaml
+  - http://www.getcloudify.org/spec/openstack-plugin/1.3m4/plugin.yaml
+  - http://www.getcloudify.org/spec/diamond-plugin/1.3m4/plugin.yaml
+
+inputs:
+  webserver_port:
+    description: The HTTP web server port
+    default: 8080
+  image:
+    description: Openstack image name or id to use for the new server
+  flavor:
+    description: Openstack flavor name or id to use for the new server
+
+node_templates:
+  virtual_ip:
+    type: cloudify.openstack.nodes.FloatingIP
+  security_group:
+    type: cloudify.openstack.nodes.SecurityGroup
+    properties:
+      rules:
+        - remote_ip_prefix: 0.0.0.0/0
+          port: { get_input: webserver_port }
+        - remote_ip_prefix: 0.0.0.0/0
+          port: 5986
+        - remote_ip_prefix: 0.0.0.0/0
+          port: 5985
+        - remote_ip_prefix: 0.0.0.0/0
+          port: 8080
+
+  keypair:
+    type: cloudify.openstack.nodes.KeyPair
+    properties:
+        private_key_path: /tmp/windows-example.pem
+
+  vm:
+    type: cloudify.openstack.nodes.WindowsServer
+    properties:     
+      image: { get_input: image }
+      flavor: { get_input: flavor }
+      server:
+        name: windows-server-vm
+        userdata: |
+          #ps1_sysnative
+          winrm quickconfig -q
+          winrm set winrm/config/winrs '@{MaxMemoryPerShellMB="300"}'
+          winrm set winrm/config '@{MaxTimeoutms="1800000"}'
+          winrm set winrm/config/service '@{AllowUnencrypted="true"}'
+          winrm set winrm/config/service/auth '@{Basic="true"}'
+          &netsh advfirewall firewall add rule name="WinRM 5985" protocol=TCP dir=in localport=5985 action=allow
+          &netsh advfirewall firewall add rule name="WinRM 5986" protocol=TCP dir=in localport=5986 action=allow
+          &netsh advfirewall firewall add rule name="web-server-port" protocol=TCP dir=in localport=8080 action=allow
+
+          msiexec /i https://www.python.org/ftp/python/2.7.6/python-2.7.6.msi TARGETDIR=C:\Python27 ALLUSERS=1 /qn
+
+    relationships:
+      - type: cloudify.openstack.server_connected_to_keypair
+        target: keypair
+      - type: cloudify.openstack.server_connected_to_floating_ip
+        target: virtual_ip
+      - type: cloudify.openstack.server_connected_to_security_group
+        target: security_group
+    
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        start:
+          max_retries: 35
+      cloudify.interfaces.worker_installer:
+        install:
+          inputs:
+            cloudify_agent: &CLOUDIFY_AGENT
+              service:
+                successful_consecutive_status_queries_count: 10
+                status_transition_sleep_interval: 5
+                start_timeout: 240
+                stop_timeout: 240  
+              user: Admin
+              password: { get_attribute: [SELF, password] }     
+        configure:
+          inputs:
+            cloudify_agent: *CLOUDIFY_AGENT
+        start:
+          inputs:
+            cloudify_agent: *CLOUDIFY_AGENT
+        stop:
+          inputs:
+            cloudify_agent: *CLOUDIFY_AGENT
+        uninstall:
+          inputs:
+            cloudify_agent: *CLOUDIFY_AGENT
+        restart:
+          inputs:
+            cloudify_agent: *CLOUDIFY_AGENT
+      cloudify.interfaces.plugin_installer:
+        install:
+          inputs:
+            cloudify_agent: *CLOUDIFY_AGENT
+
+
+  http_web_server:
+    type: cloudify.nodes.WebServer
+    properties:
+      port: { get_input: webserver_port }
+    relationships:
+      - type: cloudify.relationships.contained_in
+        target: vm
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        configure:
+          implementation: scripts/configure.ps1
+          inputs:
+              process:
+                command_prefix: powershell
+        start: 
+          implementation: scripts/start.ps1
+          inputs:
+              process:
+                command_prefix: powershell
+        stop: 
+          implementation: scripts/stop.ps1
+          inputs:
+              process:
+                command_prefix: powershell
+outputs:
+  http_endpoint:
+    description: Web server external endpoint
+    value: { concat: ['http://', { get_attribute: [virtual_ip, floating_ip_address] }, 
+                      ':', { get_property: [http_web_server, port] }] }
