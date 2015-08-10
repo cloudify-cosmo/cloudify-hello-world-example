@@ -15,7 +15,6 @@
 
 
 import requests
-import nose.tools
 from neutronclient.common.exceptions import NeutronException
 from novaclient.exceptions import NotFound
 from retrying import retry
@@ -28,37 +27,7 @@ CLOUDIFY_HELLO_WORLD_EXAMPLE_URL = "https://github.com/cloudify-cosmo/" \
                                    "cloudify-hello-world-example.git"
 
 
-class HelloWorldBashTest(MonitoringTestCase):
-
-    def test_hello_world_on_ubuntu(self):
-        self._run(self.env.ubuntu_image_name, self.env.cloudify_agent_user)
-        # checking reinstallation scenario
-        self._run(self.env.ubuntu_image_name, self.env.cloudify_agent_user,
-                  is_existing_deployment=True)
-
-    # TODO: enable this test once the issue with validating agent plugins is
-    #       resolved - right now it'll fail because the VM creation is where
-    #       the execution should fail
-    @nose.tools.nottest
-    def test_hello_world_uninstall_after_failure(self):
-        try:
-            self._run(self.env.ubuntu_image_name,
-                      self.env.cloudify_agent_user,
-                      vm_security_group='gibberish')
-            self.fail('Install should have failed!')
-        except Exception as e:
-            # verifying the install failed where we expected it to fail.
-            # TODO: verify the actual error is really the expected one
-            floating_ip_id, neutron, nova, sg_id, _ = \
-                self._verify_deployment_installed(with_server=False)
-            self.logger.info("failed to install, as expected ({0})"
-                             .format(e))
-
-        self._uninstall_and_make_assertions(
-            floating_ip_id, neutron, nova, sg_id)
-
-    def test_hello_world_on_centos(self):
-        self._run(self.env.centos_image_name, self.env.centos_image_user)
+class AbstractHelloWorldTest(MonitoringTestCase):
 
     def assert_events(self):
         deployment_by_id = self.client.deployments.get(self.test_id)
@@ -71,17 +40,17 @@ class HelloWorldBashTest(MonitoringTestCase):
                            'Expected at least 1 event for execution id: {0}'
                            .format(execution_by_id.id))
 
-    def _run(self, image_name, user, is_existing_deployment=False):
+    def _run(self,
+             inputs=None,
+             blueprint_file='blueprint.yaml',
+             is_existing_deployment=False):
         if not is_existing_deployment:
             self.repo_dir = clone(CLOUDIFY_HELLO_WORLD_EXAMPLE_URL,
                                   self.workdir)
-            self.blueprint_yaml = self.repo_dir / 'blueprint.yaml'
+            self.blueprint_yaml = self.repo_dir / blueprint_file
             self.upload_deploy_and_execute_install(
                 fetch_state=False,
-                inputs=dict(
-                    agent_user=user,
-                    image=image_name,
-                    flavor=self.env.flavor_name))
+                inputs=inputs)
         else:
             self.execute_install(deployment_id=self.test_id, fetch_state=False)
 
@@ -90,36 +59,54 @@ class HelloWorldBashTest(MonitoringTestCase):
         # This is the only test that needs to make this assertion.
         self.assert_events()
 
-        floating_ip_id, neutron, nova, sg_id, server_id =\
-            self._verify_deployment_installed()
+        outputs = self.client.deployments.outputs.get(self.test_id)['outputs']
+        self.logger.info('Deployment outputs: {0}'.format(outputs))
+        verify_webserver_running(outputs['http_endpoint'])
+
+        context = self._do_post_install_assertions()
+
         self.assert_deployment_monitoring_data_exists()
-        floating_ip = neutron.show_floatingip(floating_ip_id)
-        ip = floating_ip['floatingip']['floating_ip_address']
-        web_server_node = get_web_server_node(self.client, self.test_id)
-        port = web_server_node.properties['port']
-        expected_output = \
-            {u'http_endpoint': u'http://{0}:{1}'.format(ip, port)}
-        self.assert_outputs(expected_output)
-        self._uninstall_and_make_assertions(floating_ip_id, neutron, nova,
-                                            sg_id, server_id)
 
-    def _verify_deployment_installed(self, with_server=True):
+        self.execute_uninstall()
+
+        self._do_post_uninstall_assertions(context)
+
+    def _do_post_install_assertions(self):
+        pass
+
+    def _do_post_uninstall_assertions(self, context):
+        pass
+
+    def _instances(self):
+        return get_instances(client=self.client, deployment_id=self.test_id)
+
+
+class HelloWorldBashTest(AbstractHelloWorldTest):
+
+    def test_hello_world_on_ubuntu(self):
+        inputs = {
+            'agent_user': self.env.cloudify_agent_user,
+            'image': self.env.ubuntu_image_name,
+            'flavor': self.env.flavor_name
+        }
+        self._run(inputs=inputs)
+        # checking reinstallation scenario
+        self._run(inputs=inputs, is_existing_deployment=True)
+
+    def test_hello_world_on_centos(self):
+        inputs = {
+            'agent_user': self.env.centos_image_user,
+            'image': self.env.centos_image_name,
+            'flavor': self.env.flavor_name
+        }
+        self._run(inputs=inputs)
+
+    def _do_post_install_assertions(self):
         (floatingip_node, security_group_node, server_node) = self._instances()
-
         nova, neutron, _ = self.env.handler.openstack_clients()
-
-        server_id = None
-        if with_server:
-            verify_webserver_running(
-                web_server_node=get_web_server_node(
-                    self.client, self.test_id),
-                floatingip_node_instance=floatingip_node)
-
-            server_id = server_node.runtime_properties['external_id']
-            nova_server = nova.servers.get(server_id)
-            self.logger.info("Agent server : {0}".format(nova_server))
-        else:
-            self.assertNotIn('external_id', server_node.runtime_properties)
+        server_id = server_node.runtime_properties['external_id']
+        nova_server = nova.servers.get(server_id)
+        self.logger.info("Agent server : {0}".format(nova_server))
 
         floating_ip_id = floatingip_node.runtime_properties['external_id']
         neutron_floating_ip = neutron.show_floatingip(floating_ip_id)
@@ -127,22 +114,26 @@ class HelloWorldBashTest(MonitoringTestCase):
         sg_id = security_group_node.runtime_properties['external_id']
         neutron_sg = neutron.show_security_group(sg_id)
         self.logger.info("Agent security group : {0}".format(neutron_sg))
-        return floating_ip_id, neutron, nova, sg_id, server_id
 
-    def _uninstall_and_make_assertions(self, floating_ip_id, neutron, nova,
-                                       sg_id, server_id=None):
-        self.execute_uninstall()
-        self._assert_components_cleared(floating_ip_id, neutron, nova,
-                                        sg_id, server_id)
+        return {
+            'floatingip_id': floating_ip_id,
+            'security_group_id': sg_id,
+            'server_id': server_id
+        }
+
+    def _do_post_uninstall_assertions(self, context):
         self._assert_nodes_deleted()
 
-    def _assert_components_cleared(self, floating_ip_id, neutron, nova,
-                                   sg_id, server_id=None):
+        nova, neutron, _ = self.env.handler.openstack_clients()
+        server_id = context.get('server_id')
         if server_id:
             self.assertRaises(NotFound, nova.servers.get, server_id)
-        self.assertRaises(NeutronException, neutron.show_security_group, sg_id)
-        self.assertRaises(NeutronException, neutron.show_floatingip,
-                          floating_ip_id)
+        self.assertRaises(NeutronException,
+                          neutron.show_security_group,
+                          context['security_group_id'])
+        self.assertRaises(NeutronException,
+                          neutron.show_floatingip,
+                          context['floatingip_id'])
 
     def _assert_nodes_deleted(self):
         (floatingip_node, security_group_node, server_node) = self._instances()
@@ -155,20 +146,13 @@ class HelloWorldBashTest(MonitoringTestCase):
         # CFY-2670 - diamond plugin leaves one runtime property at this time
         self.assertEquals(1, len(server_node.runtime_properties))
 
-    def _instances(self):
-        return get_instances(client=self.client, deployment_id=self.test_id)
-
 
 @retry(stop_max_attempt_number=10, wait_fixed=5000)
-def verify_webserver_running(web_server_node, floatingip_node_instance):
+def verify_webserver_running(http_endpoint):
     """
     This method is also used by two_deployments_test!
     """
-    server_port = web_server_node.properties['port']
-    server_ip = \
-        floatingip_node_instance.runtime_properties['floating_ip_address']
-    server_response = requests.get('http://{0}:{1}'.format(server_ip,
-                                                           server_port))
+    server_response = requests.get(http_endpoint, timeout=15)
     if server_response.status_code != 200:
         raise AssertionError('Unexpected status code: {}'
                              .format(server_response.status_code))
@@ -191,11 +175,3 @@ def get_instances(client, deployment_id):
         if instance.node_id == 'vm':
             server_node = instance
     return floatingip_node, security_group_node, server_node
-
-
-def get_web_server_node(client, deployment_id):
-    """
-    This method is also used by two_deployments_test!
-    """
-    return client.nodes.get(deployment_id=deployment_id,
-                            node_id='http_web_server')

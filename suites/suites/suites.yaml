@@ -728,10 +728,14 @@ test_suites:
       - openstack_plugin
       - openstack_blueprints_persistence_recovery
 
-  openstack_watchdog_simple_manager:
+  openstack_watchdog:
     requires: [openstack, hp]
     tests:
       - watchdog_tests
+
+  openstack_simple_manager:
+    requires: [openstack, hp]
+    tests:
       - simple_manager_blueprint
 
   #####################################################################

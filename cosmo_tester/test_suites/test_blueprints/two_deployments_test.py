@@ -62,14 +62,10 @@ class TwoDeploymentsTest(TestCase):
                     flavor='',
                 ))
 
-            floatingip_node, _, _ = bash.get_instances(
-                client=self.client,
-                deployment_id=deployment_id)
-
-            bash.verify_webserver_running(
-                web_server_node=bash.get_web_server_node(
-                    self.client, deployment_id),
-                floatingip_node_instance=floatingip_node)
+            outputs = self.client.deployments.outputs.get(
+                deployment_id)['outputs']
+            self.logger.info('Deployment outputs: {0}'.format(outputs))
+            bash.verify_webserver_running(outputs['http_endpoint'])
 
             self.cfy.execute_uninstall(deployment_id=deployment_id)
         except Exception, e:
