@@ -1,5 +1,5 @@
 ########
-# Copyright (c) 2014 GigaSpaces Technologies Ltd. All rights reserved
+# Copyright (c) 2015 GigaSpaces Technologies Ltd. All rights reserved
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,21 +18,19 @@ import os
 from cloudify.workflows import local
 from cloudify_cli import constants as cli_constants
 
-from cosmo_tester.framework.util import (create_rest_client, YamlPatcher,
-                                         get_yaml_as_dict)
-from cosmo_tester.test_suites.test_blueprints.nodecellar_test\
-    import NodecellarAppTest
+from cosmo_tester.framework.util import create_rest_client
+from cosmo_tester.test_suites.test_blueprints.hello_world_bash_test \
+    import AbstractHelloWorldTest
 from cosmo_tester.framework.git_helper import clone
-
 
 MANAGER_BLUEPRINTS_REPO_URL = 'https://github.com/cloudify-cosmo/' \
                               'cloudify-manager-blueprints.git'
 
 
-class NodecellarSingleHostTest(NodecellarAppTest):
+class HelloWorldSingleHostTest(AbstractHelloWorldTest):
 
     def setUp(self):
-        super(NodecellarSingleHostTest, self).setUp()
+        super(HelloWorldSingleHostTest, self).setUp()
         blueprint_path = self.copy_blueprint('openstack-start-vm')
         self.blueprint_yaml = blueprint_path / 'blueprint.yaml'
         self.prefix = 'simple-host-{0}'.format(self.test_id)
@@ -71,40 +69,19 @@ class NodecellarSingleHostTest(NodecellarAppTest):
 
         self.addCleanup(self.cleanup)
 
-    def test_nodecellar_single_host(self):
+    def test_hello_world_singlehost(self):
         self.bootstrap_simple_manager_blueprint()
-        self._test_nodecellar_impl('singlehost-blueprint.yaml')
+        inputs = {
+            'server_ip': self.public_ip_address,
+            'agent_user': 'ubuntu',
+            'agent_private_key_path': '~/.ssh/agent_key.pem'
+        }
+        self._run(blueprint_file='singlehost-blueprint.yaml', inputs=inputs)
 
-    def _update_manager_blueprint(self):
-        self._update_manager_blueprints_overrides()
-
-        with YamlPatcher(self.test_manager_blueprint_path) as patch:
-            for prop_path, new_value in \
-                    self.manager_blueprint_overrides.items():
-                patch.set_value(prop_path, new_value)
-
-    def _update_manager_blueprints_overrides(self):
-        manager_blueprint_dict = \
-            get_yaml_as_dict(self.env._manager_blueprint_path)
-
-        agents_prop_in_dict = manager_blueprint_dict['node_templates'][
-            'manager']['properties']['cloudify_packages']['agents']
-        agents_prop_string = \
-            'node_templates.manager.properties.cloudify_packages.agents'
-
-        docker_prop_in_dict = manager_blueprint_dict['node_templates'][
-            'manager']['properties']['cloudify_packages']['docker']
-        docker_prop_string = \
-            'node_templates.manager.properties.cloudify_packages.docker'
-
-        self.manager_blueprint_overrides['{0}.ubuntu_agent_url'.format(
-            agents_prop_string)] = agents_prop_in_dict['ubuntu_agent_url']
-        self.manager_blueprint_overrides['{0}.centos_agent_url'.format(
-            agents_prop_string)] = agents_prop_in_dict['centos_agent_url']
-        self.manager_blueprint_overrides['{0}.windows_agent_url'.format(
-            agents_prop_string)] = agents_prop_in_dict['windows_agent_url']
-        self.manager_blueprint_overrides['{0}.docker_url'.format(
-            docker_prop_string)] = docker_prop_in_dict['docker_url']
+    def _do_post_uninstall_assertions(self, context):
+        instances = self.client.node_instances.list(self.test_id)
+        for x in instances:
+            self.assertEqual('deleted', x.state)
 
     def _bootstrap(self):
         self.cfy.bootstrap(blueprint_path=self.test_manager_blueprint_path,
@@ -121,14 +98,13 @@ class NodecellarSingleHostTest(NodecellarAppTest):
 
         # using the updated handler configuration blueprint to update the
         # package urls in the simple manager blueprint
-        self._update_manager_blueprint()
+        # self._update_manager_blueprint()
 
         self.bootstrap_inputs = {
             'public_ip': self.public_ip_address,
             'private_ip': self.private_ip_address,
             'ssh_user': 'ubuntu',
             'ssh_key_filename': self.inputs['key_pair_path'],
-
             'agents_user': 'ubuntu',
             'resources_prefix': ''
         }
@@ -142,9 +118,8 @@ class NodecellarSingleHostTest(NodecellarAppTest):
 
     def get_inputs(self):
         return {
-            'host_ip': self.private_ip_address,
+            'server_ip': self.private_ip_address,
             'agent_user': 'ubuntu',
-            # default agent key location
             'agent_private_key_path': '~/.ssh/agent_key.pem'
         }
 
@@ -160,14 +135,3 @@ class NodecellarSingleHostTest(NodecellarAppTest):
         self.local_env.execute('uninstall',
                                task_retries=40,
                                task_retry_interval=30)
-
-    def get_public_ip(self, nodes_state):
-        return self.public_ip_address
-
-    @property
-    def expected_nodes_count(self):
-        return 4
-
-    @property
-    def host_expected_runtime_properties(self):
-        return []
