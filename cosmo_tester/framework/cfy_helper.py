@@ -21,8 +21,9 @@ import json
 import sh
 from path import path
 
-from cloudify_cli.utils import load_cloudify_working_dir_settings
-from cosmo_tester.framework.util import sh_bake
+from cloudify_cli.utils import (load_cloudify_working_dir_settings,
+                                get_configuration_path)
+from cosmo_tester.framework.util import sh_bake, YamlPatcher
 
 
 cfy = sh_bake(sh.cfy)
@@ -56,9 +57,15 @@ class CfyHelper(object):
                   reset_config=False,
                   task_retries=5,
                   task_retry_interval=90,
+                  subgraph_retries=2,
                   verbose=False):
         with self.workdir:
             cfy.init(reset_config=reset_config).wait()
+
+            with YamlPatcher(get_configuration_path()) as patch:
+                prop_path = ('local_provider_context.'
+                             'cloudify.workflows.subgraph_retries')
+                patch.set_value(prop_path, subgraph_retries)
 
             if not inputs_file:
                 inputs_file = self._get_inputs_in_temp_file({}, 'manager')
