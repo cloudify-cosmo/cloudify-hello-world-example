@@ -103,6 +103,7 @@ class TestSuite(object):
             'suite_runner.py',
             'suite_runner.sh',
             'requirements.txt',
+            'wheel-requirements.txt',
             'suites',
             'helpers',
             'configurations']
