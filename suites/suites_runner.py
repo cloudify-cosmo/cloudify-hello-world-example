@@ -146,7 +146,8 @@ class TestSuite(object):
         logger.info('Getting docker logs for container: {0}'.format(
             self.suite_name))
         if fetch_logs:
-            logs = xunit.xml_safe(sh.docker.logs(self.suite_name).strip())
+            logs = xunit.xml_safe(sh.docker.logs(
+                self.suite_name, _err_to_out=True).strip())
         else:
             logs = ''
         if self._handler_configuration_def:
@@ -187,6 +188,8 @@ Handler configuration:
         report_file.write_text(xunit_file_content, encoding='utf-8')
 
     def copy_xunit_reports(self):
+        report_files = self.suite_reports_dir.files('*.xml')
+
         if self.timed_out:
             self._generate_custom_xunit_report(
                 'Suite {0} timed out after {1} seconds.'.format(
@@ -200,10 +203,15 @@ Handler configuration:
                 error_type='TestSuiteSkipped',
                 error_message='Test suite skipped',
                 fetch_logs=False)
+        elif not report_files:
+            self._generate_custom_xunit_report(
+                'Suite {0} has errored before tests ran.'.format(
+                    self.descriptor),
+                error_type='TestSuiteSkipped',
+                error_message='Test suite skipped')
         else:
             import lxml.etree as et
 
-            report_files = self.suite_reports_dir.files('*.xml')
             logger.info('Suite [{0}] reports: {1}'.format(
                 self.suite_name, [r.name for r in report_files]))
 
