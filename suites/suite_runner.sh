@@ -13,6 +13,7 @@ create_activate_and_cd_virtualenv()
 	virtualenv env
 	source env/bin/activate
 	pip install -r ${BASE_HOST_DIR}/requirements.txt
+	pip install --no-index --find-links=/wheels -r ${BASE_HOST_DIR}/wheel-requirements.txt
 	cd env
 }
 
