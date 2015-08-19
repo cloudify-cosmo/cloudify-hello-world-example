@@ -574,7 +574,7 @@ handler_configurations:
     inputs_override:
       <<: *datacentred_openstack_credentials_inputs
       <<: *datacentred_openstack_inputs
-      keystone_tenant_name: gigaspaces_system-tests-1
+      keystone_tenant_name: gigaspaces_system-test-1
 
   datacentred_openstack_system_tests2:
     <<: *datacentred_openstack_handler_configuration
@@ -583,7 +583,7 @@ handler_configurations:
     inputs_override:
       <<: *datacentred_openstack_credentials_inputs
       <<: *datacentred_openstack_inputs
-      keystone_tenant_name: gigaspaces_system-tests-2
+      keystone_tenant_name: gigaspaces_system-test-2
 
   datacentred_openstack_system_tests3:
     <<: *datacentred_openstack_handler_configuration
@@ -592,7 +592,7 @@ handler_configurations:
     inputs_override:
       <<: *datacentred_openstack_credentials_inputs
       <<: *datacentred_openstack_inputs
-      keystone_tenant_name: gigaspaces_system-tests-3
+      keystone_tenant_name: gigaspaces_system-test-3
 
   datacentred_openstack_system_tests4:
     <<: *datacentred_openstack_handler_configuration
@@ -601,7 +601,7 @@ handler_configurations:
     inputs_override:
       <<: *datacentred_openstack_credentials_inputs
       <<: *datacentred_openstack_inputs
-      keystone_tenant_name: gigaspaces_system-tests-4
+      keystone_tenant_name: gigaspaces_system-test-4
 
   ###############################################################################
 
