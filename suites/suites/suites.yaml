@@ -30,6 +30,14 @@ variables:
   mirantis_openstack_centos_7_image_name: centos_7
   mirantis_openstack_windows_image_name: windows_2012_r2
 
+  datacentred_openstack_ubuntu_precise_image_name: Ubuntu 12.04
+  datacentred_openstack_ubuntu_trusty_image_name: Ubuntu 14.04
+  datacentred_openstack_ubuntu_precise: 2f91391d-ff21-4410-a063-d4e947845980
+  datacentred_openstack_ubuntu_trusty: 6c3047c6-17b1-4aaf-a657-9229bb481e50
+  datacentred_openstack_centos_6_5_image_name: CentOS 6.6 dccloud
+  datacentred_openstack_centos_7_image_name: CentOS 7.0
+  datacentred_openstack_windows_image_name: Windows Server 2012 R2 Standard Eval
+
   aws_ec2_eu_central_1_ami_ubuntu_trusty_image_id: ami-00dae61d
   aws_ec2_medium_instance_type: m3.medium
   aws_ec2_micro_instance_type: t2.micro
@@ -67,6 +75,9 @@ variables:
 
   system_tests_mirantis_os_username: _
   system_tests_mirantis_os_password: _
+
+  system_tests_datacentred_os_username: _
+  system_tests_datacentred_os_password: _
 
   system_tests_aws_access_key_id: _
   system_tests_aws_secret_access_key: _
@@ -120,6 +131,11 @@ templates:
   - &openstack_manager_blueprint_override
     <<: *manager_blueprint_override
     <<: *openstack_manager_blueprint_sg_override
+
+  - &datacentred_openstack_manager_blueprint_override
+    <<: *openstack_manager_blueprint_override
+    node_templates.management_subnet.properties.subnet:
+      dns_nameservers: [8.8.4.4, 8.8.8.8]
 
   - &aws_ec2_manager_blueprint_override
     <<: *manager_blueprint_override
@@ -206,6 +222,10 @@ templates:
     keystone_username: '{{system_tests_mirantis_os_username}}'
     keystone_password: '{{system_tests_mirantis_os_password}}'
 
+  - &datacentred_openstack_credentials_inputs
+    keystone_username: '{{system_tests_datacentred_os_username}}'
+    keystone_password: '{{system_tests_datacentred_os_password}}'
+
   #######################################################
 
   - &hp_openstack_region_a_inputs
@@ -221,6 +241,9 @@ templates:
 
   - &mirantis_openstack_inputs
     image_id: '{{mirantis_openstack_ubuntu_trusty}}'
+
+  - &datacentred_openstack_inputs
+    image_id: '{{datacentred_openstack_ubuntu_trusty}}'
 
   #######################################################
 
@@ -247,6 +270,13 @@ templates:
     manager_blueprint: openstack/openstack-manager-blueprint.yaml
     manager_blueprint_override: *openstack_manager_blueprint_override
     properties: mirantis_openstack_properties
+
+  - &datacentred_openstack_handler_configuration
+    <<: *openstack_handler_configuration
+    inputs: inputs-datacentred-openstack.yaml
+    manager_blueprint: openstack/openstack-manager-blueprint.yaml
+    manager_blueprint_override: *datacentred_openstack_manager_blueprint_override
+    properties: datacentred_openstack_properties
 
 #####################################################################################
 
@@ -289,6 +319,20 @@ handler_properties:
     flavor_name: m1.small
     small_flavor_id: 2
     medium_flavor_id: 3
+
+  datacentred_openstack_properties:
+    ubuntu_image_name: '{{datacentred_openstack_ubuntu_precise_image_name}}'
+    ubuntu_trusty_image_name: '{{datacentred_openstack_ubuntu_trusty_image_name}}'
+    ubuntu_image_id: '{{datacentred_openstack_ubuntu_precise}}'
+    ubuntu_trusty_image_id: '{{datacentred_openstack_ubuntu_trusty}}'
+    centos_image_name: '{{datacentred_openstack_centos_6_5_image_name}}'
+    centos_image_user: root
+    centos_7_image_name: '{{datacentred_openstack_centos_7_image_name}}'
+    centos_7_image_user: centos
+    windows_image_name: '{{datacentred_openstack_windows_image_name}}'
+    flavor_name: dc1.2x2.40
+    small_flavor_id: c4b193d2-f331-4250-9b15-bbfde97c462a
+    medium_flavor_id: 8f4b7ae1-b8c2-431f-bb0c-362a5ece0381
 
   pclab47_devstack_nova_net:
     ubuntu_image_name: ubuntu
@@ -520,6 +564,44 @@ handler_configurations:
       <<: *mirantis_openstack_credentials_inputs
       <<: *mirantis_openstack_inputs
       keystone_tenant_name: system-tests/system-test-4
+
+  ###############################################################################
+
+  datacentred_openstack_system_tests1:
+    <<: *datacentred_openstack_handler_configuration
+    env: datacentred_openstack_1
+    tags: [openstack, datacentred]
+    inputs_override:
+      <<: *datacentred_openstack_credentials_inputs
+      <<: *datacentred_openstack_inputs
+      keystone_tenant_name: gigaspaces_system-tests-1
+
+  datacentred_openstack_system_tests2:
+    <<: *datacentred_openstack_handler_configuration
+    env: datacentred_openstack_2
+    tags: [openstack, datacentred]
+    inputs_override:
+      <<: *datacentred_openstack_credentials_inputs
+      <<: *datacentred_openstack_inputs
+      keystone_tenant_name: gigaspaces_system-tests-2
+
+  datacentred_openstack_system_tests3:
+    <<: *datacentred_openstack_handler_configuration
+    env: datacentred_openstack_3
+    tags: [openstack, datacentred]
+    inputs_override:
+      <<: *datacentred_openstack_credentials_inputs
+      <<: *datacentred_openstack_inputs
+      keystone_tenant_name: gigaspaces_system-tests-3
+
+  datacentred_openstack_system_tests4:
+    <<: *datacentred_openstack_handler_configuration
+    env: datacentred_openstack_4
+    tags: [openstack, datacentred]
+    inputs_override:
+      <<: *datacentred_openstack_credentials_inputs
+      <<: *datacentred_openstack_inputs
+      keystone_tenant_name: gigaspaces_system-tests-4
 
   ###############################################################################
 
@@ -766,7 +848,7 @@ test_suites:
   #####################################################################
 
   openstack_chef_puppet:
-    requires: [openstack, mirantis]
+    requires: [openstack, datacentred]
     tests:
       - openstack_blueprints_chef_puppet
 
@@ -776,22 +858,22 @@ test_suites:
       - openstack_blueprints_windows
 
   rest_plugins:
-    requires: [openstack, mirantis]
+    requires: [openstack, datacentred]
     tests:
       - openstack_rest_plugins
 
   diamond_snmp:
-    requires: [openstack, mirantis]
+    requires: [openstack, datacentred]
     tests:
       - diamond_snmp_extension
 
   openstack_security:
-    requires: [openstack, mirantis]
+    requires: [openstack, datacentred]
     tests:
       - openstack_security
 
   docker_plugin:
-    requires: [openstack, mirantis]
+    requires: [openstack, datacentred]
     tests:
       - docker_plugin
 
@@ -801,12 +883,12 @@ test_suites:
       - cli_packager_windows
 
   openstack_centos_cli_package:
-    requires: [openstack, mirantis]
+    requires: [openstack, datacentred]
     tests:
       - cli_packager_centos
 
   agent:
-    requires: [openstack, mirantis]
+    requires: [openstack, datacentred]
     tests:
       - agent_tests
 
