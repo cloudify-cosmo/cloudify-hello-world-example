@@ -817,7 +817,7 @@ test_suites:
       - watchdog_tests
 
   openstack_simple_manager:
-    requires: [openstack, hp]
+    requires: [openstack, datacentred]
     tests:
       - simple_manager_blueprint
 
