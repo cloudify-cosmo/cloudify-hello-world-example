@@ -15,6 +15,8 @@
 
 import os
 
+from fabric import api as fabric_api
+
 from cloudify.workflows import local
 from cloudify_cli import constants as cli_constants
 
@@ -44,7 +46,7 @@ class HelloWorldSingleHostTest(AbstractHelloWorldTest):
             'os_tenant_name': self.env.keystone_tenant_name,
             'os_region': self.env.region,
             'os_auth_url': self.env.keystone_url,
-            'image_id': self.env.ubuntu_trusty_image_id,
+            'image_id': self.env.centos_7_image_name,
             'flavor': self.env.medium_flavor_id,
             'key_pair_path': '{0}/{1}-keypair.pem'.format(self.workdir,
                                                           self.prefix)
@@ -70,11 +72,13 @@ class HelloWorldSingleHostTest(AbstractHelloWorldTest):
         self.addCleanup(self.cleanup)
 
     def test_hello_world_singlehost(self):
-        self.bootstrap_simple_manager_blueprint()
+        remote_manager_key_path = '/home/{0}/manager_key.pem'.format(
+            self.env.centos_7_image_user)
+        self.bootstrap_simple_manager_blueprint(remote_manager_key_path)
         inputs = {
             'server_ip': self.public_ip_address,
-            'agent_user': 'ubuntu',
-            'agent_private_key_path': '~/.ssh/agent_key.pem'
+            'agent_user': self.env.centos_7_image_user,
+            'agent_private_key_path': remote_manager_key_path
         }
         self._run(blueprint_file='singlehost-blueprint.yaml', inputs=inputs)
 
@@ -89,12 +93,12 @@ class HelloWorldSingleHostTest(AbstractHelloWorldTest):
                            task_retries=5)
         self.addCleanup(self.cfy.teardown)
 
-    def bootstrap_simple_manager_blueprint(self):
+    def bootstrap_simple_manager_blueprint(self, remote_manager_key_path):
         self.manager_blueprints_repo_dir = clone(MANAGER_BLUEPRINTS_REPO_URL,
                                                  self.workdir)
         self.test_manager_blueprint_path = \
             os.path.join(self.manager_blueprints_repo_dir,
-                         'simple', 'simple-manager-blueprint.yaml')
+                         'new', 'simple-manager-blueprint.yaml')
 
         # using the updated handler configuration blueprint to update the
         # package urls in the simple manager blueprint
@@ -103,9 +107,9 @@ class HelloWorldSingleHostTest(AbstractHelloWorldTest):
         self.bootstrap_inputs = {
             'public_ip': self.public_ip_address,
             'private_ip': self.private_ip_address,
-            'ssh_user': 'ubuntu',
+            'ssh_user': self.env.centos_7_image_user,
             'ssh_key_filename': self.inputs['key_pair_path'],
-            'agents_user': 'ubuntu',
+            'agents_user': self.env.centos_7_image_user,
             'resources_prefix': ''
         }
 
@@ -116,12 +120,12 @@ class HelloWorldSingleHostTest(AbstractHelloWorldTest):
         self._bootstrap()
         self._running_env_setup(self.public_ip_address)
 
-    def get_inputs(self):
-        return {
-            'server_ip': self.private_ip_address,
-            'agent_user': 'ubuntu',
-            'agent_private_key_path': '~/.ssh/agent_key.pem'
-        }
+        self.logger.info('Uploading key file to manager...')
+        with fabric_api.settings(host_string=self.public_ip_address,
+                                 user=self.env.centos_7_image_user,
+                                 key_filename=self.inputs['key_pair_path']):
+            fabric_api.put(self.inputs['key_pair_path'],
+                           remote_manager_key_path)
 
     def _running_env_setup(self, management_ip):
         self.env.management_ip = management_ip
