@@ -1,0 +1,26 @@
+keystone_username: ''
+keystone_password: ''
+keystone_tenant_name: ''
+region: ''
+image_id: ''
+keystone_url: https://compute.datacentred.io:5000/v2.0
+manager_public_key_name: shared-systemt-tests
+agent_public_key_name: shared-systemt-tests
+flavor_id: 8f4b7ae1-b8c2-431f-bb0c-362a5ece0381
+external_network_name: external
+
+use_existing_manager_keypair: true
+use_existing_agent_keypair: true
+manager_server_name: systemt-cloudify-manager
+manager_server_user: ubuntu
+manager_private_key_path: ~/.ssh/shared-systemt-tests-key.pem
+agent_private_key_path: ~/.ssh/shared-systemt-tests-key.pem
+agents_user: ubuntu
+management_network_name: systemt-cloudify-management-network
+management_subnet_name: systemt-cloudify-management-network-subnet
+management_router: systemt-cloudify-management-router
+manager_security_group_name: systemt-cloudify-sg-manager
+agents_security_group_name: systemt-cloudify-sg-agents
+manager_port_name: systemt-cloudify-manager-port
+manager_volume_name: systemt-cloudify-manager-volume
+resources_prefix: ''
