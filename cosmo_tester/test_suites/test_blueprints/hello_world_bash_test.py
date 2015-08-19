@@ -57,18 +57,25 @@ class AbstractHelloWorldTest(MonitoringTestCase):
         # We assert for events to test events are actually
         # sent in a real world environment.
         # This is the only test that needs to make this assertion.
+        self.logger.info('Asserting events...')
         self.assert_events()
 
         outputs = self.client.deployments.outputs.get(self.test_id)['outputs']
         self.logger.info('Deployment outputs: {0}'.format(outputs))
+        self.logger.info('Verifying web server is running on: {0}'.format(
+            outputs['http_endpoint']))
         verify_webserver_running(outputs['http_endpoint'])
 
+        self.logger.info('Performing post install assertions...')
         context = self._do_post_install_assertions()
 
+        self.logger.info('Asserting deployment monitoring data exists...')
         self.assert_deployment_monitoring_data_exists()
 
+        self.logger.info('Uninstalling deployment...')
         self.execute_uninstall()
 
+        self.logger.info('Performing post uninstall assertions...')
         self._do_post_uninstall_assertions(context)
 
     def _do_post_install_assertions(self):
