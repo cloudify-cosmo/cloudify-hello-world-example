@@ -101,7 +101,7 @@ templates:
 #    node_templates.manager.properties.cloudify_packages.agents.ubuntu_agent_url: '{{ubuntu_package_agent_url}}'
 #    node_templates.manager.properties.cloudify_packages.agents.centos_agent_url: '{{centos_package_agent_url}}'
 #    node_templates.manager.properties.cloudify_packages.agents.windows_agent_url: '{{windows_package_agent_url}}'
-    node_templates.manager.properties.cloudify_packages.docker.docker_url: '{{docker_image_url}}'
+#    node_templates.manager.properties.cloudify_packages.docker.docker_url: '{{docker_image_url}}'
     node_templates.manager.properties.cloudify.workflows.task_retries: 20
     node_templates.manager.properties.cloudify.workflows.subgraph_retries: 2
 
