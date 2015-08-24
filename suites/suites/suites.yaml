@@ -852,7 +852,7 @@ test_suites:
       - openstack_blueprints_chef_puppet
 
   openstack_windows:
-    requires: [openstack, lab]
+    requires: [openstack, datacentred]
     tests:
       - openstack_blueprints_windows
 
@@ -877,7 +877,7 @@ test_suites:
       - docker_plugin
 
   openstack_windows_cli_package:
-    requires: [openstack, lab]
+    requires: [openstack, datacentred]
     tests:
       - cli_packager_windows
 
