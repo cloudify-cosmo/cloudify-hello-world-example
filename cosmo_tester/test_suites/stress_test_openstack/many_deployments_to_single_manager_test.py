@@ -37,7 +37,7 @@ class ManyDeploymentsTest(MonitoringTestCase):
         while len([execution for execution in self.client.executions.list(
                 deployment_id=deployment_id)
                 if execution["status"] not in Execution.END_STATES]) > 0:
-                        time.sleep(1)
+                    time.sleep(1)
         return
 
     def many_deployments_stress_test(self):
@@ -103,11 +103,14 @@ class ManyDeploymentsTest(MonitoringTestCase):
             _include=["deploy_number_of_instances",
                       "deployment_id"])))
 
-    def _end_test(self, report):
+    def _end_test(self, report, number_of_deployments):
         self.logger.info(json.dumps(report, indent=2))
+        self.assertGreater(number_of_deployments, 60)
         return report
 
     def _run(self):
+        self.number_of_active_nodes = \
+            self.get_number_of_total_active_nodes()
         number_of_deployments = 1
         self.init_fabric()
         blueprint_path = self.copy_blueprint('mocks')
@@ -122,6 +125,7 @@ class ManyDeploymentsTest(MonitoringTestCase):
                                prev_manager_memory_available,
                            "manager_memory_total":
                                manager_memory_total,
+                           "nodes_active": self.number_of_active_nodes,
                            "manager_cpu_usage":
                                self.get_manager_cpu_usage(),
                            "manager_disk space_available":
@@ -157,7 +161,7 @@ class ManyDeploymentsTest(MonitoringTestCase):
                 manager_disk_space_available = \
                     self.get_manager_disk_available()
                 manager_memory_available = self.get_manager_memory_available()
-                number_of_active_nodes = \
+                self.number_of_active_nodes = \
                     self.get_number_of_total_active_nodes()
                 number_of_my_active_nodes = \
                     self.get_number_of_active_nodes_per_deployment(
@@ -165,7 +169,7 @@ class ManyDeploymentsTest(MonitoringTestCase):
                 deployment_dict = {"deployment_number": number_of_deployments,
                                    "number_of_my_active_nodes":
                                        number_of_my_active_nodes,
-                                   "nodes_active": number_of_active_nodes,
+                                   "nodes_active": self.number_of_active_nodes,
                                    "time_to_create_deployment": limit_dpoints(
                                        end_create_deployment_time -
                                        start_time),
@@ -201,5 +205,5 @@ class ManyDeploymentsTest(MonitoringTestCase):
                     deployment_id=self.test_id+str(i))
             self._end_test(deployments_dict)
         except Exception as e:
-            print e
-            self._end_test(deployments_dict)
+            self.logger.info(e)
+            self._end_test(deployments_dict, self.number_of_active_nodes)
