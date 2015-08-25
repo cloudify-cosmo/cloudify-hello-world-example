@@ -16,8 +16,6 @@
 import os
 from path import path
 
-from fabric.api import sudo
-from fabric.api import settings
 from cloudify_rest_client import CloudifyClient
 
 from cosmo_tester.framework.testenv import TestCase
@@ -38,7 +36,7 @@ class BaseManagerRecoveryTest(TestCase):
         self.wait_for_stop_dep_env_execution_to_end(self.deployment_id)
 
         # this will verify that all the data is actually persisted.
-        before, after = self._kill_and_recover_manager()
+        before, after = self._recover_manager()
         self.assertEqual(before, after)
 
         # make sure we can still execute operation on agents.
@@ -93,29 +91,14 @@ class BaseManagerRecoveryTest(TestCase):
             deployment_id=self.deployment_id,
             blueprint_id=blueprint_id
         )
-        self.fabric_env = self._setup_fabric_env()
 
-    def _setup_fabric_env(self):
-        return {
-            'host_string': self.cfy.get_management_ip(),
-            'port': 22,
-            'user': self.env.management_user_name,
-            'key_filename': util.get_actual_keypath(
-                self.env,
-                self.env.management_key_path
-            ),
-            'connection_attempts': 5
-        }
+    def _recover_manager(self):
 
-    def _kill_and_recover_manager(self):
-
-        def _kill_and_recover():
-            with settings(**self.fabric_env):
-                sudo('docker kill cfy')
+        def recover():
             self.cfy.recover(task_retries=10)
 
         return self._make_operation_with_before_after_states(
-            _kill_and_recover,
+            recover,
             fetch_state=True)
 
     def bootstrap(self):
