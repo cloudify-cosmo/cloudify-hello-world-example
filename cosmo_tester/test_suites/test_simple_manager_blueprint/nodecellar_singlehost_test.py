@@ -18,8 +18,7 @@ import os
 from cloudify.workflows import local
 from cloudify_cli import constants as cli_constants
 
-from cosmo_tester.framework.util import (create_rest_client, YamlPatcher,
-                                         get_yaml_as_dict)
+from cosmo_tester.framework.util import create_rest_client
 from cosmo_tester.test_suites.test_blueprints.nodecellar_test\
     import NodecellarAppTest
 from cosmo_tester.framework.git_helper import clone
@@ -75,37 +74,6 @@ class NodecellarSingleHostTest(NodecellarAppTest):
         self.bootstrap_simple_manager_blueprint()
         self._test_nodecellar_impl('singlehost-blueprint.yaml')
 
-    def _update_manager_blueprint(self):
-        self._update_manager_blueprints_overrides()
-
-        with YamlPatcher(self.test_manager_blueprint_path) as patch:
-            for prop_path, new_value in \
-                    self.manager_blueprint_overrides.items():
-                patch.set_value(prop_path, new_value)
-
-    def _update_manager_blueprints_overrides(self):
-        manager_blueprint_dict = \
-            get_yaml_as_dict(self.env._manager_blueprint_path)
-
-        agents_prop_in_dict = manager_blueprint_dict['node_templates'][
-            'manager']['properties']['cloudify_packages']['agents']
-        agents_prop_string = \
-            'node_templates.manager.properties.cloudify_packages.agents'
-
-        docker_prop_in_dict = manager_blueprint_dict['node_templates'][
-            'manager']['properties']['cloudify_packages']['docker']
-        docker_prop_string = \
-            'node_templates.manager.properties.cloudify_packages.docker'
-
-        self.manager_blueprint_overrides['{0}.ubuntu_agent_url'.format(
-            agents_prop_string)] = agents_prop_in_dict['ubuntu_agent_url']
-        self.manager_blueprint_overrides['{0}.centos_agent_url'.format(
-            agents_prop_string)] = agents_prop_in_dict['centos_agent_url']
-        self.manager_blueprint_overrides['{0}.windows_agent_url'.format(
-            agents_prop_string)] = agents_prop_in_dict['windows_agent_url']
-        self.manager_blueprint_overrides['{0}.docker_url'.format(
-            docker_prop_string)] = docker_prop_in_dict['docker_url']
-
     def _bootstrap(self):
         self.cfy.bootstrap(blueprint_path=self.test_manager_blueprint_path,
                            inputs_file=self.test_inputs_path,
@@ -118,10 +86,6 @@ class NodecellarSingleHostTest(NodecellarAppTest):
         self.test_manager_blueprint_path = \
             os.path.join(self.manager_blueprints_repo_dir,
                          'simple', 'simple-manager-blueprint.yaml')
-
-        # using the updated handler configuration blueprint to update the
-        # package urls in the simple manager blueprint
-        self._update_manager_blueprint()
 
         self.bootstrap_inputs = {
             'public_ip': self.public_ip_address,
