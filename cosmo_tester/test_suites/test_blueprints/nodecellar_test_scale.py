@@ -61,11 +61,11 @@ class OpenStackScaleNodeCellarTest(OpenStackNodeCellarTestBase):
 
     @property
     def entrypoint_node_name(self):
-        return 'frontend_floatingip'
+        return 'nodecellar_ip'
 
     @property
     def nodecellar_port(self):
-        return 80
+        return 8080
 
     @property
     def expected_nodes_count(self):

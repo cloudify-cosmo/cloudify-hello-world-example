@@ -76,7 +76,7 @@ class NodecellarSingleHostTest(NodecellarAppTest):
 
     def test_nodecellar_single_host(self):
         self.bootstrap_simple_manager_blueprint()
-        self._test_nodecellar_impl('singlehost-blueprint.yaml')
+        self._test_nodecellar_impl('simple-blueprint.yaml')
 
     def _bootstrap(self):
         self.cfy.bootstrap(blueprint_path=self.test_manager_blueprint_path,
@@ -145,3 +145,11 @@ class NodecellarSingleHostTest(NodecellarAppTest):
     @property
     def host_expected_runtime_properties(self):
         return []
+
+    @property
+    def entrypoint_node_name(self):
+        return 'host'
+
+    @property
+    def entrypoint_property_name(self):
+        return 'ip'

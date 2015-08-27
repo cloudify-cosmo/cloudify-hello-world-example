@@ -23,7 +23,6 @@ from time import sleep, time
 
 import fabric.api
 
-from cosmo_tester.framework.util import YamlPatcher
 from cosmo_tester.test_suites.test_blueprints import nodecellar_test
 
 
@@ -50,20 +49,6 @@ class DockerPersistenceTest(nodecellar_test.NodecellarAppTest):
         context_url = 'http://{0}/provider/context' \
             .format(self.env.management_ip)
         return json.loads(urllib.urlopen(context_url).read())
-
-    def modify_blueprint(self):
-        with YamlPatcher(self.blueprint_yaml) as patch:
-            vm_props_path = 'node_types.nodecellar\.nodes\.MonitoredServer' \
-                            '.properties'
-            vm_type_path = 'node_types.vm_host.properties'
-            patch.merge_obj('{0}.server.default'.format(vm_type_path), {
-                'image': self.env.ubuntu_trusty_image_name,
-                'flavor': self.env.flavor_name
-            })
-            # Use ubuntu trusty 14.04 as agent machine
-            patch.merge_obj('{0}.server.default'.format(vm_props_path), {
-                'image': self.env.ubuntu_trusty_image_id
-            })
 
     def init_fabric(self):
         manager_keypath = self.env._config_reader.management_key_path
@@ -107,7 +92,7 @@ class DockerPersistenceTest(nodecellar_test.NodecellarAppTest):
     def get_inputs(self):
 
         return {
-            'image': self.env.ubuntu_image_id,
+            'image': self.env.ubuntu_trusty_image_id,
             'flavor': self.env.small_flavor_id,
             'agent_user': 'ubuntu'
         }
