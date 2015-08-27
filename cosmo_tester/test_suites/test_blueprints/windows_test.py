@@ -19,20 +19,16 @@ Assumes Windows image with WinRM and python.
 
 
 from cosmo_tester.framework.testenv import TestCase
-from cosmo_tester.framework.util import YamlPatcher
 
 
 class WindowsAgentTest(TestCase):
 
     def test_windows(self):
-
         blueprint_path = self.copy_blueprint('windows')
         self.blueprint_yaml = blueprint_path / 'blueprint.yaml'
-        with YamlPatcher(self.blueprint_yaml) as patch:
-            patch.set_value('node_templates.vm.properties.image',
-                            self.env.windows_image_name)
-            patch.set_value('node_templates.vm.properties.flavor',
-                            self.env.medium_flavor_id)
-
-        self.upload_deploy_and_execute_install()
+        self.upload_deploy_and_execute_install(inputs={
+            'image': self.env.windows_image_name,
+            'flavor': self.env.medium_flavor_id
+        })
+        self.assert_outputs({'task_execution': {'executed': True}})
         self.execute_uninstall()
