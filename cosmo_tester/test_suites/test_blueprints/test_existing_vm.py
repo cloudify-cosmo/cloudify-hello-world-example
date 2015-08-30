@@ -94,7 +94,7 @@ class ExistingVMTest(TestCase):
         keypair = nova_client.keypairs.create(key_name)
         self.addCleanup(self.delete_keypair, nova_client, keypair)
 
-        key_file.write_text(self.keypair.private_key)
+        key_file.write_text(keypair.private_key)
         key_file.chmod(0600)
 
         management_key_path = get_actual_keypath(self.env,
