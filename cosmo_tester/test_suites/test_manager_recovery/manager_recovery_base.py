@@ -60,6 +60,7 @@ class BaseManagerRecoveryTest(TestCase):
 
         # this will test that the operations worker is still responsive
         self.execute_uninstall(self.deployment_id)
+        self.wait_for_stop_dep_env_execution_to_end(self.deployment_id)
 
         # this will test the management worker is still responding
         self.cfy.delete_deployment(self.deployment_id)
