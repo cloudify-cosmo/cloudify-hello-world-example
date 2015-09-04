@@ -12,8 +12,8 @@ external_network_name: Ext-Net
 use_existing_manager_keypair: true
 use_existing_agent_keypair: true
 manager_server_name: systemt-cloudify-manager
-manager_server_user: ubuntu
-manager_private_key_path: ~/.ssh/shared-systemt-tests-key.pem
+ssh_user: centos
+ssh_key_filename: ~/.ssh/shared-systemt-tests-key.pem
 agent_private_key_path: ~/.ssh/shared-systemt-tests-key.pem
 agents_user: ubuntu
 management_network_name: systemt-cloudify-management-network
@@ -22,5 +22,5 @@ management_router: systemt-cloudify-management-router
 manager_security_group_name: systemt-cloudify-sg-manager
 agents_security_group_name: systemt-cloudify-sg-agents
 manager_port_name: systemt-cloudify-manager-port
-manager_volume_name: systemt-cloudify-manager-volume
+# manager_volume_name: systemt-cloudify-manager-volume
 resources_prefix: ''
