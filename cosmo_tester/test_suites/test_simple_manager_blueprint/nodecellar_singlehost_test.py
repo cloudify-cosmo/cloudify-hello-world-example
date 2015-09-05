@@ -15,6 +15,8 @@
 
 import os
 
+from fabric import api as fabric_api
+
 from cloudify.workflows import local
 from cloudify_cli import constants as cli_constants
 
@@ -36,6 +38,8 @@ class NodecellarSingleHostTest(NodecellarAppTest):
         self.blueprint_yaml = blueprint_path / 'blueprint.yaml'
         self.prefix = 'simple-host-{0}'.format(self.test_id)
         self.manager_blueprint_overrides = {}
+        self.remote_manager_key_path = '/home/{0}/manager_key.pem'.format(
+            self.env.centos_7_image_user)
 
         self.inputs = {
             'prefix': self.prefix,
@@ -45,7 +49,7 @@ class NodecellarSingleHostTest(NodecellarAppTest):
             'os_tenant_name': self.env.keystone_tenant_name,
             'os_region': self.env.region,
             'os_auth_url': self.env.keystone_url,
-            'image_id': self.env.ubuntu_trusty_image_id,
+            'image_id': self.env.centos_7_image_name,
             'flavor': self.env.medium_flavor_id,
             'key_pair_path': '{0}/{1}-keypair.pem'.format(self.workdir,
                                                           self.prefix)
@@ -85,15 +89,15 @@ class NodecellarSingleHostTest(NodecellarAppTest):
                                                  self.workdir)
         self.test_manager_blueprint_path = \
             os.path.join(self.manager_blueprints_repo_dir,
-                         'simple', 'simple-manager-blueprint.yaml')
+                         'new', 'simple-manager-blueprint.yaml')
 
         self.bootstrap_inputs = {
             'public_ip': self.public_ip_address,
             'private_ip': self.private_ip_address,
-            'ssh_user': 'ubuntu',
+            'ssh_user': self.env.centos_7_image_user,
             'ssh_key_filename': self.inputs['key_pair_path'],
 
-            'agents_user': 'ubuntu',
+            'agents_user': self.env.centos_7_image_user,
             'resources_prefix': ''
         }
 
@@ -104,12 +108,18 @@ class NodecellarSingleHostTest(NodecellarAppTest):
         self._bootstrap()
         self._running_env_setup(self.public_ip_address)
 
+        self.logger.info('Uploading key file to manager...')
+        with fabric_api.settings(host_string=self.public_ip_address,
+                                 user=self.env.centos_7_image_user,
+                                 key_filename=self.inputs['key_pair_path']):
+            fabric_api.put(self.inputs['key_pair_path'],
+                           self.remote_manager_key_path)
+
     def get_inputs(self):
         return {
             'host_ip': self.private_ip_address,
-            'agent_user': 'ubuntu',
-            # default agent key location
-            'agent_private_key_path': '~/.ssh/agent_key.pem'
+            'agent_user': self.env.centos_7_image_user,
+            'agent_private_key_path': self.remote_manager_key_path
         }
 
     def _running_env_setup(self, management_ip):
