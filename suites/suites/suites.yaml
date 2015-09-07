@@ -7,6 +7,7 @@ variables:
   hp_openstack_ubuntu_trusty_image_name: Ubuntu Server 14.04.1 LTS (amd64 20150706) - Partner Image
   hp_openstack_centos_6_3_image_name: CentOS 6.3 Server 64-bit 20130116
   hp_openstack_centos_7_image_name: CentOS 7 x86_64 (2014-09-29) - Partner Image
+  hp_openstack_region_centos_7_image_id: a2859f14-ea12-55e7-8e39-cec9b59e56fb
   hp_openstack_windows_image_name: Windows Server 2008 R2 Enterprise SP1 x64 Volume License 20140415 (b)
   hp_openstack_region_a_ubuntu_precise: 8ca068c5-6fde-4701-bab8-322b3e7c8d81
   hp_openstack_region_a_ubuntu_trusty: bec3cab5-4722-40b9-a78a-3489218e22fe
@@ -18,6 +19,7 @@ variables:
   lab_openstack_ubuntu_trusty_image_name: ubuntu_14.04
   lab_openstack_centos_6_5_image_name: centos_6.5
   lab_openstack_centos_7_image_name: centos_7
+  lab_openstack_centos_7_image_id: a4bbfb75-a681-4d02-beae-ba1e91f72dfa
   lab_openstack_windows_image_name: windows-server-2012
   lab_openstack_ubuntu_precise: d81ccdfe-7482-460e-a7ce-69ea29aa129b
   lab_openstack_ubuntu_trusty: c6d36e11-f4d5-4221-b6e8-4e97914c67e9
@@ -36,6 +38,7 @@ variables:
   datacentred_openstack_ubuntu_trusty: 6c3047c6-17b1-4aaf-a657-9229bb481e50
   datacentred_openstack_centos_6_5_image_name: CentOS 6.6 dccloud
   datacentred_openstack_centos_7_image_name: CentOS 7.0
+  datacentred_openstack_centos_7_image_id: 74ff4015-aee1-4e02-aaa8-1c77b2650394
   datacentred_openstack_windows_image_name: Windows Server 2012 R2 Standard Eval
 
   aws_ec2_eu_central_1_ami_ubuntu_trusty_image_id: ami-00dae61d
@@ -105,6 +108,10 @@ templates:
     node_templates.manager.properties.cloudify.workflows.task_retries: 20
     node_templates.manager.properties.cloudify.workflows.subgraph_retries: 2
 
+  - &new_manager_blueprint_override
+    node_templates.manager_configuration.properties.cloudify.workflows.task_retries: 20
+    node_templates.manager_configuration.properties.cloudify.workflows.subgraph_retries: 2
+
   - &manager_blueprint_commercial_override
     <<: *manager_blueprint_override
     # override packages derived from 'manager_blueprint_override' with commercial ones
@@ -129,7 +136,7 @@ templates:
       cidr_ip: 0.0.0.0/0
 
   - &openstack_manager_blueprint_override
-    <<: *manager_blueprint_override
+    <<: *new_manager_blueprint_override
     <<: *openstack_manager_blueprint_sg_override
 
   - &datacentred_openstack_manager_blueprint_override
@@ -143,9 +150,6 @@ templates:
   - &transient_deployment_workers_manager_blueprint_override
     node_templates.manager.properties.cloudify.transient_deployment_workers_mode:
       enabled: true
-
-  - &stress_manager_blueprint_override
-    node_templates.volume.properties.volume.size: 30
 
   ######################################################
 
@@ -229,20 +233,20 @@ templates:
 
   - &hp_openstack_region_a_inputs
     region: region-a.geo-1
-    image_id: '{{hp_openstack_region_a_ubuntu_trusty}}'
+    image_id: '{{hp_openstack_region_centos_7_image_id}}'
 
   - &hp_openstack_region_b_inputs
     region: region-b.geo-1
-    image_id: '{{hp_openstack_region_b_ubuntu_trusty}}'
+    image_id: '{{hp_openstack_region_centos_7_image_id}}'
 
   - &lab_openstack_inputs
-    image_id: '{{lab_openstack_ubuntu_trusty}}'
+    image_id: '{{lab_openstack_centos_7_image_id}}'
 
   - &mirantis_openstack_inputs
     image_id: '{{mirantis_openstack_ubuntu_trusty}}'
 
   - &datacentred_openstack_inputs
-    image_id: '{{datacentred_openstack_ubuntu_trusty}}'
+    image_id: '{{datacentred_openstack_centos_7_image_id}}'
 
   #######################################################
 
@@ -253,27 +257,27 @@ templates:
   - &hp_openstack_handler_configuration
     <<: *openstack_handler_configuration
     inputs: inputs-hp-openstack.yaml
-    manager_blueprint: openstack/openstack-manager-blueprint.yaml
+    manager_blueprint: new/openstack-manager-blueprint.yaml
     manager_blueprint_override: *openstack_manager_blueprint_override
 
   - &lab_openstack_handler_configuration
     <<: *openstack_handler_configuration
     inputs: inputs-lab-openstack.yaml
-    manager_blueprint: openstack/openstack-manager-blueprint.yaml
+    manager_blueprint: new/openstack-manager-blueprint.yaml
     manager_blueprint_override: *openstack_manager_blueprint_override
     properties: lab_openstack_properties
 
   - &mirantis_openstack_handler_configuration
     <<: *openstack_handler_configuration
     inputs: inputs-mirantis-openstack.yaml
-    manager_blueprint: openstack/openstack-manager-blueprint.yaml
+    manager_blueprint: new/openstack-manager-blueprint.yaml
     manager_blueprint_override: *openstack_manager_blueprint_override
     properties: mirantis_openstack_properties
 
   - &datacentred_openstack_handler_configuration
     <<: *openstack_handler_configuration
     inputs: inputs-datacentred-openstack.yaml
-    manager_blueprint: openstack/openstack-manager-blueprint.yaml
+    manager_blueprint: new/openstack-manager-blueprint.yaml
     manager_blueprint_override: *datacentred_openstack_manager_blueprint_override
     properties: datacentred_openstack_properties
 
@@ -457,7 +461,6 @@ handler_configurations:
     properties: hp_openstack_region_a_properties
     manager_blueprint_override:
       <<: *openstack_manager_blueprint_override
-      <<: *stress_manager_blueprint_override
     inputs_override:
       <<: *hp_openstack_credentials_inputs
       <<: *hp_openstack_region_a_inputs
