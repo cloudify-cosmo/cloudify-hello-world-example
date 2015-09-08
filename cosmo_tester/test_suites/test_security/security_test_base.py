@@ -58,7 +58,7 @@ class SecurityTestBase(TestCase):
 
         auth_token_generator = self.get_auth_token_generator()
         if auth_token_generator:
-            settings['auth_token_generator'] = auth_token_generator
+            settings['security_auth_token_generator'] = auth_token_generator
 
         settings['ssl'] = {
             constants.SSL_ENABLED_PROPERTY_NAME: self.get_ssl_enabled(),
