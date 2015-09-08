@@ -224,7 +224,7 @@ class NodecellarAppTest(MonitoringTestCase):
 
     @property
     def entrypoint_node_name(self):
-        return 'nodecellar_floatingip'
+        return 'nodecellar_ip'
 
     @property
     def entrypoint_property_name(self):
@@ -269,3 +269,7 @@ class OldVersionNodeCellarTest(OpenStackNodeCellarTestBase):
     @property
     def repo_branch(self):
         return 'tags/3.1'
+
+    @property
+    def entrypoint_node_name(self):
+        return 'nodecellar_floatingip'
