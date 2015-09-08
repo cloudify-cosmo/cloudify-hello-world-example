@@ -31,7 +31,6 @@ from path import path
 import fabric.api
 import fabric.context_managers
 
-from cloudify_rest_client.executions import Execution
 from cosmo_tester.framework.cfy_helper import (CfyHelper,
                                                DEFAULT_EXECUTE_TIMEOUT)
 from cosmo_tester.framework.util import (get_blueprint_path,
@@ -39,6 +38,8 @@ from cosmo_tester.framework.util import (get_blueprint_path,
                                          YamlPatcher,
                                          generate_unique_configurations,
                                          create_rest_client)
+
+from cloudify_rest_client.executions import Execution
 
 root = logging.getLogger()
 root.setLevel(logging.INFO)
@@ -271,6 +272,25 @@ class TestCase(unittest.TestCase):
     def tearDownClass(cls):
         pass
 
+    def wait_until_deployment_ready_and_execute_install(self,
+                                                        deployment_id,
+                                                        inputs):
+        self.wait_until_all_deployment_executions_end(deployment_id)
+        return self.execute_install(deployment_id=deployment_id)
+
+    def wait_until_all_deployment_executions_end(self, deployment_id):
+        self.logger.info("waiting for executions on deployment {0} to finish"
+                         .format(deployment_id))
+        start_time = time.time()
+        while len([execution for execution in self.client.executions.list(
+                deployment_id=deployment_id)
+                if execution["status"] not in Execution.END_STATES]) > 0:
+            time.sleep(1)
+            if start_time - time.time() > DEFAULT_EXECUTE_TIMEOUT:
+                raise Exception("timeout while waiting for executions to end "
+                                "on deployment {0}".format(deployment_id))
+        return
+
     def assert_outputs(self, expected_outputs, deployment_id=None):
         if deployment_id is None:
             deployment_id = self.test_id
@@ -351,6 +371,8 @@ class TestCase(unittest.TestCase):
     def execute_install(self,
                         deployment_id=None,
                         fetch_state=True):
+        self.logger.info("attempting to execute install on deployment {0}"
+                         .format(deployment_id))
         return self._make_operation_with_before_after_states(
             self.cfy.execute_install,
             fetch_state,
@@ -376,7 +398,8 @@ class TestCase(unittest.TestCase):
     def upload_blueprint(
             self,
             blueprint_id):
-
+        self.logger.info("attempting to upload blueprint {0}"
+                         .format(blueprint_id))
         return self.cfy.upload_blueprint(
             blueprint_id=blueprint_id,
             blueprint_path=str(self.blueprint_yaml))
@@ -386,10 +409,11 @@ class TestCase(unittest.TestCase):
             blueprint_id,
             deployment_id,
             inputs):
-
+        self.logger.info("attempting to create_deployment deployment {0}"
+                         .format(deployment_id))
         return self.cfy.create_deployment(
-            blueprint_id=blueprint_id or self.test_id,
-            deployment_id=deployment_id or self.test_id,
+            blueprint_id=blueprint_id,
+            deployment_id=deployment_id,
             inputs=inputs)
 
     def _make_operation_with_before_after_states(self, operation, fetch_state,
