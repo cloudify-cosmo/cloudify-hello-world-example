@@ -1,25 +1,19 @@
-from lxml import etree
+from collections import namedtuple
 import os
-import sys
 import yaml
 import requests
 from requests.auth import HTTPBasicAuth
-from collections import namedtuple
-from oauth2client import file as oauth2client_file
-from oauth2client import tools as oauth2client_tools
-import oauth2client
+from lxml import etree
+import gspread
+from oauth2client.client import SignedJwtAssertionCredentials
 
 
-SPREADSHEET_TITLE = 'Sprint Test Summary'
 SUITES_YAML_FILE = 'suites.yaml'
 QUICKBUILD_ADDRESS = 'http://192.168.9.18:8810'
-MILESTONE = '3.3m5'
-GOOGLE_SCOPES = 'https://www.googleapis.com/auth/drive ' \
-                'https://spreadsheets.google.com/feeds ' \
-                'https://docs.google.com/feeds'
-GOOGLE_CREDENTIALS_DIR = os.path.join(os.path.expanduser('~'), '.credentials')
-GOOGLE_CLIENT_FILE_NAME = 'google_client.json'
-GOOGLE_CACHED_CREDS_FILE_NAME = 'google_cached_creds.json'
+
+GOOGLE_ACCOUNT = 'cfy_champion@gigaspaces.com'
+GOOGLE_SPREADSHEET_TITLE = 'Sprint Test Summary'
+GOOGLE_SCOPE = 'https://spreadsheets.google.com/feeds'
 
 COLUMN_TITLES = [
     'Status',
@@ -151,50 +145,28 @@ class QuickbuildDriver():
 
 class GoogleSheetsDriver():
 
-    def __init__(self, spreadsheet_title):
-        self.spreadsheet_title = spreadsheet_title
-        import gspread
-        credentials = self._get_credentials()
+    def __init__(self, google_client_email, google_client_pem):
+        with open(google_client_pem, 'r') as pem_file:
+            private_key = pem_file.read()
+
+        credentials = SignedJwtAssertionCredentials(
+            google_client_email,
+            private_key,
+            GOOGLE_SCOPE,
+            sub=GOOGLE_ACCOUNT)
         gc = gspread.authorize(credentials)
-        self.spreadsheet = gc.open(spreadsheet_title)
+        self.spreadsheet = gc.open(GOOGLE_SPREADSHEET_TITLE)
         self.worksheet = None
 
-    @staticmethod
-    def _get_credentials():
-        credentials = None
-        credential_file_path = os.path.join(GOOGLE_CREDENTIALS_DIR,
-                                            GOOGLE_CACHED_CREDS_FILE_NAME)
-        if os.path.exists(credential_file_path):
-            # try to use the cached credentials
-            credentials = oauth2client_file.Storage(credential_file_path).get()
-
-        if not credentials or credentials.invalid:
-            credentials = GoogleSheetsDriver._generate_new_credentials()
-
-        return credentials
-
-    @staticmethod
-    def _generate_new_credentials():
-        client_secret_file = os.path.join(GOOGLE_CREDENTIALS_DIR,
-                                          'google_client_secret.json')
-        flow = oauth2client.client.flow_from_clientsecrets(
-            client_secret_file, GOOGLE_SCOPES)
-        flow.user_agent = 'cfy_champion'
-        import argparse
-        flags = argparse.ArgumentParser(
-            parents=[oauth2client_tools.argparser]).parse_args()
-        store_path = os.path.join(GOOGLE_CREDENTIALS_DIR,
-                                  GOOGLE_CACHED_CREDS_FILE_NAME)
-        store = oauth2client_file.Storage(store_path)
-        credentials = oauth2client_tools.run_flow(flow, store, flags)
-        print 'Storing credentials to ' + store_path
-        return credentials
-
-    def create_report_worksheet(self, report_id, qb_report_ui_url,
+    def create_report_worksheet(self, cfy_sprint, report_id, qb_report_ui_url,
                                 success_rate):
-        new_sheet_name = '{0} {1}'.format(MILESTONE, report_id)
-        self.worksheet = self.spreadsheet.add_worksheet(
-            title=new_sheet_name, rows="100", cols="20")
+        new_sheet_name = '{0} {1}'.format(cfy_sprint, report_id)
+        try:
+            self.worksheet = self.spreadsheet.add_worksheet(
+                title=new_sheet_name, rows="100", cols="20")
+        except Exception:
+            raise Exception('Failed to add worksheet "{0}" to spreadsheet {1}'.
+                            format(new_sheet_name, GOOGLE_SPREADSHEET_TITLE))
         summary_status_line = [
             '',
             'quickbuild report: {0}'.format(report_id),
@@ -308,18 +280,29 @@ def analyze_results(quickbuild_driver, cloudify_test_suites):
                     ]
                     analyzed_results.append(test_summary)
             else:
-                print 'wrong configuration in suites yaml, ' \
-                      'definition of test group {0} not found'. \
-                    format(test_group)
+                raise Exception('wrong configuration in suites yaml, '
+                                'definition of test group {0} not found'.
+                                format(test_group))
 
     print_missing(missing_results)
     return analyzed_results
 
 
+def get_mandatory_env_var(env_var_name):
+    env_var_value = os.environ.get(env_var_name)
+    if not env_var_value:
+        raise ValueError('{0} environment variable not set'.
+                         format(env_var_name))
+    return env_var_value
+
+
 def main():
-    quickbuild_username = sys.argv.pop(1)
-    quickbuild_password = sys.argv.pop(1)
-    build_id = sys.argv.pop(1)
+    quickbuild_username = get_mandatory_env_var('QUICK_BUILD_USER')
+    quickbuild_password = get_mandatory_env_var('QUICK_BUILD_PASSWORD')
+    build_id = get_mandatory_env_var('QUICK_BUILD_BUILD_ID')
+    cfy_sprint = get_mandatory_env_var('CFY_SPRINT')
+    google_client_email = get_mandatory_env_var('GOOGLE_CLIENT_EMAIL')
+    google_client_pem = get_mandatory_env_var('GOOGLE_CLIENT_PEM')
 
     quickbuild_driver = QuickbuildDriver(
         QUICKBUILD_ADDRESS, quickbuild_username, quickbuild_password, build_id)
@@ -327,9 +310,10 @@ def main():
     cloudify_test_suites = CloudifyTestSuites(SUITES_YAML_FILE)
     analyzed_results = analyze_results(quickbuild_driver, cloudify_test_suites)
     report_id = quickbuild_driver.get_report_id()
-    spreadsheet_driver = GoogleSheetsDriver(SPREADSHEET_TITLE)
+    spreadsheet_driver = GoogleSheetsDriver(google_client_email,
+                                            google_client_pem)
     spreadsheet_driver.create_report_worksheet(
-        report_id, quickbuild_driver.report_ui_url,
+        cfy_sprint, report_id, quickbuild_driver.report_ui_url,
         success_rate)
     spreadsheet_driver.populate_report_worksheet(analyzed_results)
 
