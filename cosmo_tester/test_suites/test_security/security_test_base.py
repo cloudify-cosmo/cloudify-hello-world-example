@@ -25,7 +25,8 @@ from cosmo_tester.framework.testenv import TestCase
 
 TEST_CFY_USERNAME = 'user1'
 TEST_CFY_PASSWORD = 'pass1'
-SECURITY_PROP_PATH = 'node_templates.manager.properties.cloudify.security'
+SECURITY_PROP_PATH = 'node_templates.manager_configuration.' \
+                     'properties.cloudify.security'
 
 
 class SecurityTestBase(TestCase):

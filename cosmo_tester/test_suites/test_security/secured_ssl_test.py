@@ -43,7 +43,7 @@ class SecuredWithSSLManagerTests(OpenStackNodeCellarTestBase,
     def get_manager_blueprint_additional_props_override(self):
         return {
             USE_EXISTING_FLOATING_IP_INPUT_PROP: {
-                'default': 'true',
+                'default': True,
                 'type': 'boolean'
             },
             FLOATING_IP_INPUT_PROP: {

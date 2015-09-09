@@ -60,7 +60,8 @@ class RestPluginsTests(TestCase):
                 'install_args': "--install-option='--do-not-fail'"
             }
         }
-        plugins_path = 'node_templates.manager.properties.cloudify.plugins'
+        plugins_path = 'node_templates.manager_configuration.' \
+                       'properties.cloudify.plugins'
         with util.YamlPatcher(self.test_manager_blueprint_path) as patch:
             patch.set_value(plugins_path, plugins)
 
