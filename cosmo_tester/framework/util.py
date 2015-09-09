@@ -201,7 +201,7 @@ class YamlPatcher(object):
 
     def __init__(self, yaml_path, is_json=False, default_flow_style=True):
         self.yaml_path = path(yaml_path)
-        self.obj = yaml.load(self.yaml_path.text())
+        self.obj = yaml.load(self.yaml_path.text()) or {}
         self.is_json = is_json
         self.default_flow_style = default_flow_style
 
