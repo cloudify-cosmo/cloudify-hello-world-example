@@ -148,7 +148,7 @@ templates:
     <<: *aws_ec2_manager_blueprint_sg_override
 
   - &transient_deployment_workers_manager_blueprint_override
-    node_templates.manager.properties.cloudify.transient_deployment_workers_mode:
+    node_templates.manager_configuration.properties.cloudify.transient_deployment_workers_mode:
       enabled: true
 
   ######################################################
@@ -480,7 +480,7 @@ handler_configurations:
       <<: *hp_openstack_region_b_inputs
       keystone_tenant_name: cloudify-cosmo-system-tests3
       image_id: '{{hp_openstack_region_b_centos_7_0_selinux}}'
-      manager_server_user: centos
+      ssh_user: centos
 
   ############################################################################
 
