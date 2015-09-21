@@ -60,8 +60,7 @@ class RestPluginsTests(TestCase):
                 'install_args': "--install-option='--do-not-fail'"
             }
         }
-        plugins_path = 'node_templates.manager_configuration.' \
-                       'properties.cloudify.plugins'
+        plugins_path = 'node_templates.rest_service.properties.plugins'
         with util.YamlPatcher(self.test_manager_blueprint_path) as patch:
             patch.set_value(plugins_path, plugins)
 
@@ -72,7 +71,6 @@ class RestPluginsTests(TestCase):
             'scripts/test_rest_plugins.sh')
         remote_script_path = ('/home/{0}/test_rest_plugins.sh'
                               .format(self.env.management_user_name))
-        container_script_path = '/tmp/home/test_rest_plugins.sh'
         with fabric_api.settings(
                 timeout=30,
                 user=self.env.management_user_name,
@@ -81,8 +79,7 @@ class RestPluginsTests(TestCase):
                 warn_only=False):
             fabric_api.put(local_script_path, remote_script_path)
             output = fabric_api.run(
-                'chmod +x {0} && sudo docker exec -t cfy bash {1}'
-                .format(remote_script_path, container_script_path))
+                'chmod +x {0} && {0}'.format(remote_script_path))
         # This tells us that plugin-template was successfully installed
         self.assertIn('imported_plugin_tasks', output)
         # This tells us that mock-rest-plugin was successfully installed
