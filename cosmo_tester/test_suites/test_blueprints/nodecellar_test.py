@@ -173,8 +173,10 @@ class NodecellarAppTest(MonitoringTestCase):
         self._assert_mongodb_collector_data(client)
         self.assert_deployment_monitoring_data_exists(self.deployment_id)
 
-    def post_uninstall_assertions(self):
-        nodes_instances = self.client.node_instances.list(self.deployment_id)
+    def post_uninstall_assertions(self, client=None):
+        client = client or self.client
+
+        nodes_instances = client.node_instances.list(self.deployment_id)
         self.assertFalse(any(node_ins for node_ins in nodes_instances if
                              node_ins.state != 'deleted'))
         try:
@@ -204,6 +206,9 @@ class NodecellarAppTest(MonitoringTestCase):
             self.fail('monitoring events for {0} node instance '
                       'with id {1} were not found on influxDB. error is: {2}'
                       .format(self.mongo_node_name, instance_id, e))
+
+    def before_uninstall(self):
+        pass
 
     @property
     def repo_url(self):

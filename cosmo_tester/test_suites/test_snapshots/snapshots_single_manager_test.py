@@ -18,6 +18,15 @@ import time
 from cosmo_tester.test_suites.test_blueprints.nodecellar_test import \
     OpenStackNodeCellarTestBase
 from cloudify_rest_client.executions import Execution
+from cosmo_tester.framework.testenv import bootstrap, teardown
+
+
+def setUp():
+    bootstrap()
+
+
+def tearDown():
+    teardown()
 
 
 class SnapshotsSingleManagerTest(OpenStackNodeCellarTestBase):

@@ -13,17 +13,3 @@
 #    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
-
-from cosmo_tester.framework.testenv import bootstrap, teardown
-
-import requests
-
-requests.packages.urllib3.disable_warnings()
-
-
-def setUp():
-    bootstrap()
-
-
-def tearDown():
-    teardown()
