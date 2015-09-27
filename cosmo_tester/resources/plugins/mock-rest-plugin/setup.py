@@ -35,7 +35,7 @@ class InstallCommand(install):
 
 setup(
     name='mock-rest-plugin',
-    version='3.3a5',
+    version='3.3a6',
     packages=['mock_rest_plugin'],
     cmdclass={
         'install': InstallCommand,

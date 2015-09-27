@@ -17,7 +17,7 @@ from setuptools import setup
 
 setup(
     name='cloudify-system-tests',
-    version='3.3a5',
+    version='3.3a6',
     author='Gigaspaces',
     author_email='cosmo-admin@gigaspaces.com',
     packages=['cosmo_tester'],
@@ -32,7 +32,7 @@ setup(
         'path.py==5.1',
         'nose',
         'retrying==1.3.3',
-        'cloudify==3.3a5',
+        'cloudify==3.3a6',
         'elasticsearch',
         'Jinja2==2.7.2',
         'influxdb==0.1.13',
