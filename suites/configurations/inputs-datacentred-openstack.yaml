@@ -12,7 +12,7 @@ external_network_name: external
 use_existing_manager_keypair: true
 use_existing_agent_keypair: true
 manager_server_name: systemt-cloudify-manager
-ssh_user: ubuntu
+ssh_user: centos
 ssh_key_filename: ~/.ssh/shared-systemt-tests-key.pem
 agent_private_key_path: ~/.ssh/shared-systemt-tests-key.pem
 agents_user: ubuntu
