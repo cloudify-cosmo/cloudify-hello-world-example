@@ -8,7 +8,7 @@ import gspread
 from oauth2client.client import SignedJwtAssertionCredentials
 
 
-SUITES_YAML_FILE = 'suites.yaml'
+SUITES_YAML_FILE = '../suites/suites.yaml'
 QUICKBUILD_ADDRESS = 'http://192.168.9.18:8810'
 
 GOOGLE_ACCOUNT = 'cfy_champion@gigaspaces.com'
