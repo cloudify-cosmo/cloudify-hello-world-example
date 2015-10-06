@@ -37,7 +37,7 @@ class NeutronGaloreTest(TestCase):
 
         inputs = {
             'server_name': 'novaservertest',
-            'image': self.env.ubuntu_image_name,
+            'image': self.env.ubuntu_trusty_image_name,
             'flavor': self.env.flavor_name,
             'private_key_path': PRIVATE_KEY_PATH,
         }
@@ -385,11 +385,7 @@ class NeutronGaloreTest(TestCase):
 
     def _check_if_private_key_is_on_manager(self):
 
-        if self._is_docker_manager():
-            path_to_check = '/home/{0}/neutron-test.pem'\
-                .format(self.env.management_user_name)
-        else:
-            path_to_check = PRIVATE_KEY_PATH
+        path_to_check = PRIVATE_KEY_PATH
 
         manager_key_path = get_actual_keypath(
             self.env, self.env.management_key_path)
@@ -403,20 +399,3 @@ class NeutronGaloreTest(TestCase):
         })
 
         return fabric.contrib.files.exists(path_to_check)
-
-    def _is_docker_manager(self):
-        manager_key_path = get_actual_keypath(
-            self.env, self.env.management_key_path)
-
-        fabric_env = fabric.api.env
-        fabric_env.update({
-            'timeout': 30,
-            'user': self.env.management_user_name,
-            'key_filename': manager_key_path,
-            'host_string': self.env.management_ip
-        })
-        try:
-            fabric.api.sudo('which docker')
-            return True
-        except SystemExit:
-            return False

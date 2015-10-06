@@ -18,8 +18,6 @@ import fabric.api
 import fabric.context_managers
 from path import path
 
-from retrying import retry
-
 from cosmo_tester.framework.util import get_actual_keypath
 from cosmo_tester.framework.testenv import TestCase
 
@@ -38,13 +36,7 @@ class ExistingVMTest(TestCase):
         prefix = self.env.resources_prefix
         remote_key_name = '{}test-existing-vm.pem'.format(prefix)
         server_name = '{}testexistingvm'.format(prefix)
-        if self._is_docker_manager():
-            docker_manager = True
-            remote_key_path = '/home/{}/{}'.format(
-                self.env.management_user_name, remote_key_name)
-        else:
-            docker_manager = False
-            remote_key_path = '/tmp/{}'.format(remote_key_name)
+        remote_key_path = '/tmp/{}'.format(remote_key_name)
         key_name = '{}test_existing_vm_key'.format(prefix)
         agents_security_group = self.env.agents_security_group
         management_network_name = self.env.management_network_name
@@ -70,8 +62,7 @@ class ExistingVMTest(TestCase):
             fetch_state=False,
             inputs=dict(
                 ip=private_server_ip,
-                agent_key=remote_key_path if not docker_manager
-                else '/tmp/home/{0}'.format(remote_key_name)
+                agent_key=remote_key_path
             ))
 
         instances = self.client.node_instances.list(deployment_id=self.test_id)
@@ -101,12 +92,10 @@ class ExistingVMTest(TestCase):
                                                  self.env.management_key_path)
         fabric.api.env.update({
             'timeout': 30,
-            'user': self.env.cloudify_agent_user,
+            'user': self.env.management_user_name,
             'key_filename': management_key_path,
             'host_string': self.env.management_ip,
         })
-        if self._is_docker_manager():
-            fabric.api.run('mkdir -p /tmp/home')
         fabric.api.put(local_path=key_file,
                        remote_path=remote_key_path)
 
@@ -119,7 +108,7 @@ class ExistingVMTest(TestCase):
                       timeout=300):
         server = {
             'name': name,
-            'image': self.env.ubuntu_image_id,
+            'image': self.env.ubuntu_trusty_image_id,
             'flavor': self.env.small_flavor_id,
             'key_name': key_name,
             'security_groups': security_groups
@@ -139,26 +128,3 @@ class ExistingVMTest(TestCase):
             'Failed finding new server ip [expected management network '
             'name={}, vm networks={}]'.format(management_network_name,
                                               srv.networks))
-
-    @retry(stop_max_attempt_number=3, wait_fixed=5000)
-    def _is_docker_manager(self):
-        manager_key_path = get_actual_keypath(
-            self.env, self.env.management_key_path)
-
-        fabric_env = fabric.api.env
-        fabric_env.update({
-            'timeout': 30,
-            'user': self.env.management_user_name,
-            'key_filename': manager_key_path,
-            'host_string': self.env.management_ip
-        })
-        try:
-            cmd = 'which docker'
-            self.logger.info('Executing "{0}" on host: {1}@{2}'.format(
-                cmd,
-                self.env.management_user_name,
-                self.env.management_ip))
-            fabric.api.sudo(cmd)
-            return True
-        except SystemExit:
-            return False
