@@ -57,7 +57,8 @@ class BaseCloudifyInputsConfigReader(object):
 
     @property
     def transient_deployment_workers_mode_enabled(self):
-        manager = self.manager_blueprint['node_templates'].get('manager', {})
+        manager = self.manager_blueprint['node_templates'].get(
+            'manager_configuration', {})
         bootstrap_context = manager.get('properties', {}).get('cloudify', {})
         transient_deployment_workers_config = bootstrap_context.get(
             'transient_deployment_workers_mode', {})
