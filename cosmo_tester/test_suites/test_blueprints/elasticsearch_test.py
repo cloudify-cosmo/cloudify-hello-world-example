@@ -105,9 +105,10 @@ class ElasticsearchTimestampFormatTest(TestCase):
         es = Elasticsearch("{0}:{1}".format(self.env.management_ip,
                            str(ELASTICSEARCH_PORT)))
 
-        res = es.search(index="cloudify_events",
-                        body={"query": {"match":
-                                        {"deployment_id": deployment_id}}})
+        index = "cloudify_events" if es.indices.exists(
+            index=["cloudify_events"]) else "logstash-*"
+        res = es.search(index=index, body={"query": {"match":
+                        {"deployment_id": deployment_id}}})
         self.logger.info("Got %d Hits:" % res['hits']['total'])
         #  check if events were created
         self.assertNotEqual(0, res['hits']['total'],
