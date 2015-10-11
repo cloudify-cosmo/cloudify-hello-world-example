@@ -300,6 +300,7 @@ handler_properties:
     ubuntu_trusty_image_name: '{{lab_openstack_ubuntu_trusty_image_name}}'
     centos_image_name: '{{lab_openstack_centos_6_5_image_name}}'
     centos_7_image_name: '{{lab_openstack_centos_7_image_name}}'
+    centos_7_image_id: '{{lab_openstack_centos_7_image_id}}'
     windows_image_name: '{{lab_openstack_windows_image_name}}'
     ubuntu_image_id: '{{lab_openstack_ubuntu_precise}}'
     ubuntu_trusty_image_id: '{{lab_openstack_ubuntu_trusty}}'
@@ -718,10 +719,6 @@ tests:
     tests:
       - cosmo_tester/test_suites/test_rest_plugins
 
-  docker_centos:
-    tests:
-      - cosmo_tester/test_suites/test_docker_centos_env
-
   simple_manager_blueprint:
     tests:
       - cosmo_tester/test_suites/test_simple_manager_blueprint
@@ -902,13 +899,6 @@ test_suites:
       - openstack_nova_net
 
   #####################################################################
-
-  docker_centos_on_openstack:
-    handler_configuration: hp_openstack_centos_system_tests3_region_b
-    tests:
-      - docker_centos
-
-  ######################################################################
 
   vsphere:
     handler_configuration: vsphere_handler_config
