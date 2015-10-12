@@ -29,43 +29,17 @@ class TokenAuthenticationTest(SecurityTestBase):
         self._assert_valid_token_authenticates()
         self._assert_invalid_token_fails()
 
-    def get_auth_token_generator(self):
-        return {
-            'implementation': 'flask_securest'
-                              '.authentication_providers.token'
-                              ':TokenAuthenticator',
-            'properties': {
-                'secret_key': 'my_secret',
-                'expires_in_seconds': 600
-            }
-        }
-
-    def get_authentication_providers_list(self):
-        list_authentication_providers = super(
-            TokenAuthenticationTest, self).get_authentication_providers_list()
-        list_authentication_providers.append(
-            {
-                'name': 'token',
-                'implementation': 'flask_securest.'
-                                  'authentication_providers.token:'
-                                  'TokenAuthenticator',
-                'properties': {
-                    'secret_key': 'my_secret'
-                }
-            }
-        )
-        return list_authentication_providers
-
     def _assert_invalid_user_fails(self):
         client = CloudifyClient(host=self.env.management_ip,
-                                headers=util.get_auth_header(username='user1',
-                                                             password='pass2'))
+                                headers=util.get_auth_header(
+                                    username='wrong_user',
+                                    password='wrong_password'))
         self.assertRaisesRegexp(CloudifyClientError, '401: user unauthorized',
                                 client.manager.get_status)
 
     def _assert_valid_token_authenticates(self):
-        user_pass_header = util.get_auth_header(username='user1',
-                                                password='pass1')
+        user_pass_header = util.get_auth_header(username='admin',
+                                                password='admin')
         client = CloudifyClient(host=self.env.management_ip,
                                 headers=user_pass_header)
 
