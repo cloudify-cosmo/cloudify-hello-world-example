@@ -25,18 +25,3 @@ class SecuredOpenstackNodecellarTest(OpenStackNodeCellarTestBase,
     def test_secured_openstack_nodecellar(self):
         self.setup_secured_manager()
         self._test_openstack_nodecellar('openstack-blueprint.yaml')
-
-    def get_userstore_drive(self):
-        userstore_drive = \
-            super(SecuredOpenstackNodecellarTest, self).get_userstore_drive()
-        userstore_drive['properties']['userstore']['user2'] = {
-            'username': 'user2',
-            'password': 'pass2',
-            'email': 'user2@domain.dom'
-        }
-        userstore_drive['properties']['userstore']['user3'] = {
-            'username': 'user3',
-            'password': 'pass3',
-            'email': 'user3@domain.dom'
-        }
-        return userstore_drive
