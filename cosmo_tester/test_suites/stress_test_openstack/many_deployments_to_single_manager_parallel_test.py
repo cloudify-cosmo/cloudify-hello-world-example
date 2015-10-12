@@ -225,7 +225,7 @@ class MultiDeploymentParallelExecutionTest(MonitoringTestCase):
         fabric_env = fabric.api.env
         fabric_env.update({
             'timeout': 30,
-            'user': 'ubuntu',
+            'user': 'centos',
             'key_filename': manager_keypath,
             'host_string': self.env.management_ip,
             })
@@ -256,7 +256,7 @@ class MultiDeploymentParallelExecutionTest(MonitoringTestCase):
                          .format(self.env.management_ip))
         return int(
             str(fabric.api.run(
-                'df -k | grep docker | '
+                'df -k | grep /dev/vda1 | '
                 'awk \'{print $2}\'')).replace(
                 "sudo: unable to resolve host cloudify-manager-server", ""))
 
@@ -265,7 +265,7 @@ class MultiDeploymentParallelExecutionTest(MonitoringTestCase):
                          .format(self.env.management_ip))
         return int(
             str(fabric.api.run(
-                'df -k | grep docker | '
+                'df -k | grep /dev/vda1 | '
                 'awk \'{print $4}\'')).replace(
                 "sudo: unable to resolve host cloudify-manager-server", ""))
 
