@@ -5,7 +5,7 @@
 # and simple web server started using Cloudify's script plugin.
 # In addition, an OpenStack floating ip and security group are created and associated with the created vm.
 #
-tosca_definitions_version: cloudify_dsl_1_1
+tosca_definitions_version: cloudify_dsl_1_2
 imports:
   - http://www.getcloudify.org/spec/cloudify/3.3m6/types.yaml
   - http://www.getcloudify.org/spec/openstack-plugin/1.3m6/plugin.yaml
@@ -86,5 +86,5 @@ node_templates:
 outputs:
   http_endpoint:
     description: Web server external endpoint
-    value: { concat: ['http://', { get_attribute: [virtual_ip, floating_ip_address] }, 
+    value: { concat: ['http://', { get_attribute: [virtual_ip, floating_ip_address] },
                       ':', { get_property: [http_web_server, port] }] }
