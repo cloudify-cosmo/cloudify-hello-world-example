@@ -55,30 +55,35 @@ class SecurityTestBase(TestCase):
 
     def get_security_settings(self):
         settings = {
-            SECURITY_PROP_PATH + '.enabled': self.get_enabled(),
+            '{0}.enabled'.format(SECURITY_PROP_PATH): self.get_enabled(),
         }
 
         authentication_providers = self.get_authentication_providers()
         if authentication_providers:
-            settings[SECURITY_PROP_PATH + '.authentication_providers'] = \
+            settings[
+                '{0}.authentication_providers'.format(SECURITY_PROP_PATH)] = \
                 authentication_providers
 
         authorization_providers = self.get_authorization_providers()
         if authorization_providers:
-            settings[SECURITY_PROP_PATH + '.authorization_providers'] = \
+            settings[
+                '{0}.authorization_providers'.format(SECURITY_PROP_PATH)] = \
                 authorization_providers
 
         userstore_drive = self.get_userstore_driver()
         if userstore_drive:
-            settings[SECURITY_PROP_PATH + '.userstore_driver'] = \
+            settings[
+                '{0}.userstore_driver'.format(SECURITY_PROP_PATH)] = \
                 userstore_drive
 
         auth_token_generator = self.get_auth_token_generator()
         if auth_token_generator:
-            settings[SECURITY_PROP_PATH + '.auth_token_generator'] = \
+            settings[
+                '{0}.auth_token_generator'.format(SECURITY_PROP_PATH)] = \
                 auth_token_generator
 
-        settings[SECURITY_PROP_PATH + '.ssl'] = {
+        settings[
+            '{0}.ssl'.format(SECURITY_PROP_PATH)] = {
             constants.SSL_ENABLED_PROPERTY_NAME: self.get_ssl_enabled(),
         }
 
@@ -88,16 +93,16 @@ class SecurityTestBase(TestCase):
         return True
 
     def get_userstore_driver(self):
-        return ''
+        return None
 
     def get_authentication_providers(self):
-        return ''
+        return None
 
     def get_authorization_providers(self):
-        return ''
+        return None
 
     def get_auth_token_generator(self):
-        return ''
+        return None
 
     def get_ssl_enabled(self):
         return False
