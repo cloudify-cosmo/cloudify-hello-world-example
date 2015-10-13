@@ -19,7 +19,7 @@ from cloudify_rest_client.client import CloudifyClient
 from cloudify_rest_client.exceptions import CloudifyClientError
 
 from cosmo_tester.test_suites.test_security.security_test_base import \
-    SecurityTestBase
+    SecurityTestBase, SECURITY_PROP_PATH
 from cosmo_tester.framework import util
 
 
@@ -47,7 +47,7 @@ class NoUserstoreTests(SecurityTestBase):
             }
         }
 
-    def get_authentication_providers_list(self):
+    def get_authentication_providers(self):
         return [
             {
                 'implementation': 'mock_auth_provider_with_no_userstore'
@@ -59,12 +59,24 @@ class NoUserstoreTests(SecurityTestBase):
             }
         ]
 
-    def get_userstore_drive(self):
-        return ''
+    def get_security_settings(self):
+        settings = {
+            SECURITY_PROP_PATH + '.enabled': self.get_enabled(),
+        }
+
+        authentication_providers = self.get_authentication_providers()
+        if authentication_providers:
+            settings[SECURITY_PROP_PATH + '.authentication_providers'] = \
+                authentication_providers
+
+        settings[SECURITY_PROP_PATH + '.userstore_driver'] = ''
+
+        return settings
 
     def _assert_unauthorized_user_fails(self):
         client = CloudifyClient(host=self.env.management_ip,
-                                headers=util.get_auth_header(username='user2',
-                                                             password='pass2'))
+                                headers=util.get_auth_header(
+                                    username='wrong_user',
+                                    password='wrong_pass'))
         self.assertRaisesRegexp(CloudifyClientError, '401: user unauthorized',
                                 client.manager.get_status)
