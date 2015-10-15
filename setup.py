@@ -36,7 +36,10 @@ setup(
         'elasticsearch',
         'Jinja2==2.7.2',
         'influxdb==0.1.13',
-        'pywinrm==0.0.3'
+        'pywinrm==0.0.3',
+        # Wagon version has been left out since it better reflects the user
+        # use-case
+        'wagon'
     ],
     entry_points={
         'nose.plugins.0.10': [

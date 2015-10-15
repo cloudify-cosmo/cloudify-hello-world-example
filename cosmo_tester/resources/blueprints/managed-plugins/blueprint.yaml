@@ -1,0 +1,24 @@
+tosca_definitions_version: cloudify_dsl_1_2
+
+imports:
+    - http://www.getcloudify.org/spec/cloudify/3.3m7/types.yaml
+
+plugins:
+    plugin1:
+        package_name: mogrify
+        executor: central_deployment_agent
+
+node_types:
+    bla:
+        derived_from: cloudify.nodes.Root
+        interfaces:
+            cloudify.interfaces.lifecycle:
+                create:
+                    implementation: scripts/create.py
+                    executor: central_deployment_agent
+            dummy_stub:
+                dummy_op: plugin1.this_is_a_fake_function
+
+node_templates:
+    bla_service:
+        type: bla
