@@ -81,6 +81,10 @@ class CfyHelper(object):
                 verbose=verbose).wait()
 
     def recover(self, task_retries=5):
+        map(lambda dep_id:
+            self._wait_for_stop_dep_env_execution_if_necessary(dep_id),
+            self._testcase.client.deployments.list())
+
         with self.workdir:
             cfy.recover(force=True, task_retries=task_retries).wait()
 
@@ -134,6 +138,8 @@ class CfyHelper(object):
     def delete_deployment(self, deployment_id,
                           verbose=False,
                           ignore_live_nodes=False):
+        self._wait_for_stop_dep_env_execution_if_necessary(deployment_id)
+
         with self.workdir:
             cfy.deployments.delete(
                 deployment_id=deployment_id,
@@ -211,15 +217,7 @@ class CfyHelper(object):
                          execute_timeout=DEFAULT_EXECUTE_TIMEOUT,
                          parameters=None):
 
-        if self._testcase and \
-            self._testcase.env and \
-            self._testcase.env._config_reader and \
-                self._testcase.env.transient_deployment_workers_mode_enabled:
-            # we're in transient deployment workers mode - need to verify
-            # there is no "stop deployment environment" execution
-            # running, and wait till it ends if there is one
-            self._testcase.wait_for_stop_dep_env_execution_to_end(
-                deployment_id)
+        self._wait_for_stop_dep_env_execution_if_necessary(deployment_id)
 
         params_file = self._get_inputs_in_temp_file(parameters, workflow)
         with self.workdir:
@@ -230,6 +228,17 @@ class CfyHelper(object):
                 verbose=verbose,
                 include_logs=include_logs,
                 parameters=params_file).wait()
+
+    def _wait_for_stop_dep_env_execution_if_necessary(self, deployment_id):
+        if self._testcase and \
+                self._testcase.env and \
+                self._testcase.env._config_reader and \
+                self._testcase.env.transient_deployment_workers_mode_enabled:
+            # we're in transient deployment workers mode - need to verify
+            # there is no "stop deployment environment" execution
+            # running, and wait till it ends if there is one
+            self._testcase.wait_for_stop_dep_env_execution_to_end(
+                deployment_id)
 
     def _get_inputs_in_temp_file(self, inputs, inputs_prefix):
         inputs = inputs or {}

@@ -33,7 +33,6 @@ class BaseManagerRecoveryTest(TestCase):
         # bootstrap and install
         self.bootstrap()
         self._install_blueprint()
-        self.wait_for_stop_dep_env_execution_to_end(self.deployment_id)
 
         # this will verify that all the data is actually persisted.
         before, after = self._recover_manager()
@@ -60,7 +59,6 @@ class BaseManagerRecoveryTest(TestCase):
 
         # this will test that the operations worker is still responsive
         self.execute_uninstall(self.deployment_id)
-        self.wait_for_stop_dep_env_execution_to_end(self.deployment_id)
 
         # this will test the management worker is still responding
         self.cfy.delete_deployment(self.deployment_id)

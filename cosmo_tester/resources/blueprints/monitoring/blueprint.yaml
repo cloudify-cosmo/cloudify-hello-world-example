@@ -72,7 +72,6 @@ groups:
                         type: cloudify.policies.triggers.execute_workflow
                         parameters:
                             workflow: on_monitor_event
-                            force: true
                             workflow_parameters:
                                 service: { get_property: [SELF, service] }
                                 metric: { get_property: [SELF, metric] }
