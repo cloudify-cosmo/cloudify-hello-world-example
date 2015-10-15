@@ -330,8 +330,8 @@ handler_properties:
     ubuntu_image_id: '{{datacentred_openstack_ubuntu_precise}}'
     ubuntu_trusty_image_id: '{{datacentred_openstack_ubuntu_trusty}}'
     centos_image_name: '{{datacentred_openstack_centos_6_5_image_name}}'
-    centos_image_user: centos
     centos_7_image_name: '{{datacentred_openstack_centos_7_image_name}}'
+    centos_7_image_id: '{{datacentred_openstack_centos_7_image_id}}'
     centos_7_image_user: centos
     windows_image_name: '{{datacentred_openstack_windows_image_name}}'
     flavor_name: dc1.2x2.40
