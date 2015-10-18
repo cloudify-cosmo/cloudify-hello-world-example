@@ -62,7 +62,7 @@ class BaseCloudifyInputsConfigReader(object):
         bootstrap_context = manager.get('properties', {}).get('cloudify', {})
         transient_deployment_workers_config = bootstrap_context.get(
             'transient_deployment_workers_mode', {})
-        return transient_deployment_workers_config.get('enabled', False)
+        return transient_deployment_workers_config.get('enabled', True)
 
     @property
     def management_user_name(self):

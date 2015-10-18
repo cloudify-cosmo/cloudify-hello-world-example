@@ -147,9 +147,9 @@ templates:
     <<: *manager_blueprint_override
     <<: *aws_ec2_manager_blueprint_sg_override
 
-  - &transient_deployment_workers_manager_blueprint_override
+  - &nontransient_deployment_workers_manager_blueprint_override
     node_templates.manager_configuration.properties.cloudify.transient_deployment_workers_mode:
-      enabled: true
+      enabled: false
 
   ######################################################
 
@@ -418,37 +418,37 @@ handler_configurations:
 
   ############################################################################
 
-  transient_deployment_workers_hp_openstack_system_tests2_region_a:
+  nontransient_deployment_workers_hp_openstack_system_tests2_region_a:
     <<: *hp_openstack_handler_configuration
     env: hp_openstack_system_tests2_region_a
     properties: hp_openstack_region_a_properties
     manager_blueprint_override:
       <<: *openstack_manager_blueprint_override
-      <<: *transient_deployment_workers_manager_blueprint_override
+      <<: *nontransient_deployment_workers_manager_blueprint_override
     inputs_override:
       <<: *hp_openstack_credentials_inputs
       <<: *hp_openstack_region_a_inputs
       keystone_tenant_name: cloudify-cosmo-system-tests2
 
-  transient_deployment_workers_hp_openstack_system_tests2_region_b:
+  nontransient_deployment_workers_hp_openstack_system_tests2_region_b:
     <<: *hp_openstack_handler_configuration
     env: hp_openstack_system_tests2_region_b
     properties: hp_openstack_region_b_properties
     manager_blueprint_override:
       <<: *openstack_manager_blueprint_override
-      <<: *transient_deployment_workers_manager_blueprint_override
+      <<: *nontransient_deployment_workers_manager_blueprint_override
     inputs_override:
       <<: *hp_openstack_credentials_inputs
       <<: *hp_openstack_region_b_inputs
       keystone_tenant_name: cloudify-cosmo-system-tests2
 
-  transient_deployment_workers_hp_openstack_system_tests3_region_a:
+  nontransient_deployment_workers_hp_openstack_system_tests3_region_a:
     <<: *hp_openstack_handler_configuration
     env: hp_openstack_system_tests3_region_a
     properties: hp_openstack_region_a_properties
     manager_blueprint_override:
       <<: *openstack_manager_blueprint_override
-      <<: *transient_deployment_workers_manager_blueprint_override
+      <<: *nontransient_deployment_workers_manager_blueprint_override
     inputs_override:
       <<: *hp_openstack_credentials_inputs
       <<: *hp_openstack_region_a_inputs
@@ -822,18 +822,18 @@ test_suites:
 
   #####################################################################
 
-  transient_deployment_workers_openstack_nodecellar:
-    handler_configuration: transient_deployment_workers_hp_openstack_system_tests2_region_a
+  nontransient_deployment_workers_openstack_nodecellar:
+    handler_configuration: nontransient_deployment_workers_hp_openstack_system_tests2_region_a
     tests:
       - openstack_blueprints_nodecellar
 
-  transient_deployment_workers_hp_openstack_autoheal_and_scale:
-    handler_configuration: transient_deployment_workers_hp_openstack_system_tests2_region_b
+  nontransient_deployment_workers_hp_openstack_autoheal_and_scale:
+    handler_configuration: nontransient_deployment_workers_hp_openstack_system_tests2_region_b
     tests:
       - openstack_blueprints_autoheal_and_scale
 
-  transient_deployment_workers_openstack_manager_recovery:
-    handler_configuration: transient_deployment_workers_hp_openstack_system_tests3_region_a
+  nontransient_deployment_workers_openstack_manager_recovery:
+    handler_configuration: nontransient_deployment_workers_hp_openstack_system_tests3_region_a
     tests:
       - manager_recovery
 
