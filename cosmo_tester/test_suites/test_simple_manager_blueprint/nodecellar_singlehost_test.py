@@ -134,6 +134,7 @@ class NodecellarSingleHostTest(NodecellarAppTest):
         self.local_env.execute('uninstall',
                                task_retries=40,
                                task_retry_interval=30)
+        self.env.management_ip = None
 
     def get_public_ip(self, nodes_state):
         return self.public_ip_address
