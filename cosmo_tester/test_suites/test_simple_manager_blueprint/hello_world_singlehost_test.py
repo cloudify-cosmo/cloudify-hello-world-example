@@ -82,6 +82,68 @@ class HelloWorldSingleHostTest(AbstractHelloWorldTest):
         }
         self._run(blueprint_file='singlehost-blueprint.yaml', inputs=inputs)
 
+    def _setup_external_components_vm(self):
+        blueprint_path = self.copy_blueprint('external-components-vm')
+        self.blueprint_yaml = \
+            blueprint_path / 'external-components-blueprint.yaml'
+        self.prefix = 'external-components-host-{0}'.format(self.test_id)
+        self.manager_blueprint_overrides = {}
+
+        self.ext_inputs = {
+            'prefix': self.prefix,
+            'external_network': self.env.external_network_name,
+            'os_username': self.env.keystone_username,
+            'os_password': self.env.keystone_password,
+            'os_tenant_name': self.env.keystone_tenant_name,
+            'os_region': self.env.region,
+            'os_auth_url': self.env.keystone_url,
+            'image_id': self.env.centos_7_image_name,
+            'flavor': self.env.medium_flavor_id,
+            'key_pair_path': '{0}/{1}-keypair.pem'.format(self.workdir,
+                                                          self.prefix)
+        }
+
+        self.logger.info('initialize external '
+                         'components local env for running the '
+                         'blueprint that starts a vm of es and influx')
+        self.ext_local_env = local.init_env(
+            self.blueprint_yaml,
+            inputs=self.ext_inputs,
+            name=self._testMethodName,
+            ignored_modules=cli_constants.IGNORED_LOCAL_WORKFLOW_MODULES)
+
+        self.logger.info('starting vm to serve as the management vm')
+        self.ext_local_env.execute('install',
+                                   task_retries=10,
+                                   task_retry_interval=30)
+        self.external_components_public_ip = \
+            self.ext_local_env.outputs()[
+                'external_components_vm_public_ip_address']
+        self.external_components_private_ip = \
+            self.ext_local_env.outputs()[
+                'external_components_vm_private_ip_address']
+        self.addCleanup(self.cleanup_ext)
+
+    def test_external_components(self):
+        self._setup_external_components_vm()
+        remote_manager_key_path = '/home/{0}/manager_key.pem'.format(
+            self.env.centos_7_image_user)
+        additional_bootstrap_inputs = {
+            'elasticsearch_endpoint_ip': self.external_components_public_ip,
+            'influxdb_endpoint_ip': self.external_components_public_ip
+        }
+        self.logger.info(str(additional_bootstrap_inputs))
+        self.bootstrap_simple_manager_blueprint(
+            remote_manager_key_path, additional_bootstrap_inputs)
+        inputs = {
+            'server_ip': self.public_ip_address,
+            'agent_user': self.env.centos_7_image_user,
+            'agent_private_key_path': remote_manager_key_path
+        }
+        self._run(blueprint_file='singlehost-blueprint.yaml',
+                  inputs=inputs,
+                  influx_host_ip=self.external_components_public_ip)
+
     def _do_post_uninstall_assertions(self, context):
         instances = self.client.node_instances.list(self.test_id)
         for x in instances:
@@ -93,7 +155,8 @@ class HelloWorldSingleHostTest(AbstractHelloWorldTest):
                            task_retries=5)
         self.addCleanup(self.cfy.teardown)
 
-    def bootstrap_simple_manager_blueprint(self, remote_manager_key_path):
+    def bootstrap_simple_manager_blueprint(self, remote_manager_key_path,
+                                           additional_bootstrap_inputs=None):
         self.manager_blueprints_repo_dir = clone(MANAGER_BLUEPRINTS_REPO_URL,
                                                  self.workdir)
         self.test_manager_blueprint_path = \
@@ -110,8 +173,9 @@ class HelloWorldSingleHostTest(AbstractHelloWorldTest):
             'ssh_user': self.env.centos_7_image_user,
             'ssh_key_filename': self.inputs['key_pair_path'],
             'agents_user': self.env.centos_7_image_user,
-            'resources_prefix': ''
+            'resources_prefix': '',
         }
+        self.bootstrap_inputs.update(additional_bootstrap_inputs or {})
 
         # preparing inputs file for bootstrap
         self.test_inputs_path = \
@@ -139,3 +203,10 @@ class HelloWorldSingleHostTest(AbstractHelloWorldTest):
         self.local_env.execute('uninstall',
                                task_retries=40,
                                task_retry_interval=30)
+        self.env.management_ip = None
+
+    def cleanup_ext(self):
+        self.ext_local_env.execute('uninstall',
+                                   task_retries=40,
+                                   task_retry_interval=30)
+        self.env.management_ip = None

@@ -43,7 +43,8 @@ class AbstractHelloWorldTest(MonitoringTestCase):
     def _run(self,
              inputs=None,
              blueprint_file='blueprint.yaml',
-             is_existing_deployment=False):
+             is_existing_deployment=False,
+             influx_host_ip=None):
         if not is_existing_deployment:
             self.repo_dir = clone(CLOUDIFY_HELLO_WORLD_EXAMPLE_URL,
                                   self.workdir)
@@ -70,7 +71,8 @@ class AbstractHelloWorldTest(MonitoringTestCase):
         context = self._do_post_install_assertions()
 
         self.logger.info('Asserting deployment monitoring data exists...')
-        self.assert_deployment_monitoring_data_exists()
+        self.assert_deployment_monitoring_data_exists(
+            influx_host_ip=influx_host_ip)
 
         self.logger.info('Uninstalling deployment...')
         self.execute_uninstall()
