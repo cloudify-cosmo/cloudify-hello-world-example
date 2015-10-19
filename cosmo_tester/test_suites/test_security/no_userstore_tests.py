@@ -24,7 +24,7 @@ from cosmo_tester.framework import util
 
 
 CUSTOM_AUTH_PROVIDER_PLUGIN = 'mock-auth-provider-with-no-userstore'
-PLUGINS_PROP_PATH = 'node_templates.manager.properties.cloudify.plugins'
+PLUGINS_PROP_PATH = 'node_templates.rest_service.properties.plugins'
 
 
 class NoUserstoreTests(SecurityTestBase):
