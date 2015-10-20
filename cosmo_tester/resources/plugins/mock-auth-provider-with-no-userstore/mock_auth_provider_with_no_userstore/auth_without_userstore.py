@@ -31,8 +31,8 @@ class AuthorizeUser1(AbstractAuthenticationProvider):
         if userstore:
             raise ValueError("userstore specified, but I don't want it")
 
-        if auth_info.user_id != 'user1':
-            raise Exception('invalid username, only user1 is valid')
+        if auth_info.user_id != 'admin':
+            raise Exception('invalid username, only admin is valid')
 
         return User('mockuser1', 'mockpass1', 'mockuser1@mock.com', [],
                     active=True)
