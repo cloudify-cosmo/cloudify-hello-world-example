@@ -22,12 +22,12 @@ from time import sleep, time
 import fabric.api
 from cloudify_rest_client import exceptions
 
-from cosmo_tester.test_suites.test_blueprints import nodecellar_test
+from cosmo_tester.test_suites.test_blueprints import hello_world_bash_test
 
 
-class DockerRecoveryTest(nodecellar_test.NodecellarAppTest):
+class ManagerAfterRebootTest(hello_world_bash_test.AbstractHelloWorldTest):
 
-    def test_docker_recovery(self):
+    def test_manager_after_reboot(self):
         context_before = self.get_provider_context()
         self.init_fabric()
         self.restart_vm()
@@ -47,6 +47,12 @@ class DockerRecoveryTest(nodecellar_test.NodecellarAppTest):
         self.assertEqual(context_before,
                          context_after,
                          msg='Provider context is not the same after restart')
+        inputs = {
+            'agent_user': self.env.centos_7_image_user,
+            'image': self.env.centos_7_image_name,
+            'flavor': self.env.flavor_name
+        }
+        self._run(inputs=inputs)
 
     def get_provider_context(self):
         return self.client.manager.get_context()
@@ -54,9 +60,13 @@ class DockerRecoveryTest(nodecellar_test.NodecellarAppTest):
     def init_fabric(self):
         manager_keypath = self.env._config_reader.management_key_path
         fabric_env = fabric.api.env
+        self.logger.info('Fabric env: user={0}, key={1}, host={2}'.format(
+            self.env.centos_image_user,
+            manager_keypath,
+            self.env.management_ip))
         fabric_env.update({
             'timeout': 30,
-            'user': 'ubuntu',
+            'user': self.env.centos_image_user,
             'key_filename': manager_keypath,
             'host_string': self.env.management_ip,
         })
@@ -64,7 +74,7 @@ class DockerRecoveryTest(nodecellar_test.NodecellarAppTest):
     def restart_vm(self):
         self.logger.info('Restarting machine with ip {0}'
                          .format(self.env.management_ip))
-        return fabric.api.run('sudo shutdown -r now')
+        return fabric.api.run('sudo shutdown -r +1')
 
     def _wait_for_provider_context(self, timeout):
         end = time() + timeout
@@ -117,11 +127,3 @@ class DockerRecoveryTest(nodecellar_test.NodecellarAppTest):
             sleep(2)
 
         return False
-
-    def get_inputs(self):
-
-        return {
-            'image': self.env.ubuntu_image_id,
-            'flavor': self.env.small_flavor_id,
-            'agent_user': 'ubuntu'
-        }
