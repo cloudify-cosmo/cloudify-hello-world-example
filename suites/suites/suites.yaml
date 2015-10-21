@@ -676,10 +676,9 @@ tests:
     tests:
       - cosmo_tester/test_suites/test_blueprints -e puppet -e chef -e docker -e windows
 
-  openstack_blueprints_persistence_recovery:
+  manager_after_reboot:
     tests:
-      - cosmo_tester/test_suites/test_blueprints/docker_persistence_test.py
-      - cosmo_tester/test_suites/test_blueprints/docker_recovery_test.py
+      - cosmo_tester/test_suites/test_blueprints/manager_after_reboot_test.py
 
   openstack_blueprints_chef_puppet:
     tests:
