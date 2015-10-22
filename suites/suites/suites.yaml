@@ -891,6 +891,11 @@ test_suites:
     tests:
       - agent_tests
 
+  openstack_manager_after_reboot:
+    requires: [openstack, datacentred]
+    tests:
+      - manager_after_reboot
+
   #####################################################################
 
   pclab47_devstack_nova_net:
