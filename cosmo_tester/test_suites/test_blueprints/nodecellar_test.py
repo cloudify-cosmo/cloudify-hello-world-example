@@ -18,7 +18,6 @@ import requests
 import json
 from requests.exceptions import ConnectionError
 from influxdb import InfluxDBClient
-from influxdb.client import InfluxDBClientError
 
 from cosmo_tester.framework.git_helper import clone
 from cosmo_tester.framework.test_cases import MonitoringTestCase
@@ -200,7 +199,7 @@ class NodecellarAppTest(MonitoringTestCase):
                 .format(self.deployment_id, self.mongo_node_name,
                         instance_id)
             influx_client.query(query)
-        except InfluxDBClientError as e:
+        except Exception as e:
             self.fail('monitoring events for {0} node instance '
                       'with id {1} were not found on influxDB. error is: {2}'
                       .format(self.mongo_node_name, instance_id, e))
