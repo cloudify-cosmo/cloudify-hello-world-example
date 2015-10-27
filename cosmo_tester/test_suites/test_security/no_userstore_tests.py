@@ -51,11 +51,10 @@ class NoUserstoreTests(SecurityTestBase):
         return [
             {
                 'implementation': 'mock_auth_provider_with_no_userstore'
-                                  '.auth_without_userstore:AuthorizeUser1',
-                'name': 'password',
-                'properties': {
-                    'dummy_param': 'dumdum'
-                }
+                                  '.auth_without_userstore:'
+                                  'AuthorizeUserMyUsername',
+                'name': 'Authorize_only_MyUsername',
+                'properties': {}
             }
         ]
 
@@ -73,10 +72,16 @@ class NoUserstoreTests(SecurityTestBase):
 
         return settings
 
+    def set_rest_client(self):
+        self.client = CloudifyClient(
+            host=self.env.management_ip,
+            headers=util.get_auth_header(username='my_username',
+                                         password='something'))
+
     def _assert_unauthorized_user_fails(self):
         client = CloudifyClient(host=self.env.management_ip,
                                 headers=util.get_auth_header(
-                                    username='wrong_user',
-                                    password='wrong_pass'))
+                                    username='wrong_username',
+                                    password='something'))
         self.assertRaisesRegexp(CloudifyClientError, '401: user unauthorized',
                                 client.manager.get_status)
