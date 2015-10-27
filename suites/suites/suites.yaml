@@ -783,7 +783,7 @@ tests:
   agent_tests:
     external: *agent_external
     tests:
-      - system_tests/manager
+      - system_tests/manager -e winrm -e windows
 
 #####################################################################################
 
