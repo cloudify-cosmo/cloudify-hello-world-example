@@ -52,8 +52,8 @@ class NoUserstoreTests(SecurityTestBase):
             {
                 'implementation': 'mock_auth_provider_with_no_userstore'
                                   '.auth_without_userstore:'
-                                  'AuthorizeUserMyUsername',
-                'name': 'Authorize_only_MyUsername',
+                                  'AuthorizeUserByUsername',
+                'name': 'Authorize_By_Username',
                 'properties': {}
             }
         ]
@@ -75,7 +75,7 @@ class NoUserstoreTests(SecurityTestBase):
     def set_rest_client(self):
         self.client = CloudifyClient(
             host=self.env.management_ip,
-            headers=util.get_auth_header(username='my_username',
+            headers=util.get_auth_header(username='not_the_default_username',
                                          password='something'))
 
     def _assert_unauthorized_user_fails(self):
