@@ -191,6 +191,11 @@ class CfyHelper(object):
         with self.workdir:
             cfy.blueprints.download(blueprint_id=blueprint_id).wait()
 
+    def download_plugin(self, plugin_id, output_file):
+        with self.workdir:
+            cfy.plugins.download(plugin_id=plugin_id, output=output_file)\
+                .wait()
+
     def use(self, management_ip):
         with self.workdir:
             cfy.use(management_ip=management_ip).wait()
