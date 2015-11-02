@@ -809,7 +809,6 @@ test_suites:
     requires: [openstack, hp]
     tests:
       - openstack_plugin
-      - openstack_blueprints_persistence_recovery
 
   openstack_watchdog:
     requires: [openstack, hp]
