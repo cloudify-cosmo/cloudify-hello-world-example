@@ -14,7 +14,8 @@
 #    * limitations under the License.
 
 from cloudify_rest_client.client import CloudifyClient
-from cloudify_rest_client.exceptions import CloudifyClientError
+from cloudify_rest_client.exceptions import CloudifyClientError, \
+    UserUnauthorizedError
 
 from cosmo_tester.framework import util
 from cosmo_tester.test_suites.test_security.security_test_base import \
@@ -36,7 +37,8 @@ class TokenAuthenticationTest(SecurityTestBase):
                                 headers=util.get_auth_header(
                                     username='wrong_user',
                                     password='wrong_password'))
-        self.assertRaisesRegexp(CloudifyClientError, '401: user unauthorized',
+        self.assertRaisesRegexp(UserUnauthorizedError,
+                                '401: user unauthorized',
                                 client.blueprints.list())
 
     def _assert_authorized_user_succeeds(self):

@@ -16,7 +16,7 @@
 import shutil
 
 from cloudify_rest_client.client import CloudifyClient
-from cloudify_rest_client.exceptions import CloudifyClientError
+from cloudify_rest_client.exceptions import UserUnauthorizedError
 
 from cosmo_tester.test_suites.test_security.security_test_base import \
     SecurityTestBase, SECURITY_PROP_PATH
@@ -83,5 +83,6 @@ class NoUserstoreTests(SecurityTestBase):
                                 headers=util.get_auth_header(
                                     username='wrong_username',
                                     password='something'))
-        self.assertRaisesRegexp(CloudifyClientError, '401: user unauthorized',
+        self.assertRaisesRegexp(UserUnauthorizedError,
+                                '401: user unauthorized',
                                 client.manager.get_status)
