@@ -15,21 +15,24 @@
 import urllib
 from time import sleep, time
 
-from fabric.api import env, reboot
+import fabric.api
 
 from cosmo_tester.framework.testenv import TestCase
 from cosmo_tester.framework.util import get_actual_keypath
 
 
 class RebootManagerTest(TestCase):
+
     def _reboot_server(self):
-        env.update({
-            'user': self.env.management_user_name,
+        fabric_env = fabric.api.env
+        fabric_env.update({
+            'timeout': 30,
+            'user': self.env.centos_7_image_user,
             'key_filename': get_actual_keypath(self.env,
                                                self.env.management_key_path),
             'host_string': self.env.management_ip,
-        })
-        reboot()
+            })
+        return fabric.api.run('sudo shutdown -r +1')
 
     def _get_undefined_services(self):
         return [each['display_name']

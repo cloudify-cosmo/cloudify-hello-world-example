@@ -61,12 +61,12 @@ class ManagerAfterRebootTest(hello_world_bash_test.AbstractHelloWorldTest):
         manager_keypath = self.env._config_reader.management_key_path
         fabric_env = fabric.api.env
         self.logger.info('Fabric env: user={0}, key={1}, host={2}'.format(
-            self.env.centos_image_user,
+            self.env.centos_7_image_user,
             manager_keypath,
             self.env.management_ip))
         fabric_env.update({
             'timeout': 30,
-            'user': self.env.centos_image_user,
+            'user': self.env.centos_7_image_user,
             'key_filename': manager_keypath,
             'host_string': self.env.management_ip,
         })
