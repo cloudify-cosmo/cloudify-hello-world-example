@@ -775,6 +775,10 @@ tests:
     tests:
       - system_tests/manager
 
+  docker_nodecellar:
+    tests:
+      - cosmo_tester/test_suites/test_blueprints/docker_plugin_nodecellar_test.py
+
   host_pool_plugin:
     external: *host_pool_plugin_external
     tests:
@@ -875,6 +879,7 @@ test_suites:
     requires: [openstack, datacentred]
     tests:
       - docker_plugin
+      - docker_nodecellar
 
   openstack_windows_cli_package:
     requires: [openstack, datacentred]
