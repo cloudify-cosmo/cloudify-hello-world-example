@@ -675,7 +675,7 @@ tests:
 
   openstack_blueprints_without_chef_puppet_docker_windows:
     tests:
-      - cosmo_tester/test_suites/test_blueprints -e puppet -e chef -e docker -e windows
+      - cosmo_tester/test_suites/test_blueprints -e puppet -e chef -e docker -e windows -e test_manager_after_reboot
 
   manager_after_reboot:
     tests:
