@@ -1,8 +1,0 @@
-policy_types:
-    diamond_test:
-        properties:
-            contains:
-                description: >
-                    pass all events for which the service contains this
-                    string
-        source: policies/diamond_test.clj

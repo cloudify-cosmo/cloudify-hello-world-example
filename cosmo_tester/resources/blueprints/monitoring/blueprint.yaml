@@ -4,11 +4,11 @@ imports:
     - http://www.getcloudify.org/spec/cloudify/3.3rc1/types.yaml
     - http://www.getcloudify.org/spec/openstack-plugin/1.3rc1/plugin.yaml
     - http://www.getcloudify.org/spec/diamond-plugin/1.3rc1/plugin.yaml
-    - policies/diamond_test.yaml
 
 inputs:
     image: {}
     flavor: {}
+    user: {}
     diamond_config:
         default:
             interval: 1
@@ -31,10 +31,10 @@ node_templates:
     vm:
         type: cloudify.openstack.nodes.Server
         properties:
+            agent_config:
+              user: { get_input: user }
             image: { get_input: image }
             flavor: { get_input: flavor }
-            server:
-                name: diamond-agent-server
         interfaces:
             cloudify.interfaces.monitoring_agent:
                 install:
@@ -64,9 +64,11 @@ groups:
         members: [vm]
         policies:
             test_policy:
-                type: diamond_test
+                type: cloudify.policies.types.threshold
                 properties:
-                    contains: example
+                    service: example
+                    threshold: 40.0
+                    stability_time: 30
                 triggers:
                     test_trigger:
                         type: cloudify.policies.triggers.execute_workflow
