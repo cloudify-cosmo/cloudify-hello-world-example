@@ -343,7 +343,7 @@ class TestCase(unittest.TestCase):
         node_state = {}
         for deployment_id in deployments.keys():
             deployment_nodes[deployment_id] = self.client.node_instances.list(
-                deployment_id)
+                deployment_id).items
             node_state[deployment_id] = {}
             for node in deployment_nodes[deployment_id]:
                 node_state[deployment_id][node.id] = node

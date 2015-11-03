@@ -16,7 +16,10 @@
 from manager_recovery_base import BaseManagerRecoveryTest
 
 
-class ManagerRecoveryTest(BaseManagerRecoveryTest):
+class ManagerRecoveryWithSnapshotTest(BaseManagerRecoveryTest):
 
-    def test_manager_recovery(self):
+    def _get_snapshot_id(self):
+        return 'test_manager_recovery_with_snapshot'
+
+    def test_manager_recovery_with_snapshot(self):
         self._test_manager_recovery_impl()

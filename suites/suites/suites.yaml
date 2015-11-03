@@ -758,7 +758,6 @@ tests:
     tests:
       - cosmo_tester/test_suites/test_manager_status
 
-  # These tests must run on a specific HP tenant and region i.e: hp_openstack_system_tests3_region_a
   manager_recovery:
     tests:
       - cosmo_tester/test_suites/test_manager_recovery
@@ -865,7 +864,7 @@ test_suites:
       - manager_status
 
   openstack_manager_recovery:
-    handler_configuration: hp_openstack_system_tests3_region_a
+    requires: [openstack, hp]
     tests:
       - manager_recovery
 
