@@ -789,6 +789,10 @@ tests:
     tests:
       - system_tests/manager -e winrm -e windows
 
+  nodecellar_backwards_compatibility_tests:
+    tests:
+      - cosmo_tester/test_suites/backwards/test_nodecellar_backwards_compatibility/nodecellar_backwards_compatibility_test.py
+
 #####################################################################################
 
 test_suites:
@@ -900,6 +904,11 @@ test_suites:
     requires: [openstack, datacentred]
     tests:
       - manager_after_reboot
+
+  openstack_backwards_nodecellar:
+    requires: [openstack, datacentered]
+    tests:
+      - nodecellar_backwards_compatibility_tests
 
   #####################################################################
 

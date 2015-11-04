@@ -12,8 +12,6 @@
 #    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
-
-
 import requests
 import json
 from requests.exceptions import ConnectionError
@@ -256,19 +254,3 @@ class OpenStackNodeCellarTest(OpenStackNodeCellarTestBase):
 
     def test_openstack_nodecellar(self):
         self._test_openstack_nodecellar('openstack-blueprint.yaml')
-
-
-class OldVersionNodeCellarTest(OpenStackNodeCellarTestBase):
-
-    # Nodecellar test using the 3.1 version blueprint
-
-    def test_old_version_openstack_nodecellar(self):
-        self._test_openstack_nodecellar('openstack-blueprint.yaml')
-
-    @property
-    def repo_branch(self):
-        return 'tags/3.1'
-
-    @property
-    def entrypoint_node_name(self):
-        return 'nodecellar_floatingip'
