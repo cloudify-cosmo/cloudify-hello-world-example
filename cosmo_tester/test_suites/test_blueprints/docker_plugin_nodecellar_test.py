@@ -25,7 +25,7 @@ class DockerPluginNodecellarTest(NodecellarAppTest):
     def get_inputs(self):
 
         return {
-            'image': self.env.ubuntu_image_id,
+            'image': self.env.ubuntu_trusty_image_id,
             'flavor': self.env.small_flavor_id,
             'agent_user': 'ubuntu',
             'web_port': 8080,
@@ -47,3 +47,14 @@ class DockerPluginNodecellarTest(NodecellarAppTest):
     @property
     def expected_nodes_count(self):
         return 7
+
+    def _assert_mongodb_collector_data(self, influx_client):
+        pass
+
+    @property
+    def nodecellar_port(self):
+        return 8080
+
+    @property
+    def entrypoint_node_name(self):
+        return 'nodecellar_floatingip'
