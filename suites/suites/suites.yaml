@@ -832,12 +832,12 @@ test_suites:
       - openstack_blueprints_nodecellar
 
   nontransient_deployment_workers_hp_openstack_autoheal_and_scale:
-    handler_configuration: nontransient_deployment_workers_hp_openstack_system_tests2_region_b
+    handler_configuration: nontransient_deployment_workers_hp_openstack_system_tests3_region_a
     tests:
       - openstack_blueprints_autoheal_and_scale
 
   nontransient_deployment_workers_openstack_manager_recovery:
-    handler_configuration: nontransient_deployment_workers_hp_openstack_system_tests3_region_a
+    handler_configuration: nontransient_deployment_workers_hp_openstack_system_tests2_region_b
     tests:
       - manager_recovery
 
