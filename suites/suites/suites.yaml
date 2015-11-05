@@ -136,6 +136,20 @@ templates:
       to_port: 8086
       cidr_ip: 0.0.0.0/0
 
+  - &vcloud_manager_blueprint_sg_override
+    'node_templates.management_security_group.properties.rules[append]':
+        - source: external
+          destination: internal
+          destination_port: 8086
+          action: allow
+
+  - &vcloud_manager_blueprint_pi_override
+    'node_templates.manager_public_ip.properties.rules[append]':
+        - type: DNAT
+          protocol: tcp
+          original_port: 8086
+          translated_port: 8086
+
   - &openstack_manager_blueprint_override
     <<: *new_manager_blueprint_override
     <<: *openstack_manager_blueprint_sg_override
@@ -151,6 +165,10 @@ templates:
   - &nontransient_deployment_workers_manager_blueprint_override
     node_templates.manager_configuration.properties.cloudify.transient_deployment_workers_mode:
       enabled: false
+
+  - &vcloud_manager_blueprint_override
+    <<: *vcloud_manager_blueprint_sg_override
+    <<: *vcloud_manager_blueprint_pi_override
 
   ######################################################
 
