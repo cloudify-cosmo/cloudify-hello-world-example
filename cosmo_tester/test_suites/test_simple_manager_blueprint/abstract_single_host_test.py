@@ -70,7 +70,7 @@ class AbstractSingleHostTest(object):
         self.addCleanup(self.clear_management_ip)
         self.addCleanup(self.uninstall_client)
 
-    def bootstrap_simple_manager_blueprint(self):
+    def bootstrap_simple_manager_blueprint(self, override_inputs=None):
         self.manager_blueprints_repo_dir = clone(MANAGER_BLUEPRINTS_REPO_URL,
                                                  self.workdir)
         self.test_manager_blueprint_path = \
@@ -85,6 +85,9 @@ class AbstractSingleHostTest(object):
             'agents_user': self.env.centos_7_image_user,
             'resources_prefix': ''
         }
+
+        if override_inputs is not None:
+            self.bootstrap_inputs.update(override_inputs)
 
         # preparing inputs file for bootstrap
         self.test_inputs_path = \
