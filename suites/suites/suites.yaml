@@ -925,7 +925,7 @@ test_suites:
       - manager_after_reboot
 
   openstack_backwards_nodecellar:
-    requires: [openstack, datacentered]
+    requires: [openstack, datacentred]
     tests:
       - nodecellar_backwards_compatibility_tests
 
