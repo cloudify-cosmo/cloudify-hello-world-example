@@ -17,7 +17,8 @@ class ExternalComponentsTest(AbstractHelloWorldTest, AbstractSingleHostTest):
         self._setup_external_components_vm()
         additional_bootstrap_inputs = {
             'elasticsearch_endpoint_ip': self.external_components_public_ip,
-            'influxdb_endpoint_ip': self.external_components_public_ip
+            'influxdb_endpoint_ip': self.external_components_public_ip,
+            'rabbitmq_endpoint_ip': self.external_components_public_ip,
         }
         self.logger.info(str(additional_bootstrap_inputs))
         self.bootstrap_simple_manager_blueprint(additional_bootstrap_inputs)
@@ -30,7 +31,11 @@ class ExternalComponentsTest(AbstractHelloWorldTest, AbstractSingleHostTest):
         blueprint_path = self.copy_blueprint('external-components-vm')
         self.blueprint_yaml = \
             blueprint_path / 'external-components-blueprint.yaml'
-        self.prefix = 'external-components-host-{0}'.format(self.test_id)
+        # rabbitmqctl will fail hard if the hostname (which this is used for)
+        # goes over 63 characters, so external-components-host- has been
+        # shortened to external-components- (as we were at 64 characters)
+        self.prefix = 'external-components-{0}'.format(self.test_id)
+
         self.manager_blueprint_overrides = {}
 
         self.ext_inputs = {

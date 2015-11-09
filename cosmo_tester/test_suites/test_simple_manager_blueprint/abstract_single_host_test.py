@@ -75,7 +75,7 @@ class AbstractSingleHostTest(object):
                                                  self.workdir)
         self.test_manager_blueprint_path = \
             os.path.join(self.manager_blueprints_repo_dir,
-                         'new', 'simple-manager-blueprint.yaml')
+                         'simple-manager-blueprint.yaml')
 
         self.bootstrap_inputs = {
             'public_ip': self.public_ip_address,
