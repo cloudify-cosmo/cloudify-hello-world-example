@@ -288,27 +288,27 @@ templates:
   - &hp_openstack_handler_configuration
     <<: *openstack_handler_configuration
     inputs: inputs-hp-openstack.yaml
-    manager_blueprint: new/openstack-manager-blueprint.yaml
+    manager_blueprint: openstack-manager-blueprint.yaml
     manager_blueprint_override: *openstack_manager_blueprint_override
 
   - &lab_openstack_handler_configuration
     <<: *openstack_handler_configuration
     inputs: inputs-lab-openstack.yaml
-    manager_blueprint: new/openstack-manager-blueprint.yaml
+    manager_blueprint: openstack-manager-blueprint.yaml
     manager_blueprint_override: *openstack_manager_blueprint_override
     properties: lab_openstack_properties
 
   - &mirantis_openstack_handler_configuration
     <<: *openstack_handler_configuration
     inputs: inputs-mirantis-openstack.yaml
-    manager_blueprint: new/openstack-manager-blueprint.yaml
+    manager_blueprint: openstack-manager-blueprint.yaml
     manager_blueprint_override: *openstack_manager_blueprint_override
     properties: mirantis_openstack_properties
 
   - &datacentred_openstack_handler_configuration
     <<: *openstack_handler_configuration
     inputs: inputs-datacentred-openstack.yaml
-    manager_blueprint: new/openstack-manager-blueprint.yaml
+    manager_blueprint: openstack-manager-blueprint.yaml
     manager_blueprint_override: *datacentred_openstack_manager_blueprint_override
     properties: datacentred_openstack_properties
 
@@ -710,7 +710,7 @@ handler_configurations:
     handler: ec2_handler
     env: aws_ec2
     external: *aws_ec2_plugin_external
-    manager_blueprint: new/aws-ec2-manager-blueprint.yaml
+    manager_blueprint: aws-ec2-manager-blueprint.yaml
     manager_blueprint_override: *aws_ec2_manager_blueprint_override
     properties: aws_ec2
     inputs_override:
