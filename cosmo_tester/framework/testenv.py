@@ -436,10 +436,6 @@ class TestCase(unittest.TestCase):
                         str(blueprint_path))
         return blueprint_path
 
-    def delete_blueprint(self, blueprint_dir_name):
-        blueprint_path = path(self.workdir) / blueprint_dir_name
-        shutil.rmtree(blueprint_path)
-
     def wait_for_execution(self, execution, timeout):
         end = time.time() + timeout
         while time.time() < end:

@@ -13,14 +13,15 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
-import os
-import tarfile
 import filecmp
+import os
+import shutil
+import tarfile
 import tempfile
 
-from cosmo_tester.framework.testenv import TestCase
-
 from wagon.wagon import Wagon
+
+from cosmo_tester.framework.testenv import TestCase
 
 TEST_PACKAGE_NAME = 'mogrify'
 TEST_PACKAGE_VERSION = '0.1'
@@ -70,7 +71,8 @@ class DownloadInstallPluginTest(TestCase):
     def test_create_snapshot_with_plugin(self):
         self._upload_plugin()
 
-        self.client.snapshots.create(self.test_id, False, False)
+        execution = self.client.snapshots.create(self.test_id, False, False)
+        self.wait_for_execution(execution, 1000)
         self._delete_remote_plugin_if_exists()
         self.client.snapshots.restore(self.test_id)
 
@@ -87,7 +89,7 @@ class DownloadInstallPluginTest(TestCase):
         self.execute_uninstall()
         self.cfy.delete_deployment(self.test_id)
         self.cfy.delete_blueprint(self.test_id)
-        self.delete_blueprint('managed-plugins')
+        shutil.rmtree(blueprint_path)
 
     def _delete_remote_plugin_if_exists(self):
         plugins = self.client.plugins.list(package_name=TEST_PACKAGE_NAME)
