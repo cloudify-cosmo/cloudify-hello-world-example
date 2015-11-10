@@ -64,13 +64,30 @@ class DownloadInstallPluginTest(TestCase):
         self.assertTrue(filecmp.cmp(package_json, new_package_json))
 
     def test_install_managed_plugin(self):
-        # upload managed plugin
-        self.client.plugins.upload(self.wheel_tar)
+        self._upload_plugin()
+        self._verify_plugin_can_be_used_in_blueprint()
 
+    def test_create_snapshot_with_plugin(self):
+        self._upload_plugin()
+
+        self.client.snapshots.create(self.test_id, False, False)
+        self._delete_remote_plugin_if_exists()
+        self.client.snapshots.restore(self.test_id)
+
+        self._verify_plugin_can_be_used_in_blueprint()
+
+    def _upload_plugin(self):
+        return self.client.plugins.upload(self.wheel_tar)
+
+    def _verify_plugin_can_be_used_in_blueprint(self):
         # install a blueprint that uses the managed plugin
         blueprint_path = self.copy_blueprint('managed-plugins')
         self.blueprint_yaml = blueprint_path / 'blueprint.yaml'
         self.upload_deploy_and_execute_install(fetch_state=False)
+        self.execute_uninstall()
+        self.cfy.delete_deployment(self.test_id)
+        self.cfy.delete_blueprint(self.test_id)
+        self.delete_blueprint('managed-plugins')
 
     def _delete_remote_plugin_if_exists(self):
         plugins = self.client.plugins.list(package_name=TEST_PACKAGE_NAME)
