@@ -1,15 +1,15 @@
-#######
-# Cloudify Hello World blueprint.
-#
-# The blueprint describes an OpenStack vm created using Cloudify's OpenStack plugin
-# and simple web server started using Cloudify's script plugin.
-# In addition, an OpenStack floating ip and security group are created and associated with the created vm.
-#
 tosca_definitions_version: cloudify_dsl_1_2
+
+description: >
+  The blueprint describes an OpenStack vm created using Cloudify's OpenStack plugin
+  and simple web server started using Cloudify's script plugin.
+  In addition, an OpenStack floating ip and security group are created and associated with the created vm.
+
 imports:
   - http://www.getcloudify.org/spec/cloudify/3.3rc1/types.yaml
   - http://www.getcloudify.org/spec/openstack-plugin/1.3rc1/plugin.yaml
   - http://www.getcloudify.org/spec/diamond-plugin/1.3rc1/plugin.yaml
+
 inputs:
   webserver_port:
     description: The HTTP web server port
@@ -20,6 +20,7 @@ inputs:
     description: Openstack image name or id to use for the new server
   flavor:
     description: Openstack flavor name or id to use for the new server
+
 node_templates:
   virtual_ip:
     type: cloudify.openstack.nodes.FloatingIP
