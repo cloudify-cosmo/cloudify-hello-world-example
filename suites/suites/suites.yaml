@@ -47,6 +47,10 @@ variables:
   aws_ec2_micro_instance_type: t2.micro
   aws_ec2_eu_central_1_region_name: eu-central-1
 
+  vcloud_service_type: ondemand
+  vcloud_instance: 7f26733b-b8c5-4621-ae28-6033cd465b79
+  vcloud_url: https://vca.vmware.com
+
   ######################################################
 
   # These values are updated by the version tool
@@ -90,6 +94,9 @@ variables:
   system_test_vsphere_password: _
   system_test_vsphere_url: _
   system_test_vsphere_vcenter_name: _
+
+  system_test_vcloud_username: _
+  system_test_vcloud_password: _
 
   system_tests_softlayer_username: _
   system_tests_softlayer_api_key: _
@@ -168,6 +175,7 @@ templates:
       enabled: false
 
   - &vcloud_manager_blueprint_override
+    <<: *new_manager_blueprint_override
     <<: *vcloud_manager_blueprint_sg_override
     <<: *vcloud_manager_blueprint_pi_override
 
@@ -212,6 +220,9 @@ templates:
 
   - &aws_ec2_plugin_external
     repo: cloudify-aws-plugin
+
+  - &vcloud_plugin_external
+    repo: tosca-vcloud-plugin
 
   - &agent_external
     repo: cloudify-agent
@@ -367,6 +378,10 @@ handler_properties:
 
   vsphere_handler_props:
     template: systemtests-ubuntu-1404
+
+  vcloud_handler_props:
+    catalog: Public Catalog
+    ubuntu_precise_template: Ubuntu Server 12.04 LTS (amd64 20150127)
 
   aws_ec2:
     ubuntu_trusty_image_id: '{{aws_ec2_eu_central_1_ami_ubuntu_trusty_image_id}}'
@@ -658,6 +673,23 @@ handler_configurations:
       vsphere_resource_pool_name: 'system_tests'
       manager_server_template: 'systemtests-ubuntu-1404'
 
+  ###############################################################################
+
+  vcloud_handler_config:
+    inputs: inputs-vcloud.yaml
+    handler: vcloud_handler
+    env: vcloud
+    external: *vcloud_plugin_external
+    manager_blueprint: new/vcloud-manager-blueprint.yaml
+    properties: vcloud_handler_props
+    manager_blueprint_override: *vcloud_manager_blueprint_override
+    inputs_override:
+      vcloud_username: '{{system_test_vcloud_username}}'
+      vcloud_password: '{{system_test_vcloud_password}}'
+      vcloud_service_type: '{{system_test_vcloud_service_type}}'
+      vcloud_instance: '{{system_test_vcloud_instance}}'
+      vcloud_url: '{{system_test_vcloud_url}}'
+
   ################################################################################
 
   softlayer:
@@ -757,6 +789,11 @@ tests:
     external: *vsphere_plugin_external
     tests:
       - system_tests/test_vsphere_blueprints
+
+  vcloud_blueprints:
+    external: *vcloud_plugin_external
+    tests:
+      - system_tests/manager
 
   watchdog_tests:
     external: *watchdog_external
@@ -942,6 +979,13 @@ test_suites:
     handler_configuration: vsphere_handler_config
     tests:
       - vsphere_blueprints
+
+  #####################################################################
+
+  vcloud:
+    handler_configuration: vcloud_handler_config
+    tests:
+      - vcloud_blueprints
 
   ########################################################################
 
