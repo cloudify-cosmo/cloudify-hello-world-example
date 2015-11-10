@@ -1,0 +1,18 @@
+vcloud_username: ''
+vcloud_password: ''
+vcloud_service_type: ''
+vcloud_instance: ''
+vcloud_url: ''
+vcloud_org: systest
+vcloud_vdc: systest
+edge_gateway: gateway
+server_name: manager-server
+catalog: giga
+template: CentOS-7-x86_64-1406-2
+network_use_existing: false
+management_network_name: manager-net
+management_port_ip_allocation_mode: pool
+ssh_key_filename: ~/.ssh/shared-systemt-tests-key.pem
+agent_private_key_path: ~/.ssh/shared-systemt-tests-key.pem
+user_public_key: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCnmO+MjTAVwtP9LMPaewAFNHyIxRbTBm6Ft/h0LfPHvJ2azn1yJGGTuQAkNAEUICZw8TrkSuxJ1iPXlYWmyveXBCIMPWWAYNl9tet8gO/yW8fwxTWN40Fkh4BB0nJPQICIUt1DS7jv7TDA4BQqowqkQcbTGU/86jKqksKWywG5iuXw+WNLqyMRJ7ATFoeDJ/O++HBWxJ2Q5gCIwd85t1lowebQjCkIwmDoA0homhhlH2XIiwKaKWv56Ug5Ldk0KubBnO4HmbuJU66Xg2+Zl5OWU86vWiv9NxmYWBySO8HMms0077aRNm3HQ+driXpHcXPsJsAhsOcIeICsAuKZzgoL
+public_ip: ''
