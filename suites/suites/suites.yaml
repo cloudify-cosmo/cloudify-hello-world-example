@@ -144,7 +144,7 @@ templates:
       cidr_ip: 0.0.0.0/0
 
   - &vcloud_manager_blueprint_sg_override
-    'node_templates.management_security_group.properties.rules[append]':
+    'node_templates.manager_security_group.properties.rules[append]':
         - source: external
           destination: internal
           destination_port: 8086
