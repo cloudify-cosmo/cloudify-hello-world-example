@@ -88,6 +88,8 @@ node_templates:
       rules:
         - port: 22
           remote_ip_prefix: 0.0.0.0/0
+        - port: 5672
+          remote_ip_prefix: 0.0.0.0/0
         - port: 8086
           remote_ip_prefix: 0.0.0.0/0
         - port: 9200
@@ -107,6 +109,8 @@ node_templates:
       install_agent: false
       image: { get_input: image_id }
       flavor: { get_input: flavor }
+      # If the server name is >63 characters, rabbitmqctl will be unhappy
+      resource_id: { concat: [{ get_input: prefix}, '-server'] }
       management_network_name: { get_property: [network, resource_id] }
       openstack_config: *OPENSTACK_CONFIG
     relationships:
@@ -160,6 +164,25 @@ node_templates:
           implementation: fabric.fabric_plugin.tasks.run_script
           inputs:
             script_path: scripts/start-influxdb.sh
+            fabric_env: *fabric_env
+
+
+  external_rabbitmq_app:
+    type: cloudify.nodes.ApplicationModule
+    relationships:
+      - target: external_components_server
+        type: cloudify.relationships.contained_in
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create:
+          implementation: fabric.fabric_plugin.tasks.run_script
+          inputs:
+            script_path: scripts/install-rabbitmq.sh
+            fabric_env: *fabric_env
+        start:
+          implementation: fabric.fabric_plugin.tasks.run_script
+          inputs:
+            script_path: scripts/start-rabbitmq.sh
             fabric_env: *fabric_env
 
 outputs:
