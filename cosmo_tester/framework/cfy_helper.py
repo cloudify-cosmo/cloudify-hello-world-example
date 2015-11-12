@@ -80,13 +80,37 @@ class CfyHelper(object):
                 task_retry_interval=task_retry_interval,
                 verbose=verbose).wait()
 
-    def recover(self, task_retries=5):
-        map(lambda dep_id:
-            self._wait_for_stop_dep_env_execution_if_necessary(dep_id),
+    def recover(self, snapshot_path, task_retries=5):
+        map(lambda dep:
+            self._wait_for_stop_dep_env_execution_if_necessary(dep.id),
             self._testcase.client.deployments.list())
 
         with self.workdir:
-            cfy.recover(force=True, task_retries=task_retries).wait()
+            cfy.recover(force=True,
+                        task_retries=task_retries,
+                        snapshot_path=snapshot_path).wait()
+
+    def create_snapshot(self,
+                        snapshot_id,
+                        include_metrics=False,
+                        exclude_credentials=False):
+
+        map(lambda dep:
+            self._wait_for_stop_dep_env_execution_if_necessary(dep.id),
+            self._testcase.client.deployments.list())
+
+        with self.workdir:
+            cfy.snapshots.create(
+                snapshot_id=snapshot_id,
+                include_metrics=include_metrics,
+                exclude_credentials=exclude_credentials).wait()
+
+    def download_snapshot(self, snapshot_id, output_path=''):
+
+        with self.workdir:
+            cfy.snapshots.download(
+                snapshot_id=snapshot_id,
+                output=output_path).wait()
 
     def teardown(self,
                  ignore_deployments=True,

@@ -14,6 +14,8 @@
 #    * limitations under the License.
 
 import os
+import time
+from operator import itemgetter
 from path import path
 
 from cloudify_rest_client import CloudifyClient
@@ -26,17 +28,97 @@ from cosmo_tester.framework.cfy_helper import cfy as cli
 
 class BaseManagerRecoveryTest(TestCase):
 
-    def _test_manager_recovery_impl(self):
+    def _get_snapshot_id(self):
+        pass
 
+    def _bootstrap_and_install(self):
         self._copy_manager_blueprint()
 
         # bootstrap and install
         self.bootstrap()
         self._install_blueprint()
 
+    def _pre_recover_actions(self):
+        self.snapshot_id = self._get_snapshot_id()
+        self.snapshot_file_path = '{0}.zip'.format(
+            os.path.join(self.workdir, self.snapshot_id))
+        self.cfy.create_snapshot(self.snapshot_id)
+
+        # waiting for snapshot file to be created on the manager
+        start_time = time.time()
+        snapshot_created = False
+        while time.time() < start_time + 30 and not snapshot_created:
+            for snapshot in self.client.snapshots.list():
+                if self.snapshot_id == snapshot.id \
+                        and snapshot.status == 'created':
+                    snapshot_created = True
+                    break
+
+        self.cfy.download_snapshot(self.snapshot_id, self.snapshot_file_path)
+
+    def _sort_workflows_list_in_state_by_name(self, state):
+        for deployment in state['deployments'].values():
+            sorted_list = sorted(
+                deployment['workflows'], key=itemgetter('name'))
+            deployment['workflows'] = sorted_list
+
+    def _add_agent_migration_props(self,
+                                   old_state,
+                                   new_state,
+                                   properties_to_add_list):
+        for deployment_name, deployment_value in \
+                old_state['node_state'].items():
+            for host_name, host_value in \
+                    deployment_value.items():
+                properties_dict = \
+                    host_value['runtime_properties']['cloudify_agent']
+                new_properties_dict = new_state[
+                    'node_state'][
+                    deployment_name][
+                    host_name]['runtime_properties']['cloudify_agent']
+                for prop in properties_to_add_list:
+                    if prop not in properties_dict \
+                            and prop in new_properties_dict:
+                        properties_dict[prop] = new_properties_dict[prop]
+        for host_name, host_value in old_state['nodes'].items():
+            properties_dict = host_value[
+                'runtime_properties'][
+                'cloudify_agent']
+            new_properties_dict = new_state[
+                'nodes'][
+                host_name]['runtime_properties']['cloudify_agent']
+            for prop in properties_to_add_list:
+                if prop not in properties_dict and prop in new_properties_dict:
+                    properties_dict[prop] = new_properties_dict[prop]
+
+    def _assert_before_after_states(self, after, before):
+        # for some reason, the workflow order changes
+        self._sort_workflows_list_in_state_by_name(before)
+        self._sort_workflows_list_in_state_by_name(after)
+
+        # some cloudify agent properties are added during the
+        # snapshot creation, so they're added to the before state here
+        properties_to_add = [
+            'broker_ssl_enabled',
+            'broker_pass',
+            'version',
+            'broker_user',
+            'broker_ssl_cert',
+            'broker_ip'
+        ]
+        self._add_agent_migration_props(before, after, properties_to_add)
+
+        self.assertEqual(before, after)
+
+    def _test_manager_recovery_impl(self):
+
+        self._bootstrap_and_install()
+
+        self._pre_recover_actions()
         # this will verify that all the data is actually persisted.
         before, after = self._recover_manager()
-        self.assertEqual(before, after)
+
+        self._assert_before_after_states(after, before)
 
         # make sure we can still execute operation on agents.
         # this will verify that the private ip of the manager remained
@@ -79,7 +161,7 @@ class BaseManagerRecoveryTest(TestCase):
         )
 
         inputs = {
-            'image': self.env.ubuntu_image_id,
+            'image': self.env.ubuntu_trusty_image_id,
             'flavor': self.env.small_flavor_id
         }
 
@@ -94,7 +176,8 @@ class BaseManagerRecoveryTest(TestCase):
     def _recover_manager(self):
 
         def recover():
-            self.cfy.recover(task_retries=10)
+            snapshot_path = self.snapshot_file_path
+            self.cfy.recover(task_retries=10, snapshot_path=snapshot_path)
 
         return self._make_operation_with_before_after_states(
             recover,
