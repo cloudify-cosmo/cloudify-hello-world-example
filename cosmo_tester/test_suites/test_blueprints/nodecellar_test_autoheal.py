@@ -129,7 +129,6 @@ class OpenStackAutohealNodeCellarTest(OpenStackNodeCellarTestBase):
     def modify_blueprint(self):
         with YamlPatcher(self.blueprint_yaml) as patch:
             patch.merge_obj('groups', self.AUTOHEAL_GROUP_YAML)
-        print self.blueprint_yaml
 
     def get_inputs(self):
         return {
