@@ -809,6 +809,10 @@ tests:
     tests:
       - cosmo_tester/test_suites/test_security
 
+  broker_security:
+    tests:
+      - cosmo_tester/test_suites/test_broker_security
+
   cli_packager_windows:
     external: *packager_external
     tests:
