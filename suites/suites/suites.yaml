@@ -850,7 +850,7 @@ tests:
 
   nodecellar_backwards_compatibility_tests:
     tests:
-      - cosmo_tester/test_suites/backwards/test_nodecellar_backwards_compatibility/nodecellar_backwards_compatibility_test.py
+      - cosmo_tester/test_suites/backwards/test_nodecellar_backwards_compatibility
 
 #####################################################################################
 
