@@ -6,9 +6,9 @@ description: >
   In addition, an OpenStack floating ip and security group are created and associated with the created vm.
 
 imports:
-  - http://www.getcloudify.org/spec/cloudify/3.3rc1/types.yaml
-  - http://www.getcloudify.org/spec/openstack-plugin/1.3rc1/plugin.yaml
-  - http://www.getcloudify.org/spec/diamond-plugin/1.3rc1/plugin.yaml
+  - http://www.getcloudify.org/spec/cloudify/3.3/types.yaml
+  - http://www.getcloudify.org/spec/openstack-plugin/1.3/plugin.yaml
+  - http://www.getcloudify.org/spec/diamond-plugin/1.3/plugin.yaml
 
 inputs:
   webserver_port:
