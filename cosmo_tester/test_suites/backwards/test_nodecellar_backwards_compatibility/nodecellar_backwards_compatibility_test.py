@@ -20,6 +20,12 @@ from cosmo_tester.test_suites.test_blueprints.nodecellar_test import \
     OpenStackNodeCellarTestBase
 
 
+RABBITMQ_USERNAME_KEY = 'rabbitmq_username'
+RABBITMQ_PASSWORD_KEY = 'rabbitmq_password'
+RABBITMQ_USERNAME_VALUE = 'guest'
+RABBITMQ_PASSWORD_VALUE = 'guest'
+
+
 class OldVersionNodeCellarTest(OpenStackNodeCellarTestBase,
                                NodecellarNackwardsCompatibilityTestBase):
 
@@ -43,3 +49,13 @@ class OldVersionNodeCellarTest(OpenStackNodeCellarTestBase,
     @property
     def entrypoint_node_name(self):
         return 'nodecellar_floatingip'
+
+    def get_manager_blueprint_inputs_override(self):
+        # 3.1 diamond plugin is hard coded to use guest:guest
+        # no need for 'install_python_compilers' because this
+        # only applies for a later version of openstack clients
+        # that is not used in the 3.1 blueprint
+        return {
+            RABBITMQ_USERNAME_KEY: RABBITMQ_USERNAME_VALUE,
+            RABBITMQ_PASSWORD_KEY: RABBITMQ_PASSWORD_VALUE
+        }

@@ -22,12 +22,6 @@ from cosmo_tester.framework import util
 from cosmo_tester.framework.testenv import TestCase
 
 
-RABBITMQ_USERNAME_KEY = 'rabbitmq_username'
-RABBITMQ_PASSWORD_KEY = 'rabbitmq_password'
-RABBITMQ_USERNAME_VALUE = 'guest'
-RABBITMQ_PASSWORD_VALUE = 'guest'
-
-
 class NodecellarNackwardsCompatibilityTestBase(TestCase):
 
     def setup_manager(self):
@@ -47,16 +41,13 @@ class NodecellarNackwardsCompatibilityTestBase(TestCase):
             self.workdir, 'manager-blueprint/types/manager-types.yaml')
 
     def _update_manager_blueprint(self):
-        props = self.get_manager_blueprint_inputs_override()
+        inputs_props = self.get_manager_blueprint_inputs_override()
         with util.YamlPatcher(self.test_inputs_path) as patch:
-            for key, value in props.items():
+            for key, value in inputs_props.items():
                 patch.set_value(key, value)
 
     def get_manager_blueprint_inputs_override(self):
-        return {
-            RABBITMQ_USERNAME_KEY: RABBITMQ_USERNAME_VALUE,
-            RABBITMQ_PASSWORD_KEY: RABBITMQ_PASSWORD_VALUE
-        }
+        return {}
 
     def _bootstrap(self):
         self.cfy.bootstrap(blueprint_path=self.test_manager_blueprint_path,
