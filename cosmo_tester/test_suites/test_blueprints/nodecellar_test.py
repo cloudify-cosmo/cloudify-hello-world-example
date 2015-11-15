@@ -35,6 +35,8 @@ class NodecellarAppTest(MonitoringTestCase):
 
         self.post_install_assertions(before, after)
 
+        self.on_nodecellar_installed()
+
         self.execute_uninstall()
 
         self.post_uninstall_assertions()
@@ -80,14 +82,8 @@ class NodecellarAppTest(MonitoringTestCase):
             self.public_ip, self.nodecellar_port))
 
     def get_public_ip(self, nodes_state):
-        public_ip = None
-        entrypoint_node_name = self.entrypoint_node_name
-        entrypoint_runtime_property_name = self.entrypoint_property_name
-        for key, value in nodes_state.items():
-            if key.startswith(entrypoint_node_name):
-                public_ip = value['runtime_properties'][
-                    entrypoint_runtime_property_name]
-        return public_ip
+        outputs = self.client.deployments.outputs.get(self.test_id)
+        return outputs['outputs']['endpoint']['ip_address']
 
     def assert_host_state_and_runtime_properties(self, nodes_state):
         for key, value in nodes_state.items():
@@ -102,6 +98,9 @@ class NodecellarAppTest(MonitoringTestCase):
                 self.assertEqual(value['state'], 'started',
                                  'vm node should be started: {0}'
                                  .format(nodes_state))
+
+    def on_nodecellar_installed(self):
+        pass
 
     def post_install_assertions(self, before_state, after_state):
         delta = self.get_manager_state_delta(before_state, after_state)

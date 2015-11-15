@@ -12,7 +12,7 @@ variables:
   hp_openstack_region_a_ubuntu_precise: 8ca068c5-6fde-4701-bab8-322b3e7c8d81
   hp_openstack_region_a_ubuntu_trusty: bec3cab5-4722-40b9-a78a-3489218e22fe
   hp_openstack_region_b_ubuntu_precise: 261844b3-479c-5446-a2c4-1ea95d53b668
-  hp_openstack_region_b_ubuntu_trusty: 9d25fe2d-cf31-4b05-8c58-f238ec78e633
+  hp_openstack_region_b_ubuntu_trusty: 564be9dd-5a06-4a26-ba50-9453f972e483
   hp_openstack_region_b_centos_7_0_selinux: a2859f14-ea12-55e7-8e39-cec9b59e56fb
 
   lab_openstack_ubuntu_precise_image_name: ubuntu_12.04
@@ -238,6 +238,7 @@ templates:
     windows_image_name: '{{hp_openstack_windows_image_name}}'
     centos_image_user: root
     centos_7_image_user: centos
+    ubuntu_trusty_image_user: ubuntu
     flavor_name: standard.small
     small_flavor_id: 101
     medium_flavor_id: 102
