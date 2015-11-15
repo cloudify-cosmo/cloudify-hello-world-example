@@ -11,7 +11,7 @@ use_existing_manager_keypair: true
 use_existing_agent_keypair: true
 ssh_key_filename: ~/.ssh/shared-systemt-tests-key.pem
 agent_private_key_path: ~/.ssh/shared-systemt-tests-key.pem
-mananger_security_group_name: systemt-cloudify-sg-manager
+manager_security_group_name: systemt-cloudify-sg-manager
 agent_security_group_name: systemt-cloudify-sg-agents
 manager_server_name: systemt-cloudify-manager
 ssh_user: centos
