@@ -42,3 +42,7 @@ class NodeCellar321BackwardsTest(OpenStackNodeCellarTestBase,
     @property
     def entrypoint_node_name(self):
         return 'nodecellar_floatingip'
+
+    def get_manager_blueprint_inputs_override(self):
+        # No openstack wagon for 3.2.1
+        return {'install_python_compilers': 'true'}
