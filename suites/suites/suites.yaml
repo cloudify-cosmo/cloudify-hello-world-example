@@ -780,6 +780,10 @@ tests:
     tests:
       - cosmo_tester/test_suites/test_simple_manager_blueprint
 
+  external_components:
+    tests:
+      - cosmo_tester/test_suites/test_external_components
+
   openstack_nova_net:
     tests:
       - cosmo_tester/test_suites/test_openstack_nova_net
