@@ -738,6 +738,10 @@ tests:
       - cosmo_tester/test_suites/test_blueprints/chef_plugin_test.py
       - cosmo_tester/test_suites/test_blueprints/puppet_plugin_test.py
 
+  snapshots_tests:
+    tests:
+      - cosmo_tester/test_suites/test_snapshots
+
   openstack_blueprints_windows:
     tests:
       - cosmo_tester/test_suites/test_blueprints/windows_test.py
@@ -918,6 +922,11 @@ test_suites:
     requires: [openstack, datacentred]
     tests:
       - openstack_blueprints_chef_puppet
+
+  snapshots:
+    requires: [openstack, datacentred]
+    tests:
+      - snapshots_tests
 
   openstack_windows:
     requires: [openstack, datacentred]
