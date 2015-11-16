@@ -24,7 +24,8 @@ BASIC_AUTH_PREFIX = 'Basic'
 
 class AuthorizeUserByUsername(AbstractAuthenticationProvider):
 
-    def _retrieve_credentials_from_request(self):
+    @staticmethod
+    def _retrieve_request_credentials():
         auth_header = request.headers.get(AUTH_HEADER_NAME)
         if not auth_header:
             raise RuntimeError('Request authentication header "{0}" is empty '
@@ -39,7 +40,7 @@ class AuthorizeUserByUsername(AbstractAuthenticationProvider):
             api_key_parts = api_key.split(':')
             request_user_id = api_key_parts[0]
             request_password = api_key_parts[1]
-            if not self.request_user_id or not self.request_password:
+            if not request_user_id or not request_password:
                 raise RuntimeError('username or password not found on request')
 
         return request_user_id, request_password

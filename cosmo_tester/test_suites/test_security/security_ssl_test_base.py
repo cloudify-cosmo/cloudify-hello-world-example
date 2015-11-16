@@ -13,6 +13,7 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
+import os
 import sh
 
 from cloudify_cli import constants
@@ -31,6 +32,10 @@ class SSLTestBase(SecurityTestBase):
         super(SSLTestBase, self).setUp()
         self.cert_path = ''
         self.key_path = ''
+
+    def _set_credentials_env_vars(self):
+        super(SSLTestBase, self)._set_credentials_env_vars()
+        os.environ[constants.CLOUDIFY_SSL_TRUST_ALL] = 'true'
 
     def set_rest_client(self):
         self.client = CloudifyClient(

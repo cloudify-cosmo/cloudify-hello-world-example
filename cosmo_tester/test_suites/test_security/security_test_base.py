@@ -36,8 +36,8 @@ class SecurityTestBase(TestCase):
         if self.get_ssl_enabled():
             self._handle_ssl_files()
         self._update_manager_blueprint()
-        self._bootstrap()
         self._set_credentials_env_vars()
+        self._bootstrap()
         self._running_env_setup()
 
     def _copy_manager_blueprint(self):

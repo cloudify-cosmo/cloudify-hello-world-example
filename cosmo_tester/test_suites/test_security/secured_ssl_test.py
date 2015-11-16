@@ -14,7 +14,7 @@
 #    * limitations under the License.
 
 import os
-from requests.exceptions import SSLError, ConnectionError
+from requests.exceptions import SSLError
 from cloudify_cli import constants
 from cloudify_rest_client import CloudifyClient
 
@@ -73,7 +73,6 @@ class SecuredWithSSLManagerTests(OpenStackNodeCellarTestBase,
         # test commented out until functionality fixed - Jira CFY-3766
         # self._test_try_to_connect_to_manager_on_non_secured_port()
         # test nodecellar without certificate verification
-        os.environ[constants.CLOUDIFY_SSL_TRUST_ALL] = 'true'
         self._test_openstack_nodecellar('openstack-blueprint.yaml')
 
     def _handle_ssl_files(self):
@@ -91,19 +90,21 @@ class SecuredWithSSLManagerTests(OpenStackNodeCellarTestBase,
             common_name=self.floating_ip)
 
     def _test_try_to_connect_to_manager_on_non_secured_port(self):
-        try:
-            client = CloudifyClient(
-                host=self.env.management_ip,
-                port=constants.DEFAULT_REST_PORT,
-                protocol=constants.DEFAULT_PROTOCOL,
-                headers=util.get_auth_header(username=TEST_CFY_USERNAME,
-                                             password=TEST_CFY_PASSWORD))
-            client.manager.get_status()
-            self.fail(
-                'manager should not be available on port '
-                .format(constants.DEFAULT_REST_PORT))
-        except ConnectionError as e:
-            self.assertIn('Connection refused', str(e.message))
+        client = CloudifyClient(
+            host=self.env.management_ip,
+            port=constants.DEFAULT_REST_PORT,
+            protocol=constants.DEFAULT_PROTOCOL,
+            headers=util.get_auth_header(username=TEST_CFY_USERNAME,
+                                         password=TEST_CFY_PASSWORD),
+            cert=self.cert_path,
+            trust_all=False)
+
+        response = client.manager.get_status()
+        if not response['status'] == 'running':
+            raise RuntimeError('Failed to get server status from {0}://{1}:{2}'
+                               .format(constants.DEFAULT_PROTOCOL,
+                                       self.env.management_ip,
+                                       constants.DEFAULT_REST_PORT))
 
     def _test_no_verify_cert(self):
         client = CloudifyClient(

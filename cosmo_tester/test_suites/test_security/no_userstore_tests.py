@@ -13,8 +13,10 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
+import os
 import shutil
 
+from cloudify_cli import constants
 from cloudify_rest_client.client import CloudifyClient
 from cloudify_rest_client.exceptions import UserUnauthorizedError
 
@@ -69,6 +71,7 @@ class NoUserstoreTests(SecurityTestBase):
                 authentication_providers
 
         settings[SECURITY_PROP_PATH + '.userstore_driver'] = ''
+        settings[SECURITY_PROP_PATH + '.authorization_provider'] = ''
 
         return settings
 
@@ -86,3 +89,8 @@ class NoUserstoreTests(SecurityTestBase):
         self.assertRaisesRegexp(UserUnauthorizedError,
                                 '401: user unauthorized',
                                 client.manager.get_status)
+
+    def _set_credentials_env_vars(self):
+        os.environ[constants.CLOUDIFY_USERNAME_ENV] = \
+            'not_the_default_username'
+        os.environ[constants.CLOUDIFY_PASSWORD_ENV] = 'something'
