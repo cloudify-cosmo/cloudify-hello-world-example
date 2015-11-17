@@ -30,6 +30,22 @@ inputs:
     type: string
   key_pair_path:
     type: string
+  broker_ssl_public_cert:
+    type: string
+    default: ''
+  broker_ssl_private_cert:
+    type: string
+    default: ''
+
+
+node_types:
+  external_rabbitmq:
+    derived_from: cloudify.nodes.ApplicationModule
+    properties:
+      broker_ssl_public_cert:
+        default: { get_input: broker_ssl_public_cert }
+      broker_ssl_private_cert:
+        default: { get_input: broker_ssl_private_cert }
 
 node_templates:
   external_network:
@@ -87,6 +103,8 @@ node_templates:
       resource_id: { concat: [{ get_input: prefix }, '-simple-vm-security-group'] }
       rules:
         - port: 22
+          remote_ip_prefix: 0.0.0.0/0
+        - port: 5671
           remote_ip_prefix: 0.0.0.0/0
         - port: 5672
           remote_ip_prefix: 0.0.0.0/0
@@ -168,7 +186,7 @@ node_templates:
 
 
   external_rabbitmq_app:
-    type: cloudify.nodes.ApplicationModule
+    type: external_rabbitmq
     relationships:
       - target: external_components_server
         type: cloudify.relationships.contained_in
