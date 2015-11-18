@@ -386,6 +386,7 @@ handler_properties:
 
   aws_ec2:
     ubuntu_trusty_image_id: '{{aws_ec2_eu_central_1_ami_ubuntu_trusty_image_id}}'
+    centos_7_image_id: '{{aws_ec2_eu_central_1_ami_centos_7_image_id}}'
     medium_instance_type: '{{aws_ec2_medium_instance_type}}'
     micro_instance_type: '{{aws_ec2_micro_instance_type}}'
 
