@@ -61,6 +61,12 @@ class ExternalComponentsTest(AbstractHelloWorldTest, AbstractSingleHostTest):
             name=self._testMethodName,
             ignored_modules=cli_constants.IGNORED_LOCAL_WORKFLOW_MODULES)
 
+        if self.env.install_plugins:
+            self.logger.info('installing required plugins')
+            self.cfy.local(
+                'install-plugins',
+                blueprint_path=self.blueprint_yaml).wait()
+
         self.logger.info('starting vm to serve as the management vm')
         self.ext_local_env.execute('install',
                                    task_retries=10,
