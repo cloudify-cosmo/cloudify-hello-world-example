@@ -66,6 +66,13 @@ class SnapshotsSingleManagerTest(OpenStackNodeCellarTestBase):
         self.cfy.delete_deployment(self.deployment_id, ignore_live_nodes=True)
         self.cfy.delete_deployment(self.additional_dep_id)
         self.client.blueprints.delete(self.blueprint_id)
+        self.logger.info('Deleting all plugins from manager...')
+        plugins = self.client.plugins.list()
+        for plugin in plugins:
+            self.logger.info(
+                'Deleting plugin: {0} - {1}'.format(plugin.id,
+                                                    plugin.package_name))
+            self.client.plugins.delete(plugin.id)
 
         waited = 0
         execution = self.client.snapshots.restore(snapshot_id)
