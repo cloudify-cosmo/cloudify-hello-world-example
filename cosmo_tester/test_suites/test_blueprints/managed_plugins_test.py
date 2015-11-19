@@ -39,7 +39,7 @@ class DownloadInstallPluginTest(TestCase):
 
     def tearDown(self):
         if self.client:
-            self._delete_remote_plugin_if_exists()
+            self._delete_all_plugins()
         super(DownloadInstallPluginTest, self).tearDown()
 
     def _create_sample_wheel(self, package_name, package_version):
@@ -73,7 +73,7 @@ class DownloadInstallPluginTest(TestCase):
 
         execution = self.client.snapshots.create(self.test_id, False, False)
         self.wait_for_execution(execution, 1000)
-        self._delete_remote_plugin_if_exists()
+        self._delete_all_plugins()
         self.client.snapshots.restore(self.test_id)
 
         self._verify_plugin_can_be_used_in_blueprint()
@@ -94,11 +94,13 @@ class DownloadInstallPluginTest(TestCase):
             self.cfy.delete_blueprint(self.test_id)
             shutil.rmtree(blueprint_path)
 
-    def _delete_remote_plugin_if_exists(self):
-        plugins = self.client.plugins.list(package_name=TEST_PACKAGE_NAME)
-        if plugins:
-            # one result is expected
-            plugin = plugins[0]
+    def _delete_all_plugins(self):
+        for plugin in self.client.plugins.list():
+            self.client.plugins.delete(plugin.id)
+
+    def _delete_plugins_by_package_name(self, package_name):
+        plugins = self.client.plugins.list(package_name=package_name)
+        for plugin in plugins:
             self.client.plugins.delete(plugin.id)
 
     def _extract_package_json(self, tar_location):
