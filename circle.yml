@@ -1,0 +1,21 @@
+machine:
+  python:
+    version: 2.7.9
+
+dependencies:
+  override:
+    - pip install https://github.com/cloudify-cosmo/cloudify-rest-client/archive/3.3.zip
+    - pip install https://github.com/cloudify-cosmo/cloudify-dsl-parser/archive/3.3.zip
+    - pip install https://github.com/cloudify-cosmo/cloudify-plugins-common/archive/3.3.zip
+    - pip install https://github.com/cloudify-cosmo/cloudify-script-plugin/archive/1.3.zip
+    - pip install https://github.com/cloudify-cosmo/cloudify-cli/archive/3.3.zip
+
+test:
+  override:
+    - cfy init
+    - cfy blueprints validate -p blueprint.yaml
+    - cfy blueprints validate -p singlehost-blueprint.yaml
+
+# notify:
+#   flowdock: 1f4ec6febcf1ac9b35ae6c1f0049471f
+
