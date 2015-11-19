@@ -261,7 +261,7 @@ class CfyHelper(object):
     def install_plugins_locally(self, blueprint_path):
         cfy.local(
             'install-plugins',
-            blueprint_path=self.blueprint_path).wait()
+            blueprint_path=blueprint_path).wait()
 
     def _wait_for_stop_dep_env_execution_if_necessary(self, deployment_id):
         if self._testcase and \
