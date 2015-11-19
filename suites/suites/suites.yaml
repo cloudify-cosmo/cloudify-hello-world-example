@@ -728,7 +728,7 @@ tests:
 
   openstack_blueprints_without_chef_puppet_docker_windows:
     tests:
-      - cosmo_tester/test_suites/test_blueprints -e puppet -e chef -e docker -e windows -e test_manager_after_reboot
+      - cosmo_tester/test_suites/test_blueprints -e puppet -e chef -e docker -e test_manager_after_reboot
 
   manager_after_reboot:
     tests:
@@ -742,10 +742,6 @@ tests:
   snapshots_tests:
     tests:
       - cosmo_tester/test_suites/test_snapshots
-
-  openstack_blueprints_windows:
-    tests:
-      - cosmo_tester/test_suites/test_blueprints/windows_test.py
 
   openstack_blueprints_nodecellar:
       tests:
@@ -862,7 +858,7 @@ tests:
 
 test_suites:
 
-  openstack_blueprints_no_chef_puppet_docker_windows:
+  openstack_blueprints_no_chef_puppet_docker:
     requires: [openstack, hp]
     tests:
       - openstack_blueprints_without_chef_puppet_docker_windows
@@ -928,11 +924,6 @@ test_suites:
     requires: [openstack, datacentred]
     tests:
       - snapshots_tests
-
-  openstack_windows:
-    requires: [openstack, datacentred]
-    tests:
-      - openstack_blueprints_windows
 
   rest_plugins:
     requires: [openstack, datacentred]
