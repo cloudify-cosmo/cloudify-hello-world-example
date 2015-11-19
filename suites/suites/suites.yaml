@@ -39,7 +39,7 @@ variables:
   datacentred_openstack_centos_6_5_image_name: CentOS 6.6 dccloud
   datacentred_openstack_centos_7_image_name: CentOS 7.0
   datacentred_openstack_centos_7_image_id: 74ff4015-aee1-4e02-aaa8-1c77b2650394
-  datacentred_openstack_windows_image_name: Windows Server 2012 R2 Standard Eval
+  datacentred_openstack_windows_image_name: Windows Server 2012 R2 Standard
 
   aws_ec2_eu_central_1_ami_ubuntu_trusty_image_id: ami-00dae61d
   aws_ec2_eu_central_1_ami_centos_7_image_id: ami-e68f82fb
