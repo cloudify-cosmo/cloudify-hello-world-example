@@ -77,6 +77,8 @@ class SnapshotsSingleManagerTest(OpenStackNodeCellarTestBase):
                 'Waiting too long for restore snapshot to finish'
             )
             execution = self.client.executions.get(execution.id)
+        if execution.status == Execution.FAILED:
+            self.logger.error('Execution error: {0}'.format(execution.error))
         self.assertEqual(Execution.TERMINATED, execution.status)
 
         self.logger.info('Snapshot restored, deleting snapshot..')
