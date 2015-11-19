@@ -14,8 +14,7 @@
 #    * limitations under the License.
 
 from cloudify_rest_client.client import CloudifyClient
-from cloudify_rest_client.exceptions import CloudifyClientError, \
-    UserUnauthorizedError
+from cloudify_rest_client.exceptions import UserUnauthorizedError
 
 from cosmo_tester.framework import util
 from cosmo_tester.test_suites.test_security.security_test_base import \
