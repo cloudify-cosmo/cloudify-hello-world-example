@@ -54,8 +54,7 @@ class ExternalComponentsTest(AbstractHelloWorldTest, AbstractSingleHostTest):
 
         if self.env.install_plugins:
             self.logger.info('installing required plugins')
-            self.cfy.local(
-                'install-plugins',
+            self.cfy.install_plugins_locally(
                 blueprint_path=self.blueprint_yaml).wait()
 
         self.logger.info('initialize external '
