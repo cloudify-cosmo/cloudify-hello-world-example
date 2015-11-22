@@ -87,6 +87,7 @@ class SuiteRunner(object):
             self.variables['centos_7_cli_package_url']
         self.centos6_5_cli_package_url = \
             self.variables['centos_6_5_cli_package_url']
+        self.rhel_cli_package_url = self.variables['rhel_cli_package_url']
         self.cloudify_automation_token = \
             self.variables['cloudify_automation_token']
 
@@ -114,6 +115,7 @@ class SuiteRunner(object):
         os.environ['CENTOS_7_CLI_PACKAGE_URL'] = self.centos7_cli_package_url
         os.environ['CENTOS_6_5_CLI_PACKAGE_URL'] = \
             self.centos6_5_cli_package_url
+        os.environ['RHEL_CLI_PACKAGE_URL'] = self.rhel_cli_package_url
         os.environ['CLOUDIFY_AUTOMATION_TOKEN'] = \
             self.cloudify_automation_token
 
