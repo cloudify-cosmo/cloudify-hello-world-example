@@ -379,6 +379,8 @@ handler_properties:
 
   vsphere_handler_props:
     template: systemtests-ubuntu-1404
+    agent_user: giga
+    execution_timeout: 3600
 
   vcloud_handler_props:
     catalog: Public Catalog
