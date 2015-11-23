@@ -19,18 +19,22 @@ from influxdb import InfluxDBClient
 
 from cosmo_tester.framework.git_helper import clone
 from cosmo_tester.framework.test_cases import MonitoringTestCase
+from cosmo_tester.framework.cfy_helper import DEFAULT_EXECUTE_TIMEOUT
 
 
 class NodecellarAppTest(MonitoringTestCase):
 
-    def _test_nodecellar_impl(self, blueprint_file):
+    def _test_nodecellar_impl(
+        self, blueprint_file, execute_timeout=DEFAULT_EXECUTE_TIMEOUT
+    ):
         self.repo_dir = clone(self.repo_url, self.workdir, self.repo_branch)
         self.blueprint_yaml = self.repo_dir / blueprint_file
 
         self.modify_blueprint()
 
         before, after = self.upload_deploy_and_execute_install(
-            inputs=self.get_inputs()
+            inputs=self.get_inputs(),
+            execute_timeout=execute_timeout
         )
 
         self.post_install_assertions(before, after)
