@@ -43,7 +43,7 @@ pip install -e cloudify-openstack-plugin
 * Clone the cloudify-manager-blueprints repository (for the framework to be able to bootstrap a Cloudify manager):
 ```git clone https://github.com/cloudify-cosmo/cloudify-manager-blueprints.git```
 
-* Create an inputs file for your environment (based on cloudify-manager-blueprints/openstack/inputs.yaml.template)
+* Create an inputs file for your environment (based on `cloudify-manager-blueprints/openstack/inputs.yaml.template`)
 
 * Copy the sample handler configuration to your work dir (cloudify-system-tests/suites/suites/sample-handler-configuration.yaml).
 
