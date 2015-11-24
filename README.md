@@ -45,7 +45,7 @@ pip install -e cloudify-openstack-plugin
 
 * Create an inputs file for your environment (based on `cloudify-manager-blueprints/openstack/inputs.yaml.template`)
 
-* Copy the sample handler configuration to your work dir (cloudify-system-tests/suites/suites/sample-handler-configuration.yaml).
+* Copy the sample handler configuration to your work dir (`cloudify-system-tests/suites/suites/sample-handler-configuration.yaml`).
 
 * Set values for the following keys in the handler configuration file:
   - handler
