@@ -688,15 +688,15 @@ handler_configurations:
     handler: vcloud_handler
     env: vcloud
     external: *vcloud_plugin_external
-    manager_blueprint: new/vcloud-manager-blueprint.yaml
+    manager_blueprint: vcloud-manager-blueprint.yaml
     properties: vcloud_handler_props
     manager_blueprint_override: *vcloud_manager_blueprint_override
     inputs_override:
       vcloud_username: '{{system_test_vcloud_username}}'
       vcloud_password: '{{system_test_vcloud_password}}'
-      vcloud_service_type: '{{system_test_vcloud_service_type}}'
-      vcloud_instance: '{{system_test_vcloud_instance}}'
-      vcloud_url: '{{system_test_vcloud_url}}'
+      vcloud_service_type: '{{vcloud_service_type}}'
+      vcloud_instance: '{{vcloud_instance}}'
+      vcloud_url: '{{vcloud_url}}'
 
   ################################################################################
 
