@@ -1,0 +1,9 @@
+set -eax
+
+cd {{ work_dir }}
+source {{ venv_name }}/bin/activate
+cd {{ venv_name }}
+
+cfy use -t {{ manager_ip }}
+
+python {{ command }}

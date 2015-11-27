@@ -1,0 +1,8 @@
+set -eax
+
+cd {{ work_dir }}/{{ venv_name }}
+source bin/activate
+
+cfy bootstrap --install-plugins -i {{ work_dir }}/{{ inputs_file }} -p {{ repo_path }}/openstack/openstack-manager-blueprint.yaml
+
+sleep 10

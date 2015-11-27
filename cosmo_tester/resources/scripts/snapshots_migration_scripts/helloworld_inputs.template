@@ -1,0 +1,3 @@
+agent_user: {{ agent_user }}
+image: {{ image }}
+flavor: {{ flavor }}
