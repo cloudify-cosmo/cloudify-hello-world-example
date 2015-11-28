@@ -56,15 +56,6 @@ class BaseCloudifyInputsConfigReader(object):
         return self.config['resources_prefix']
 
     @property
-    def transient_deployment_workers_mode_enabled(self):
-        manager = self.manager_blueprint['node_templates'].get(
-            'manager_configuration', {})
-        bootstrap_context = manager.get('properties', {}).get('cloudify', {})
-        transient_deployment_workers_config = bootstrap_context.get(
-            'transient_deployment_workers_mode', {})
-        return transient_deployment_workers_config.get('enabled', True)
-
-    @property
     def management_user_name(self):
         raise NotImplementedError('management_user_name property must be '
                                   'implemented by concrete handler config '

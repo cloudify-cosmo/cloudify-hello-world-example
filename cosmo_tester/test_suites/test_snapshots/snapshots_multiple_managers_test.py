@@ -96,7 +96,6 @@ class TwoManagersTest(HelloWorldBashTest):
         self.wait_for_execution(execution, self.default_timeout, client)
 
     def _create_snapshot(self, client, name):
-        self.wait_for_stop_dep_env_execution_to_end(self.test_id)
         execution = client.snapshots.create(name, False, False)
         self.wait_for_execution(execution, self.default_timeout, client)
 
@@ -154,8 +153,6 @@ class TwoManagersTest(HelloWorldBashTest):
         self._start_execution_and_wait(self.client2, self.test_id,
                                        'install_new_agents')
         self.logger.info('Installed new agents.')
-        self.wait_for_stop_dep_env_execution_to_end(self.test_id,
-                                                    client=self.client2)
         return context
 
     def execute_uninstall(self, deployment_id=None, cfy=None):

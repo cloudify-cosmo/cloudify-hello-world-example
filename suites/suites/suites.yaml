@@ -162,10 +162,6 @@ templates:
     <<: *new_manager_blueprint_override
     <<: *aws_ec2_manager_blueprint_sg_override
 
-  - &nontransient_deployment_workers_manager_blueprint_override
-    node_templates.manager_configuration.properties.cloudify.transient_deployment_workers_mode:
-      enabled: false
-
   - &vcloud_manager_blueprint_override
     <<: *new_manager_blueprint_override
     <<: *vcloud_manager_blueprint_sg_override
@@ -359,41 +355,6 @@ handler_properties:
 #####################################################################################
 
 handler_configurations:
-
-  nontransient_deployment_workers_datacentred_openstack_system_tests1:
-    <<: *datacentred_openstack_handler_configuration
-    env: datacentred_openstack_1
-    manager_blueprint_override:
-      <<: *datacentred_openstack_manager_blueprint_override
-      <<: *nontransient_deployment_workers_manager_blueprint_override
-    inputs_override:
-      <<: *datacentred_openstack_credentials_inputs
-      <<: *datacentred_openstack_inputs
-      keystone_tenant_name: gigaspaces_system-test-1
-
-  nontransient_deployment_workers_datacentred_openstack_system_tests2:
-    <<: *datacentred_openstack_handler_configuration
-    env: datacentred_openstack_2
-    manager_blueprint_override:
-      <<: *datacentred_openstack_manager_blueprint_override
-      <<: *nontransient_deployment_workers_manager_blueprint_override
-    inputs_override:
-      <<: *datacentred_openstack_credentials_inputs
-      <<: *datacentred_openstack_inputs
-      keystone_tenant_name: gigaspaces_system-test-2
-
-  nontransient_deployment_workers_datacentred_openstack_system_tests3:
-    <<: *datacentred_openstack_handler_configuration
-    env: datacentred_openstack_3
-    manager_blueprint_override:
-      <<: *datacentred_openstack_manager_blueprint_override
-      <<: *nontransient_deployment_workers_manager_blueprint_override
-    inputs_override:
-      <<: *datacentred_openstack_credentials_inputs
-      <<: *datacentred_openstack_inputs
-      keystone_tenant_name: gigaspaces_system-test-3
-
-  ############################################################################
 
   stress_datacentred_openstack_system_tests4:
     <<: *datacentred_openstack_handler_configuration
@@ -829,23 +790,6 @@ test_suites:
     requires: [openstack, datacentred]
     tests:
       - simple_manager_blueprint
-
-  #####################################################################
-
-  nontransient_deployment_workers_openstack_nodecellar:
-    handler_configuration: nontransient_deployment_workers_datacentred_openstack_system_tests1
-    tests:
-      - openstack_blueprints_nodecellar
-
-  nontransient_deployment_workers_openstack_autoheal_and_scale:
-    handler_configuration: nontransient_deployment_workers_datacentred_openstack_system_tests2
-    tests:
-      - openstack_blueprints_autoheal_and_scale
-
-  nontransient_deployment_workers_openstack_manager_recovery:
-    handler_configuration: nontransient_deployment_workers_datacentred_openstack_system_tests3
-    tests:
-      - manager_recovery
 
   #####################################################################
 

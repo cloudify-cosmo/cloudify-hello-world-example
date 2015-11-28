@@ -516,7 +516,6 @@ class HelloWorldSnapshotMigrationFrom_3_2_1_To_3_3_Test(TestCase):
         # agents migration
         self.logger.info('-- Installing agents')
         self.cfy.install_agents(HELLOWORLD_APP_NAME)
-        self.wait_for_stop_dep_env_execution_to_end(HELLOWORLD_APP_NAME)
 
     def _uninstall_hello_world(self):
         self.logger.info('Uninstalling Helloworld application by '
@@ -524,7 +523,6 @@ class HelloWorldSnapshotMigrationFrom_3_2_1_To_3_3_Test(TestCase):
         execution = self.client.executions.start(HELLOWORLD_APP_NAME,
                                                  'uninstall')
         self.wait_for_execution(execution, 900)
-        self.wait_for_stop_dep_env_execution_to_end(HELLOWORLD_APP_NAME)
 
     def _clear_manager(self):
         self.logger.info('Clearing manager 3.3')
