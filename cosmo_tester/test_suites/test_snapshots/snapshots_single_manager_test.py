@@ -66,13 +66,10 @@ class SnapshotsSingleManagerTest(OpenStackNodeCellarTestBase):
         self.cfy.delete_deployment(self.deployment_id, ignore_live_nodes=True)
         self.cfy.delete_deployment(self.additional_dep_id)
         self.client.blueprints.delete(self.blueprint_id)
-        self.logger.info('Deleting all plugins from manager...')
-        plugins = self.client.plugins.list()
-        for plugin in plugins:
-            self.logger.info(
-                'Deleting plugin: {0} - {1}'.format(plugin.id,
-                                                    plugin.package_name))
-            self.client.plugins.delete(plugin.id)
+
+        def get_sorted_plugins():
+            return self.client.plugins.list(_sort=['id']).items
+        plugins_before_restore = get_sorted_plugins()
 
         waited = 0
         execution = self.client.snapshots.restore(snapshot_id)
@@ -87,8 +84,9 @@ class SnapshotsSingleManagerTest(OpenStackNodeCellarTestBase):
         if execution.status == Execution.FAILED:
             self.logger.error('Execution error: {0}'.format(execution.error))
         self.assertEqual(Execution.TERMINATED, execution.status)
-
         self.logger.info('Snapshot restored, deleting snapshot..')
         self.client.snapshots.delete(snapshot_id)
+        self.assertEqual(plugins_before_restore, get_sorted_plugins(),
+                         'Plugins should remain intact after restore..')
         # Throws if not found
         self.client.deployments.delete(self.additional_dep_id)
