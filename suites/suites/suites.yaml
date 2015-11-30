@@ -745,6 +745,10 @@ tests:
       - cosmo_tester/test_suites/test_blueprints/chef_plugin_test.py
       - cosmo_tester/test_suites/test_blueprints/puppet_plugin_test.py
 
+  managed_plugins_tests:
+    tests:
+      - cosmo_tester/test_suites/test_managed_plugins
+
   snapshots_tests:
     tests:
       - cosmo_tester/test_suites/test_snapshots
@@ -934,6 +938,11 @@ test_suites:
     requires: [openstack, datacentred]
     tests:
       - snapshots_tests
+
+  managed_plugins:
+    requires: [openstack, datacentred]
+    tests:
+      - managed_plugins_tests
 
   rest_plugins:
     requires: [openstack, datacentred]
