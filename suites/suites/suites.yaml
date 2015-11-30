@@ -840,6 +840,11 @@ tests:
       - system_tests/test_centos6_5_bootstrap.py
       - system_tests/test_centos7_bootstrap.py
 
+  cli_packager_rhel:
+    external: *packager_external
+    tests:
+      - system_tests/test_rhel_bootstrap.py
+
   diamond_snmp_extension:
     external: *diamond_snmp_extension_external
     tests:
@@ -974,6 +979,11 @@ test_suites:
     requires: [openstack, datacentred]
     tests:
       - cli_packager_centos
+
+  ec2_rhel_cli_package:
+    handler_configuration: aws_ec2
+    tests:
+      - cli_packager_rhel
 
   agent:
     requires: [openstack, datacentred]
