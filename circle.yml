@@ -11,5 +11,7 @@ dependencies:
 
 test:
   override:
-    - flake8 .
-    - nosetests suites/tests
+    - case $CIRCLE_NODE_INDEX in 0) flake8 . ;; esac:
+        parallel: true
+    - case $CIRCLE_NODE_INDEX in 1) nosetests suites/tests ;; esac:
+        parallel: true  
