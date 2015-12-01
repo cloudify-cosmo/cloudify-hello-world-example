@@ -282,17 +282,34 @@ class TestCase(unittest.TestCase):
         self.wait_until_all_deployment_executions_end(deployment_id)
         return self.execute_install(deployment_id=deployment_id)
 
-    def wait_until_all_deployment_executions_end(self, deployment_id):
-        self.logger.info("waiting for executions on deployment {0} to finish"
-                         .format(deployment_id))
+    def wait_until_all_deployment_executions_end(
+            self,
+            deployment_id=None,
+            include_system_workflows=False):
+        if deployment_id:
+            msg = "Waiting for executions on " \
+                  "deployment {0} to finish".format(deployment_id)
+        else:
+            msg = "Waiting for system wide executions to finish"
+        if include_system_workflows:
+            msg = "{0}, including system workflows.".format(msg)
+        self.logger.info(msg)
+
         start_time = time.time()
         while len([execution for execution in self.client.executions.list(
-                deployment_id=deployment_id)
+                deployment_id=deployment_id,
+                include_system_workflows=include_system_workflows)
                 if execution["status"] not in Execution.END_STATES]) > 0:
             time.sleep(1)
             if start_time - time.time() > DEFAULT_EXECUTE_TIMEOUT:
-                raise Exception("timeout while waiting for executions to end "
-                                "on deployment {0}".format(deployment_id))
+                if deployment_id:
+                    timeout_msg = "Timeout while waiting for " \
+                                  "executions to end " \
+                                  "on deployment {0}.".format(deployment_id)
+                else:
+                    timeout_msg = "Timeout while waiting for " \
+                                  "system wide executions to end."
+                raise Exception(timeout_msg)
         return
 
     def assert_outputs(self, expected_outputs, deployment_id=None):
