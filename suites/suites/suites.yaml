@@ -45,6 +45,7 @@ variables:
   aws_ec2_eu_central_1_ami_ubuntu_trusty_image_id: ami-00dae61d
   aws_ec2_eu_central_1_ami_centos_7_image_id: ami-e68f82fb
   aws_ec2_eu_west_1_ami_rhel_7_image_id: ami-25158352
+  aws_ec2_frankfurt_rhel_7_image_id: ami-dafdcfc7
   aws_ec2_medium_instance_type: m3.medium
   aws_ec2_micro_instance_type: t2.micro
   aws_ec2_eu_central_1_region_name: eu-central-1
@@ -391,7 +392,7 @@ handler_properties:
   aws_ec2:
     ubuntu_trusty_image_id: '{{aws_ec2_eu_central_1_ami_ubuntu_trusty_image_id}}'
     centos_7_image_id: '{{aws_ec2_eu_central_1_ami_centos_7_image_id}}'
-    rhel_7_image_id: '{{aws_ec2_eu_west_1_ami_rhel_7_image_id}}'
+    rhel_7_image_id: '{{aws_ec2_frankfurt_rhel_7_image_id}}'
     medium_instance_type: '{{aws_ec2_medium_instance_type}}'
     micro_instance_type: '{{aws_ec2_micro_instance_type}}'
     rhel_7_image_user: '{{rhel_7_image_user}}'
