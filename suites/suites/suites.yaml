@@ -148,18 +148,18 @@ templates:
 
   - &vcloud_manager_blueprint_sg_override
     'node_templates.manager_security_group.properties.rules[append]':
-        - source: external
-          destination: internal
-          destination_port: 8086
-          action: allow
-          protocol: TCP
+      source: external
+      destination: internal
+      destination_port: 8086
+      action: allow
+      protocol: TCP
 
   - &vcloud_manager_blueprint_pi_override
     'node_templates.manager_public_ip.properties.rules[append]':
-        - type: DNAT
-          protocol: tcp
-          original_port: 8086
-          translated_port: 8086
+      type: DNAT
+      protocol: tcp
+      original_port: 8086
+      translated_port: 8086
 
   - &openstack_manager_blueprint_override
     <<: *new_manager_blueprint_override
