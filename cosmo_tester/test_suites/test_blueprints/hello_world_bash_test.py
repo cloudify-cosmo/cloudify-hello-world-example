@@ -27,6 +27,10 @@ CLOUDIFY_HELLO_WORLD_EXAMPLE_URL = "https://github.com/cloudify-cosmo/" \
                                    "cloudify-hello-world-example.git"
 
 
+def clone_hello_world(workdir):
+    return clone(CLOUDIFY_HELLO_WORLD_EXAMPLE_URL, workdir)
+
+
 class AbstractHelloWorldTest(MonitoringTestCase):
 
     def assert_events(self):
@@ -46,8 +50,7 @@ class AbstractHelloWorldTest(MonitoringTestCase):
              is_existing_deployment=False,
              influx_host_ip=None):
         if not is_existing_deployment:
-            self.repo_dir = clone(CLOUDIFY_HELLO_WORLD_EXAMPLE_URL,
-                                  self.workdir)
+            self.repo_dir = clone_hello_world(self.workdir)
             self.blueprint_yaml = self.repo_dir / blueprint_file
             self.upload_deploy_and_execute_install(
                 fetch_state=False,
