@@ -266,6 +266,11 @@ class CfyHelper(object):
             settings = load_cloudify_working_dir_settings()
             return settings.get_provider_context()
 
+    def install_agents(self, deployment_id=None, include_logs=False):
+        with self.workdir:
+            cfy.agents.install(deployment_id=deployment_id,
+                               include_logs=include_logs).wait()
+
     def close(self):
         if self.tmpdir:
             shutil.rmtree(self._cfy_workdir)

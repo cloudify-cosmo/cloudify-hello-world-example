@@ -329,6 +329,7 @@ handler_properties:
     <<: *hp_openstack_properties
     ubuntu_image_id: '{{hp_openstack_region_b_ubuntu_precise}}'
     ubuntu_trusty_image_id: '{{hp_openstack_region_b_ubuntu_trusty}}'
+    centos_7_image_id: '{{hp_openstack_region_b_centos_7_0_selinux}}'
 
   lab_openstack_properties:
     ubuntu_image_name: '{{lab_openstack_ubuntu_precise_image_name}}'
