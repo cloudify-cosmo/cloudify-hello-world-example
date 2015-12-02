@@ -1,7 +1,7 @@
 Cloudify System Tests
 ==================
 
-* Master [(https://circleci.com/gh/cloudify-cosmo/cloudify-system-tests/tree/master.svg?&style=shield)](https://circleci.com/gh/cloudify-cosmo/cloudify-system-tests/tree/master)
+* Master [![Circle CI](https://circleci.com/gh/cloudify-cosmo/cloudify-system-tests/tree/master.svg?&style=shield)](https://circleci.com/gh/cloudify-cosmo/cloudify-system-tests/tree/master)
 
 
 This repository contains Cloudify's system tests which in most cases mean that the entire flow of:
