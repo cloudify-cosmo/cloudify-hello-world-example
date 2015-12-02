@@ -177,6 +177,38 @@ class CfyHelper(object):
                 blueprint_id=blueprint_id,
                 verbose=verbose).wait()
 
+    def list_blueprints(self, verbose=False):
+        with self.workdir:
+            cfy.blueprints.list(verbose=verbose).wait()
+
+    def list_deployments(self, verbose=False):
+        with self.workdir:
+            cfy.deployments.list(verbose=verbose).wait()
+
+    def list_executions(self, verbose=False):
+        with self.workdir:
+            cfy.executions.list(verbose=verbose).wait()
+
+    def get_blueprint(self, blueprint_id, verbose=False):
+        with self.workdir:
+            cfy.blueprints.get(
+                blueprint_id=blueprint_id, verbose=verbose).wait()
+
+    def get_deployment(self, deployment_id, verbose=False):
+        with self.workdir:
+            cfy.deployments.get(
+                deployment_id=deployment_id, verbose=verbose).wait()
+
+    def get_execution(self, execution_id, verbose=False):
+        with self.workdir:
+            cfy.executions.get(
+                execution_id=execution_id, verbose=verbose).wait()
+
+    def cancel_execution(self, execution_id, verbose=False):
+        with self.workdir:
+            cfy.executions.cancel(
+                execution_id=execution_id, verbose=verbose).wait()
+
     def execute_install(self,
                         deployment_id,
                         verbose=False,
