@@ -26,6 +26,7 @@ import importlib
 import json
 from contextlib import contextmanager
 
+import requests
 import yaml
 from path import path
 import fabric.api
@@ -40,6 +41,9 @@ from cosmo_tester.framework.util import (get_blueprint_path,
                                          create_rest_client)
 
 from cloudify_rest_client.executions import Execution
+
+requests.packages.urllib3.disable_warnings(
+    requests.packages.urllib3.exceptions.InsecurePlatformWarning)
 
 root = logging.getLogger()
 root.setLevel(logging.INFO)
@@ -427,8 +431,9 @@ class TestCase(unittest.TestCase):
             after_state = self.get_manager_state()
         return before_state, after_state
 
-    def execute_uninstall(self, deployment_id=None):
-        self.cfy.execute_uninstall(deployment_id=deployment_id or self.test_id)
+    def execute_uninstall(self, deployment_id=None, cfy=None):
+        cfy = cfy or self.cfy
+        cfy.execute_uninstall(deployment_id=deployment_id or self.test_id)
 
     def copy_blueprint(self, blueprint_dir_name, blueprints_dir=None):
         blueprint_path = path(self.workdir) / blueprint_dir_name
@@ -436,19 +441,21 @@ class TestCase(unittest.TestCase):
                         str(blueprint_path))
         return blueprint_path
 
-    def wait_for_execution(self, execution, timeout):
+    def wait_for_execution(self, execution, timeout, client=None):
+        client = client or self.client
+
         end = time.time() + timeout
         while time.time() < end:
-            status = self.client.executions.get(execution.id).status
+            status = client.executions.get(execution.id).status
             if status == 'failed':
                 raise AssertionError('Execution "{}" failed'.format(
                     execution.id))
             if status == 'terminated':
                 return
             time.sleep(1)
-        events, _ = self.client.events.get(execution.id,
-                                           batch_size=1000,
-                                           include_logs=True)
+        events, _ = client.events.get(execution.id,
+                                      batch_size=1000,
+                                      include_logs=True)
         self.logger.info('Deployment creation events & logs:')
         for event in events:
             self.logger.info(json.dumps(event))
