@@ -38,8 +38,8 @@ class AuthenticationWithoutAuthorizationTest(SecurityTestBase):
         self._assert_no_credentials_or_token_fails()
 
     def _assert_valid_credentials_authenticate(self):
-        user_pass_header = util.get_auth_header(username='admin',
-                                                password='admin_password')
+        user_pass_header = util.get_auth_header(username='alice',
+                                                password='alice_password')
         self.client = CloudifyClient(host=self.env.management_ip,
                                      headers=user_pass_header)
         self._assert_authorized()
@@ -59,8 +59,8 @@ class AuthenticationWithoutAuthorizationTest(SecurityTestBase):
         self._assert_unauthorized()
 
     def _assert_valid_token_authenticates(self):
-        user_pass_header = util.get_auth_header(username='admin',
-                                                password='admin_password')
+        user_pass_header = util.get_auth_header(username='alice',
+                                                password='alice_password')
         client = CloudifyClient(host=self.env.management_ip,
                                 headers=user_pass_header)
         token_header = util.get_auth_header(token=client.tokens.get().value)
