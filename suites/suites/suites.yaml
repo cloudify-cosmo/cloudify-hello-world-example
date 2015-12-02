@@ -814,7 +814,7 @@ tests:
   watchdog_tests:
     external: *watchdog_external
     tests:
-      - system_tests/manager
+      - system_tests/manager/test_watchdog.py:WatchdogNoRecoveryTests
 
   softlayer_blueprints:
     external: *softlayer_plugin_external
