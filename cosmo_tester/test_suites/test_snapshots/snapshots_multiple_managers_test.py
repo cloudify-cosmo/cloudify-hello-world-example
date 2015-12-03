@@ -47,58 +47,49 @@ class TwoManagersTest(OpenStackNodeCellarTest):
 
     def setUp(self):
         super(TwoManagersTest, self).setUp()
-        configuration = self.env.handler_configuration
         self.workdir2 = tempfile.mkdtemp(prefix='cloudify-testenv-')
 
-        if 'second_manager_ip' in self.env.handler_configuration:
-            self.cfy2 = CfyHelper(self.workdir2,
-                                  configuration['second_manager_ip'],
-                                  self)
+        self.cfy2 = CfyHelper(self.workdir2, testcase=self)
+        second_manager_blueprint_path = '{}_existing'.format(
+            self.env._manager_blueprint_path)
 
-            self.client2 = create_rest_client(
-                configuration['second_manager_ip'])
-        else:
-            self.cfy2 = CfyHelper(self.workdir2, testcase=self)
-            second_manager_blueprint_path = '{}_existing'.format(
-                self.env._manager_blueprint_path)
+        shutil.copy2(self.env._manager_blueprint_path,
+                     second_manager_blueprint_path)
 
-            shutil.copy2(self.env._manager_blueprint_path,
-                         second_manager_blueprint_path)
+        external_resources = [
+            'node_templates.management_network.properties',
+            'node_templates.management_subnet.properties',
+            'node_templates.router.properties',
+            'node_templates.agents_security_group.properties',
+            'node_templates.management_security_group.properties',
+        ]
 
-            external_resources = [
-                'node_templates.management_network.properties',
-                'node_templates.management_subnet.properties',
-                'node_templates.router.properties',
-                'node_templates.agents_security_group.properties',
-                'node_templates.management_security_group.properties',
-            ]
+        with YamlPatcher(second_manager_blueprint_path) as patch:
+            for prop in external_resources:
+                patch.merge_obj(prop, {'use_external_resource': True})
 
-            with YamlPatcher(second_manager_blueprint_path) as patch:
-                for prop in external_resources:
-                    patch.merge_obj(prop, {'use_external_resource': True})
+        second_cloudify_config_path = '{}_existing'.format(
+            self.env.cloudify_config_path)
 
-            second_cloudify_config_path = '{}_existing'.format(
-                self.env.cloudify_config_path)
+        shutil.copy2(self.env.cloudify_config_path,
+                     second_cloudify_config_path)
 
-            shutil.copy2(self.env.cloudify_config_path,
-                         second_cloudify_config_path)
+        new_resources = ['manager_server_name', 'manager_port_name']
 
-            new_resources = ['manager_server_name', 'manager_port_name']
+        with YamlPatcher(second_cloudify_config_path) as patch:
+            for prop in new_resources:
+                patch.append_value(prop, '2')
 
-            with YamlPatcher(second_cloudify_config_path) as patch:
-                for prop in new_resources:
-                    patch.append_value(prop, '2')
+        self.cfy2.bootstrap(
+            blueprint_path=second_manager_blueprint_path,
+            inputs_file=second_cloudify_config_path,
+            install_plugins=self.env.install_plugins,
+            keep_up_on_failure=False,
+            task_retries=5,
+            verbose=False
+        )
 
-            self.cfy2.bootstrap(
-                blueprint_path=second_manager_blueprint_path,
-                inputs_file=second_cloudify_config_path,
-                install_plugins=self.env.install_plugins,
-                keep_up_on_failure=False,
-                task_retries=5,
-                verbose=False
-            )
-
-            self.client2 = create_rest_client(self.cfy2.get_management_ip())
+        self.client2 = create_rest_client(self.cfy2.get_management_ip())
 
     def _start_execution_and_wait(self, client, deployment, workflow_id):
         execution = client.executions.start(deployment, workflow_id)
@@ -159,9 +150,11 @@ class TwoManagersTest(OpenStackNodeCellarTest):
         self.logger.info('Snapshot restored.')
 
         self.logger.info('Installing new agents...')
-        self._start_execution_and_wait(
-            self.client2, self.test_id, 'install_new_agents')
+        self._start_execution_and_wait(self.client2, self.test_id,
+                                       'install_new_agents')
         self.logger.info('Installed new agents.')
+        self.wait_for_stop_dep_env_execution_to_end(self.test_id,
+                                                    client=self.client2)
 
     def execute_uninstall(self, deployment_id=None, cfy=None):
         super(TwoManagersTest, self).execute_uninstall(
