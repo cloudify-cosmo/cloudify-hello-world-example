@@ -482,8 +482,11 @@ class TestCase(unittest.TestCase):
         raise AssertionError('Execution "{}" timed out'.format(execution.id))
 
     def wait_for_stop_dep_env_execution_to_end(self, deployment_id,
-                                               timeout_seconds=240):
-        executions = self.client.executions.list(
+                                               timeout_seconds=240,
+                                               client=None):
+        client = client or self.client
+
+        executions = client.executions.list(
             deployment_id=deployment_id, include_system_workflows=True)
         running_stop_executions = [e for e in executions if e.workflow_id ==
                                    '_stop_deployment_environment' and
@@ -498,7 +501,7 @@ class TestCase(unittest.TestCase):
                                .format(running_stop_executions))
 
         execution = running_stop_executions[0]
-        return self.wait_for_execution(execution, timeout_seconds)
+        return self.wait_for_execution(execution, timeout_seconds, client)
 
     def repetitive(self, func, timeout=10, exception_class=Exception,
                    args=None, kwargs=None):
