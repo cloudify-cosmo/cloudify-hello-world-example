@@ -59,6 +59,8 @@ class SnapshotsHelloWorldTest(TestCase):
             self.client.deployments.delete(d)
         for b in state['blueprints']:
             self.client.blueprints.delete(b)
+        for snapshot in self.client.snapshots.list():
+            self.client.snapshots.delete(snapshot.id)
         super(SnapshotsHelloWorldTest, self).tearDown()
 
     def _deploy(self, deployment_id, blueprint_id=None):
