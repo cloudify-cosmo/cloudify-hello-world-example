@@ -39,8 +39,6 @@ class NodecellarAppTest(MonitoringTestCase):
 
         self.post_install_assertions(before, after)
 
-        self.on_nodecellar_installed()
-
         self.execute_uninstall()
 
         self.post_uninstall_assertions()
@@ -102,9 +100,6 @@ class NodecellarAppTest(MonitoringTestCase):
                 self.assertEqual(value['state'], 'started',
                                  'vm node should be started: {0}'
                                  .format(nodes_state))
-
-    def on_nodecellar_installed(self):
-        pass
 
     def post_install_assertions(self, before_state, after_state):
         delta = self.get_manager_state_delta(before_state, after_state)

@@ -15,8 +15,8 @@
 
 import time
 
-from cosmo_tester.test_suites.test_blueprints.nodecellar_test import \
-    OpenStackNodeCellarTestBase
+from cosmo_tester.test_suites.test_blueprints.hello_world_bash_test import \
+    HelloWorldBashTest
 from cloudify_rest_client.executions import Execution
 from cosmo_tester.framework.testenv import bootstrap, teardown
 
@@ -29,31 +29,34 @@ def tearDown():
     teardown()
 
 
-class SnapshotsSingleManagerTest(OpenStackNodeCellarTestBase):
+class SnapshotsSingleManagerTest(HelloWorldBashTest):
     """
-    This test deploys nodecellar, creates an additional deployment and a
+    This test deploys hello world, creates an additional deployment and a
     snapshot, deletes both deployments and the corresponding blueprint,
     restores the snapshot and validates that the manager is consistent
-    and operational - uninstalling nodecellar, deleting both deployments
+    and operational - uninstalling hello world, deleting both deployments
     and deleting the blueprint should succeed.
     """
 
-    def test_openstack_nodecellar(self):
+    def _run(self, *args, **kwargs):
         self.blueprint_id = self.test_id
         self.deployment_id = self.test_id
         self.additional_dep_id = self.deployment_id + '_2'
 
-        self._test_openstack_nodecellar('openstack-blueprint.yaml')
+        super(SnapshotsSingleManagerTest, self)._run(*args, **kwargs)
 
         self.wait_for_stop_dep_env_execution_to_end(self.deployment_id)
         self.client.deployments.delete(self.deployment_id)
         self.client.blueprints.delete(self.deployment_id)
 
-    def on_nodecellar_installed(self):
-        snapshot_id = 'nodecellar_sn-{0}'.format(time.strftime("%Y%m%d-%H%M"))
+    def _do_post_install_assertions(self):
+        context = super(SnapshotsSingleManagerTest,
+                        self)._do_post_install_assertions()
+        snapshot_id = 'helloworld_sn-{0}'.format(time.strftime("%Y%m%d-%H%M"))
 
+        dep_inputs = self.client.deployments.get(self.deployment_id).inputs
         self.cfy.create_deployment(self.blueprint_id, self.additional_dep_id,
-                                   inputs=self.get_inputs())
+                                   inputs=dep_inputs)
         self.wait_until_all_deployment_executions_end(self.additional_dep_id)
 
         self.wait_for_stop_dep_env_execution_to_end(self.deployment_id)
@@ -99,3 +102,5 @@ class SnapshotsSingleManagerTest(OpenStackNodeCellarTestBase):
                          'Plugins should remain intact after restore..')
         # Throws if not found
         self.client.deployments.delete(self.additional_dep_id)
+
+        return context

@@ -24,8 +24,8 @@ from cloudify_rest_client.exceptions import CloudifyClientError
 from cosmo_tester.framework.cfy_helper import CfyHelper
 from cosmo_tester.framework.testenv import bootstrap, teardown
 from cosmo_tester.framework.util import create_rest_client, YamlPatcher
-from cosmo_tester.test_suites.test_blueprints.nodecellar_test import (
-    OpenStackNodeCellarTest)
+from cosmo_tester.test_suites.test_blueprints.hello_world_bash_test import (
+    HelloWorldBashTest)
 
 
 def setUp():
@@ -36,12 +36,12 @@ def tearDown():
     teardown()
 
 
-class TwoManagersTest(OpenStackNodeCellarTest):
+class TwoManagersTest(HelloWorldBashTest):
     """
-    This test bootstraps managers, installs nodecellar using the first manager,
+    This test bootstraps managers, installs helloworld using the first manager,
     checks whether it has been installed correctly, creates a snapshot,
-    downloads it, uploads it to the second manager, uninstalls nodecellar using
-    the second manager, checks whether nodecellar is not running indeed and
+    downloads it, uploads it to the second manager, uninstalls helloworld using
+    the second manager, checks whether helloworld is not running indeed and
     tears down those managers.
     """
 
@@ -104,7 +104,8 @@ class TwoManagersTest(OpenStackNodeCellarTest):
         execution = client.snapshots.restore(name, True)
         self.wait_for_execution(execution, self.default_timeout, client)
 
-    def on_nodecellar_installed(self):
+    def _do_post_install_assertions(self):
+        context = super(TwoManagersTest, self)._do_post_install_assertions()
         self.logger.info('Creating snapshot...')
         self._create_snapshot(self.client, self.test_id)
         try:
@@ -155,14 +156,14 @@ class TwoManagersTest(OpenStackNodeCellarTest):
         self.logger.info('Installed new agents.')
         self.wait_for_stop_dep_env_execution_to_end(self.test_id,
                                                     client=self.client2)
+        return context
 
     def execute_uninstall(self, deployment_id=None, cfy=None):
         super(TwoManagersTest, self).execute_uninstall(
             cfy=self.cfy2)
 
-    def post_uninstall_assertions(self, client=None):
-        super(TwoManagersTest, self).post_uninstall_assertions(
-            self.client2)
+    def _assert_nodes_deleted(self):
+        super(TwoManagersTest, self)._assert_nodes_deleted(self.client2)
 
     @property
     def default_timeout(self):
