@@ -20,29 +20,32 @@ from cloudify_cli import constants
 from cloudify_rest_client.client import CloudifyClient
 from cloudify_rest_client.exceptions import UserUnauthorizedError
 
-from cosmo_tester.test_suites.test_security.security_test_base import \
-    SecurityTestBase, SECURITY_PROP_PATH
+from cosmo_tester.test_suites.test_security import security_test_base
 from cosmo_tester.framework import util
 
 
 CUSTOM_AUTH_PROVIDER_PLUGIN = 'mock-auth-provider-with-no-userstore'
-PLUGINS_PROP_PATH = 'node_templates.rest_service.properties.plugins'
 
 
-class NoUserstoreTests(SecurityTestBase):
+class NoUserstoreTests(security_test_base.SecurityTestBase):
+
+    def setUp(self):
+        super(NoUserstoreTests, self).setUp()
+        self.setup_secured_manager()
 
     def test_authentication_without_userstore(self):
-        self.setup_secured_manager()
         self._assert_unauthorized_user_fails()
 
-    def get_manager_blueprint_additional_props_override(self):
+    def _update_manager_blueprint(self):
+        super(NoUserstoreTests, self)._update_manager_blueprint()
+
+        # copying custom auth provider plugin
         src_plugin_dir = util.get_plugin_path(CUSTOM_AUTH_PROVIDER_PLUGIN)
         shutil.copytree(src_plugin_dir,
                         self.test_manager_blueprint_path.dirname() /
                         CUSTOM_AUTH_PROVIDER_PLUGIN)
-        return {PLUGINS_PROP_PATH: self.get_plugins_settings()}
 
-    def get_plugins_settings(self):
+    def get_rest_plugins(self):
         return {
             'user_custom_auth_provider': {
                 'source': CUSTOM_AUTH_PROVIDER_PLUGIN
@@ -60,20 +63,11 @@ class NoUserstoreTests(SecurityTestBase):
             }
         ]
 
-    def get_security_settings(self):
-        settings = {
-            SECURITY_PROP_PATH + '.enabled': self.get_enabled(),
-        }
+    def get_userstore_driver(self):
+        return ''
 
-        authentication_providers = self.get_authentication_providers()
-        if authentication_providers:
-            settings[SECURITY_PROP_PATH + '.authentication_providers'] = \
-                authentication_providers
-
-        settings[SECURITY_PROP_PATH + '.userstore_driver'] = ''
-        settings[SECURITY_PROP_PATH + '.authorization_provider'] = ''
-
-        return settings
+    def get_authorization_provider(self):
+        return ''
 
     def set_rest_client(self):
         self.client = CloudifyClient(

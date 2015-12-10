@@ -27,6 +27,8 @@ TEST_CFY_USERNAME = 'admin'
 TEST_CFY_PASSWORD = 'admin'
 SECURITY_PROP_PATH = 'node_types.cloudify\.nodes\.MyCloudifyManager.properties.' \
                      'security.default'
+REST_PLUGIN_PATH = 'node_templates.rest_service.properties.plugins'
+USERDATA_PATH = 'node_templates.manager_host.properties.parameters.user_data'
 
 
 class SecurityTestBase(TestCase):
@@ -35,6 +37,8 @@ class SecurityTestBase(TestCase):
         self._copy_manager_blueprint()
         if self.get_ssl_enabled():
             self._handle_ssl_files()
+        if self.get_file_userstore_enabled():
+            self._update_userstore_file()
         self._update_manager_blueprint()
         self._set_credentials_env_vars()
         self._bootstrap()
@@ -49,6 +53,8 @@ class SecurityTestBase(TestCase):
         self.test_inputs_path = path(inputs_path)
         self.test_manager_types_path = os.path.join(
             self.workdir, 'manager-blueprint/types/manager-types.yaml')
+        self.test_userstore_file_path = os.path.join(
+            self.workdir, 'manager-blueprint/resources/rest/userstore.yaml')
 
     def _handle_ssl_files(self):
         pass
@@ -64,14 +70,14 @@ class SecurityTestBase(TestCase):
                 '{0}.authentication_providers'.format(SECURITY_PROP_PATH)] = \
                 authentication_providers
 
-        authorization_providers = self.get_authorization_providers()
-        if authorization_providers:
+        authorization_provider = self.get_authorization_provider()
+        if authorization_provider is not None:
             settings[
-                '{0}.authorization_providers'.format(SECURITY_PROP_PATH)] = \
-                authorization_providers
+                '{0}.authorization_provider'.format(SECURITY_PROP_PATH)] = \
+                authorization_provider
 
         userstore_drive = self.get_userstore_driver()
-        if userstore_drive:
+        if userstore_drive is not None:
             settings[
                 '{0}.userstore_driver'.format(SECURITY_PROP_PATH)] = \
                 userstore_drive
@@ -98,7 +104,7 @@ class SecurityTestBase(TestCase):
     def get_authentication_providers(self):
         return None
 
-    def get_authorization_providers(self):
+    def get_authorization_provider(self):
         return None
 
     def get_auth_token_generator(self):
@@ -106,6 +112,16 @@ class SecurityTestBase(TestCase):
 
     def get_ssl_enabled(self):
         return False
+
+    def get_rest_plugins(self):
+        return None
+
+    def get_file_userstore_enabled(self):
+        return False
+
+    # Currently supports userdata injection to the ec2 manager bp only.
+    def get_userdata(self):
+        return None
 
     def _update_manager_blueprint(self):
         security_settings = self.get_security_settings()
@@ -118,8 +134,39 @@ class SecurityTestBase(TestCase):
             for key, value in props.items():
                 patch.set_value(key, value)
 
+    def get_userstore_users(self):
+        return None
+
+    def get_userstore_groups(self):
+        return None
+
+    def get_userstore_settings(self):
+        settings = {}
+        users = self.get_userstore_users()
+        if users:
+            settings['users'] = users
+        groups = self.get_userstore_groups()
+        if groups:
+            settings['groups'] = groups
+
+        return settings
+
+    def _update_userstore_file(self):
+        userstore_settings = self.get_userstore_settings()
+        with util.YamlPatcher(self.test_userstore_file_path) as patch:
+            for key, value in userstore_settings.items():
+                patch.set_value(key, value)
+
     def get_manager_blueprint_additional_props_override(self):
-        return {}
+        overrides = {}
+        rest_plugins = self.get_rest_plugins()
+        if rest_plugins:
+            overrides = {'{0}'.format(REST_PLUGIN_PATH): rest_plugins}
+        userdata = self.get_userdata()
+        if userdata:
+            overrides['{0}'.format(USERDATA_PATH)] = \
+                userdata
+        return overrides
 
     def _bootstrap(self):
         self.cfy.bootstrap(blueprint_path=self.test_manager_blueprint_path,
