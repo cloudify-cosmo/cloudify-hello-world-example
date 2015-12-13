@@ -89,8 +89,9 @@ class AbstractHelloWorldTest(MonitoringTestCase):
     def _do_post_uninstall_assertions(self, context):
         pass
 
-    def _instances(self):
-        return get_instances(client=self.client, deployment_id=self.test_id)
+    def _instances(self, client=None):
+        client = client or self.client
+        return get_instances(client=client, deployment_id=self.test_id)
 
 
 class HelloWorldBashTest(AbstractHelloWorldTest):
@@ -147,8 +148,10 @@ class HelloWorldBashTest(AbstractHelloWorldTest):
                           neutron.show_floatingip,
                           context['floatingip_id'])
 
-    def _assert_nodes_deleted(self):
-        (floatingip_node, security_group_node, server_node) = self._instances()
+    def _assert_nodes_deleted(self, client=None):
+        client = client or self.client
+        (floatingip_node, security_group_node, server_node) = \
+            self._instances(client)
         expected_node_state = 'deleted'
         self.assertEquals(expected_node_state, floatingip_node.state)
         self.assertEquals(expected_node_state, security_group_node.state)
@@ -156,7 +159,8 @@ class HelloWorldBashTest(AbstractHelloWorldTest):
         self.assertEquals(0, len(floatingip_node.runtime_properties))
         self.assertEquals(0, len(security_group_node.runtime_properties))
         # CFY-2670 - diamond plugin leaves one runtime property at this time
-        self.assertEquals(1, len(server_node.runtime_properties))
+        self.assertLessEqual(set(server_node.runtime_properties.keys()),
+                             {'diamond_paths', 'old_cloudify_agent'})
 
 
 @retry(stop_max_attempt_number=10, wait_fixed=5000)
