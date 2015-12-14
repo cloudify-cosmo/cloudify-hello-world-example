@@ -3,18 +3,6 @@
 # using `{{variable_name}}` syntax
 variables:
 
-  hp_openstack_ubuntu_precise_image_name: Ubuntu Server 12.04.5 LTS (amd64 20150707) - Partner Image
-  hp_openstack_ubuntu_trusty_image_name: Ubuntu Server 14.04.1 LTS (amd64 20150706) - Partner Image
-  hp_openstack_centos_6_3_image_name: CentOS 6.3 Server 64-bit 20130116
-  hp_openstack_centos_7_image_name: CentOS 7 x86_64 (2014-09-29) - Partner Image
-  hp_openstack_region_centos_7_image_id: a2859f14-ea12-55e7-8e39-cec9b59e56fb
-  hp_openstack_windows_image_name: Windows Server 2008 R2 Enterprise SP1 x64 Volume License 20140415 (b)
-  hp_openstack_region_a_ubuntu_precise: 8ca068c5-6fde-4701-bab8-322b3e7c8d81
-  hp_openstack_region_a_ubuntu_trusty: bec3cab5-4722-40b9-a78a-3489218e22fe
-  hp_openstack_region_b_ubuntu_precise: 261844b3-479c-5446-a2c4-1ea95d53b668
-  hp_openstack_region_b_ubuntu_trusty: 564be9dd-5a06-4a26-ba50-9453f972e483
-  hp_openstack_region_b_centos_7_0_selinux: a2859f14-ea12-55e7-8e39-cec9b59e56fb
-
   lab_openstack_ubuntu_precise_image_name: ubuntu_12.04
   lab_openstack_ubuntu_trusty_image_name: ubuntu_14.04
   lab_openstack_centos_6_5_image_name: centos_6.5
@@ -77,9 +65,6 @@ variables:
   windows_cli_package_url: _
   centos_7_cli_package_url: _
   centos_6_5_cli_package_url: _
-
-  system_tests_hp_username: _
-  system_tests_hp_password: _
 
   system_tests_lab_os_username: _
   system_tests_lab_os_password: _
@@ -233,25 +218,6 @@ templates:
 
   #######################################################
 
-  - &hp_openstack_properties
-    ubuntu_image_name: '{{hp_openstack_ubuntu_precise_image_name}}'
-    ubuntu_trusty_image_name: '{{hp_openstack_ubuntu_trusty_image_name}}'
-    centos_image_name: '{{hp_openstack_centos_6_3_image_name}}'
-    centos_7_image_name: '{{hp_openstack_centos_7_image_name}}'
-    windows_image_name: '{{hp_openstack_windows_image_name}}'
-    centos_image_user: root
-    centos_7_image_user: centos
-    ubuntu_trusty_image_user: ubuntu
-    flavor_name: standard.small
-    small_flavor_id: 101
-    medium_flavor_id: 102
-
-  #######################################################
-
-  - &hp_openstack_credentials_inputs
-    keystone_username: '{{system_tests_hp_username}}'
-    keystone_password: '{{system_tests_hp_password}}'
-
   - &lab_openstack_credentials_inputs
     keystone_username: '{{system_tests_lab_os_username}}'
     keystone_password: '{{system_tests_lab_os_password}}'
@@ -265,14 +231,6 @@ templates:
     keystone_password: '{{system_tests_datacentred_os_password}}'
 
   #######################################################
-
-  - &hp_openstack_region_a_inputs
-    region: region-a.geo-1
-    image_id: '{{hp_openstack_region_centos_7_image_id}}'
-
-  - &hp_openstack_region_b_inputs
-    region: region-b.geo-1
-    image_id: '{{hp_openstack_region_centos_7_image_id}}'
 
   - &lab_openstack_inputs
     image_id: '{{lab_openstack_centos_7_image_id}}'
@@ -288,12 +246,6 @@ templates:
   - &openstack_handler_configuration
     handler: openstack_handler
     external: *openstack_plugin_external
-
-  - &hp_openstack_handler_configuration
-    <<: *openstack_handler_configuration
-    inputs: inputs-hp-openstack.yaml
-    manager_blueprint: openstack-manager-blueprint.yaml
-    manager_blueprint_override: *openstack_manager_blueprint_override
 
   - &lab_openstack_handler_configuration
     <<: *openstack_handler_configuration
@@ -319,17 +271,6 @@ templates:
 #####################################################################################
 
 handler_properties:
-
-  hp_openstack_region_a_properties:
-    <<: *hp_openstack_properties
-    ubuntu_image_id: '{{hp_openstack_region_a_ubuntu_precise}}'
-    ubuntu_trusty_image_id: '{{hp_openstack_region_a_ubuntu_trusty}}'
-
-  hp_openstack_region_b_properties:
-    <<: *hp_openstack_properties
-    ubuntu_image_id: '{{hp_openstack_region_b_ubuntu_precise}}'
-    ubuntu_trusty_image_id: '{{hp_openstack_region_b_ubuntu_trusty}}'
-    centos_7_image_id: '{{hp_openstack_region_b_centos_7_0_selinux}}'
 
   lab_openstack_properties:
     ubuntu_image_name: '{{lab_openstack_ubuntu_precise_image_name}}'
@@ -402,132 +343,49 @@ handler_properties:
 
 handler_configurations:
 
-  hp_openstack_system_tests_region_a:
-    <<: *hp_openstack_handler_configuration
-    env: hp_openstack_system_tests_region_a
-    tags: [openstack, hp]
-    properties: hp_openstack_region_a_properties
+  nontransient_deployment_workers_datacentred_openstack_system_tests1:
+    <<: *datacentred_openstack_handler_configuration
+    env: datacentred_openstack_1
+    manager_blueprint_override:
+      <<: *datacentred_openstack_manager_blueprint_override
+      <<: *nontransient_deployment_workers_manager_blueprint_override
     inputs_override:
-      <<: *hp_openstack_credentials_inputs
-      <<: *hp_openstack_region_a_inputs
-      keystone_tenant_name: cloudify-cosmo-system-tests
+      <<: *datacentred_openstack_credentials_inputs
+      <<: *datacentred_openstack_inputs
+      keystone_tenant_name: gigaspaces_system-test-1
 
-  hp_openstack_system_tests_region_b:
-    <<: *hp_openstack_handler_configuration
-    env: hp_openstack_system_tests_region_b
-    tags: [openstack, hp]
-    properties: hp_openstack_region_b_properties
+  nontransient_deployment_workers_datacentred_openstack_system_tests2:
+    <<: *datacentred_openstack_handler_configuration
+    env: datacentred_openstack_2
+    manager_blueprint_override:
+      <<: *datacentred_openstack_manager_blueprint_override
+      <<: *nontransient_deployment_workers_manager_blueprint_override
     inputs_override:
-      <<: *hp_openstack_credentials_inputs
-      <<: *hp_openstack_region_b_inputs
-      keystone_tenant_name: cloudify-cosmo-system-tests
+      <<: *datacentred_openstack_credentials_inputs
+      <<: *datacentred_openstack_inputs
+      keystone_tenant_name: gigaspaces_system-test-2
 
-  hp_openstack_system_tests2_region_a:
-    <<: *hp_openstack_handler_configuration
-    env: hp_openstack_system_tests2_region_a
-    tags: [openstack, hp]
-    properties: hp_openstack_region_a_properties
+  nontransient_deployment_workers_datacentred_openstack_system_tests3:
+    <<: *datacentred_openstack_handler_configuration
+    env: datacentred_openstack_3
+    manager_blueprint_override:
+      <<: *datacentred_openstack_manager_blueprint_override
+      <<: *nontransient_deployment_workers_manager_blueprint_override
     inputs_override:
-      <<: *hp_openstack_credentials_inputs
-      <<: *hp_openstack_region_a_inputs
-      keystone_tenant_name: cloudify-cosmo-system-tests2
-
-  hp_openstack_system_tests2_region_b:
-    <<: *hp_openstack_handler_configuration
-    env: hp_openstack_system_tests2_region_b
-    tags: [openstack, hp]
-    properties: hp_openstack_region_b_properties
-    inputs_override:
-      <<: *hp_openstack_credentials_inputs
-      <<: *hp_openstack_region_b_inputs
-      keystone_tenant_name: cloudify-cosmo-system-tests2
-
-  hp_openstack_system_tests3_region_a:
-    <<: *hp_openstack_handler_configuration
-    env: hp_openstack_system_tests3_region_a
-    tags: [openstack, hp]
-    properties: hp_openstack_region_a_properties
-    inputs_override:
-      <<: *hp_openstack_credentials_inputs
-      <<: *hp_openstack_region_a_inputs
-      keystone_tenant_name: cloudify-cosmo-system-tests3
-
-  hp_openstack_system_tests3_region_b:
-    <<: *hp_openstack_handler_configuration
-    env: hp_openstack_system_tests3_region_b
-    tags: [openstack, hp]
-    properties: hp_openstack_region_b_properties
-    inputs_override:
-      <<: *hp_openstack_credentials_inputs
-      <<: *hp_openstack_region_b_inputs
-      keystone_tenant_name: cloudify-cosmo-system-tests3
+      <<: *datacentred_openstack_credentials_inputs
+      <<: *datacentred_openstack_inputs
+      keystone_tenant_name: gigaspaces_system-test-3
 
   ############################################################################
 
-  nontransient_deployment_workers_hp_openstack_system_tests2_region_a:
-    <<: *hp_openstack_handler_configuration
-    env: hp_openstack_system_tests2_region_a
-    properties: hp_openstack_region_a_properties
-    manager_blueprint_override:
-      <<: *openstack_manager_blueprint_override
-      <<: *nontransient_deployment_workers_manager_blueprint_override
+  stress_datacentred_openstack_system_tests4:
+    <<: *datacentred_openstack_handler_configuration
+    env: datacentred_openstack_4
     inputs_override:
-      <<: *hp_openstack_credentials_inputs
-      <<: *hp_openstack_region_a_inputs
-      keystone_tenant_name: cloudify-cosmo-system-tests2
-
-  nontransient_deployment_workers_hp_openstack_system_tests2_region_b:
-    <<: *hp_openstack_handler_configuration
-    env: hp_openstack_system_tests2_region_b
-    properties: hp_openstack_region_b_properties
-    manager_blueprint_override:
-      <<: *openstack_manager_blueprint_override
-      <<: *nontransient_deployment_workers_manager_blueprint_override
-    inputs_override:
-      <<: *hp_openstack_credentials_inputs
-      <<: *hp_openstack_region_b_inputs
-      keystone_tenant_name: cloudify-cosmo-system-tests2
-
-  nontransient_deployment_workers_hp_openstack_system_tests3_region_a:
-    <<: *hp_openstack_handler_configuration
-    env: hp_openstack_system_tests3_region_a
-    properties: hp_openstack_region_a_properties
-    manager_blueprint_override:
-      <<: *openstack_manager_blueprint_override
-      <<: *nontransient_deployment_workers_manager_blueprint_override
-    inputs_override:
-      <<: *hp_openstack_credentials_inputs
-      <<: *hp_openstack_region_a_inputs
-      keystone_tenant_name: cloudify-cosmo-system-tests3
-
-  ############################################################################
-
-  stress_hp_openstack_system_tests3_region_a:
-    <<: *hp_openstack_handler_configuration
-    env: hp_openstack_system_tests3_region_a
-    properties: hp_openstack_region_a_properties
-    manager_blueprint_override:
-      <<: *openstack_manager_blueprint_override
-    inputs_override:
-      <<: *hp_openstack_credentials_inputs
-      <<: *hp_openstack_region_a_inputs
-      keystone_tenant_name: cloudify-cosmo-system-tests3
-      flavor_id: 103
-
-  ############################################################################
-
-  hp_openstack_centos_system_tests3_region_b:
-    <<: *hp_openstack_handler_configuration
-    env: hp_openstack_system_tests3_region_b
-    properties: hp_openstack_region_b_properties
-    manager_blueprint_override:
-      <<: *openstack_manager_blueprint_override
-    inputs_override:
-      <<: *hp_openstack_credentials_inputs
-      <<: *hp_openstack_region_b_inputs
-      keystone_tenant_name: cloudify-cosmo-system-tests3
-      image_id: '{{hp_openstack_region_b_centos_7_0_selinux}}'
-      ssh_user: centos
+      <<: *datacentred_openstack_credentials_inputs
+      <<: *datacentred_openstack_inputs
+      keystone_tenant_name: gigaspaces_system-test-4
+      flavor_id: 9cf6e43b-e191-47ca-8665-f8592e2d6227
 
   ############################################################################
 
@@ -651,6 +509,42 @@ handler_configurations:
       <<: *datacentred_openstack_credentials_inputs
       <<: *datacentred_openstack_inputs
       keystone_tenant_name: gigaspaces_system-test-4
+
+  datacentred_openstack_system_tests5:
+    <<: *datacentred_openstack_handler_configuration
+    env: datacentred_openstack_5
+    tags: [openstack, datacentred]
+    inputs_override:
+      <<: *datacentred_openstack_credentials_inputs
+      <<: *datacentred_openstack_inputs
+      keystone_tenant_name: gigaspaces_system-test-5
+
+  datacentred_openstack_system_tests6:
+    <<: *datacentred_openstack_handler_configuration
+    env: datacentred_openstack_6
+    tags: [openstack, datacentred]
+    inputs_override:
+      <<: *datacentred_openstack_credentials_inputs
+      <<: *datacentred_openstack_inputs
+      keystone_tenant_name: gigaspaces_system-test-6
+
+  datacentred_openstack_system_tests7:
+    <<: *datacentred_openstack_handler_configuration
+    env: datacentred_openstack_7
+    tags: [openstack, datacentred]
+    inputs_override:
+      <<: *datacentred_openstack_credentials_inputs
+      <<: *datacentred_openstack_inputs
+      keystone_tenant_name: gigaspaces_system-test-7
+
+  datacentred_openstack_system_tests8:
+    <<: *datacentred_openstack_handler_configuration
+    env: datacentred_openstack_8
+    tags: [openstack, datacentred]
+    inputs_override:
+      <<: *datacentred_openstack_credentials_inputs
+      <<: *datacentred_openstack_inputs
+      keystone_tenant_name: gigaspaces_system-test-8
 
   ###############################################################################
 
@@ -880,28 +774,28 @@ tests:
 test_suites:
 
   openstack_blueprints_no_chef_puppet_docker:
-    requires: [openstack, hp]
+    requires: [openstack, datacentred]
     tests:
       - openstack_blueprints_without_chef_puppet_docker_windows
       - host_pool_plugin
 
   openstack_manager_status:
-    requires: [openstack, hp]
+    requires: [openstack, datacentred]
     tests:
       - manager_status
 
   openstack_manager_recovery:
-    requires: [openstack, hp]
+    requires: [openstack, datacentred]
     tests:
       - manager_recovery
 
   openstack_plugin_and_docker_tests:
-    requires: [openstack, hp]
+    requires: [openstack, datacentred]
     tests:
       - openstack_plugin
 
   openstack_watchdog:
-    requires: [openstack, hp]
+    requires: [openstack, datacentred]
     tests:
       - watchdog_tests
 
@@ -913,24 +807,24 @@ test_suites:
   #####################################################################
 
   nontransient_deployment_workers_openstack_nodecellar:
-    handler_configuration: nontransient_deployment_workers_hp_openstack_system_tests2_region_a
+    handler_configuration: nontransient_deployment_workers_datacentred_openstack_system_tests1
     tests:
       - openstack_blueprints_nodecellar
 
-  nontransient_deployment_workers_hp_openstack_autoheal_and_scale:
-    handler_configuration: nontransient_deployment_workers_hp_openstack_system_tests3_region_a
+  nontransient_deployment_workers_openstack_autoheal_and_scale:
+    handler_configuration: nontransient_deployment_workers_datacentred_openstack_system_tests2
     tests:
       - openstack_blueprints_autoheal_and_scale
 
   nontransient_deployment_workers_openstack_manager_recovery:
-    handler_configuration: nontransient_deployment_workers_hp_openstack_system_tests2_region_b
+    handler_configuration: nontransient_deployment_workers_datacentred_openstack_system_tests3
     tests:
       - manager_recovery
 
   #####################################################################
 
   stress:
-    handler_configuration: stress_hp_openstack_system_tests3_region_a
+    handler_configuration: stress_datacentred_openstack_system_tests4
     tests:
       - stress
 

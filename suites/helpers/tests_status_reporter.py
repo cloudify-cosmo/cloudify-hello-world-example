@@ -205,18 +205,6 @@ class CloudifyTestSuites():
         return test_status
 
     @staticmethod
-    def get_comment_for_test_group(test_group_name):
-        test_group_comment = ''
-        if test_group_name == 'cli_packager_windows':
-            test_group_comment = 'must run in lab for windows support'
-        elif test_group_name == 'manager_recovery':
-            test_group_comment = 'must run on hp tenant system_tests3 ' \
-                                 'in region_a (west)'
-        elif test_group_name == 'openstack_nova_net':
-            test_group_comment = 'must run on pclab47_devstack_nova_net'
-        return test_group_comment
-
-    @staticmethod
     def get_descriptor(suite_details, test_group_name, test_name, is_external):
         if 'requires' in suite_details:
             at_value = ','.join(suite_details['requires'])
@@ -265,8 +253,6 @@ def analyze_results(quickbuild_driver, cloudify_test_suites):
 
                     descriptor = cloudify_test_suites.get_descriptor(
                         suite_details, test_group_name, test_name, is_external)
-                    comment = cloudify_test_suites.get_comment_for_test_group(
-                        test_group_name)
 
                     test_summary = [
                         status,
@@ -276,7 +262,7 @@ def analyze_results(quickbuild_driver, cloudify_test_suites):
                         descriptor,
                         '',
                         '',
-                        comment
+                        ''
                     ]
                     analyzed_results.append(test_summary)
             else:
