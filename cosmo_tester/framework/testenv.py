@@ -26,7 +26,6 @@ import importlib
 import json
 from contextlib import contextmanager
 
-import requests
 import yaml
 from path import path
 import fabric.api
@@ -41,9 +40,6 @@ from cosmo_tester.framework.util import (get_blueprint_path,
                                          create_rest_client)
 
 from cloudify_rest_client.executions import Execution
-
-requests.packages.urllib3.disable_warnings(
-    requests.packages.urllib3.exceptions.InsecurePlatformWarning)
 
 root = logging.getLogger()
 root.setLevel(logging.INFO)
