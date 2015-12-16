@@ -24,9 +24,6 @@ from cosmo_tester.framework.testenv import TestCase
 from cosmo_tester.framework.git_helper import clone, checkout
 from cosmo_tester.framework.util import create_rest_client, YamlPatcher
 
-import requests.packages.urllib3
-requests.packages.urllib3.disable_warnings()
-
 VIRTUALENV_NAME = 'env'
 HELLOWORLD_APP_NAME = 'helloworld'
 SNAPSHOT_NAME = 'snap'
