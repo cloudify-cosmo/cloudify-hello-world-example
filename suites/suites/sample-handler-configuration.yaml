@@ -25,7 +25,7 @@ manager_blueprint: ~/path/to/manager-blueprint.yaml
 # specifying this attribute is required depending on
 # the handler in use and the tests that are to be
 # executed
-properties: hp_openstack_region_b_properties
+properties: datacentred_openstack_properties
 
 ######################################################
 # if specified, tests will run using an existing manager,
