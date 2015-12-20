@@ -218,6 +218,11 @@ templates:
 
   #######################################################
 
+  - &install_python_compilers_input_override
+    install_python_compilers: 'true'
+
+  #######################################################
+
   - &lab_openstack_credentials_inputs
     keystone_username: '{{system_tests_lab_os_username}}'
     keystone_password: '{{system_tests_lab_os_password}}'

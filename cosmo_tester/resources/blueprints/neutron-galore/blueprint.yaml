@@ -104,6 +104,7 @@ node_templates:
         properties:
             security_group:
                 name: neutron_test_security_group_src
+            description: source security group
     security_group_dst:
         type: cloudify.openstack.nodes.SecurityGroup
         properties:

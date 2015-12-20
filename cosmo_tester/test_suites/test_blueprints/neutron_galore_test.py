@@ -121,6 +121,8 @@ class NeutronGaloreTest(TestCase):
         self.assertEqual(openstack['router']['name'], p('neutron_router_test'))
         self.assertEqual(openstack['sg_src']['name'],
                          p('neutron_test_security_group_src'))
+        self.assertEqual(openstack['sg_src']['description'],
+                         'source security group')
         self.assertIn(sg_dst_id, port_security_groups)
         self.assertIn(sg_src_id, port_security_groups)
         self.assertEqual(openstack['network']['name'],
