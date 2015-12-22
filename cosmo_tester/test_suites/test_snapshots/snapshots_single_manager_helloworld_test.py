@@ -69,7 +69,7 @@ class SnapshotsHelloWorldTest(TestCase):
         self.upload_blueprint(blueprint_id)
         inputs = {
             'agent_user': self.env.cloudify_agent_user,
-            'image': self.env.ubuntu_image_name,
+            'image': self.env.ubuntu_trusty_image_name,
             'flavor': self.env.flavor_name
         }
         self.create_deployment(blueprint_id, deployment_id, inputs=inputs)
