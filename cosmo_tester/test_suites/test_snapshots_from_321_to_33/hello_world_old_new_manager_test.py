@@ -375,7 +375,7 @@ class HelloWorldSnapshotMigrationFrom_3_2_1_To_3_3_Test(TestCase):
         # generate inputs file
         inputs_template_vars = {
             'agent_user': self.env.cloudify_agent_user,
-            'image':      self.env.ubuntu_image_name,
+            'image':      self.env.ubuntu_trusty_image_name,
             'flavor':     self.env.flavor_name
         }
 

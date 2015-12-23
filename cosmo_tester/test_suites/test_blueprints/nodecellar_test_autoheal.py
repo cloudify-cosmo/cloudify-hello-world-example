@@ -132,7 +132,7 @@ class OpenStackAutohealNodeCellarTest(OpenStackNodeCellarTestBase):
 
     def get_inputs(self):
         return {
-            'image': self.env.ubuntu_image_id,
+            'image': self.env.ubuntu_trusty_image_id,
             'flavor': self.env.small_flavor_id,
             'agent_user': 'ubuntu'
         }
