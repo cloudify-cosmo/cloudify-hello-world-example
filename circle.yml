@@ -2,6 +2,15 @@ machine:
   python:
     version: 2.7.9
 
+checkout:
+  post:
+    - >
+      if [ -n "$CI_PULL_REQUEST" ]; then
+        PR_ID=${CI_PULL_REQUEST##*/}
+        git fetch origin +refs/pull/$PR_ID/merge:
+        git checkout -qf FETCH_HEAD
+      fi
+
 dependencies:
   override:
     - pip install https://github.com/cloudify-cosmo/cloudify-rest-client/archive/3.3.zip
@@ -15,7 +24,3 @@ test:
     - cfy init
     - cfy blueprints validate -p blueprint.yaml
     - cfy blueprints validate -p singlehost-blueprint.yaml
-
-# notify:
-#   flowdock: 1f4ec6febcf1ac9b35ae6c1f0049471f
-
