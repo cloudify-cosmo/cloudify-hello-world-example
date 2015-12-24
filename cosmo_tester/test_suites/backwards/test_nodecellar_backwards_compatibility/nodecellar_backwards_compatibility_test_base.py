@@ -22,7 +22,7 @@ from cosmo_tester.framework import util
 from cosmo_tester.framework.testenv import TestCase
 
 
-class NodecellarNackwardsCompatibilityTestBase(TestCase):
+class NodecellarBackwardsCompatibilityTestBase(TestCase):
 
     def setup_manager(self):
         self._copy_manager_blueprint()
@@ -48,6 +48,19 @@ class NodecellarNackwardsCompatibilityTestBase(TestCase):
 
     def get_manager_blueprint_inputs_override(self):
         return {}
+
+    def _add_description_field_to_openstack_security_groups(self):
+        # updating 'description' field in security groups - this has become
+        # mandatory in Openstack security groups (see CFY-2834). since we're
+        # using an old Openstack plugin, we have to explicitly add support
+        # for this in the blueprint itself
+        with util.YamlPatcher(self.blueprint_yaml) as patch:
+            patch.set_value('node_templates.nodecellar_security_group.'
+                            'properties.security_group.description',
+                            'nodecellar security group')
+            patch.set_value('node_templates.mongod_security_group.'
+                            'properties.security_group.description',
+                            'mongod security group')
 
     def _bootstrap(self):
         self.cfy.bootstrap(blueprint_path=self.test_manager_blueprint_path,

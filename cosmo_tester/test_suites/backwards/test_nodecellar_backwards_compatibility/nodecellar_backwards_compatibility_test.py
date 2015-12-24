@@ -15,7 +15,7 @@
 
 from cosmo_tester.test_suites.backwards.test_nodecellar_backwards_compatibility\
     .nodecellar_backwards_compatibility_test_base import \
-    NodecellarNackwardsCompatibilityTestBase
+    NodecellarBackwardsCompatibilityTestBase
 from cosmo_tester.test_suites.test_blueprints.nodecellar_test import \
     OpenStackNodeCellarTestBase
 
@@ -27,7 +27,7 @@ RABBITMQ_PASSWORD_VALUE = 'guest'
 
 
 class OldVersionNodeCellarTest(OpenStackNodeCellarTestBase,
-                               NodecellarNackwardsCompatibilityTestBase):
+                               NodecellarBackwardsCompatibilityTestBase):
 
     # Nodecellar test using the 3.1 version blueprint
     def test_old_version_openstack_nodecellar(self):
@@ -41,6 +41,9 @@ class OldVersionNodeCellarTest(OpenStackNodeCellarTestBase,
             'flavor': self.env.small_flavor_id,
             'agent_user': 'ubuntu'
         }
+
+    def modify_blueprint(self):
+        self._add_description_field_to_openstack_security_groups()
 
     @property
     def repo_branch(self):
