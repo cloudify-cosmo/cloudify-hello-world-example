@@ -520,3 +520,32 @@ class TestCase(unittest.TestCase):
                 key_filename=self.env.management_key_path,
                 **kwargs):
             yield fabric.api
+
+    def run_commands_on_agent_host(self,
+                                   user,
+                                   commands,
+                                   deployment_id=None,
+                                   compute_node_id=None,
+                                   compute_node_instance_id=None):
+        if not (compute_node_id or compute_node_instance_id):
+            self.fail('no node_id or node_instance_id')
+        deployment_id = deployment_id or self.test_id
+        filters = {'deployment_id': deployment_id}
+        if compute_node_id:
+            filters['node_id'] = compute_node_id
+        if compute_node_instance_id:
+            filters['id'] = compute_node_instance_id
+        computes = self.client.node_instances.list(**filters).items
+        if not computes:
+            self.fail('No compute nodes were found')
+        if len(computes) > 1:
+            self.fail('More than one instance found, please refine your query:'
+                      ' {0}'.format(computes))
+        compute = computes[0]
+        private_ip = compute.runtime_properties['ip']
+        with self.manager_env_fabric() as api:
+            api.sudo('ssh '
+                     '-o UserKnownHostsFile=/dev/null '
+                     '-o StrictHostKeyChecking=no '
+                     '-t -i /root/.ssh/agent_key.pem {0}@{1} "{2}"'
+                     .format(user, private_ip, ' && '.join(commands)))

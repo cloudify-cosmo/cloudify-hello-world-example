@@ -48,7 +48,8 @@ class AbstractHelloWorldTest(MonitoringTestCase):
              inputs=None,
              blueprint_file='blueprint.yaml',
              is_existing_deployment=False,
-             influx_host_ip=None):
+             influx_host_ip=None,
+             after_install=None):
         if not is_existing_deployment:
             self.repo_dir = clone_hello_world(self.workdir)
             self.blueprint_yaml = self.repo_dir / blueprint_file
@@ -57,6 +58,9 @@ class AbstractHelloWorldTest(MonitoringTestCase):
                 inputs=inputs)
         else:
             self.execute_install(deployment_id=self.test_id, fetch_state=False)
+
+        if after_install:
+            after_install()
 
         # We assert for events to test events are actually
         # sent in a real world environment.
@@ -107,12 +111,25 @@ class HelloWorldBashTest(AbstractHelloWorldTest):
         self._run(inputs=inputs, is_existing_deployment=True)
 
     def test_hello_world_on_centos(self):
+        agent_user = self.env.centos_image_user
         inputs = {
-            'agent_user': self.env.centos_image_user,
+            'agent_user': agent_user,
             'image': self.env.centos_image_name,
             'flavor': self.env.flavor_name
         }
-        self._run(inputs=inputs)
+
+        def after_install():
+            # Some CentOS 6.X images seem to have a firewall
+            # enabled by default (e.g. datacentred).
+            # We need port 8080 to assert the web application is active,
+            # so we walk the easy route and disable the entire firewall.
+            self.run_commands_on_agent_host(
+                compute_node_id='vm',
+                user=agent_user,
+                commands=['sudo service iptables save',
+                          'sudo service iptables stop',
+                          'sudo chkconfig iptables off'])
+        self._run(inputs=inputs, after_install=after_install)
 
     def _do_post_install_assertions(self):
         (floatingip_node, security_group_node, server_node) = self._instances()
