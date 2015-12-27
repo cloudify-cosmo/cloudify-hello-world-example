@@ -34,7 +34,7 @@ class OpenstackPluginTests(TestCase):
             'keystone_tenant_name': self.env.keystone_tenant_name,
             'keystone_url': self.env.keystone_url,
             'region': self.env.region,
-            'image': self.env.ubuntu_image_name,
+            'image': self.env.ubuntu_trusty_image_name,
             'flavor': self.env.flavor_name
         }
 

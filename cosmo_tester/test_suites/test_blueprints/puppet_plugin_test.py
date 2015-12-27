@@ -67,7 +67,7 @@ def update_blueprint(env, blueprint, hostname, userdata_vars=None):
 
     inputs = {
         'flavor': env.flavor_name,
-        'image': env.ubuntu_trusty_image_name,
+        'image': env.ubuntu_precise_image_name,
         'server_name': vm_hostname,
         'security_groups': [sg]
     }

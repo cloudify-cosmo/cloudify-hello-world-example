@@ -278,13 +278,13 @@ templates:
 handler_properties:
 
   lab_openstack_properties:
-    ubuntu_image_name: '{{lab_openstack_ubuntu_precise_image_name}}'
+    ubuntu_precise_image_name: '{{lab_openstack_ubuntu_precise_image_name}}'
     ubuntu_trusty_image_name: '{{lab_openstack_ubuntu_trusty_image_name}}'
     centos_image_name: '{{lab_openstack_centos_6_5_image_name}}'
     centos_7_image_name: '{{lab_openstack_centos_7_image_name}}'
     centos_7_image_id: '{{lab_openstack_centos_7_image_id}}'
     windows_image_name: '{{lab_openstack_windows_image_name}}'
-    ubuntu_image_id: '{{lab_openstack_ubuntu_precise}}'
+    ubuntu_precise_image_id: '{{lab_openstack_ubuntu_precise}}'
     ubuntu_trusty_image_id: '{{lab_openstack_ubuntu_trusty}}'
     centos_image_user: cloud-user
     centos_7_image_user: centos
@@ -293,9 +293,9 @@ handler_properties:
     medium_flavor_id: 8b5be402-98e6-461c-8425-56f708187c13
 
   mirantis_openstack_properties:
-    ubuntu_image_name: '{{mirantis_openstack_ubuntu_precise_image_name}}'
+    ubuntu_precise_image_name: '{{mirantis_openstack_ubuntu_precise_image_name}}'
     ubuntu_trusty_image_name: '{{mirantis_openstack_ubuntu_trusty_image_name}}'
-    ubuntu_image_id: '{{mirantis_openstack_ubuntu_precise}}'
+    ubuntu_precise_image_id: '{{mirantis_openstack_ubuntu_precise}}'
     ubuntu_trusty_image_id: '{{mirantis_openstack_ubuntu_trusty}}'
     centos_image_name: '{{mirantis_openstack_centos_6_5_image_name}}'
     centos_image_user: root
@@ -307,9 +307,9 @@ handler_properties:
     medium_flavor_id: 3
 
   datacentred_openstack_properties:
-    ubuntu_image_name: '{{datacentred_openstack_ubuntu_precise_image_name}}'
+    ubuntu_precise_image_name: '{{datacentred_openstack_ubuntu_precise_image_name}}'
     ubuntu_trusty_image_name: '{{datacentred_openstack_ubuntu_trusty_image_name}}'
-    ubuntu_image_id: '{{datacentred_openstack_ubuntu_precise}}'
+    ubuntu_precise_image_id: '{{datacentred_openstack_ubuntu_precise}}'
     ubuntu_trusty_image_id: '{{datacentred_openstack_ubuntu_trusty}}'
     centos_image_name: '{{datacentred_openstack_centos_6_5_image_name}}'
     centos_image_user: centos
@@ -322,9 +322,9 @@ handler_properties:
     medium_flavor_id: 8f4b7ae1-b8c2-431f-bb0c-362a5ece0381
 
   pclab47_devstack_nova_net:
-    ubuntu_image_name: ubuntu
+    ubuntu_precise_image_name: ubuntu
     flavor_name: m1.small
-    ubuntu_image_id: 32533bad-fd76-42e8-91fb-93e5c9921498
+    ubuntu_precise_image_id: 32533bad-fd76-42e8-91fb-93e5c9921498
     small_flavor_id: 2
 
   vsphere_handler_props:
