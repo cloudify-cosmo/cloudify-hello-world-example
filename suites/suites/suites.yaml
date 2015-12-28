@@ -37,6 +37,8 @@ variables:
   aws_ec2_medium_instance_type: m3.medium
   aws_ec2_micro_instance_type: t2.micro
   aws_ec2_eu_central_1_region_name: eu-central-1
+  aws_ec2_eu_central_1b_availability_zone: eu-central-1b
+  aws_ec2_eu_central_1_domain_name: eu-central-1.compute.internal
 
   vcloud_service_type: ondemand
   vcloud_instance: 7f26733b-b8c5-4621-ae28-6033cd465b79
@@ -343,6 +345,8 @@ handler_properties:
     medium_instance_type: '{{aws_ec2_medium_instance_type}}'
     micro_instance_type: '{{aws_ec2_micro_instance_type}}'
     rhel_7_image_user: '{{rhel_7_image_user}}'
+    availability_zone: '{{aws_ec2_eu_central_1b_availability_zone}}'
+    ec2_domain_name: '{{aws_ec2_eu_central_1_domain_name}}'
 
 #####################################################################################
 
