@@ -868,6 +868,17 @@ test_suites:
     requires: [openstack, datacentred]
     tests:
       - openstack_security
+      - broker_security
+
+  broker_security:
+    requires: [openstack, datacentred]
+    tests:
+      - broker_security
+
+  external_components:
+    requires: [openstack, datacentred]
+    tests:
+      - external_components
 
   docker_plugin:
     requires: [openstack, datacentred]
