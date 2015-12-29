@@ -2,4 +2,4 @@ git+https://github.com/cloudify-cosmo/cloudify-dsl-parser@master#egg=cloudify-ds
 git+https://github.com/cloudify-cosmo/cloudify-rest-client@master#egg=cloudify-rest-client==3.4a1
 git+https://github.com/cloudify-cosmo/cloudify-plugins-common@master#egg=cloudify-plugins-common==3.4a1
 git+https://github.com/cloudify-cosmo/cloudify-script-plugin@master#egg=cloudify-script-plugin==1.3.1
-git+https://github.com/cloudify-cosmo/cloudify-cli@master#egg=cloudify-cli==3.4a1
+git+https://github.com/cloudify-cosmo/cloudify-cli@master#egg=cloudify==3.4a1
