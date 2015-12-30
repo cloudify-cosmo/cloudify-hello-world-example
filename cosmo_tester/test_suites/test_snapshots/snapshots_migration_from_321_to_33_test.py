@@ -24,6 +24,18 @@ from cosmo_tester.framework.testenv import TestCase
 from cosmo_tester.framework.git_helper import clone, checkout
 from cosmo_tester.framework.util import create_rest_client, YamlPatcher
 
+from cosmo_tester.framework.testenv import (initialize_without_bootstrap,
+                                            clear_environment)
+
+
+def setUp():
+    initialize_without_bootstrap()
+
+
+def tearDown():
+    clear_environment()
+
+
 VIRTUALENV_NAME = 'env'
 HELLOWORLD_APP_NAME = 'helloworld'
 SNAPSHOT_NAME = 'snap'
@@ -181,8 +193,18 @@ class HelloWorldSnapshotMigrationFrom_3_2_1_To_3_3_Test(TestCase):
             NEW_MANAGER_INPUTS_NAME
         )
 
+        blueprint_path = os.path.join(
+            self.repo_path,
+            'openstack-manager-blueprint.yaml')
+
+        with YamlPatcher(blueprint_path) as patch:
+            patch.merge_obj(
+                'node_templates.management_subnet.properties.subnet',
+                {'dns_nameservers': ['8.8.4.4', '8.8.8.8']}
+            )
+
         self.cfy.bootstrap(
-            os.path.join(self.repo_path, 'openstack-manager-blueprint.yaml'),
+            blueprint_path,
             os.path.join(self.workdir, NEW_MANAGER_INPUTS_NAME),
         )
 
@@ -193,7 +215,7 @@ class HelloWorldSnapshotMigrationFrom_3_2_1_To_3_3_Test(TestCase):
         self._run_code_on_manager_3_3('sudo yum install -y gcc python-devel')
 
     def _teardown_manager_3_3(self):
-        self.logger.info('Teardowning manager 3.3')
+        self.logger.info('Tearing down manager 3.3')
 
         self.cfy.teardown()
 
@@ -271,7 +293,7 @@ class HelloWorldSnapshotMigrationFrom_3_2_1_To_3_3_Test(TestCase):
             OLD_MANAGER_INPUTS_NAME
         )
 
-        checkout(self.repo_path, '3.2.1-build')
+        checkout(self.repo_path, '3.2.1-build', force=True)
 
         external_resources = [
             'node_templates.management_network.properties',
@@ -288,6 +310,11 @@ class HelloWorldSnapshotMigrationFrom_3_2_1_To_3_3_Test(TestCase):
         with YamlPatcher(blueprint_path) as patch:
             for prop in external_resources:
                 patch.merge_obj(prop, {'use_external_resource': True})
+
+            patch.merge_obj(
+                'node_templates.management_subnet.properties.subnet',
+                {'dns_nameservers': ['8.8.4.4', '8.8.8.8']}
+            )
 
         template_vars = {
             'work_dir':   self.workdir,
@@ -312,7 +339,7 @@ class HelloWorldSnapshotMigrationFrom_3_2_1_To_3_3_Test(TestCase):
         self.addCleanup(self._teardown_manager_3_2_1)
 
     def _teardown_manager_3_2_1(self):
-        self.logger.info('Teardowning manager 3.2.1')
+        self.logger.info('Tearing down manager 3.2.1')
 
         template_vars = {
             'work_dir':   self.workdir,
@@ -328,7 +355,7 @@ class HelloWorldSnapshotMigrationFrom_3_2_1_To_3_3_Test(TestCase):
         rc = self._run_script(TEARDOWN_SCRIPT_NAME)
         if rc:
             self.fail(
-                'Teardowning manager 3.2.1 failed with exit code: {0}'
+                'Tearing down manager 3.2.1 failed with exit code: {0}'
                 .format(rc)
             )
 
@@ -385,9 +412,31 @@ class HelloWorldSnapshotMigrationFrom_3_2_1_To_3_3_Test(TestCase):
             HELLOWORLD_INPUTS_NAME
         )
 
+        hello_repo_path = clone(
+            'https://github.com/cloudify-cosmo/'
+            'cloudify-hello-world-example.git',
+            self.workdir,
+            '3.2.1-build'
+        )
+
+        hello_blueprint_path = os.path.join(hello_repo_path, 'blueprint.yaml')
+
+        with YamlPatcher(hello_blueprint_path) as patch:
+            patch.merge_obj(
+                'node_templates.security_group.interfaces',
+                {'cloudify.interfaces.lifecycle': {
+                    'create': {
+                        'inputs': {
+                            'args': {'description': 'hello security group'}
+                        }
+                    }
+                }}
+            )
+
         template_vars = {
             'work_dir':   self.workdir,
             'venv_name':  VIRTUALENV_NAME,
+            'repo_path': hello_repo_path,
             'helloworld_inputs_file': HELLOWORLD_INPUTS_NAME,
             'app_name': HELLOWORLD_APP_NAME,
             'runtime_property_name': RUNTIME_PROPERTY_NAME,

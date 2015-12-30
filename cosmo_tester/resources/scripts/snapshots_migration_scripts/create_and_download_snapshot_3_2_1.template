@@ -4,7 +4,7 @@ cd {{ work_dir }}
 source {{ venv_name }}/bin/activate
 cd {{ venv_name }}
 
-# TODO: this url has to be changed
-git clone https://github.com/xwombat/cloudify-3.2-snapshot.git
-python ./cloudify-3.2-snapshot/create_snapshot_3_2.py
+git clone https://github.com/cloudify-cosmo/cloudify-3.2.1-snapshots-tool.git
+pip install -e ./cloudify-3.2.1-snapshots-tool
+cfy-snapshot32
 mv snapshot.zip ../
