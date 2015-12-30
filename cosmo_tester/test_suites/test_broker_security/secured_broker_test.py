@@ -250,7 +250,8 @@ class SecuredBrokerManagerTests(
 
         # Allow rabbitmq access for security tests (5671,5672)
         # Allow influxdb access to test monitoring for nodecellar (8086)
-        for port in (5671, 5672, 8086):
+        # Access through 8086 is already available.. (sys tests framework).
+        for port in (5671, 5672):
             self._allow_port_on_security_group(
                 group_id=group_id,
                 port=port,
