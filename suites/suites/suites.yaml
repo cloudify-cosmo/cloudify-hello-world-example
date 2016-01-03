@@ -32,6 +32,7 @@ variables:
   rhel_7_image_user: ec2-user
   aws_ec2_eu_central_1_ami_ubuntu_trusty_image_id: ami-00dae61d
   aws_ec2_eu_central_1_ami_centos_7_image_id: ami-e68f82fb
+  aws_ec2_eu_central_1_windows_server_2012_r2_image_id: ami-c64559aa
   aws_ec2_eu_west_1_ami_rhel_7_image_id: ami-25158352
   aws_ec2_frankfurt_rhel_7_image_id: ami-dafdcfc7
   aws_ec2_medium_instance_type: m3.medium
@@ -49,6 +50,7 @@ variables:
   # These values are updated by the version tool
   core_branch: '3.4m1'
   plugins_branch: '1.3.1'
+  manager_blueprints_branch: ''
 
   # These values are injected by quickbuild and are here mainly
   # for reference (i.e. they will exist in runtime either way)
@@ -342,6 +344,8 @@ handler_properties:
     ubuntu_trusty_image_id: '{{aws_ec2_eu_central_1_ami_ubuntu_trusty_image_id}}'
     centos_7_image_id: '{{aws_ec2_eu_central_1_ami_centos_7_image_id}}'
     rhel_7_image_id: '{{aws_ec2_frankfurt_rhel_7_image_id}}'
+    rhel_65_image_id: '{{aws_ec2_frankfurt_rhel_65_image_id}}'
+    windows_server_2012_r2_image_id: '{{aws_ec2_eu_central_1_windows_server_2012_r2_image_id}}'
     medium_instance_type: '{{aws_ec2_medium_instance_type}}'
     micro_instance_type: '{{aws_ec2_micro_instance_type}}'
     rhel_7_image_user: '{{rhel_7_image_user}}'
@@ -728,7 +732,11 @@ tests:
 
   openstack_security:
     tests:
-      - cosmo_tester/test_suites/test_security
+      - cosmo_tester/test_suites/test_security -e ad_auth_test
+
+  ec2_security:
+    tests:
+      - cosmo_tester/test_suites/test_security/ad_auth_test.py
 
   broker_security:
     tests:
@@ -879,6 +887,11 @@ test_suites:
     requires: [openstack, datacentred]
     tests:
       - external_components
+
+  ec2_security:
+    handler_configuration: aws_ec2
+    tests:
+      - ec2_security
 
   docker_plugin:
     requires: [openstack, datacentred]

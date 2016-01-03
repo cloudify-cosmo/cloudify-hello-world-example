@@ -1,0 +1,102 @@
+tosca_definitions_version: cloudify_dsl_1_2
+
+description: >
+  This blueprint defines an EC2 VM created using Cloudify's AWS plugin
+  and a simple web server started using Cloudify's script plugin.
+  In addition, an elastic IP and a security group are created and associated with the created VM.
+
+imports:
+  - http://www.getcloudify.org/spec/cloudify/3.3.1/types.yaml
+  - http://www.getcloudify.org/spec/aws-plugin/1.3.1/plugin.yaml
+
+inputs:
+  active_directory_port:
+    description: The active directory server port
+    default: 389
+  image_id: 
+    description: AWS EC2 image id to use for the server
+    default: 'ami-e4034a8e'
+  aws_config:
+    default: {}
+  instance_type:
+    description: AWS EC2 instance type to use for the server
+    default: m3.medium
+
+node_templates:
+  elastic_ip:
+    type: cloudify.aws.nodes.ElasticIP
+    properties:
+      aws_config: { get_input: aws_config }
+
+  security_group:
+    type: cloudify.aws.nodes.SecurityGroup
+    properties:
+      aws_config: { get_input: aws_config }
+      description: Security group for active directory test VM
+      rules:
+        - ip_protocol: tcp
+          cidr_ip: 0.0.0.0/0
+          from_port: { get_property: [ active_directory_server, port ] }
+          to_port: { get_property: [ active_directory_server, port ] }
+
+  vm:
+    type: cloudify.aws.nodes.Instance
+    properties:
+      aws_config: { get_input: aws_config }
+      agent_config:
+        install_method: none
+      image_id: { get_input: image_id }
+      instance_type: { get_input: instance_type }
+      parameters: 
+        user_data: |
+          <powershell>
+            $Computer = [ADSI]"WinNT://$Env:COMPUTERNAME,Computer"
+            $bob = $Computer.Create("User", "bob")
+            $bob.SetPassword("b0b_Aa123456!")
+            $bob.SetInfo()
+            $clair = $Computer.Create("User", "clair")
+            $clair.SetPassword("cl@ir_Aa123456!")
+            $clair.SetInfo()
+            $alice = $Computer.Create("User", "alice")
+            $alice.SetPassword("@lice_Aa123456!")
+            $alice.SetInfo()
+            $dave = $Computer.Create("User", "dave")
+            $dave.SetPassword("d@ve_Aa123456!")
+            $dave.SetInfo()
+            Install-windowsfeature AD-domain-services -IncludeManagementTools
+            Import-Module ADDSDeployment
+            #set administrator password
+            $name = hostname
+            ([adsi]"WinNT://$name/Administrator").SetPassword("Aa123456!")
+            $secure_string_pwd = convertto-securestring "P@ssW0rD!" -asplaintext -force
+            Install-ADDSForest -DomainName welcome.com -SafeModeAdministratorPassword $secure_string_pwd -Force
+          </powershell>
+    relationships:
+      - type: cloudify.aws.relationships.instance_connected_to_elastic_ip
+        target: elastic_ip
+      - type: cloudify.aws.relationships.instance_connected_to_security_group
+        target: security_group
+
+  active_directory_server:
+    type: cloudify.nodes.WebServer
+    properties:
+      port: { get_input: active_directory_port }
+    relationships:
+      - type: cloudify.relationships.contained_in
+        target: vm
+        target_interfaces:
+          cloudify.interfaces.relationship_lifecycle:
+            establish:
+              implementation: script.script_runner.tasks.run
+              inputs:
+                script_path: scripts/wait_for_active_directory_port.sh
+                public_ip: { get_attribute: [elastic_ip, aws_resource_id] }
+                port: { get_property: [active_directory_server, port] }
+                timeout_minutes: 3
+                fail_on_timeout: false
+
+outputs:
+  ldap_endpoint:
+    description: The active directory's external endpoint
+    value: { concat: ['ldap://', { get_attribute: [elastic_ip, aws_resource_id] },
+                      ':', { get_property: [active_directory_server, port] }] }
