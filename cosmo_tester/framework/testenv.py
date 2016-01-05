@@ -332,6 +332,7 @@ class TestCase(unittest.TestCase):
             self._testMethodName, self.env)
         # register cleanup
         self.addCleanup(self._cleanup)
+        self.maxDiff = 1024 * 1024 * 10
 
     def _cleanup(self):
         self._test_cleanup_context.cleanup()

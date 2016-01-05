@@ -66,30 +66,24 @@ class BaseManagerRecoveryTest(TestCase):
                                    old_state,
                                    new_state,
                                    properties_to_add_list):
-        for deployment_name, deployment_value in \
-                old_state['node_state'].items():
-            for host_name, host_value in \
-                    deployment_value.items():
-                properties_dict = \
-                    host_value['runtime_properties']['cloudify_agent']
-                new_properties_dict = new_state[
-                    'node_state'][
-                    deployment_name][
-                    host_name]['runtime_properties']['cloudify_agent']
-                for prop in properties_to_add_list:
-                    if prop not in properties_dict \
-                            and prop in new_properties_dict:
-                        properties_dict[prop] = new_properties_dict[prop]
-        for host_name, host_value in old_state['nodes'].items():
-            properties_dict = host_value[
-                'runtime_properties'][
-                'cloudify_agent']
-            new_properties_dict = new_state[
-                'nodes'][
-                host_name]['runtime_properties']['cloudify_agent']
-            for prop in properties_to_add_list:
-                if prop not in properties_dict and prop in new_properties_dict:
-                    properties_dict[prop] = new_properties_dict[prop]
+        for deployment_id, deployment in new_state['node_state'].items():
+            for instance_id, node in deployment.items():
+                if 'cloudify_agent' not in node['runtime_properties']:
+                    continue
+                after_agent = node['runtime_properties']['cloudify_agent']
+                instance1 = old_state['node_state'][deployment_id][instance_id]
+                instance2 = old_state['nodes'][instance_id]
+                for instance in old_state['deployment_nodes'][deployment_id]:
+                    if instance['id'] == instance_id:
+                        instance3 = instance
+                        break
+                else:
+                    self.fail('Failed finding: {0}'.format(instance_id))
+                for instance in [instance1, instance2, instance3]:
+                    before_agent = instance['runtime_properties'][
+                        'cloudify_agent']
+                    for prop in properties_to_add_list:
+                        before_agent[prop] = after_agent[prop]
 
     def _assert_before_after_states(self, after, before):
         # for some reason, the workflow order changes
@@ -99,13 +93,10 @@ class BaseManagerRecoveryTest(TestCase):
         # some cloudify agent properties are added during the
         # snapshot creation, so they're added to the before state here
         properties_to_add = [
-            'broker_ssl_enabled',
-            'broker_pass',
-            'version',
-            'broker_user',
-            'broker_ssl_cert',
-            'broker_ip'
+            u'version',
+            u'broker_config'
         ]
+
         self._add_agent_migration_props(before, after, properties_to_add)
 
         self.assertEqual(before, after)
