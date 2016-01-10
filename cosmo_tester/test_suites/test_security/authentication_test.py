@@ -12,11 +12,17 @@
 #    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
-from cosmo_tester.test_suites.test_security import auth_test_base
-from cosmo_tester.test_suites.test_security import security_test_base
 
-security_test_base.TEST_CFY_USERNAME = 'alice'
-security_test_base.TEST_CFY_PASSWORD = 'alice_password'
+import os
+
+from cloudify_rest_client import CloudifyClient
+from cloudify_cli import constants
+
+from cosmo_tester.framework import util
+from cosmo_tester.test_suites.test_security import auth_test_base
+
+TEST_CFY_USERNAME = 'alice'
+TEST_CFY_PASSWORD = 'alice_password'
 
 
 class AuthenticationWithoutAuthorizationTest(auth_test_base.BaseAuthTest):
@@ -31,6 +37,16 @@ class AuthenticationWithoutAuthorizationTest(auth_test_base.BaseAuthTest):
     ######################################
     # override default security settings
     ######################################
+    def _set_credentials_env_vars(self):
+        os.environ[constants.CLOUDIFY_USERNAME_ENV] = TEST_CFY_USERNAME
+        os.environ[constants.CLOUDIFY_PASSWORD_ENV] = TEST_CFY_PASSWORD
+
+    def set_rest_client(self):
+        self.client = CloudifyClient(
+            host=self.env.management_ip,
+            headers=util.get_auth_header(username=TEST_CFY_USERNAME,
+                                         password=TEST_CFY_PASSWORD))
+
     def get_userstore_users(self):
         return [
             {

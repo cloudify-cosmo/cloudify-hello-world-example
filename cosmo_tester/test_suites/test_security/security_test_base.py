@@ -179,6 +179,10 @@ class SecurityTestBase(TestCase):
         os.environ[constants.CLOUDIFY_USERNAME_ENV] = TEST_CFY_USERNAME
         os.environ[constants.CLOUDIFY_PASSWORD_ENV] = TEST_CFY_PASSWORD
 
+    def _unset_credentials_env_vars(self):
+        os.environ.pop(constants.CLOUDIFY_USERNAME_ENV, None)
+        os.environ.pop(constants.CLOUDIFY_PASSWORD_ENV, None)
+
     def set_rest_client(self):
         self.client = CloudifyClient(
             host=self.env.management_ip,
@@ -189,9 +193,11 @@ class SecurityTestBase(TestCase):
         self.env.management_ip = self.cfy.get_management_ip()
         self.set_rest_client()
 
-        def clean_mgmt_ip():
+        def clear_mgmt_and_security_settings():
             self.env.management_ip = None
-        self.addCleanup(clean_mgmt_ip)
+            self.env.rest_client = None
+            self._unset_credentials_env_vars()
+        self.addCleanup(clear_mgmt_and_security_settings)
 
         response = self.client.manager.get_status()
         if not response['status'] == 'running':
