@@ -23,15 +23,16 @@ from cosmo_tester.framework import util
 from cosmo_tester.framework.testenv import TestCase
 
 
-TEST_CFY_USERNAME = 'admin'
-TEST_CFY_PASSWORD = 'admin'
-SECURITY_PROP_PATH = 'node_types.cloudify\.nodes\.MyCloudifyManager.properties.' \
-                     'security.default'
+SECURITY_PROP_PATH = 'node_types.cloudify\.nodes\.MyCloudifyManager.' \
+                     'properties.security.default'
 REST_PLUGIN_PATH = 'node_templates.rest_service.properties.plugins'
 USERDATA_PATH = 'node_templates.manager_host.properties.parameters.user_data'
 
 
 class SecurityTestBase(TestCase):
+
+    TEST_CFY_USERNAME = 'admin'
+    TEST_CFY_PASSWORD = 'admin'
 
     def setup_secured_manager(self):
         self._copy_manager_blueprint()
@@ -176,8 +177,8 @@ class SecurityTestBase(TestCase):
         self.addCleanup(self.cfy.teardown)
 
     def _set_credentials_env_vars(self):
-        os.environ[constants.CLOUDIFY_USERNAME_ENV] = TEST_CFY_USERNAME
-        os.environ[constants.CLOUDIFY_PASSWORD_ENV] = TEST_CFY_PASSWORD
+        os.environ[constants.CLOUDIFY_USERNAME_ENV] = self.TEST_CFY_USERNAME
+        os.environ[constants.CLOUDIFY_PASSWORD_ENV] = self.TEST_CFY_PASSWORD
 
     def _unset_credentials_env_vars(self):
         os.environ.pop(constants.CLOUDIFY_USERNAME_ENV, None)
@@ -186,8 +187,8 @@ class SecurityTestBase(TestCase):
     def set_rest_client(self):
         self.client = CloudifyClient(
             host=self.env.management_ip,
-            headers=util.get_auth_header(username=TEST_CFY_USERNAME,
-                                         password=TEST_CFY_PASSWORD))
+            headers=util.get_auth_header(username=self.TEST_CFY_USERNAME,
+                                         password=self.TEST_CFY_PASSWORD))
 
     def _running_env_setup(self):
         self.env.management_ip = self.cfy.get_management_ip()

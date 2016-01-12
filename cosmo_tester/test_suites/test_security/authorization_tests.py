@@ -13,14 +13,15 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 #
-from cosmo_tester.test_suites.test_security import auth_test_base
-from cosmo_tester.test_suites.test_security import security_test_base
 
-security_test_base.TEST_CFY_USERNAME = 'alice'
-security_test_base.TEST_CFY_PASSWORD = 'alice_password'
+from cosmo_tester.test_suites.test_security import auth_test_base
 
 
 class AuthorizationTests(auth_test_base.BaseAuthTest):
+
+    # overriding super's credentials
+    TEST_CFY_USERNAME = 'alice'
+    TEST_CFY_PASSWORD = 'alice_password'
 
     def setUp(self):
         super(AuthorizationTests, self).setUp()
