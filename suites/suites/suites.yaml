@@ -659,7 +659,7 @@ tests:
 
   snapshots_tests:
     tests:
-      - cosmo_tester/test_suites/test_snapshots
+      - cosmo_tester/test_suites/test_snapshots -e test_hello_world_on*
 
   openstack_blueprints_nodecellar:
       tests:

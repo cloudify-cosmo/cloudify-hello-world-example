@@ -146,6 +146,17 @@ class CfyHelper(object):
                 verbose=verbose,
                 include_logs=include_logs)
 
+    def publish_archive(self,
+                        blueprint_id,
+                        archive_location,
+                        verbose=False):
+        with self.workdir:
+            cfy.blueprints.publish_archive(
+                blueprint_id=blueprint_id,
+                archive_location=archive_location,
+                blueprint_filename='blueprint.yaml',
+                verbose=verbose).wait()
+
     def create_deployment(self,
                           blueprint_id,
                           deployment_id,
