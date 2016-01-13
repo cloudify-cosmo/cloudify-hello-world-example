@@ -21,7 +21,7 @@ from cloudify_rest_client import CloudifyClient
 
 from cosmo_tester.framework import util
 from cosmo_tester.test_suites.test_security.security_test_base import \
-    SecurityTestBase, TEST_CFY_USERNAME, TEST_CFY_PASSWORD
+    SecurityTestBase
 
 openssl = util.sh_bake(sh.openssl)
 
@@ -42,8 +42,8 @@ class SSLTestBase(SecurityTestBase):
             host=self.env.management_ip,
             port=constants.SECURED_REST_PORT,
             protocol=constants.SECURED_PROTOCOL,
-            headers=util.get_auth_header(username=TEST_CFY_USERNAME,
-                                         password=TEST_CFY_PASSWORD),
+            headers=util.get_auth_header(username=self.TEST_CFY_USERNAME,
+                                         password=self.TEST_CFY_PASSWORD),
             trust_all=True)
 
     # def _running_env_setup(self):

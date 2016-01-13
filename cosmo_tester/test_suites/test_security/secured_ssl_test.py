@@ -23,8 +23,6 @@ from cosmo_tester.test_suites.test_blueprints.nodecellar_test import \
     OpenStackNodeCellarTestBase
 from cosmo_tester.test_suites.test_security.security_ssl_test_base import \
     SSLTestBase
-from cosmo_tester.test_suites.test_security.security_test_base import \
-    TEST_CFY_USERNAME, TEST_CFY_PASSWORD
 
 USE_EXISTING_FLOATING_IP_INPUT_PROP = 'inputs.use_existing_floating_ip'
 USE_EXISTING_FLOATING_IP_INPUT = 'use_existing_floating_ip'
@@ -94,8 +92,8 @@ class SecuredWithSSLManagerTests(OpenStackNodeCellarTestBase,
             host=self.env.management_ip,
             port=constants.DEFAULT_REST_PORT,
             protocol=constants.DEFAULT_PROTOCOL,
-            headers=util.get_auth_header(username=TEST_CFY_USERNAME,
-                                         password=TEST_CFY_PASSWORD),
+            headers=util.get_auth_header(username=self.TEST_CFY_USERNAME,
+                                         password=self.TEST_CFY_PASSWORD),
             cert=self.cert_path,
             trust_all=False)
 
@@ -111,8 +109,8 @@ class SecuredWithSSLManagerTests(OpenStackNodeCellarTestBase,
             host=self.env.management_ip,
             port=constants.SECURED_REST_PORT,
             protocol=constants.SECURED_PROTOCOL,
-            headers=util.get_auth_header(username=TEST_CFY_USERNAME,
-                                         password=TEST_CFY_PASSWORD),
+            headers=util.get_auth_header(username=self.TEST_CFY_USERNAME,
+                                         password=self.TEST_CFY_PASSWORD),
             trust_all=True)
 
         response = client.manager.get_status()
@@ -125,8 +123,8 @@ class SecuredWithSSLManagerTests(OpenStackNodeCellarTestBase,
             host=self.env.management_ip,
             port=constants.SECURED_REST_PORT,
             protocol=constants.SECURED_PROTOCOL,
-            headers=util.get_auth_header(username=TEST_CFY_USERNAME,
-                                         password=TEST_CFY_PASSWORD),
+            headers=util.get_auth_header(username=self.TEST_CFY_USERNAME,
+                                         password=self.TEST_CFY_PASSWORD),
             trust_all=False)
         try:
             client.manager.get_status()
@@ -142,8 +140,8 @@ class SecuredWithSSLManagerTests(OpenStackNodeCellarTestBase,
             host=self.env.management_ip,
             port=constants.SECURED_REST_PORT,
             protocol=constants.SECURED_PROTOCOL,
-            headers=util.get_auth_header(username=TEST_CFY_USERNAME,
-                                         password=TEST_CFY_PASSWORD),
+            headers=util.get_auth_header(username=self.TEST_CFY_USERNAME,
+                                         password=self.TEST_CFY_PASSWORD),
             cert=util.get_resource_path(cert_path),
             trust_all=False)
         try:
@@ -157,8 +155,8 @@ class SecuredWithSSLManagerTests(OpenStackNodeCellarTestBase,
             host=self.env.management_ip,
             port=constants.SECURED_REST_PORT,
             protocol=constants.SECURED_PROTOCOL,
-            headers=util.get_auth_header(username=TEST_CFY_USERNAME,
-                                         password=TEST_CFY_PASSWORD),
+            headers=util.get_auth_header(username=self.TEST_CFY_USERNAME,
+                                         password=self.TEST_CFY_PASSWORD),
             cert=self.cert_path,
             trust_all=False)
 

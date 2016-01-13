@@ -13,7 +13,8 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
-from cosmo_tester.test_suites.backwards.test_nodecellar_backwards_compatibility \
+from cosmo_tester.test_suites.backwards.\
+    test_nodecellar_backwards_compatibility \
     .nodecellar_backwards_compatibility_test_base import \
     NodecellarBackwardsCompatibilityTestBase
 from cosmo_tester.test_suites.test_blueprints.nodecellar_test import \

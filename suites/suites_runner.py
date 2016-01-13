@@ -384,7 +384,10 @@ class SuitesScheduler(object):
                 suite.handler_configuration:
                     self._handler_configurations[suite.handler_configuration]
             } if config else {}
-        tags_match = lambda x, y: set(x) & set(y) == set(x)
+
+        def tags_match(x, y):
+            return set(x) & set(y) == set(x)
+
         return {
             k: v for k, v in self._handler_configurations.iteritems()
             if tags_match(suite.requires, v.get('tags', set()))

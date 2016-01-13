@@ -41,7 +41,8 @@ class QuickbuildDriver():
     def __init__(self, server_address, username, password, build_id):
         self.server_address = server_address
         self.auth = HTTPBasicAuth(username, password)
-        self.tests_report_url = '{0}/rest/junit/records/tests/{1}/DEFAULT?limit=0'. \
+        self.tests_report_url = \
+            '{0}/rest/junit/records/tests/{1}/DEFAULT?limit=0'. \
             format(self.server_address, build_id)
         self.report_ui_url = '{0}/build/{1}/junit_report/by_test'. \
             format(QUICKBUILD_ADDRESS, build_id)
