@@ -12,37 +12,145 @@
 #    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
+import tempfile
+
 from ec2 import constants
 from boto.ec2 import get_region
 
-from cosmo_tester.test_suites.test_security import security_test_base
 from cosmo_tester.test_suites.test_security import auth_test_base
-
+from cosmo_tester.framework import util
 from cloudify.workflows import local
 from cloudify_cli import constants as cli_constants
 
-auth_test_base.ADMIN_USERNAME = 'alice@welcome.com'
-auth_test_base.ADMIN_PASSWORD = '@lice_Aa123456!'
-auth_test_base.DEPLOYER_USERNAME = 'bob@welcome.com'
-auth_test_base.DEPLOYER_PASSWORD = 'b0b_Aa123456!'
-auth_test_base.VIEWER_USERNAME = 'clair@welcome.com'
-auth_test_base.VIEWER_PASSWORD = 'cl@ir_Aa123456!'
-auth_test_base.NO_ROLE_USERNAME = 'dave@welcome.com'
-auth_test_base.NO_ROLE_PASSWORD = 'd@ve_Aa123456!'
 
-security_test_base.TEST_CFY_USERNAME = auth_test_base.ADMIN_USERNAME
-security_test_base.TEST_CFY_PASSWORD = auth_test_base.ADMIN_PASSWORD
+# used by auth using upn
+DOMAIN_NAME = 'welcome.com'
+
+# used by auth using subtree search
+BASE_DN = 'CN=Users,DC=welcome,DC=com'
+ACTIVE_DIRECTORY_USERNAME_ATTR = 'sAMAccountName'
+
+REMOTE_SECURITY_CONF_PATH = '/opt/manager/rest-security.conf'
+REMOTE_USERSTORE_PATH = '/opt/manager/userstore.yaml'
 
 
 class ADAuthenticationAuthorizationTest(auth_test_base.BaseAuthTest):
+
+    admin_username = 'alice'
+    admin_password = '@lice_Aa123456!'
+    deployer_username = 'bob'
+    deployer_password = 'b0b_Aa123456!'
+    viewer_username = 'clair'
+    viewer_password = 'cl@ir_Aa123456!'
+    no_role_username = 'dave'
+    no_role_password = 'd@ve_Aa123456!'
+
+    TEST_CFY_USERNAME = admin_username
+    TEST_CFY_PASSWORD = admin_password
 
     def setUp(self):
         super(ADAuthenticationAuthorizationTest, self).setUp()
         self.ad_ip = self.provision_active_directory_instance()
         self.setup_secured_manager()
 
-    def test_ad_authentication_and_authorization(self):
-        self._test_authentication_and_authorization(assert_token=False)
+    def test_active_directory_authentication_methods(self):
+        # Test subtree authentication.
+        self.inject_subtree_auth_config()
+        self._test_authentication_and_authorization()
+
+        # Test authentication using domain name.
+        self.inject_domain_name_auth_config()
+        self._test_authentication_and_authorization()
+
+        # Test authentication using the non-standard authentication option
+        # enabled in active directory by default. Authenticate according to the
+        # full userPrincipalName attribute.
+        self._modify_test_users_to_upn()
+        self.inject_upn_userstore_users()
+        self.inject_upn_auth_config()
+        self._test_authentication_and_authorization()
+
+    def inject_upn_userstore_users(self):
+        upn_userstore_users = self.get_userstore_users()
+        userstore_config = {
+            'users': upn_userstore_users
+        }
+        userstore_file = tempfile.NamedTemporaryFile(delete=False)
+        with self.manager_env_fabric() as api:
+            with open(userstore_file.name) as f:
+                api.get(REMOTE_USERSTORE_PATH, f.name)
+
+            with util.YamlPatcher(userstore_file.name) as patch:
+                for key, value in userstore_config.iteritems():
+                    patch.set_value(key, value)
+
+            api.put(use_sudo=True,
+                    local_path=userstore_file.name,
+                    remote_path=REMOTE_USERSTORE_PATH)
+
+    def _modify_test_users_to_upn(self):
+        # append domain name to usernames.
+        self.admin_username = 'alice@{0}'.format(DOMAIN_NAME)
+        self.deployer_username = 'bob@{0}'.format(DOMAIN_NAME)
+        self.viewer_username = 'clair@{0}'.format(DOMAIN_NAME)
+        self.no_role_username = 'dave@{0}'.format(DOMAIN_NAME)
+
+        # recreate the test client with the new admin username
+        self.client = self._create_client(self.admin_username,
+                                          self.admin_password)
+
+    def inject_upn_auth_config(self):
+        authentication_provider = self.get_authentication_providers()[0]
+        authentication_provider['properties'] = {
+            'ldap_url': self.ad_ip
+        }
+        self.inject_authentication_configuration(authentication_provider)
+
+    def inject_domain_name_auth_config(self):
+        authentication_provider = self.get_authentication_providers()[0]
+        authentication_provider['properties'] = {
+            'ldap_url': self.ad_ip,
+            'domain_name': DOMAIN_NAME
+        }
+        self.inject_authentication_configuration(authentication_provider)
+
+    def inject_subtree_auth_config(self):
+
+        authentication_provider = self.get_authentication_providers()[0]
+        authentication_provider['properties'] = {
+            'ldap_url': self.ad_ip,
+            'search_properties': {
+                'base_dn': BASE_DN,
+                'admin_user_id': self.TEST_CFY_USERNAME,
+                'admin_password': self.TEST_CFY_PASSWORD,
+                'user_id_attribute': ACTIVE_DIRECTORY_USERNAME_ATTR
+            }
+        }
+        self.inject_authentication_configuration(authentication_provider)
+
+    # Inject a new authentication provider configuration to the manager and
+    # restart the rest service.
+    def inject_authentication_configuration(self, authentication_provider):
+        security_config = {
+            'authentication_providers': [authentication_provider]
+        }
+
+        rest_security_file = tempfile.NamedTemporaryFile(delete=False)
+        with self.manager_env_fabric() as api:
+            with open(rest_security_file.name) as f:
+                api.get(REMOTE_SECURITY_CONF_PATH, f.name)
+
+            with util.YamlPatcher(rest_security_file.name) as patch:
+                for key, value in security_config.iteritems():
+                    patch.set_value(key, value)
+
+            api.put(use_sudo=True,
+                    local_path=rest_security_file.name,
+                    remote_path=REMOTE_SECURITY_CONF_PATH)
+
+            # Restart the rest service
+            api.run('sudo systemctl restart cloudify-restservice.service')
+        self.wait_for_resource(self.client.manager.get_status, timeout_sec=60)
 
     def provision_active_directory_instance(self):
 
@@ -61,22 +169,21 @@ class ADAuthenticationAuthorizationTest(auth_test_base.BaseAuthTest):
         self.addCleanup(self._terminate_active_directory_instance)
         # execute the install workflow
         self.localenv.execute('install',
-                              task_retries=9,
-                              task_retry_interval=9)
+                              task_retries=19,
+                              task_retry_interval=20)
 
         return self.localenv.outputs().get('ldap_endpoint')
 
     def _terminate_active_directory_instance(self):
         self.localenv.execute('uninstall',
                               task_retries=9,
-                              task_retry_interval=9)
+                              task_retry_interval=10)
 
     def _get_active_directory_inputs(self):
         return {
             'instance_type': self.env.medium_instance_type,
             'image_id': self.env.windows_server_2012_r2_image_id,
-            constants.AWS_CONFIG_PROPERTY:
-                self._get_aws_config()
+            constants.AWS_CONFIG_PROPERTY: self._get_aws_config()
         }
 
     def _get_aws_config(self):
@@ -97,11 +204,13 @@ class ADAuthenticationAuthorizationTest(auth_test_base.BaseAuthTest):
     def get_authentication_providers(self):
         return [
             {
-                'implementation': 'authentication.ldap_authentication_'
-                                  'provider:LDAPAuthenticationProvider',
+                'implementation': 'authentication.active_directory_'
+                                  'authentication_provider'
+                                  ':ActiveDirectoryAuthenticationProvider',
                 'name': 'ldap_authentication_provider',
                 'properties': {
-                    'directory_url': '{0}'.format(self.ad_ip)
+                    'domain_name': DOMAIN_NAME,
+                    'ldap_url': '{0}'.format(self.ad_ip)
                 }
             }
         ]
@@ -112,9 +221,10 @@ class ADAuthenticationAuthorizationTest(auth_test_base.BaseAuthTest):
         return {
             'ldap_authentication_provider':
                 {
-                    'source': 'http://adaml-bucket.s3.amazonaws.com/'
-                              'cloudify_ldap_plugin-1.0-py27-none-linux_'
-                              'x86_64-centos-Core.wgn',
+                    'source': 'http://gigaspaces-repository-eu.s3.amazonaws'
+                              '.com/org/cloudify3/3.3.1/sp-RELEASE/cloudify'
+                              '_ldap_plugin-1.0-py27-none-linux_x86_64-centos'
+                              '-Core.wgn',
                     'install_args': 'cloudify-ldap-plugin --use-wheel'
                                     ' --no-index --find-links=wheels/ --pre'
                 }
@@ -138,25 +248,25 @@ class ADAuthenticationAuthorizationTest(auth_test_base.BaseAuthTest):
     def get_userstore_users(self):
         return [
             {
-                'username': auth_test_base.ADMIN_USERNAME,
+                'username': self.admin_username,
                 'groups': [
                     'cfy_admins'
                 ]
             },
             {
-                'username': auth_test_base.DEPLOYER_USERNAME,
+                'username': self.deployer_username,
                 'groups': [
                     'cfy_deployers'
                 ]
             },
             {
-                'username': auth_test_base.VIEWER_USERNAME,
+                'username': self.viewer_username,
                 'groups': [
                     'cfy_viewer'
                 ]
             },
             {
-                'username': auth_test_base.NO_ROLE_USERNAME,
+                'username': self.no_role_username,
                 'groups': ['users']
             }
         ]

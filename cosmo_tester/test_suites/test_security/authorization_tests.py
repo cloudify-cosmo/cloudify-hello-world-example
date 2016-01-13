@@ -51,24 +51,24 @@ class AuthorizationTests(auth_test_base.BaseAuthTest):
     def get_userstore_users(self):
         return [
             {
-                'username': auth_test_base.ADMIN_USERNAME,
-                'password': auth_test_base.ADMIN_PASSWORD,
+                'username': self.admin_username,
+                'password': self.admin_password,
                 'groups': ['cfy_admins']
             },
             {
-                'username': auth_test_base.DEPLOYER_USERNAME,
-                'password': auth_test_base.DEPLOYER_PASSWORD,
+                'username': self.deployer_username,
+                'password': self.deployer_password,
                 'groups': ['managers', 'users']
             },
             {
-                'username': auth_test_base.VIEWER_USERNAME,
-                'password': auth_test_base.VIEWER_PASSWORD,
+                'username': self.viewer_username,
+                'password': self.viewer_password,
                 'groups': ['users'],
                 'roles': ['viewer']
             },
             {
-                'username': auth_test_base.NO_ROLE_USERNAME,
-                'password': auth_test_base.NO_ROLE_PASSWORD,
+                'username': self.no_role_username,
+                'password': self.no_role_password,
                 'groups': ['users']
             }
         ]

@@ -25,19 +25,20 @@ from cloudify_rest_client.exceptions import UserUnauthorizedError
 from cosmo_tester.framework import util
 from cosmo_tester.test_suites.test_security import security_test_base
 
-ADMIN_USERNAME = 'alice'
-ADMIN_PASSWORD = 'alice_password'
-DEPLOYER_USERNAME = 'bob'
-DEPLOYER_PASSWORD = 'bob_password'
-VIEWER_USERNAME = 'clair'
-VIEWER_PASSWORD = 'clair_password'
-NO_ROLE_USERNAME = 'dave'
-NO_ROLE_PASSWORD = 'dave_password'
 
 RUNNING_EXECUTIONS_MESSAGE = 'There are running executions for this deployment'
 
 
 class BaseAuthTest(security_test_base.SecurityTestBase):
+
+    admin_username = 'alice'
+    admin_password = 'alice_password'
+    deployer_username = 'bob'
+    deployer_password = 'bob_password'
+    viewer_username = 'clair'
+    viewer_password = 'clair_password'
+    no_role_username = 'dave'
+    no_role_password = 'dave_password'
 
     def _test_authentication_and_authorization(self, assert_token=None):
         self._test_authentication(assert_token=assert_token)
@@ -45,14 +46,21 @@ class BaseAuthTest(security_test_base.SecurityTestBase):
 
     def _test_authorization(self):
         # setup temp blueprint
-        self.blueprints_dir = self.copy_blueprint('mocks')
-        self.blueprint_path = self.blueprints_dir / 'empty-blueprint.yaml'
+        self.blueprints_dir = self.copy_mocks_blueprints_dir()
+        self.blueprint_path = '{0}/empty-blueprint.yaml'\
+                              .format(self.blueprints_dir)
         self.blueprint_yaml = self.blueprint_path
 
         # start authorization assertions
         self._assert_blueprint_operations()
         self._assert_deployment_operations()
         self._assert_execution_operations()
+
+    def copy_mocks_blueprints_dir(self):
+        dest_path = '{0}/{1}'.format(self.workdir, 'mocks')
+        if not os.path.exists(dest_path):
+            dest_path = self.copy_blueprint('mocks')
+        return dest_path
 
     def _test_authentication(self, assert_token=None):
         self._assert_valid_credentials_authenticate()
@@ -71,7 +79,7 @@ class BaseAuthTest(security_test_base.SecurityTestBase):
         self._assert_delete_blueprint(blueprint_ids[0])
 
         # cleanup
-        self._login_cli(ADMIN_USERNAME, ADMIN_PASSWORD)
+        self._login_cli(self.admin_username, self.admin_password)
         # item 0 has already been deleted in _assert_delete_blueprint
         for blueprint_id in blueprint_ids[1:]:
             self.cfy.delete_blueprint(blueprint_id)
@@ -79,7 +87,7 @@ class BaseAuthTest(security_test_base.SecurityTestBase):
     def _assert_deployment_operations(self):
         blueprint_id = 'test_deployment_blueprint1'
         # setup
-        self._login_cli(ADMIN_USERNAME, ADMIN_PASSWORD)
+        self._login_cli(self.admin_username, self.admin_password)
         self.cfy.upload_blueprint(blueprint_id, self.blueprint_path)
 
         # test
@@ -88,7 +96,7 @@ class BaseAuthTest(security_test_base.SecurityTestBase):
         self._assert_delete_deployment(deployment_ids)
 
         # cleanup
-        self._login_cli(ADMIN_USERNAME, ADMIN_PASSWORD)
+        self._login_cli(self.admin_username, self.admin_password)
         # item 0 has already been deleted in _assert_delete_deployment
         for deployment_id in deployment_ids[1:]:
             self.cfy.delete_deployment(deployment_id)
@@ -100,7 +108,7 @@ class BaseAuthTest(security_test_base.SecurityTestBase):
                           'test_execution_deployment2',
                           'test_execution_deployment3']
         # setup
-        self._login_cli(ADMIN_USERNAME, ADMIN_PASSWORD)
+        self._login_cli(self.admin_username, self.admin_password)
         self.cfy.upload_blueprint(blueprint_id, self.blueprint_path)
         for deployment_id in deployment_ids:
             self.cfy.create_deployment(blueprint_id, deployment_id)
@@ -115,7 +123,7 @@ class BaseAuthTest(security_test_base.SecurityTestBase):
                                        execution_id2=execution_ids[1])
 
         # cleanup
-        self._login_cli(ADMIN_USERNAME, ADMIN_PASSWORD)
+        self._login_cli(self.admin_username, self.admin_password)
         for deployment_id in deployment_ids:
             self.wait_until_all_deployment_executions_end(deployment_id)
             self.cfy.delete_deployment(deployment_id, ignore_live_nodes=True)
@@ -137,19 +145,19 @@ class BaseAuthTest(security_test_base.SecurityTestBase):
         blueprint1_id = 'blueprint1_id'
         blueprint2_id = 'blueprint2_id'
 
-        self._login_cli(ADMIN_USERNAME, ADMIN_PASSWORD)
+        self._login_cli(self.admin_username, self.admin_password)
         _upload_and_assert(blueprint1_id)
 
-        self._login_cli(DEPLOYER_USERNAME, DEPLOYER_PASSWORD)
+        self._login_cli(self.deployer_username, self.deployer_password)
         _upload_and_assert(blueprint2_id)
 
         # ...but viewers and simple users should not
-        self._login_cli(VIEWER_USERNAME, VIEWER_PASSWORD)
+        self._login_cli(self.viewer_username, self.viewer_password)
         self._assert_unauthorized(self.cfy.upload_blueprint,
                                   'dummy_bp',
                                   self.blueprint_path)
 
-        self._login_cli(NO_ROLE_USERNAME, NO_ROLE_PASSWORD)
+        self._login_cli(self.no_role_username, self.no_role_password)
         self._assert_unauthorized(self.cfy.upload_blueprint,
                                   'dummy_bp',
                                   self.blueprint_path)
@@ -164,17 +172,17 @@ class BaseAuthTest(security_test_base.SecurityTestBase):
             self.assertEqual('', err)
 
         # admins, deployers and viewers should be able to list blueprints...
-        self._login_cli(ADMIN_USERNAME, ADMIN_PASSWORD)
+        self._login_cli(self.admin_username, self.admin_password)
         _list_and_assert()
 
-        self._login_cli(DEPLOYER_USERNAME, DEPLOYER_PASSWORD)
+        self._login_cli(self.deployer_username, self.deployer_password)
         _list_and_assert()
 
-        self._login_cli(VIEWER_USERNAME, VIEWER_PASSWORD)
+        self._login_cli(self.viewer_username, self.viewer_password)
         _list_and_assert()
 
         # ...but simple users should not
-        self._login_cli(NO_ROLE_USERNAME, NO_ROLE_PASSWORD)
+        self._login_cli(self.no_role_username, self.no_role_password)
         self._assert_unauthorized(self.cfy.list_blueprints)
 
     def _assert_get_blueprint(self, blueprint_id):
@@ -186,17 +194,17 @@ class BaseAuthTest(security_test_base.SecurityTestBase):
             self.assertEqual('', err)
 
         # admins, deployers and viewers should be able to get blueprints...
-        self._login_cli(ADMIN_USERNAME, ADMIN_PASSWORD)
+        self._login_cli(self.admin_username, self.admin_password)
         _get_and_assert()
 
-        self._login_cli(DEPLOYER_USERNAME, DEPLOYER_PASSWORD)
+        self._login_cli(self.deployer_username, self.deployer_password)
         _get_and_assert()
 
-        self._login_cli(VIEWER_USERNAME, VIEWER_PASSWORD)
+        self._login_cli(self.viewer_username, self.viewer_password)
         _get_and_assert()
 
         # ...but simple users should not
-        self._login_cli(NO_ROLE_USERNAME, NO_ROLE_PASSWORD)
+        self._login_cli(self.no_role_username, self.no_role_password)
         self._assert_unauthorized(self.cfy.get_blueprint, blueprint_id)
 
     def _assert_delete_blueprint(self, blueprint_id):
@@ -208,18 +216,18 @@ class BaseAuthTest(security_test_base.SecurityTestBase):
             self.assertEqual('', err)
 
         # admins should be able to delete blueprints...
-        self._login_cli(ADMIN_USERNAME, ADMIN_PASSWORD)
-        self._login_cli(ADMIN_USERNAME, ADMIN_PASSWORD)
+        self._login_cli(self.admin_username, self.admin_password)
+        self._login_cli(self.admin_username, self.admin_password)
         _delete_and_assert()
 
         # ...but deployers, viewers and simple users should not
-        self._login_cli(DEPLOYER_USERNAME, DEPLOYER_PASSWORD)
+        self._login_cli(self.deployer_username, self.deployer_password)
         self._assert_unauthorized(self.cfy.delete_blueprint, blueprint_id)
 
-        self._login_cli(VIEWER_USERNAME, VIEWER_PASSWORD)
+        self._login_cli(self.viewer_username, self.viewer_password)
         self._assert_unauthorized(self.cfy.delete_blueprint, blueprint_id)
 
-        self._login_cli(NO_ROLE_USERNAME, NO_ROLE_PASSWORD)
+        self._login_cli(self.no_role_username, self.no_role_password)
         self._assert_unauthorized(self.cfy.delete_blueprint, blueprint_id)
 
     ##############################
@@ -233,26 +241,26 @@ class BaseAuthTest(security_test_base.SecurityTestBase):
             self._assert_in_output(out, 'Deployment created')
 
             # polling for deployments requires an authorized client
-            self._login_client(username=ADMIN_USERNAME,
-                               password=ADMIN_PASSWORD)
+            self._login_client(username=self.admin_username,
+                               password=self.admin_password)
             self.wait_until_all_deployment_executions_end(deployment_id)
             self.assertEqual('', err)
 
         # admins and deployers should be able to create deployments...
         deployment1_id = 'deployment1'
         deployment2_id = 'deployment2'
-        self._login_cli(ADMIN_USERNAME, ADMIN_PASSWORD)
+        self._login_cli(self.admin_username, self.admin_password)
         _create_and_assert(deployment1_id)
-        self._login_cli(DEPLOYER_USERNAME, DEPLOYER_PASSWORD)
+        self._login_cli(self.deployer_username, self.deployer_password)
         _create_and_assert(deployment2_id)
 
         # ...but viewers and simple users should not
-        self._login_cli(VIEWER_USERNAME, VIEWER_PASSWORD)
+        self._login_cli(self.viewer_username, self.viewer_password)
         self._assert_unauthorized(self.cfy.create_deployment,
                                   blueprint_id,
                                   'dummy_dp')
 
-        self._login_cli(NO_ROLE_USERNAME, NO_ROLE_PASSWORD)
+        self._login_cli(self.no_role_username, self.no_role_password)
         self._assert_unauthorized(self.cfy.create_deployment,
                                   blueprint_id,
                                   'dummy_dp')
@@ -267,17 +275,17 @@ class BaseAuthTest(security_test_base.SecurityTestBase):
             self.assertEqual('', err)
 
         # admins, deployers and viewers should be able to list deployments...
-        self._login_cli(ADMIN_USERNAME, ADMIN_PASSWORD)
+        self._login_cli(self.admin_username, self.admin_password)
         _list_and_assert()
 
-        self._login_cli(DEPLOYER_USERNAME, DEPLOYER_PASSWORD)
+        self._login_cli(self.deployer_username, self.deployer_password)
         _list_and_assert()
 
-        self._login_cli(VIEWER_USERNAME, VIEWER_PASSWORD)
+        self._login_cli(self.viewer_username, self.viewer_password)
         _list_and_assert()
 
         # ...but simple users should not
-        self._login_cli(NO_ROLE_USERNAME, NO_ROLE_PASSWORD)
+        self._login_cli(self.no_role_username, self.no_role_password)
         self._assert_unauthorized(self.cfy.list_deployments)
 
     def _assert_delete_deployment(self, deployment_ids):
@@ -289,19 +297,19 @@ class BaseAuthTest(security_test_base.SecurityTestBase):
             self.assertEqual('', err)
 
         # admins should be able to delete deployments...
-        self._login_cli(ADMIN_USERNAME, ADMIN_PASSWORD)
+        self._login_cli(self.admin_username, self.admin_password)
         _delete_and_assert()
 
         # ...but deployers, viewers and simple users should not
-        self._login_cli(DEPLOYER_USERNAME, DEPLOYER_PASSWORD)
+        self._login_cli(self.deployer_username, self.deployer_password)
         self._assert_unauthorized(self.cfy.delete_deployment,
                                   deployment_ids[1])
 
-        self._login_cli(VIEWER_USERNAME, VIEWER_PASSWORD)
+        self._login_cli(self.viewer_username, self.viewer_password)
         self._assert_unauthorized(self.cfy.delete_deployment,
                                   deployment_ids[1])
 
-        self._login_cli(NO_ROLE_USERNAME, NO_ROLE_PASSWORD)
+        self._login_cli(self.no_role_username, self.no_role_password)
         self._assert_unauthorized(self.cfy.delete_deployment,
                                   deployment_ids[1])
 
@@ -318,18 +326,18 @@ class BaseAuthTest(security_test_base.SecurityTestBase):
             self.assertEqual('', err)
 
         # admins and deployers should be able to start executions...
-        self._login_cli(ADMIN_USERNAME, ADMIN_PASSWORD)
+        self._login_cli(self.admin_username, self.admin_password)
         _start_and_assert(deployment_ids[0])
 
-        self._login_cli(DEPLOYER_USERNAME, DEPLOYER_PASSWORD)
+        self._login_cli(self.deployer_username, self.deployer_password)
         _start_and_assert(deployment_ids[1])
 
         # ...but viewers and simple users should not
-        self._login_cli(VIEWER_USERNAME, VIEWER_PASSWORD)
+        self._login_cli(self.viewer_username, self.viewer_password)
         self._assert_unauthorized(
             self.cfy.execute_workflow, workflow, deployment_ids[2])
 
-        self._login_cli(NO_ROLE_USERNAME, NO_ROLE_PASSWORD)
+        self._login_cli(self.no_role_username, self.no_role_password)
         self._assert_unauthorized(
             self.cfy.execute_workflow, workflow, deployment_ids[2])
 
@@ -341,17 +349,17 @@ class BaseAuthTest(security_test_base.SecurityTestBase):
             self.assertEqual('', err)
 
         # admins, deployers and viewers should be able so list executions...
-        self._login_cli(ADMIN_USERNAME, ADMIN_PASSWORD)
+        self._login_cli(self.admin_username, self.admin_password)
         _list_and_assert()
 
-        self._login_cli(DEPLOYER_USERNAME, DEPLOYER_PASSWORD)
+        self._login_cli(self.deployer_username, self.deployer_password)
         _list_and_assert()
 
-        self._login_cli(VIEWER_USERNAME, VIEWER_PASSWORD)
+        self._login_cli(self.viewer_username, self.viewer_password)
         _list_and_assert()
 
         # ...but simple users should not
-        self._login_cli(NO_ROLE_USERNAME, NO_ROLE_PASSWORD)
+        self._login_cli(self.no_role_username, self.no_role_password)
         # self._assert_unauthorized(self.cfy.list_executions)
         # this is a temporary work around a bug in the cli: CFY-4339
         out, err = self._execute_and_get_streams(self.cfy.list_executions)
@@ -367,17 +375,17 @@ class BaseAuthTest(security_test_base.SecurityTestBase):
             self.assertEqual('', err)
 
         # admins, deployers and viewers should be able to get executions...
-        self._login_cli(ADMIN_USERNAME, ADMIN_PASSWORD)
+        self._login_cli(self.admin_username, self.admin_password)
         _get_and_assert()
 
-        self._login_cli(DEPLOYER_USERNAME, DEPLOYER_PASSWORD)
+        self._login_cli(self.deployer_username, self.deployer_password)
         _get_and_assert()
 
-        self._login_cli(VIEWER_USERNAME, VIEWER_PASSWORD)
+        self._login_cli(self.viewer_username, self.viewer_password)
         _get_and_assert()
 
         # ...but simple users should not
-        self._login_cli(NO_ROLE_USERNAME, NO_ROLE_PASSWORD)
+        self._login_cli(self.no_role_username, self.no_role_password)
         self._assert_unauthorized(self.cfy.get_execution, execution_id)
 
     def _assert_cancel_executions(self, execution_id1, execution_id2):
@@ -394,17 +402,17 @@ class BaseAuthTest(security_test_base.SecurityTestBase):
             self.assertEqual('', err)
 
         # admins and deployers should be able to cancel executions...
-        self._login_cli(ADMIN_USERNAME, ADMIN_PASSWORD)
+        self._login_cli(self.admin_username, self.admin_password)
         _cancel_and_assert(execution_id1)
 
-        self._login_cli(DEPLOYER_USERNAME, DEPLOYER_PASSWORD)
+        self._login_cli(self.deployer_username, self.deployer_password)
         _cancel_and_assert(execution_id2)
 
         # ...but viewers and simple users should not
-        self._login_cli(VIEWER_USERNAME, VIEWER_PASSWORD)
+        self._login_cli(self.viewer_username, self.viewer_password)
         self._assert_unauthorized(self.cfy.cancel_execution, execution_id1)
 
-        self._login_cli(NO_ROLE_USERNAME, NO_ROLE_PASSWORD)
+        self._login_cli(self.no_role_username, self.no_role_password)
         self._assert_unauthorized(self.cfy.cancel_execution, execution_id1)
 
     ###############################
@@ -460,11 +468,13 @@ class BaseAuthTest(security_test_base.SecurityTestBase):
                               headers=user_pass_header)
 
     def _get_execution_ids(self):
-        alice_client = self._create_client(ADMIN_USERNAME, ADMIN_PASSWORD)
+        alice_client = self._create_client(self.admin_username,
+                                           self.admin_password)
         return [execution.id for execution in alice_client.executions.list()]
 
     def _assert_valid_credentials_authenticate(self):
-        self._login_client(username=ADMIN_USERNAME, password=ADMIN_PASSWORD)
+        self._login_client(username=self.admin_username,
+                           password=self.admin_password)
         self._assert_authorized()
 
     def _assert_invalid_credentials_fails(self):
@@ -478,7 +488,7 @@ class BaseAuthTest(security_test_base.SecurityTestBase):
         self._assert_unauthorized(self.client.manager.get_status)
 
     def _assert_valid_token_authenticates(self):
-        client = self._create_client(ADMIN_USERNAME, ADMIN_PASSWORD)
+        client = self._create_client(self.admin_username, self.admin_password)
         token = client.tokens.get().value
         self._login_client(token=token)
         self._assert_authorized()
@@ -509,29 +519,29 @@ class BaseAuthTest(security_test_base.SecurityTestBase):
     def get_userstore_users(self):
         return [
             {
-                'username': ADMIN_USERNAME,
-                'password': ADMIN_PASSWORD,
+                'username': self.admin_username,
+                'password': self.admin_password,
                 'groups': [
                     'cfy_admins'
                 ]
             },
             {
-                'username': DEPLOYER_USERNAME,
-                'password': DEPLOYER_PASSWORD,
+                'username': self.deployer_username,
+                'password': self.deployer_password,
                 'groups': [
                     'cfy_deployers'
                 ]
             },
             {
-                'username': VIEWER_USERNAME,
-                'password': VIEWER_PASSWORD,
+                'username': self.viewer_username,
+                'password': self.viewer_password,
                 'groups': [
                     'cfy_viewer'
                 ]
             },
             {
-                'username': NO_ROLE_USERNAME,
-                'password': NO_ROLE_PASSWORD,
+                'username': self.no_role_username,
+                'password': self.no_role_password,
                 'groups': ['users']
             }
         ]

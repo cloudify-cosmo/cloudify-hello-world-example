@@ -92,8 +92,8 @@ node_templates:
                 script_path: scripts/wait_for_active_directory_port.sh
                 public_ip: { get_attribute: [elastic_ip, aws_resource_id] }
                 port: { get_property: [active_directory_server, port] }
-                timeout_minutes: 3
-                fail_on_timeout: false
+                timeout_minutes: 2
+                fail_on_timeout: true
 
 outputs:
   ldap_endpoint:

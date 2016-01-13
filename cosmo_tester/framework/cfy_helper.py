@@ -58,7 +58,8 @@ class CfyHelper(object):
                   task_retries=5,
                   task_retry_interval=90,
                   subgraph_retries=2,
-                  verbose=False):
+                  verbose=False,
+                  debug=False):
         with self.workdir:
             cfy.init(reset_config=reset_config).wait()
 
@@ -78,7 +79,8 @@ class CfyHelper(object):
                 validate_only=validate_only,
                 task_retries=task_retries,
                 task_retry_interval=task_retry_interval,
-                verbose=verbose).wait()
+                verbose=verbose,
+                debug=debug).wait()
 
     def recover(self, snapshot_path, task_retries=5):
         map(lambda dep:
