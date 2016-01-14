@@ -428,9 +428,10 @@ def build_docker_image():
 
 def kill_containers():
     containers = list_containers(quiet=True).replace(os.linesep, ' ')
+    containers = containers.split(' ')
     if containers:
         logger.info('Killing containers: {0}'.format(containers))
-        docker.rm('-f', containers).wait()
+        docker.rm('-f', *containers).wait()
 
 
 def container_exit_code(container_name):
