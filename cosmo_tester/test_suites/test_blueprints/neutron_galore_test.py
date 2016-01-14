@@ -205,7 +205,11 @@ class NeutronGaloreTest(TestCase):
         leftovers = self._test_cleanup_context.get_resources_to_teardown(
             self.env,
             resources_to_keep=self._test_cleanup_context.before_run)
-        self.assertTrue(all([len(g) == 0 for g in leftovers.values()]))
+        if leftovers['key_pairs']:
+            for key_id in leftovers['key_pairs']:
+                self.assertTrue(self.test_id not in key_id)
+        self.assertTrue(all(
+            [len(g) == 0 for k, g in leftovers.items() if k != 'key_pairs']))
         self.assertFalse(self._check_if_private_key_is_on_manager())
 
     def _test_use_external_resource(self, inputs):
@@ -263,12 +267,17 @@ class NeutronGaloreTest(TestCase):
         # verify private key still exists
         self.assertTrue(self._check_if_private_key_is_on_manager())
 
-        # verify there aren't any new resources on Openstack
+        # verify there aren't any new resources on Openstack, except key pairs
         after_openstack_infra_state = self.env.handler.openstack_infra_state()
         delta = self.env.handler.openstack_infra_state_delta(
             before_openstack_infra_state, after_openstack_infra_state)
-        for delta_resources_of_single_type in delta.values():
-            self.assertFalse(delta_resources_of_single_type)
+        for delta_of_single_type_key, \
+                delta_of_single_type_value in delta.items():
+            if delta_of_single_type_key == 'key_pairs':
+                for key_pair_id in delta_of_single_type_value.keys():
+                    self.assertTrue(self.test_id not in key_pair_id)
+            else:
+                self.assertFalse(delta_of_single_type_value)
 
         # verify the runtime properties of the new deployment's nodes
         # original_deployment_node_states = self.get_node_states(
