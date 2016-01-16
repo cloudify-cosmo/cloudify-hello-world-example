@@ -2,14 +2,12 @@ set -eax
 
 cd {{ work_dir }}
 source {{ venv_name }}/bin/activate
-cd {{ venv_name }}
 
-git clone https://github.com/cloudify-cosmo/cloudify-hello-world-example.git
-cd cloudify-hello-world-example
-git checkout 3.2.1-build
+cd {{ repo_path }}
 echo "ctx instance runtime_properties {{ runtime_property_name }} {{ runtime_property_value }}" >> ./scripts/stop.sh
-cd ..
+cd {{ work_dir }}/{{ venv_name }}
 
-cfy blueprints upload -p cloudify-hello-world-example/blueprint.yaml -b {{ app_name }}
-cfy deployments create -d {{ app_name }} -b {{ app_name }} -i ../{{ helloworld_inputs_file }}
+cfy blueprints upload -p {{ repo_path }}/blueprint.yaml -b {{ app_name }}
+cfy deployments create -d {{ app_name }} -b {{ app_name }} -i {{ work_dir }}/{{ helloworld_inputs_file }}
+sleep 5
 cfy executions start -w install -d {{ app_name }} -l

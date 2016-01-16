@@ -44,9 +44,9 @@ def clone(url, basedir, branch=None):
     return target.abspath()
 
 
-def checkout(repo_path, branch):
+def checkout(repo_path, branch, force=False):
     logger.info('Checking out to {0} branch in repo {1}'
                 .format(branch, repo_path))
     target = path(repo_path)
     with target:
-        git.checkout(branch).wait()
+        git.checkout(branch, force=force).wait()
