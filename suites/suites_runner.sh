@@ -2,26 +2,33 @@
 
 setenv()
 {
+    echo "Setup environment"
     export PYTHONUNBUFFERED="true"
 }
 
 create_virtualenv_if_needed_and_source()
 {
-    if [[ ! -d system_tests_controller_venv ]]; then
-        virtualenv system_tests_controller_venv
-        source system_tests_controller_venv/bin/activate
-        pip install pip --upgrade
+    if [[ ! -d ~/system-tests-env ]]; then
+        echo "Creating virtualenv"
+        virtualenv-2.7 ~/system-tests-env
+        source ~/system-tests-env/bin/activate
         pip install -r requirements.txt
         pip install -r wheel-requirements.txt
     else
-        source system_tests_controller_venv/bin/activate
+        echo "Activating virtualenv"
+        source ~/system-tests-env/bin/activate
     fi
 }
 
 suites_runner()
 {
-    variables_yaml_path=$(mktemp)
-    python helpers/variables_builder.py ${variables_yaml_path}
+    local variables_yaml_path=$(mktemp -t vars-XXXXXXXX)
+    echo "Writing variables to ${variables_yaml_path}"
+    python helpers/variables_builder.py \
+        --variables-output-path=${variables_yaml_path} \
+        --jenkins-parameters-path=${EXPORT_PARAMS_FILE} \
+        --gpg-secret-key-path=${SYSTEM_TESTS_SECRET_KEY_PATH}
+    rm ${SYSTEM_TESTS_SECRET_KEY_PATH}
     python suites_runner.py ${variables_yaml_path}
 }
 

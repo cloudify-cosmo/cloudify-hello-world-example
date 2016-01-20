@@ -1,0 +1,33 @@
+tosca_definitions_version: cloudify_dsl_1_2
+
+node_types:
+
+  JenkinsSlave:
+    derived_from: cloudify.nodes.Root
+    properties:
+      master_url:
+        default: { get_input: jenkins_master_url }
+      username:
+        default: { get_input: jenkins_username }
+      password:
+        default: { get_input: jenkins_password }
+      executors:
+        default: { get_input: jenkins_executors }
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        start:
+          implementation: fabric.fabric_plugin.tasks.run_script
+          inputs:
+            JENKINS_MASTER_URL:
+              default: { get_property: [SELF, master_url] }
+            JENKINS_USERNAME:
+              default: { get_property: [SELF, username] }
+            JENKINS_PASSWORD:
+              default: { get_property: [SELF, password] }
+            JENKINS_EXECUTORS:
+              default: { get_property: [SELF, executors] }
+            script_path:
+              default: scripts/setup.sh
+            process:
+              default:
+                cwd: { get_input: workdir }
