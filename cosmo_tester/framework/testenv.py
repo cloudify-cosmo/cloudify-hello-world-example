@@ -550,3 +550,17 @@ class TestCase(unittest.TestCase):
                      '-o StrictHostKeyChecking=no '
                      '-t -i /root/.ssh/agent_key.pem {0}@{1} "{2}"'
                      .format(user, private_ip, ' && '.join(commands)))
+
+    def wait_for_resource(self, predicate_func, timeout_sec=60):
+        timeout = time.time() + timeout_sec
+        while True:
+            if time.time() > timeout:
+                raise RuntimeError('Failed waiting for resource')
+            try:
+                result = predicate_func()
+                if result:
+                    break
+            except Exception as e:
+                logger.info('predicate function raised an error; {error}'
+                            .format(error=e))
+            time.sleep(1)
