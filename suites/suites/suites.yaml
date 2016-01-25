@@ -204,6 +204,9 @@ templates:
     repo: cloudify-diamond-snmp-extension
     branch: '{{core_branch}}'
 
+  - &psutil_plugin_external
+    repo: cloudify-psutil-plugin
+
   - &docker_plugin_external
     repo: cloudify-docker-plugin
 
@@ -739,6 +742,11 @@ tests:
     tests:
       - cosmo_tester/test_suites/test_security/ad_auth_test.py
 
+  psutil_plugin:
+    external: *psutil_plugin_external
+    tests:
+      - system_tests
+
   broker_security:
     tests:
       - cosmo_tester/test_suites/test_broker_security
@@ -899,6 +907,11 @@ test_suites:
     tests:
       - docker_plugin
       - docker_nodecellar
+
+  psutil_plugin:
+    handler_configuration: aws_ec2
+    tests:
+      - psutil_plugin
 
   openstack_windows_cli_package:
     requires: [openstack, datacentred]
