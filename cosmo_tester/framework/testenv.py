@@ -326,7 +326,9 @@ class TestCase(unittest.TestCase):
                              management_ip=self.env.management_ip,
                              testcase=self)
         self.client = self.env.rest_client
-        self.test_id = 'system-test-{0}'.format(time.strftime("%Y%m%d-%H%M"))
+        self.test_id = 'system-test-{0}-{1}'.format(
+            self._testMethodName,
+            time.strftime("%Y%m%d-%H%M"))
         self.blueprint_yaml = None
         self._test_cleanup_context = self.env.handler.CleanupContext(
             self._testMethodName, self.env)
