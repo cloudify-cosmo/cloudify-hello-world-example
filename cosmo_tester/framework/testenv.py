@@ -323,8 +323,7 @@ class TestCase(unittest.TestCase):
         self.logger.info('Starting test setUp')
         self.workdir = tempfile.mkdtemp(prefix='cosmo-test-')
         self.cfy = CfyHelper(cfy_workdir=self.workdir,
-                             management_ip=self.env.management_ip,
-                             testcase=self)
+                             management_ip=self.env.management_ip)
         self.client = self.env.rest_client
         self.test_id = 'system-test-{0}-{1}'.format(
             self._testMethodName,
@@ -479,28 +478,6 @@ class TestCase(unittest.TestCase):
         for event in events:
             self.logger.info(json.dumps(event))
         raise AssertionError('Execution "{}" timed out'.format(execution.id))
-
-    def wait_for_stop_dep_env_execution_to_end(self, deployment_id,
-                                               timeout_seconds=240,
-                                               client=None):
-        client = client or self.client
-
-        executions = client.executions.list(
-            deployment_id=deployment_id, include_system_workflows=True)
-        running_stop_executions = [e for e in executions if e.workflow_id ==
-                                   '_stop_deployment_environment' and
-                                   e.status not in Execution.END_STATES]
-
-        if not running_stop_executions:
-            return
-
-        if len(running_stop_executions) > 1:
-            raise RuntimeError('There is more than one running '
-                               '"_stop_deployment_environment" execution: {0}'
-                               .format(running_stop_executions))
-
-        execution = running_stop_executions[0]
-        return self.wait_for_execution(execution, timeout_seconds, client)
 
     def repetitive(self, func, timeout=10, exception_class=Exception,
                    args=None, kwargs=None):

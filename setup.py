@@ -29,7 +29,7 @@ setup(
         'PyYAML==3.10',
         'requests==2.7.0',
         'sh==1.09',
-        'path.py==5.1',
+        'path.py>=8.1.2',
         'nose',
         'retrying==1.3.3',
         'cloudify==3.4a1',

@@ -45,7 +45,6 @@ class SnapshotsSingleManagerTest(HelloWorldBashTest):
 
         super(SnapshotsSingleManagerTest, self)._run(*args, **kwargs)
 
-        self.wait_for_stop_dep_env_execution_to_end(self.deployment_id)
         self.client.deployments.delete(self.deployment_id)
         self.client.blueprints.delete(self.deployment_id)
 
@@ -59,7 +58,6 @@ class SnapshotsSingleManagerTest(HelloWorldBashTest):
                                    inputs=dep_inputs)
         self.wait_until_all_deployment_executions_end(self.additional_dep_id)
 
-        self.wait_for_stop_dep_env_execution_to_end(self.deployment_id)
         self.client.snapshots.create(snapshot_id, True, True)
 
         waited = 0
