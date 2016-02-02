@@ -22,3 +22,10 @@ test:
   override:
     - case $CIRCLE_NODE_INDEX in 0) flake8 . ;; 1) nosetests suites/tests ;; esac:
         parallel: true  
+
+deployment:
+  release:
+    tag: /[0-9]+(\.[0-9]+)*/
+    owner: circleci
+    commands:
+      - "true" 
