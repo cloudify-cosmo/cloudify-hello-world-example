@@ -3,5 +3,5 @@ path.py>=8.1.2
 PyYAML==3.10
 nose
 xmltodict
-requests
-jinja2
+requests==2.7.0
+jinja2==2.7.2
