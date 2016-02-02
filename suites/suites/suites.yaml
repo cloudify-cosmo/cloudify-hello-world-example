@@ -750,7 +750,7 @@ tests:
   agent_tests:
     external: *agent_external
     tests:
-      - system_tests/manager -e winrm -e windows
+      - system_tests/manager
 
   nodecellar_backwards_compatibility_tests:
     tests:
