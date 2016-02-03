@@ -6,7 +6,7 @@ imports:
 plugins:
     plugin1:
         package_name: mogrify
-        package_version: 0.1
+        package_version: '0.1'
         executor: central_deployment_agent
 
 node_types:
