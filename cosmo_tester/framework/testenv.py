@@ -458,12 +458,20 @@ class TestCase(unittest.TestCase):
 
     def wait_for_execution(self, execution, timeout, client=None,
                            assert_success=True):
+        def dump_events(_client, _execution):
+            events, _ = _client.events.get(_execution.id,
+                                           batch_size=1000,
+                                           include_logs=True)
+            self.logger.info('Deployment creation events & logs:')
+            for event in events:
+                self.logger.info(json.dumps(event))
         client = client or self.client
         end = time.time() + timeout
         while time.time() < end:
             status = client.executions.get(execution.id).status
             if status == 'failed':
                 if assert_success:
+                    dump_events(client, execution)
                     raise AssertionError('Execution "{}" failed'.format(
                         execution.id))
                 else:
@@ -471,12 +479,7 @@ class TestCase(unittest.TestCase):
             if status == 'terminated':
                 return
             time.sleep(1)
-        events, _ = client.events.get(execution.id,
-                                      batch_size=1000,
-                                      include_logs=True)
-        self.logger.info('Deployment creation events & logs:')
-        for event in events:
-            self.logger.info(json.dumps(event))
+        dump_events(client, execution)
         raise AssertionError('Execution "{}" timed out'.format(execution.id))
 
     def repetitive(self, func, timeout=10, exception_class=Exception,
