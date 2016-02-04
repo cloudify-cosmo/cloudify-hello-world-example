@@ -21,18 +21,17 @@ import tempfile
 
 from wagon.wagon import Wagon
 
+from cosmo_tester.framework import util
 from cosmo_tester.framework.testenv import TestCase
 
-TEST_PACKAGE_NAME = 'mogrify'
-TEST_PACKAGE_VERSION = '0.1'
+TEST_PACKAGE_NAME = 'mock-wagon-plugin'
 
 
 class DownloadInstallPluginTest(TestCase):
 
     def setUp(self):
         super(DownloadInstallPluginTest, self).setUp()
-        self.wheel_tar = self._create_sample_wheel(TEST_PACKAGE_NAME,
-                                                   TEST_PACKAGE_VERSION)
+        self.wheel_tar = self._create_sample_wheel()
         self.downloaded_archive_path = os.path.join(self.workdir,
                                                     os.path.basename(
                                                         self.wheel_tar))
@@ -42,10 +41,9 @@ class DownloadInstallPluginTest(TestCase):
             self._delete_all_plugins()
         super(DownloadInstallPluginTest, self).tearDown()
 
-    def _create_sample_wheel(self, package_name, package_version):
-        package_src = '{0}=={1}'.format(package_name,
-                                        package_version)
-        wagon_client = Wagon(package_src)
+    def _create_sample_wheel(self):
+        src = util.get_resource_path('plugins/{0}'.format(TEST_PACKAGE_NAME))
+        wagon_client = Wagon(src)
         return wagon_client.create(
             archive_destination_dir=tempfile.mkdtemp(dir=self.workdir),
             force=True)
@@ -87,7 +85,12 @@ class DownloadInstallPluginTest(TestCase):
 
         try:
             # install a blueprint that uses the managed plugin
-            self.upload_deploy_and_execute_install(fetch_state=False)
+            test_input_value = 'MY_TEST_INPUT'
+            inputs = {'test_input': test_input_value}
+            self.upload_deploy_and_execute_install(fetch_state=False,
+                                                   inputs=inputs)
+            outputs = self.client.deployments.outputs.get(self.test_id)
+            self.assertEqual(outputs.outputs['test_output'], test_input_value)
         finally:
             self.execute_uninstall()
             self.cfy.delete_deployment(self.test_id)
