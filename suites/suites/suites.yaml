@@ -35,6 +35,7 @@ variables:
   aws_ec2_eu_central_1_windows_server_2012_r2_image_id: ami-c64559aa
   aws_ec2_eu_west_1_ami_rhel_7_image_id: ami-25158352
   aws_ec2_frankfurt_rhel_7_image_id: ami-dafdcfc7
+  aws_ec2_frankfurt_rhel_65_image_id: ami-12ccfa0f
   aws_ec2_medium_instance_type: m3.medium
   aws_ec2_micro_instance_type: t2.micro
   aws_ec2_eu_central_1_region_name: eu-central-1
