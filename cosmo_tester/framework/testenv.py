@@ -336,6 +336,7 @@ class TestCase(unittest.TestCase):
         self.maxDiff = 1024 * 1024 * 10
 
     def _cleanup(self):
+        self.env.setup()
         self._test_cleanup_context.cleanup()
         shutil.rmtree(self.workdir)
 

@@ -115,17 +115,6 @@ class SecuredBrokerManagerTests(
         # test nodecellar deployment
         self._test_openstack_nodecellar('openstack-blueprint.yaml')
 
-    def get_inputs(self):
-        # Inputs for nodecellar test
-        image_id = self.env.cloudify_config['image_id']
-        flavor_id = self.env.cloudify_config['flavor_id']
-        agents_user = self.env.cloudify_config['agents_user']
-        return {
-            'image': image_id,
-            'flavor': flavor_id,
-            'agent_user': agents_user,
-        }
-
     def _can_get_broker_connection(self,
                                    username,
                                    password,
