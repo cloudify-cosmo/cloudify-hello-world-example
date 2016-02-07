@@ -399,7 +399,7 @@ class TestCase(unittest.TestCase):
             fetch_state,
             deployment_id=deployment_id)
 
-    def upload_deploy_and_execute_install(
+    def install(
             self,
             blueprint_id=None,
             deployment_id=None,
@@ -408,13 +408,15 @@ class TestCase(unittest.TestCase):
             inputs=None):
 
         return self._make_operation_with_before_after_states(
-            self.cfy.upload_deploy_and_execute_install,
+            self.cfy.install,
             fetch_state,
             str(self.blueprint_yaml),
             blueprint_id=blueprint_id or self.test_id,
             deployment_id=deployment_id or self.test_id,
             execute_timeout=execute_timeout,
             inputs=inputs)
+
+    upload_deploy_and_execute_install = install
 
     def upload_blueprint(
             self,
@@ -448,9 +450,18 @@ class TestCase(unittest.TestCase):
             after_state = self.get_manager_state()
         return before_state, after_state
 
-    def execute_uninstall(self, deployment_id=None, cfy=None):
+    def execute_uninstall(self, deployment_id=None, cfy=None,
+                          delete_deployment_and_blueprint=False):
         cfy = cfy or self.cfy
-        cfy.execute_uninstall(deployment_id=deployment_id or self.test_id)
+        if delete_deployment_and_blueprint:
+            cfy.uninstall(deployment_id=deployment_id or self.test_id,
+                          workflow_id='uninstall',
+                          parameters=None,
+                          allow_custom_parameters=False,
+                          timeout=DEFAULT_EXECUTE_TIMEOUT,
+                          include_logs=True)
+        else:
+            cfy.execute_uninstall(deployment_id=deployment_id or self.test_id)
 
     def copy_blueprint(self, blueprint_dir_name, blueprints_dir=None):
         blueprint_path = path(self.workdir) / blueprint_dir_name

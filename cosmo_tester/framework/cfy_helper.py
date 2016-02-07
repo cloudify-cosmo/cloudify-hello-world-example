@@ -32,6 +32,8 @@ cfy = sh_bake(sh.cfy)
 
 
 DEFAULT_EXECUTE_TIMEOUT = 1800
+INPUTS = 'inputs'
+PARAMETERS = 'parameters'
 
 
 class CfyHelper(object):
@@ -118,7 +120,21 @@ class CfyHelper(object):
                 force=True,
                 verbose=verbose).wait()
 
-    def upload_deploy_and_execute_install(
+    def uninstall(self, deployment_id, workflow_id, parameters,
+                  allow_custom_parameters, timeout, include_logs):
+
+        parameters = self._get_parameters_in_temp_file(parameters, workflow_id)
+
+        with self.workdir:
+            cfy.uninstall(deployment_id=deployment_id,
+                          workflow=workflow_id,
+                          parameters=parameters,
+                          allow_custom_parameters=allow_custom_parameters,
+                          timeout=timeout,
+                          include_logs=include_logs
+                          ).wait()
+
+    def install(
             self,
             blueprint_path,
             blueprint_id,
@@ -127,21 +143,19 @@ class CfyHelper(object):
             include_logs=True,
             execute_timeout=DEFAULT_EXECUTE_TIMEOUT,
             inputs=None):
+
+        inputs_file = self._get_inputs_in_temp_file(inputs, deployment_id)
+
         with self.workdir:
-            self.upload_blueprint(
-                blueprint_path=blueprint_path,
-                blueprint_id=blueprint_id,
-                verbose=verbose)
-            self.create_deployment(
-                blueprint_id=blueprint_id,
-                deployment_id=deployment_id,
-                verbose=verbose,
-                inputs=inputs)
-            self.execute_install(
-                deployment_id=deployment_id,
-                execute_timeout=execute_timeout,
-                verbose=verbose,
-                include_logs=include_logs)
+            cfy.install(blueprint_path=blueprint_path,
+                        blueprint_id=blueprint_id,
+                        deployment_id=deployment_id,
+                        inputs=inputs_file,
+                        timeout=execute_timeout,
+                        include_logs=include_logs,
+                        verbose=verbose).wait()
+
+    upload_deploy_and_execute_install = install
 
     def publish_archive(self,
                         blueprint_id,
@@ -294,7 +308,7 @@ class CfyHelper(object):
                          execute_timeout=DEFAULT_EXECUTE_TIMEOUT,
                          parameters=None):
 
-        params_file = self._get_inputs_in_temp_file(parameters, workflow)
+        params_file = self._get_parameters_in_temp_file(parameters, workflow)
         with self.workdir:
             cfy.executions.start(
                 workflow=workflow,
@@ -326,11 +340,21 @@ class CfyHelper(object):
             'install-plugins',
             blueprint_path=blueprint_path).wait()
 
+    def _get_dict_in_temp_file(self, dictionary, prefix, suffix):
+        dictionary = dictionary or {}
+        file_ = tempfile.mktemp(prefix='{0}-'.format(prefix),
+                                suffix=suffix,
+                                dir=self.workdir)
+        with open(file_, 'w') as f:
+            f.write(json.dumps(dictionary))
+        return file_
+
     def _get_inputs_in_temp_file(self, inputs, inputs_prefix):
-        inputs = inputs or {}
-        inputs_file = tempfile.mktemp(prefix='{0}-'.format(inputs_prefix),
-                                      suffix='-inputs.json',
-                                      dir=self.workdir)
-        with open(inputs_file, 'w') as f:
-            f.write(json.dumps(inputs))
-        return inputs_file
+        return self._get_dict_in_temp_file(dictionary=inputs,
+                                           prefix=inputs_prefix,
+                                           suffix='-inputs.json')
+
+    def _get_parameters_in_temp_file(self, parameters, parameters_prefix):
+        return self._get_dict_in_temp_file(dictionary=parameters,
+                                           prefix=parameters_prefix,
+                                           suffix='-parameters.json')
