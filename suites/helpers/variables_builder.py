@@ -1,82 +1,51 @@
 import os
-import sys
-import logging
+import argparse
 
-import yaml
 import requests
-import xmltodict
+import yaml
+
+import password_store
+
+SYSTEM_TESTS_PASSWORD_STORE_REPO = 'system_tests_password_store_repo'
+CLI_PACKAGES_URL_FORMAT = 'https://raw.githubusercontent.com/cloudify-cosmo' \
+                          '/cloudify-packager/{0}/common' \
+                          '/cli-packages-blueprint.yaml'
 
 
-logging.basicConfig()
+def read_jenkins_parameters(jenkins_parameters_path):
+    with open(os.path.expanduser(jenkins_parameters_path)) as f:
+        parameters = yaml.safe_load(f)
+    return {parameter['key']: parameter['value'] for parameter in parameters}
 
-logger = logging.getLogger('variables_builder')
-logger.setLevel(logging.INFO)
+
+def read_cli_package_urls(cloudify_packager_branch):
+    cli_packages_url = CLI_PACKAGES_URL_FORMAT.format(cloudify_packager_branch)
+    cli_packages_raw_yaml = requests.get(cli_packages_url).text
+    cli_packages_yaml = yaml.safe_load(cli_packages_raw_yaml) or {}
+    return cli_packages_yaml.get('cli_package_urls', {})
+
+
+def parse_arguments():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--gpg-secret-key-path', required=True)
+    parser.add_argument('--jenkins-parameters-path', required=True)
+    parser.add_argument('--variables-output-path', required=True)
+    return parser.parse_args()
 
 
 def main():
-    variables_path = sys.argv[1]
-    username = os.environ['QUICK_BUILD_USER']
-    password = os.environ['QUICK_BUILD_PASSWORD']
-    auth = (username, password)
-    qb_url = os.environ['QUICK_BUILD_URL']
-    build_id = os.environ['QUICK_BUILD_BUILD_ID']
-    configuration_id = os.environ['QUICK_BUILD_CONFIGURATION_ID']
-
-    top_level_configuration_id = '1'
-    configuration_ids = [configuration_id]
-    while configuration_id != top_level_configuration_id:
-        configuration_id = _get_parent_configuration_id(
-            configuration_id, qb_url, auth)
-        configuration_ids.insert(0, configuration_id)
-
-    variables = {}
-    for configuration_id in configuration_ids:
-        variables.update(_read_configuration_variables(
-            configuration_id, qb_url, auth))
-    variables.update(_read_build_variables(build_id, qb_url, auth))
-
-    yaml_dump = yaml.safe_dump(variables)
-    with open(variables_path, 'w') as f:
-        f.write(yaml_dump)
-
-
-def _get_parent_configuration_id(configuration_id, qb_url, auth):
-    parent_endpoint = ('{0}/rest/configurations/{1}/parent'
-                       .format(qb_url, configuration_id))
-    return requests.get(parent_endpoint, auth=auth).text.strip()
-
-
-def _read_configuration_variables(configuration_id, qb_url, auth):
-    configuration_endpoint = ('{0}/rest/configurations/{1}'
-                              .format(qb_url, configuration_id))
-    xml_configuration = requests.get(configuration_endpoint, auth=auth).text
-    configuration = xmltodict.parse(xml_configuration) or {}
-    configuration = configuration.get(
-        'com.pmease.quickbuild.model.Configuration', {}) or {}
-    configuration = configuration.get('variables', {}) or {}
-    configuration = configuration.get(
-        'com.pmease.quickbuild.variable.Variable', {}) or {}
-    if not configuration:
-        return {}
-    return {e['name']: e['valueProvider']['value'] for e in configuration
-            if ('name' in e and
-                'valueProvider' in e and
-                'value' in e['valueProvider'] and
-                isinstance(e['valueProvider']['value'], basestring) and
-                'vars.get' not in e['valueProvider']['value'])}
-
-
-def _read_build_variables(build_id, qb_url, auth):
-    build_endpoint = '{0}/rest/builds/{1}'.format(qb_url, build_id)
-    xml_build = requests.get(build_endpoint, auth=auth).text
-    build = xmltodict.parse(xml_build) or {}
-    build = build.get('com.pmease.quickbuild.model.Build', {}) or {}
-    build = build.get('variableValues', {}) or {}
-    build = build.get('entry', {}) or {}
-    if not build:
-        return {}
-    return {e['string'][0]: e['string'][1] for e in build
-            if all(['string' in e, len(e['string']) >= 2])}
+    args = parse_arguments()
+    jenkins_vars = read_jenkins_parameters(args.jenkins_parameters_path)
+    cli_packages_vars = read_cli_package_urls(
+        cloudify_packager_branch=jenkins_vars.pop('packager_branch'))
+    pass_vars = password_store.read_pass(
+        gpg_secret_key_path=args.gpg_secret_key_path,
+        password_store_repo=jenkins_vars.pop(SYSTEM_TESTS_PASSWORD_STORE_REPO))
+    variables = jenkins_vars
+    variables.update(cli_packages_vars)
+    variables.update(pass_vars)
+    with open(os.path.expanduser(args.variables_output_path), 'w') as f:
+        f.write(yaml.safe_dump(variables))
 
 
 if __name__ == '__main__':

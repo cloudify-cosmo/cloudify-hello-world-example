@@ -1,0 +1,38 @@
+tosca_definitions_version: cloudify_dsl_1_2
+
+imports:
+  - http://www.getcloudify.org/spec/cloudify/3.3/types.yaml
+  - http://www.getcloudify.org/spec/fabric-plugin/1.3/plugin.yaml
+  - types/jenkins-types.yaml
+
+inputs:
+  ip:                       {}
+  user:                     {}
+  workdir:                  {}
+  keypath:                  {}
+  jenkins_master_url:       {}
+  jenkins_username:         {}
+  jenkins_password:         {}
+  jenkins_executors:        {}
+
+node_templates:
+
+  server:
+    type: cloudify.nodes.Compute
+    properties:
+      agent_config:
+        install_method: none
+
+  jenkins_slave:
+    type: JenkinsSlave
+    relationships:
+      - target: server
+        type: cloudify.relationships.contained_in
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        start:
+          inputs:
+            fabric_env:
+              user: { get_input: user }
+              key_filename: { get_input: keypath }
+              host_string:  { get_input: ip }

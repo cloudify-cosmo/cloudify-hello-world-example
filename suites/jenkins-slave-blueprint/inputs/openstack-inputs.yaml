@@ -1,0 +1,32 @@
+openstack_config:
+  username: _
+  password: _
+  tenant_name: _
+  auth_url: _
+  region: ''
+server_config:
+  image_name: _
+  flavor_name: _
+user: _
+workdir: _
+external_network_name: _
+existing_key: true
+keyname: shared-systemt-tests
+keypath: ~/.ssh/shared-systemt-tests-key.pem
+existing_server: false
+server: st-jenkins
+existing_network: false
+network: st-jenkins-network
+existing_subnet: false
+subnet: st-jenkins-subnet
+subnet_cidr: 10.67.79.0/24
+existing_router: false
+router: st-jenkins-router
+existing_security_group: false
+security_group: st-jenkins-sg
+existing_floatingip: false
+floatingip: ''
+jenkins_master_url: _
+jenkins_username: _
+jenkins_password: _
+jenkins_executors: _

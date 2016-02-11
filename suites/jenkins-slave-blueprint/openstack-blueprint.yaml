@@ -1,0 +1,141 @@
+tosca_definitions_version: cloudify_dsl_1_2
+
+imports:
+  - http://www.getcloudify.org/spec/cloudify/3.3/types.yaml
+  - http://www.getcloudify.org/spec/fabric-plugin/1.3/plugin.yaml
+  - http://www.getcloudify.org/spec/openstack-plugin/3.3/plugin.yaml
+  - types/jenkins-types.yaml
+
+inputs:
+  openstack_config:         {}
+  server_config:            {}
+  user:                     {}
+  workdir:                  {}
+  external_network_name:    {}
+  existing_key:             {}
+  keyname:                  {}
+  keypath:                  {}
+  existing_server:          {}
+  server:                   {}
+  existing_network:         {}
+  network:                  {}
+  existing_subnet:          {}
+  subnet:                   {}
+  subnet_cidr:              {}
+  existing_router:          {}
+  router:                   {}
+  existing_security_group:  {}
+  security_group:           {}
+  existing_floatingip:      {}
+  floatingip:               {}
+  jenkins_master_url:       {}
+  jenkins_username:         {}
+  jenkins_password:         {}
+  jenkins_executors:        {}
+
+node_templates:
+
+  keypair:
+    type: cloudify.openstack.nodes.KeyPair
+    properties:
+      openstack_config:         { get_input: openstack_config }
+      use_external_resource:    { get_input: existing_key }
+      resource_id:              { get_input: keyname }
+      private_key_path:         { get_input: keypath }
+
+  network:
+    type: cloudify.openstack.nodes.Network
+    properties:
+      openstack_config:         { get_input: openstack_config }
+      use_external_resource:    { get_input: existing_network }
+      resource_id:              { get_input: network }
+
+  subnet:
+    type: cloudify.openstack.nodes.Subnet
+    properties:
+      openstack_config:         { get_input: openstack_config }
+      use_external_resource:    { get_input: existing_subnet }
+      resource_id:              { get_input: subnet }
+      subnet:
+        ip_version: 4
+        cidr: { get_input: subnet_cidr }
+    relationships:
+      - target: network
+        type: cloudify.relationships.contained_in
+      - target: router
+        type: cloudify.openstack.subnet_connected_to_router
+
+  router:
+    type: cloudify.openstack.nodes.Router
+    properties:
+      openstack_config:         { get_input: openstack_config }
+      use_external_resource:    { get_input: existing_router }
+      resource_id:              { get_input: router }
+    relationships:
+      - target: external_network
+        type: cloudify.relationships.connected_to
+
+  external_network:
+    type: cloudify.openstack.nodes.Network
+    properties:
+      openstack_config:         { get_input: openstack_config }
+      use_external_resource:    true
+      resource_id:              { get_input: external_network_name }
+
+  security_group:
+    type: cloudify.openstack.nodes.SecurityGroup
+    properties:
+      openstack_config:         { get_input: openstack_config }
+      use_external_resource:    { get_input: existing_security_group }
+      resource_id:              { get_input: security_group }
+      security_group:
+        description: Jenkins slave security group
+      rules:
+        - port_range_min: 1
+          port_range_max: 65535
+          remote_ip_prefix: 0.0.0.0/0
+
+  floatingip:
+    type: cloudify.openstack.nodes.FloatingIP
+    properties:
+      openstack_config:         { get_input: openstack_config }
+      use_external_resource:    { get_input: existing_floatingip }
+      resource_id:              { get_input: floatingip }
+      floatingip:
+        floating_network_name:  { get_input: external_network_name }
+
+  server:
+    type: cloudify.openstack.nodes.Server
+    properties:
+      openstack_config:         { get_input: openstack_config }
+      use_external_resource:    { get_input: existing_server }
+      resource_id:              { get_input: server }
+      server:                   { get_input: server_config }
+      management_network_name:  { get_property: [network, resource_id] }
+      agent_config:
+        install_method: none
+    relationships:
+      - target: floatingip
+        type: cloudify.openstack.server_connected_to_floating_ip
+      - target: network
+        type: cloudify.relationships.connected_to
+      - target: subnet
+        type: cloudify.relationships.depends_on
+      - target: security_group
+        type: cloudify.openstack.server_connected_to_security_group
+      - target: keypair
+        type: cloudify.openstack.server_connected_to_keypair
+
+  jenkins_slave:
+    type: JenkinsSlave
+    relationships:
+      - target: server
+        type: cloudify.relationships.contained_in
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        start:
+          inputs:
+            fabric_env:
+              user: { get_input: user }
+              key_filename: { get_property: [keypair, private_key_path] }
+              host_string:  { get_attribute: [floatingip, floating_ip_address] }
