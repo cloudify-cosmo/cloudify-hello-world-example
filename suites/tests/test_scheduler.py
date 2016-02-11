@@ -17,10 +17,17 @@
 import logging
 import threading
 import time
+import os
 import unittest
+import tempfile
 
 from path import path
-from suites.suites_runner import TestSuite, SuitesScheduler
+from mock import patch
+
+from suites.suites_runner import TestSuite
+from suites.suites_runner import SuitesScheduler
+from suites.suites_runner import FileEnvironments
+
 
 logger = logging.getLogger('suites_scheduler')
 logger.setLevel(logging.INFO)
@@ -199,28 +206,77 @@ class TestSuiteScheduler(unittest.TestCase):
             msg='Scheduler running time should be less than {0} seconds but '
                 'was {1} seconds.'.format(suite_time, delta))
         self.assertTrue(suites[0].timed_out)
+        self.assertEqual(scheduler.timed_out_suites, suites)
 
-    def test_timed_out_env_removed_from_envs_list(self):
-        suite_time = 10
+    def test_failed_suite(self):
         suites = [
-            self._new_test_suite('suite1',
-                                 requires=['env1'],
-                                 run_for=suite_time),
-            self._new_test_suite('suite2',
-                                 requires=['env1'],
-                                 run_for=suite_time),
-            self._new_test_suite('suite3',
-                                 handler_configuration='config1',
-                                 run_for=suite_time)
+            self._new_test_suite('suite1', requires=['env1'])
         ]
+        suites[0].failed = True
         handler_configurations = {
             'config1': {'env': 'env1_id', 'tags': ['env1']}
         }
         scheduler = SuitesScheduler(
-            suites,
-            handler_configurations,
-            suite_timeout=1)
+                suites,
+                handler_configurations,
+                suite_timeout=1)
         scheduler.run()
-        self.assertIsNone(suites[1].started)
-        self.assertIsNone(suites[2].started)
-        self.assertEqual(2, len(scheduler.skipped_suites))
+        self.assertEqual(scheduler.failed_suites, suites)
+
+
+class TestFileEnvironments(unittest.TestCase):
+
+    def setUp(self):
+        fd, self.environments_path = tempfile.mkstemp()
+        os.remove(self.environments_path)
+        os.close(fd)
+        self.addCleanup(self.cleanup)
+
+    @property
+    def environments(self):
+        return FileEnvironments(self.environments_path)
+
+    def cleanup(self):
+        os.remove(self.environments._locked_environments_path)
+        os.remove(self.environments._locked_environments_lock.path)
+
+    def test_lock_and_release(self):
+        env_id = 'ENV'
+        self.assertTrue(self.environments.lock(env_id))
+        self.assertFalse(self.environments.lock(env_id))
+        self.environments.release(env_id)
+        self.assertTrue(self.environments.lock(env_id))
+
+    def test_prune(self):
+        available_envs = ['ENV1', 'ENV2']
+        unavailable_envs = ['ENV3', 'ENV4']
+
+        non_suite_runner_pid = 1
+        suite_runner_pid = 100
+
+        with patch('os.getpid', lambda: non_suite_runner_pid):
+            for env in available_envs:
+                self.assertTrue(self.environments.lock(env))
+        with patch('os.getpid', lambda: suite_runner_pid):
+            for env in unavailable_envs:
+                self.assertTrue(self.environments.lock(env))
+
+        def patched_func(pid):
+            return pid == suite_runner_pid
+
+        with patch('suites.suites_runner.is_pid_of_suites_runner',
+                   patched_func):
+            self.environments.prune()
+
+        for env in available_envs:
+            self.assertTrue(self.environments.lock(env))
+        for env in unavailable_envs:
+            self.assertFalse(self.environments.lock(env))
+
+        with patch('suites.suites_runner.is_pid_of_suites_runner',
+                   patched_func):
+            with patch('os.getpid', lambda: suite_runner_pid):
+                self.environments.prune(include_self=True)
+
+        for env in unavailable_envs:
+            self.assertTrue(self.environments.lock(env))

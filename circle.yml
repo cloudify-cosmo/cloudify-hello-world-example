@@ -13,7 +13,8 @@ checkout:
 
 dependencies:
   override:
-    - pip install flake8
+    - pip install setuptools --upgrade
+    - pip install flake8 --upgrade
     - pip install -r test-requirements.txt
     - pip install .
 
