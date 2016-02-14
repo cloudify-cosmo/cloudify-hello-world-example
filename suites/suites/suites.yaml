@@ -51,7 +51,6 @@ variables:
 
   # These values are updated by the version tool
   core_branch: '3.4m2'
-  plugins_branch: '1.3.1'
 
   # These values are injected by quickbuild and are here mainly
   # for reference (i.e. they will exist in runtime either way)
@@ -172,19 +171,21 @@ templates:
 
   - &openstack_plugin_external
     repo: cloudify-openstack-plugin
+    branch: '1.3.1'
 
   - &softlayer_plugin_external
     repo: cloudify-softlayer-plugin
     private: true
     username: opencm
     password: '{{opencm_git_pwd}}'
-    branch: '{{plugins_branch}}'
+    branch: '1.3.1'
 
   - &vsphere_plugin_external
     repo: cloudify-vsphere-plugin
     private: true
     username: opencm
     password: '{{opencm_git_pwd}}'
+    branch: '1.4'
 
   - &watchdog_external
     repo: cloudify-watchdog
@@ -203,18 +204,23 @@ templates:
 
   - &psutil_plugin_external
     repo: cloudify-psutil-plugin
+    branch: '1.0.1'
 
   - &docker_plugin_external
     repo: cloudify-docker-plugin
+    branch: '1.3.1'
 
   - &host_pool_plugin_external
     repo: cloudify-host-pool-plugin
+    branch: '1.3.1'
 
   - &aws_ec2_plugin_external
     repo: cloudify-aws-plugin
+    branch: '1.4'
 
   - &vcloud_plugin_external
     repo: tosca-vcloud-plugin
+    branch: '1.3.1'
 
   - &agent_external
     repo: cloudify-agent
