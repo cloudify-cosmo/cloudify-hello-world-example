@@ -22,14 +22,14 @@ create_virtualenv_if_needed_and_source()
 
 suites_runner()
 {
-    local variables_yaml_path=$(mktemp -t vars-XXXXXXXX)
+    local variables_yaml_path="$(mktemp -t vars-XXXXXXXX)"
     echo "Writing variables to ${variables_yaml_path}"
     python helpers/variables_builder.py \
-        --variables-output-path=${variables_yaml_path} \
-        --jenkins-parameters-path=${EXPORT_PARAMS_FILE} \
-        --gpg-secret-key-path=${SYSTEM_TESTS_SECRET_KEY_PATH}
-    rm ${SYSTEM_TESTS_SECRET_KEY_PATH}
-    python suites_runner.py ${variables_yaml_path}
+        --variables-output-path="${variables_yaml_path}" \
+        --jenkins-parameters-path="${EXPORT_PARAMS_FILE}" \
+        --gpg-secret-key-path="${SYSTEM_TESTS_SECRET_KEY_PATH}"
+    rm "${SYSTEM_TESTS_SECRET_KEY_PATH}"
+    exec python suites_runner.py "${variables_yaml_path}" "${SYSTEM_TESTS_DESCRIPTOR}"
 }
 
 main()

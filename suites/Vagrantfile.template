@@ -3,6 +3,7 @@ ENV['VAGRANT_DEFAULT_PROVIDER'] = 'docker'
 
 def vagrant_configure
   suite_name = '{{suite_name}}'
+  container_name = '{{container_name}}'
   suite = '{{suite}}'
   variables = '{{variables}}'
 
@@ -13,7 +14,7 @@ def vagrant_configure
     end
     config.vm.define suite_name do |container|
       container.vm.provider 'docker' do |d|
-        d.name = suite_name
+        d.name = container_name
         d.env = {
           'TEST_SUITE_NAME' => suite_name,
           'TEST_SUITE' => suite,
