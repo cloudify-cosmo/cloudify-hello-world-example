@@ -75,7 +75,6 @@ class SuiteRunner(object):
         self.suites_yaml['variables'] = self.variables
 
         self.branch_name_core = self.variables['core_branch']
-        self.branch_name_plugins = self.variables['plugins_branch']
         self.branch_name_system_tests = self.variables['system_tests_branch']
         self.branch_name_manager_blueprints = self.variables.get(
             'manager_blueprints_branch', self.branch_name_core)
@@ -109,7 +108,6 @@ class SuiteRunner(object):
         os.environ['HANDLER_CONFIGURATION'] = self.test_suite[
             'handler_configuration']
         os.environ['SUITES_YAML_PATH'] = self.generated_suites_yaml_path
-        os.environ['BRANCH_NAME_PLUGINS'] = self.branch_name_plugins
         os.environ['BRANCH_NAME_CORE'] = self.branch_name_core
         os.environ['WINDOWS_CLI_PACKAGE_URL'] = self.windows_cli_package_url
         os.environ['CENTOS_7_CLI_PACKAGE_URL'] = self.centos7_cli_package_url
@@ -142,7 +140,7 @@ class SuiteRunner(object):
                 external = self.handler_configuration['external']
                 external = _process_variables(self.suites_yaml, external)
                 plugin_repo = external['repo']
-                branch = external.get('branch', self.branch_name_plugins)
+                branch = external['branch']
                 organization = external.get('organization', 'cloudify-cosmo')
                 private = external.get('private', False)
                 username = external.get('username')
@@ -255,8 +253,7 @@ class SuiteRunner(object):
                 if not (path(self.work_dir) / repo).isdir():
                     self._clone_and_checkout_repo(
                         repo=repo,
-                        branch=external.get('branch',
-                                            self.branch_name_plugins),
+                        branch=external['branch'],
                         organization=external.get('organization',
                                                   'cloudify-cosmo'),
                         private_repo=external.get('private', False),
