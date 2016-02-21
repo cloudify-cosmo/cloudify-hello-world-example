@@ -72,7 +72,8 @@ class DownloadInstallPluginTest(TestCase):
         execution = self.client.snapshots.create(self.test_id, False, False)
         self.wait_for_execution(execution, 1000)
         self._delete_all_plugins()
-        self.client.snapshots.restore(self.test_id)
+        execution = self.client.snapshots.restore(self.test_id)
+        self.wait_for_execution(execution, 1000)
 
         self._verify_plugin_can_be_used_in_blueprint()
 
