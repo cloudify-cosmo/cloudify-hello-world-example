@@ -13,7 +13,11 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 import urllib
-from time import sleep, time
+import time
+import tempfile
+import os
+import tarfile
+from contextlib import closing
 
 import fabric.api
 
@@ -23,15 +27,17 @@ from cosmo_tester.framework.util import get_actual_keypath
 
 class RebootManagerTest(TestCase):
 
-    def _reboot_server(self):
+    def _update_fabric_env(self):
         fabric_env = fabric.api.env
         fabric_env.update({
             'timeout': 30,
             'user': self.env.centos_7_image_user,
-            'key_filename': get_actual_keypath(self.env,
-                                               self.env.management_key_path),
-            'host_string': self.env.management_ip,
-            })
+            'key_filename': get_actual_keypath(
+                self.env, self.env.management_key_path),
+            'host_string': self.env.management_ip})
+
+    def _reboot_server(self):
+        self._update_fabric_env()
         return fabric.api.run('sudo shutdown -r +1')
 
     def _get_undefined_services(self):
@@ -99,23 +105,24 @@ class RebootManagerTest(TestCase):
                                                         post.get('name')))
 
     def _wait_for_management(self, ip, timeout, port=80):
-        """ Wait for url to become available
-            :param ip: the manager IP
-            :param timeout: in seconds
-            :param port: port used by the rest service.
-            :return: True of False
+        """Wait for url to become available
+
+        :param ip: the manager IP
+        :param timeout: in seconds
+        :param port: port used by the rest service.
+        :return: True of False
         """
         validation_url = 'http://{0}:{1}/blueprints'.format(ip, port)
 
-        end = time() + timeout
+        end = time.time() + timeout
 
-        while end - time() >= 0:
+        while end - time.time() >= 0:
                 try:
                     status = urllib.urlopen(validation_url).getcode()
                     if status == 200:
                         return True
                 except IOError:
-                    sleep(5)
+                    time.sleep(5)
 
         return False
 
@@ -129,3 +136,31 @@ class RebootManagerTest(TestCase):
         stopped = self._get_stopped_services()
         self.assertEqual(stopped, [], 'stopped services: {0}'
                          .format(','.join(stopped)))
+
+    def test_03_cfy_logs(self):
+        self._update_fabric_env()
+
+        fd, tmp_log_archive = tempfile.mkstemp()
+        os.close(fd)
+        self.logger.info('Testing `cfy logs get`')
+        try:
+            self.cfy.get_logs(destination_path=tmp_log_archive)
+            with closing(tarfile.open(name=tmp_log_archive)) as tar:
+                files = [f.name for f in tar.getmembers()]
+                self.assertIn('cloudify/journalctl.log', files)
+                self.assertIn('cloudify/nginx/cloudify.access.log', files)
+                self.logger.info('Success!')
+        finally:
+            os.remove(tmp_log_archive)
+
+        self.logger.info('Testing `cfy logs backup`')
+        self.cfy.backup_logs()
+        self.assertTrue(fabric.api.sudo(
+            'tar -xzvf /var/log/cloudify-manager-logs_*').succeeded)
+        self.logger.info('Success!')
+
+        self.logger.info('Testing `cfy logs purge`')
+        self.cfy.purge_logs()
+        self.assertTrue(fabric.api.run(
+            '[ ! -s /var/log/cloudify/nginx/cloudify.access.log ]',).succeeded)
+        self.logger.info('Success!')

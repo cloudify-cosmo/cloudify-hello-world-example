@@ -17,12 +17,14 @@
 import tempfile
 import shutil
 import json
+import os
 
 import sh
 from path import path
 
 from cloudify_cli.utils import (load_cloudify_working_dir_settings,
-                                get_configuration_path)
+                                get_configuration_path,
+                                update_wd_settings)
 from cosmo_tester.framework.util import sh_bake, YamlPatcher
 
 
@@ -36,7 +38,9 @@ class CfyHelper(object):
 
     def __init__(self,
                  cfy_workdir=None,
-                 management_ip=None):
+                 management_ip=None,
+                 management_user=None,
+                 management_key=None):
         self._cfy_workdir = cfy_workdir
         self.tmpdir = False
         if cfy_workdir is None:
@@ -45,6 +49,8 @@ class CfyHelper(object):
         self.workdir = path(self._cfy_workdir)
         if management_ip is not None:
             self.use(management_ip)
+        if management_user and management_key:
+            self._set_management_creds(management_user, management_key)
 
     def bootstrap(self,
                   blueprint_path,
@@ -261,6 +267,11 @@ class CfyHelper(object):
             settings = load_cloudify_working_dir_settings()
             return settings.get_management_server()
 
+    def _set_management_creds(self, user, key):
+        with self.workdir, update_wd_settings() as ws_settings:
+            ws_settings.set_management_user(user)
+            ws_settings.set_management_key(key)
+
     def get_provider_context(self):
         with self.workdir:
             settings = load_cloudify_working_dir_settings()
@@ -292,6 +303,23 @@ class CfyHelper(object):
                 verbose=verbose,
                 include_logs=include_logs,
                 parameters=params_file).wait()
+
+    def get_logs(self, destination_path=os.getcwd()):
+        with self.workdir:
+            cfy.logs.get(
+                destination_path=destination_path,
+                verbose=True).wait()
+
+    def purge_logs(self, force=True, backup_first=False):
+        with self.workdir:
+            cfy.logs.purge(
+                force=force,
+                backup_first=backup_first,
+                verbose=True).wait()
+
+    def backup_logs(self):
+        with self.workdir:
+            cfy.logs.backup(verbose=True).wait()
 
     def install_plugins_locally(self, blueprint_path):
         cfy.local(
