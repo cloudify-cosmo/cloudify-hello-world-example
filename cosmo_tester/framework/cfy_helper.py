@@ -18,6 +18,7 @@ import tempfile
 import shutil
 import json
 import os
+import logging
 
 import sh
 from path import path
@@ -43,6 +44,8 @@ class CfyHelper(object):
                  management_ip=None,
                  management_user=None,
                  management_key=None):
+        self.logger = logging.getLogger('TESTENV')
+        self.logger.setLevel(logging.INFO)
         self._cfy_workdir = cfy_workdir
         self.tmpdir = False
         if cfy_workdir is None:
@@ -51,8 +54,14 @@ class CfyHelper(object):
         self.workdir = path(self._cfy_workdir)
         if management_ip is not None:
             self.use(management_ip)
-        if management_user and management_key:
-            self._set_management_creds(management_user, management_key)
+            if management_user and management_key:
+                try:
+                    self._set_management_creds(management_user, management_key)
+                except Exception as ex:
+                    self.logger.warn(
+                        'Failed to set management creds. Note that you will '
+                        'not be able to perform ssh actions after bootstrap. '
+                        'Reason: {0}'.format(ex))
 
     def bootstrap(self,
                   blueprint_path,
