@@ -41,7 +41,7 @@ class ExistingVMTest(TestCase):
         agents_security_group = self.env.agents_security_group
         management_network_name = self.env.management_network_name
 
-        nova_client, _, _ = self.env.handler.openstack_clients()
+        nova_client, neutron_client, _ = self.env.handler.openstack_clients()
 
         self.logger.info('Creating keypair...')
         self.create_keypair_and_copy_to_manager(
@@ -50,12 +50,17 @@ class ExistingVMTest(TestCase):
             key_name=key_name)
 
         self.logger.info('Creating server using nova API...')
+        nics = self.get_nics_by_network_name(management_network_name,
+                                             neutron_client)
+        if nics is None:
+            raise RuntimeError('Failed obtaining used network id')
         private_server_ip = self.create_server(
             name=server_name,
             nova_client=nova_client,
             key_name=key_name,
             security_groups=[agents_security_group],
-            management_network_name=management_network_name)
+            management_network_name=management_network_name,
+            nics=nics)
 
         self.logger.info('Installing deployment...')
         self.upload_deploy_and_execute_install(
@@ -99,19 +104,28 @@ class ExistingVMTest(TestCase):
         fabric.api.put(local_path=key_file,
                        remote_path=remote_key_path)
 
+    def get_nics_by_network_name(self, network_name, neutron_client):
+        nets = neutron_client.list_networks()
+
+        for net in nets['networks']:
+            if net['name'] == network_name:
+                return [{'net-id': net['id']}]
+
     def create_server(self,
                       nova_client,
                       name,
                       key_name,
                       security_groups,
                       management_network_name,
+                      nics,
                       timeout=300):
         server = {
             'name': name,
             'image': self.env.ubuntu_trusty_image_id,
             'flavor': self.env.small_flavor_id,
             'key_name': key_name,
-            'security_groups': security_groups
+            'security_groups': security_groups,
+            'nics': nics
         }
         srv = nova_client.servers.create(**server)
         end = time.time() + timeout
