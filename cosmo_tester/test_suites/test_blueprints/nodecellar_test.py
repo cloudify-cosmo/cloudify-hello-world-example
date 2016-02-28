@@ -32,14 +32,15 @@ class NodecellarAppTest(MonitoringTestCase):
 
         self.modify_blueprint()
 
-        before, after = self.upload_deploy_and_execute_install(
+        before, after = self.install(
             inputs=self.get_inputs(),
             execute_timeout=execute_timeout
         )
 
         self.post_install_assertions(before, after)
 
-        self.execute_uninstall()
+        self.execute_uninstall(deployment_id=self.test_id,
+                               delete_deployment_and_blueprint=True)
 
         self.post_uninstall_assertions()
 
