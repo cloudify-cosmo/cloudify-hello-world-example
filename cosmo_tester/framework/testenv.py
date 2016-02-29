@@ -321,10 +321,12 @@ class TestCase(unittest.TestCase):
         self.logger.setLevel(logging.INFO)
         self.logger.info('Starting test setUp')
         self.workdir = tempfile.mkdtemp(prefix='cosmo-test-')
+        management_user = getattr(self.env, 'management_user_name', None)
+        management_key_path = getattr(self.env, 'management_key_path', None)
         self.cfy = CfyHelper(cfy_workdir=self.workdir,
                              management_ip=self.env.management_ip,
-                             management_user=self.env.management_user_name,
-                             management_key=self.env.management_key_path)
+                             management_user=management_user,
+                             management_key=management_key_path)
         self.client = self.env.rest_client
         self.test_id = 'system-test-{0}-{1}'.format(
             self._testMethodName,
