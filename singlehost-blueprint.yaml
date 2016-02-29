@@ -22,6 +22,10 @@ inputs:
     description: >
       The HTTP web server port.
     default: 8080
+  diamond_reporting_interval:
+    description: interval in seconds for reporting metrics by diamond agent
+    type: integer
+    default: 10
 
 node_templates:
   vm:
@@ -43,7 +47,7 @@ node_templates:
           implementation: diamond.diamond_agent.tasks.install
           inputs:
             diamond_config:
-              interval: 1
+              interval: { get_input: diamond_reporting_interval }
         start: diamond.diamond_agent.tasks.start
         stop: diamond.diamond_agent.tasks.stop
         uninstall: diamond.diamond_agent.tasks.uninstall
