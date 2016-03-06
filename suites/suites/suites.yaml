@@ -860,8 +860,8 @@ test_suites:
     tests:
       - psutil_plugin
 
-  openstack_windows_cli_package:
-    requires: [openstack, datacentred]
+  ec2_windows_cli_package:
+    requires: aws_ec2
     tests:
       - cli_packager_windows
 
