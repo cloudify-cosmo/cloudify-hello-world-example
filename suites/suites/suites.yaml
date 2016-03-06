@@ -861,7 +861,7 @@ test_suites:
       - psutil_plugin
 
   ec2_windows_cli_package:
-    requires: aws_ec2
+    handler_configuration: aws_ec2
     tests:
       - cli_packager_windows
 
