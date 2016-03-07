@@ -23,7 +23,6 @@ from cloudify_rest_client import CloudifyClient
 from cosmo_tester.framework.testenv import TestCase
 from cosmo_tester.resources import blueprints
 from cosmo_tester.framework import util
-from cosmo_tester.framework.cfy_helper import cfy as cli
 
 
 class BaseManagerRecoveryTest(TestCase):
@@ -115,13 +114,14 @@ class BaseManagerRecoveryTest(TestCase):
         # this will verify that the private ip of the manager remained
         # the same. this will also test that the workflows worker is still
         # responding to tasks.
-        cli.executions.start(
-            workflow='execute_operation',
+
+        self.cfy.execute_workflow(
+            'execute_operation',
+            self.deployment_id,
             parameters={
                 'operation': 'cloudify.interfaces.greet.hello'
-            },
-            deployment_id=self.deployment_id
-        ).wait()
+            }
+        )
 
         # there is only one node instance in the blueprint
         node_instance = self.client.node_instances.list()[0]
