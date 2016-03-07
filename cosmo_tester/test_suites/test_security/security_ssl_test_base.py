@@ -54,7 +54,7 @@ class SSLTestBase(SecurityTestBase):
             self.env.management_ip = None
         self.addCleanup(clean_mgmt_ip)
 
-    def get_ssl_enabled(self):
+    def is_ssl_enabled(self):
         return True
 
     def get_cert_path(self):

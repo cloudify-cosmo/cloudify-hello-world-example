@@ -36,7 +36,7 @@ class SecurityTestBase(TestCase):
 
     def setup_secured_manager(self):
         self._copy_manager_blueprint()
-        if self.get_ssl_enabled():
+        if self.is_ssl_enabled():
             self._handle_ssl_files()
         if self.get_file_userstore_enabled():
             self._update_userstore_file()
@@ -61,13 +61,7 @@ class SecurityTestBase(TestCase):
         pass
 
     def get_security_settings(self):
-        settings = {
-            '{0}.enabled'.format(SECURITY_PROP_PATH): self.get_enabled(),
-            '{0}.admin_username'.format(SECURITY_PROP_PATH):
-                self.TEST_CFY_USERNAME,
-            '{0}.admin_password'.format(SECURITY_PROP_PATH):
-                self.TEST_CFY_PASSWORD
-        }
+        settings = {}
 
         authentication_providers = self.get_authentication_providers()
         if authentication_providers:
@@ -93,14 +87,17 @@ class SecurityTestBase(TestCase):
                 '{0}.auth_token_generator'.format(SECURITY_PROP_PATH)] = \
                 auth_token_generator
 
-        settings[
-            '{0}.ssl'.format(SECURITY_PROP_PATH)] = {
-            constants.SSL_ENABLED_PROPERTY_NAME: self.get_ssl_enabled(),
-        }
-
         return settings
 
-    def get_enabled(self):
+    def get_manager_blueprint_inputs_override(self):
+        return {
+            'security_enabled': self.is_security_enabled(),
+            'ssl_enabled': self.is_ssl_enabled(),
+            'admin_username': self.TEST_CFY_USERNAME,
+            'admin_password': self.TEST_CFY_PASSWORD
+        }
+
+    def is_security_enabled(self):
         return True
 
     def get_userstore_driver(self):
@@ -115,7 +112,7 @@ class SecurityTestBase(TestCase):
     def get_auth_token_generator(self):
         return None
 
-    def get_ssl_enabled(self):
+    def is_ssl_enabled(self):
         return False
 
     def get_rest_plugins(self):
@@ -136,6 +133,11 @@ class SecurityTestBase(TestCase):
 
         props = self.get_manager_blueprint_additional_props_override()
         with util.YamlPatcher(self.test_manager_blueprint_path) as patch:
+            for key, value in props.items():
+                patch.set_value(key, value)
+
+        props = self.get_manager_blueprint_inputs_override()
+        with util.YamlPatcher(self.test_inputs_path) as patch:
             for key, value in props.items():
                 patch.set_value(key, value)
 
@@ -193,12 +195,12 @@ class SecurityTestBase(TestCase):
             host=self.env.management_ip,
             headers=util.get_auth_header(username=self.TEST_CFY_USERNAME,
                                          password=self.TEST_CFY_PASSWORD))
+        self.env.rest_client = self.client
 
     def _running_env_setup(self):
 
         def clear_mgmt_and_security_settings():
             self.env.management_ip = None
-            self.env.rest_client = None
             self._unset_credentials_env_vars()
         self.addCleanup(clear_mgmt_and_security_settings)
         self.env.management_ip = self.cfy.get_management_ip()
