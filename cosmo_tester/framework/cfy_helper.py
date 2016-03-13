@@ -30,6 +30,7 @@ from cosmo_tester.framework.util import sh_bake, YamlPatcher
 
 
 cfy = sh_bake(sh.cfy)
+cfy_out = sh.cfy
 
 
 DEFAULT_EXECUTE_TIMEOUT = 1800
@@ -217,6 +218,15 @@ class CfyHelper(object):
     def list_executions(self, verbose=False):
         with self.workdir:
             cfy.executions.list(verbose=verbose).wait()
+
+    def list_events(self, execution_id, verbosity='', include_logs=True):
+        with self.workdir:
+            command = cfy_out.events.list.bake(
+                execution_id=execution_id,
+                include_logs=include_logs)
+            if verbosity:
+                command = command.bake(verbosity)
+            return command().stdout.strip()
 
     def get_blueprint(self, blueprint_id, verbose=False):
         with self.workdir:
