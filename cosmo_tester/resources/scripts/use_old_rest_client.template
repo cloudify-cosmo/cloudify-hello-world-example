@@ -7,8 +7,8 @@ def run_test():
     try:
         rest_client = CloudifyClient(host="{0}".format('{{ cfy_manager_ip }}'))
         rest_client_url = rest_client._client.url
-        expected_rest_client_url = "http://{0}:80".format(
-            '{{ cfy_manager_ip }}')
+        expected_rest_client_url = "http://{0}:80{1}".format(
+            '{{ cfy_manager_ip }}', '{{ url_version_postfix }}')
         if rest_client_url == expected_rest_client_url:
             status = rest_client.manager.get_status()
             output["exit_code"] = 0
