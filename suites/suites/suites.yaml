@@ -28,6 +28,7 @@ variables:
   datacentred_openstack_centos_7_image_name: CentOS 7.0
   datacentred_openstack_centos_7_image_id: 74ff4015-aee1-4e02-aaa8-1c77b2650394
   datacentred_openstack_windows_image_name: Windows Server 2012 R2 Standard
+  datacentred_openstack_windows_image_id: 07a93cc5-b3f1-499b-a7f2-ab420526ae1f
 
   rhel_7_image_user: ec2-user
   aws_ec2_eu_central_1_ami_ubuntu_trusty_image_id: ami-00dae61d
@@ -212,7 +213,7 @@ templates:
 
   - &host_pool_plugin_external
     repo: cloudify-host-pool-plugin
-    branch: '1.3.1'
+    branch: '1.4'
 
   - &aws_ec2_plugin_external
     repo: cloudify-aws-plugin
@@ -327,6 +328,7 @@ handler_properties:
     centos_7_image_id: '{{datacentred_openstack_centos_7_image_id}}'
     centos_7_image_user: centos
     windows_image_name: '{{datacentred_openstack_windows_image_name}}'
+    windows_image_id: '{{datacentred_openstack_windows_image_id}}'
     flavor_name: dc1.2x2.40
     small_flavor_id: c4b193d2-f331-4250-9b15-bbfde97c462a
     medium_flavor_id: 8f4b7ae1-b8c2-431f-bb0c-362a5ece0381

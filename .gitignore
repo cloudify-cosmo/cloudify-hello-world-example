@@ -57,3 +57,6 @@ system_tests_controller_venv/
 .qbcache/
 out/
 suite-envs/
+
+# OS generated files
+.DS_Store
