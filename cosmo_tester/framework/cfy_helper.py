@@ -344,6 +344,14 @@ class CfyHelper(object):
         with self.workdir:
             cfy.logs.backup(verbose=True).wait()
 
+    def ssh_list(self):
+        with self.workdir:
+            return sh.cfy.ssh(list=True)
+
+    def ssh_run_command(self, command):
+        with self.workdir:
+            return sh.cfy.ssh(command=command)
+
     def install_plugins_locally(self, blueprint_path):
         cfy.local(
             'install-plugins',
