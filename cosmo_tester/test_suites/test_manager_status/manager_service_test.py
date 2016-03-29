@@ -12,15 +12,19 @@
 #    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
-import urllib
-import time
-import tempfile
+
 import os
+import time
+import json
+import urllib
 import tarfile
+import tempfile
 from contextlib import closing
 
-import fabric.api
 import sh
+import fabric.api
+from fabric.api import run, sudo
+from fabric.contrib.files import sed
 
 from cosmo_tester.framework.testenv import TestCase
 from cosmo_tester.framework.util import get_actual_keypath
@@ -40,7 +44,7 @@ class RebootManagerTest(TestCase):
 
     def _reboot_server(self):
         self._update_fabric_env()
-        return fabric.api.run('sudo shutdown -r +1')
+        return run('sudo shutdown -r +1')
 
     def _get_undefined_services(self):
         return [each['display_name']
@@ -157,13 +161,13 @@ class RebootManagerTest(TestCase):
 
         self.logger.info('Testing `cfy logs backup`')
         self.cfy.backup_logs()
-        self.assertTrue(fabric.api.sudo(
-            'tar -xzvf /var/log/cloudify-manager-logs_*').succeeded)
+        self.assertTrue(
+            sudo('tar -xzvf /var/log/cloudify-manager-logs_*').succeeded)
         self.logger.info('Success!')
 
         self.logger.info('Testing `cfy logs purge`')
         self.cfy.purge_logs()
-        self.assertTrue(fabric.api.run(
+        self.assertTrue(run(
             '[ ! -s /var/log/cloudify/nginx/cloudify.access.log ]',).succeeded)
         self.logger.info('Success!')
 
@@ -176,12 +180,12 @@ class RebootManagerTest(TestCase):
             self.assertIn('tmux executable not found on Manager', str(ex))
 
         self.logger.info('Installing tmux...')
-        fabric.api.sudo('yum install tmux -y')
+        sudo('yum install tmux -y')
 
         self.logger.info('Test listing sessions when non are available..')
         output = self.cfy.ssh_list().stdout.splitlines()[-1]
         self.assertIn('No sessions are available.', output)
-        fabric.api.sudo('yum remove tmux -y')
+        sudo('yum remove tmux -y')
 
         self.logger.info('Test running ssh command...')
         self.cfy.ssh_run_command('echo yay! > /tmp/ssh_test_output_file')
@@ -196,4 +200,50 @@ class RebootManagerTest(TestCase):
                 self.assertEqual(f.read().rstrip('\n\r'), desired_content)
         finally:
             os.remove(temp_file)
-        fabric.api.run('rm {0}'.format(remote_path))
+        run('rm {0}'.format(remote_path))
+
+    def test_no_es_clustering(self):
+        """Tests that when bootstrapping we don't cluster two elasticsearch
+        nodes.
+
+        This test mainly covers the use case where a user bootstraps two
+        managers on the same network.
+
+        The test runs two nodes on the same machine. If they're not clustered,
+        two nodes on different servers will definitely not be clustered.
+        """
+        self._update_fabric_env()
+
+        self.logger.info('Duplicating elasticsearch config...')
+        sudo('mkdir /etc/es_test')
+        sudo('cp /etc/elasticsearch/elasticsearch.yml /etc/es_test/es.yml')
+
+        self.logger.info('Replacing ES REST port for second node...')
+        sed('/etc/es_test/es.yml', 'http.port: 9200', 'http.port: 9201',
+            use_sudo=True)
+        self.logger.info('Running second node...')
+        es_cmd = "/usr/share/elasticsearch/bin/elasticsearch \
+            -Des.pidfile='/var/run/elasticsearch/es_test.pid' \
+            -Des.default.path.home='/usr/share/elasticsearch' \
+            -Des.default.path.logs='/var/log/elasticsearch' \
+            -Des.default.path.data='/var/lib/elasticsearch' \
+            -Des.default.config='/etc/es_test/es.yml' \
+            -Des.default.path.conf='/etc/es_test'"
+        sudo('nohup {0} >& /dev/null < /dev/null &'.format(es_cmd),
+             pty=False)
+        # this is a good approximation of how much
+        # time it will take to load the node.
+        time.sleep(20)
+
+        node1_url = 'http://localhost:9200/_nodes'
+        node2_url = 'http://localhost:9201/_nodes'
+
+        def get_node_count(url):
+            # in case the node has not be loaded yet, this will retry.
+            curl_nodes = 'curl --retry 10 --show-error {0}'.format(url)
+            return len(json.loads(run(curl_nodes).stdout)['nodes'])
+
+        self.logger.info(
+            'Verifying that both nodes are running but not clustered...')
+        self.assertEqual(get_node_count(node1_url), 1)
+        self.assertEqual(get_node_count(node2_url), 1)
