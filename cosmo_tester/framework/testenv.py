@@ -281,7 +281,8 @@ class TestCase(unittest.TestCase):
             self,
             deployment_id=None,
             include_system_workflows=False,
-            verify_no_failed_execution=False):
+            verify_no_failed_execution=False,
+            end_status_list=Execution.END_STATES):
         if deployment_id:
             msg = "Waiting for executions on " \
                   "deployment {0} to finish".format(deployment_id)
@@ -295,7 +296,7 @@ class TestCase(unittest.TestCase):
         while len([execution for execution in self.client.executions.list(
                 deployment_id=deployment_id,
                 include_system_workflows=include_system_workflows)
-                if execution["status"] not in Execution.END_STATES]) > 0:
+                if execution["status"] not in end_status_list]) > 0:
             time.sleep(1)
             if start_time - time.time() > DEFAULT_EXECUTE_TIMEOUT:
                 if deployment_id:
