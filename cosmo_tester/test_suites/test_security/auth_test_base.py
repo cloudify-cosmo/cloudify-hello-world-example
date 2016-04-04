@@ -112,7 +112,9 @@ class BaseAuthTest(security_test_base.SecurityTestBase):
         self.cfy.upload_blueprint(blueprint_id, self.blueprint_path)
         for deployment_id in deployment_ids:
             self.cfy.create_deployment(blueprint_id, deployment_id)
-            self.wait_until_all_deployment_executions_end(deployment_id)
+            self.wait_until_all_deployment_executions_end(
+                deployment_id=deployment_id,
+                verify_no_failed_execution=True)
 
         # test
         self._assert_start_execution(deployment_ids)

@@ -280,7 +280,8 @@ class TestCase(unittest.TestCase):
     def wait_until_all_deployment_executions_end(
             self,
             deployment_id=None,
-            include_system_workflows=False):
+            include_system_workflows=False,
+            verify_no_failed_execution=False):
         if deployment_id:
             msg = "Waiting for executions on " \
                   "deployment {0} to finish".format(deployment_id)
@@ -305,6 +306,19 @@ class TestCase(unittest.TestCase):
                     timeout_msg = "Timeout while waiting for " \
                                   "system wide executions to end."
                 raise Exception(timeout_msg)
+
+        if verify_no_failed_execution:
+            executions = [e for e in self.client.executions.list(
+                          deployment_id=deployment_id,
+                          include_system_workflows=include_system_workflows)
+                          if e["status"] == Execution.FAILED]
+            if executions:
+                self.logger.error('Failed executions found.')
+            for e in executions:
+                self.logger.error('Execution {0} logs:'.format(e.id))
+                self.logger.error(self.cfy.list_events(
+                    execution_id=e.id, verbosity='-vv'))
+
         return
 
     def assert_outputs(self, expected_outputs, deployment_id=None):
