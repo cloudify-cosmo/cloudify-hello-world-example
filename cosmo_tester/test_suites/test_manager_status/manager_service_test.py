@@ -24,7 +24,7 @@ from contextlib import closing
 import sh
 import fabric.api
 from fabric.api import run, sudo
-from fabric.contrib.files import sed
+from fabric.contrib.files import exists, sed
 
 from cosmo_tester.framework.testenv import TestCase
 from cosmo_tester.framework.util import get_actual_keypath
@@ -202,7 +202,7 @@ class RebootManagerTest(TestCase):
             os.remove(temp_file)
         run('rm {0}'.format(remote_path))
 
-    def test_no_es_clustering(self):
+    def test_05_no_es_clustering(self):
         """Tests that when bootstrapping we don't cluster two elasticsearch
         nodes.
 
@@ -247,3 +247,56 @@ class RebootManagerTest(TestCase):
             'Verifying that both nodes are running but not clustered...')
         self.assertEqual(get_node_count(node1_url), 1)
         self.assertEqual(get_node_count(node2_url), 1)
+
+    def test_06_logrotation(self):
+        """Tests logrotation configuration on the manager.
+
+        This goes over some of the logs but for each of services
+        and performs logrotation based on the manager blueprint's provided
+        logrotate configuration. It then validates that logrotation occurs.
+        """
+        self._update_fabric_env()
+        logs_dir = '/var/log/cloudify'
+        test_log_files = [
+            'elasticsearch/elasticsearch.log',
+            'influxdb/log.txt',
+            'mgmtworker/logs/test.log',
+            'rabbitmq/rabbit@cloudifyman.log',
+            'rest/cloudify-rest-service.log',
+            'logstash/logstash.log',
+            'nginx/cloudify.access.log',
+            'riemann/riemann.log',
+            'webui/backend.log'
+        ]
+        # the mgmtworker doesn't create a log file upon loading so we're
+        # generating one for him.
+        sudo('touch /var/log/cloudify/mgmtworker/logs/test.log')
+
+        self.logger.info('Cancelling date suffix on rotation...')
+        sed('/etc/logrotate.conf', 'dateext', '#dateext', use_sudo=True)
+        for rotation in range(1, 9):
+            for log_file in test_log_files:
+                full_log_path = os.path.join(logs_dir, log_file)
+                self.logger.info('fallocating 101M in {0}...'.format(
+                    full_log_path))
+                sudo('fallocate -l 101M {0}'.format(full_log_path))
+                self.logger.info('Running cron.hourly to apply rotation...')
+                sudo('run-parts /etc/cron.hourly')
+                rotated_log_path = full_log_path + '.{0}'.format(rotation)
+                compressed_log_path = rotated_log_path + '.gz'
+                with fabric.api.settings(warn_only=True):
+                    if rotation == 8:
+                        self.logger.info(
+                            'Verifying overshot rotation did not occur: {0}...'
+                            .format(compressed_log_path))
+                        self.assertFalse(exists(compressed_log_path))
+                    elif rotation == 1:
+                        self.logger.info(
+                            'Verifying rotated log exists: {0}...'.format(
+                                rotated_log_path))
+                        self.assertTrue(exists(rotated_log_path))
+                    else:
+                        self.logger.info(
+                            'Verifying compressed log exists: {0}...'.format(
+                                compressed_log_path))
+                        self.assertTrue(exists(compressed_log_path))
