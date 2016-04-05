@@ -300,3 +300,31 @@ class RebootManagerTest(TestCase):
                             'Verifying compressed log exists: {0}...'.format(
                                 compressed_log_path))
                         self.assertTrue(exists(compressed_log_path))
+
+    def test_07_rabbitmq_policies(self):
+        """Tests that rabbitmq policies are set accordingly.
+
+        The order of the policies matter. We create them according to a certain
+        order in the manager blueprint and that it is the order in which they
+        are tested. If we change the order in the policy creation mechanism, we
+        need to note that in the test to verify that they are kept in order.
+        """
+        self._update_fabric_env()
+        default_policy = r'{"message-ttl":\d+,"max-length":\d+}'
+        policies = sudo('rabbitmqctl list_policies').stdout.split('\n')[1:]
+
+        self.logger.info('Verifying pattern in {0}...'.format(policies[0]))
+        self.assertIn('^cloudify-events$', policies[0])
+        self.assertRegexpMatches(policies[0], default_policy)
+
+        self.logger.info('Verifying pattern in {0}...'.format(policies[1]))
+        self.assertIn('^cloudify-logs$', policies[1])
+        self.assertRegexpMatches(policies[1], default_policy)
+
+        self.logger.info('Verifying pattern in {0}...'.format(policies[2]))
+        self.assertIn('^amq\\\\.gen.*$', policies[2])
+        self.assertRegexpMatches(policies[2], default_policy)
+
+        self.logger.info('Verifying pattern in {0}...'.format(policies[3]))
+        self.assertIn('^.*-riemann$', policies[3])
+        self.assertRegexpMatches(policies[3], default_policy)
