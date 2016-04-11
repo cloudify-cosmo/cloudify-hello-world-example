@@ -19,6 +19,7 @@ from StringIO import StringIO
 import requests
 
 from cosmo_tester.framework.git_helper import clone
+from cosmo_tester.framework.util import YamlPatcher
 from cosmo_tester.test_suites.test_blueprints.nodecellar_test import (
     OpenStackNodeCellarTestBase)
 
@@ -30,6 +31,8 @@ class OpenStackScaleNodeCellarTest(OpenStackNodeCellarTestBase):
         self.repo_dir = clone(self.repo_url, self.workdir)
         self.blueprint_yaml = self.repo_dir / blueprint_file
 
+        self.modify_blueprint()
+
         # install
         before_install, after_install = self.upload_deploy_and_execute_install(
             inputs=self.get_inputs())
@@ -37,10 +40,10 @@ class OpenStackScaleNodeCellarTest(OpenStackNodeCellarTestBase):
 
         # scale out (+1)
         self._scale(delta=1)
-        self.post_scale_assertions(expected_instances=3)
+        self.post_scale_assertions(expected_instances=2)
 
-        # scale in (-2)
-        self._scale(delta=-2)
+        # scale in (-1)
+        self._scale(delta=-1)
         self.post_scale_assertions(expected_instances=1)
 
         # uninstall
@@ -69,7 +72,7 @@ class OpenStackScaleNodeCellarTest(OpenStackNodeCellarTestBase):
 
     @property
     def expected_nodes_count(self):
-        return self._expected_node_instances_count(nodejs_instances=2)
+        return self._expected_node_instances_count(nodejs_instances=1)
 
     def _expected_node_instances_count(self, nodejs_instances):
         # 8 1 instance nodes + (nodecellar contained in nodejs
@@ -93,7 +96,7 @@ class OpenStackScaleNodeCellarTest(OpenStackNodeCellarTestBase):
     def assert_nodecellar_working(self, public_ip,
                                   # initial invocation is made
                                   # at the end of post_install_assertions
-                                  expected_number_of_backends=2):
+                                  expected_number_of_backends=1):
         initial_stats = self._read_haproxy_stats()
         number_of_backends = len(initial_stats)
         self.assertEqual(expected_number_of_backends, number_of_backends)
@@ -118,3 +121,7 @@ class OpenStackScaleNodeCellarTest(OpenStackNodeCellarTestBase):
                      for struct in structured_csv_data
                      if struct['# pxname'] == 'servers' and
                      struct['svname'] != 'BACKEND'])
+
+    def modify_blueprint(self):
+        with YamlPatcher(self.blueprint_yaml) as patch:
+            patch.set_value('node_templates.nodejs_host.instances.deploy', 1)
