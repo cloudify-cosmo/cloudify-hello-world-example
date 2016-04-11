@@ -243,6 +243,12 @@ class NodecellarAppTest(MonitoringTestCase):
 class OpenStackNodeCellarTestBase(NodecellarAppTest):
 
     def _test_openstack_nodecellar(self, blueprint_file):
+
+        self.addCleanup(self.execute_uninstall, deployment_id=self.test_id,
+                        delete_deployment_and_blueprint=True)
+        self.addCleanup(self.env.handler.remove_keypairs_from_manager,
+                        deployment_id=self.test_id)
+
         self._test_nodecellar_impl(blueprint_file)
 
     def get_inputs(self):

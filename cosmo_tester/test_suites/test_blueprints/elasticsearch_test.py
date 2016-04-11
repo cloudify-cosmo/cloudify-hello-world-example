@@ -79,6 +79,7 @@ class ElasticsearchTimestampFormatTest(TestCase):
         super(ElasticsearchTimestampFormatTest, self).setUp()
         # addCleanup is always called, tearDown is not called
         # if setUp fails
+        self.elasticsearch_rule = None
         self.addCleanup(self._delete_elasticsearch_rule)
         self._create_elasticsearch_rule()
 
