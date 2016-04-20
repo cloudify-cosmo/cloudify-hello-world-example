@@ -44,9 +44,11 @@ class DeploymentResourceTest(TestCase):
         with self.manager_env_fabric() as api:
             api.sudo('mkdir -p {0}/resources'.format(
                 deployment_folder_on_manager))
-            api.sudo('echo -n "{0}" > {1}/{2}'.format(RESOURCE_CONTENT,
-                                                      deployment_id,
-                                                      RESOURCE_PATH))
+            api.sudo('echo -n "{0}" > {1}/{2}/{3}'.format(
+                RESOURCE_CONTENT,
+                deployment_folder_on_manager,
+                deployment_id,
+                RESOURCE_PATH))
         self.execute_install(deployment_id, fetch_state=False)
         node_instance = self.client.node_instances.list(
             deployment_id=deployment_id)[0]
