@@ -78,17 +78,13 @@ class ExistingVMTest(TestCase):
         self.logger.info('Uninstalling deployment...')
         self.execute_uninstall()
 
-    def delete_keypair(self, nova_client, keypair):
-        self.logger.info('Deleting keypair: {0}'.format(keypair))
-        nova_client.keypairs.delete(keypair)
-
     def create_keypair_and_copy_to_manager(self,
                                            nova_client,
                                            remote_key_path,
                                            key_name):
         key_file = path(self.workdir) / '{}.pem'.format(key_name)
+        self.addCleanup(self.env.handler.remove_keypair, key_name)
         keypair = nova_client.keypairs.create(key_name)
-        self.addCleanup(self.delete_keypair, nova_client, keypair)
 
         key_file.write_text(keypair.private_key)
         key_file.chmod(0600)

@@ -21,8 +21,7 @@ import fabric.contrib.files
 
 from cosmo_tester.framework.testenv import TestCase
 from cosmo_tester.framework.util import (
-    YamlPatcher,
-    get_actual_keypath
+    YamlPatcher
 )
 
 PRIVATE_KEY_PATH = '/tmp/home/neutron-test.pem'
@@ -42,6 +41,8 @@ class NeutronGaloreTest(TestCase):
             'private_key_path': PRIVATE_KEY_PATH,
         }
 
+        self.addCleanup(self.env.handler.remove_keypairs_from_manager)
+        self.addCleanup(self._remove_private_key)
         before, after = self.upload_deploy_and_execute_install(inputs=inputs)
 
         node_states = self.get_delta_node_states(before, after)
@@ -49,7 +50,6 @@ class NeutronGaloreTest(TestCase):
         self.repetitive(self.post_install_assertions,
                         timeout=300,
                         args=[node_states])
-
         self._test_use_external_resource(inputs=inputs)
 
         self.execute_uninstall()
@@ -395,18 +395,12 @@ class NeutronGaloreTest(TestCase):
                   .format(router_id, subnet_id))
 
     def _check_if_private_key_is_on_manager(self):
-
         path_to_check = PRIVATE_KEY_PATH
 
-        manager_key_path = get_actual_keypath(
-            self.env, self.env.management_key_path)
+        with self.manager_env_fabric(timeout=30):
+            return fabric.contrib.files.exists(path_to_check)
 
-        fabric_env = fabric.api.env
-        fabric_env.update({
-            'timeout': 30,
-            'user': self.env.management_user_name,
-            'key_filename': manager_key_path,
-            'host_string': self.env.management_ip
-        })
-
-        return fabric.contrib.files.exists(path_to_check)
+    def _remove_private_key(self):
+        with self.manager_env_fabric(timeout=30) as fabric_api:
+            fabric_api.sudo('test -f {0} && rm {0} || true'.format(
+                PRIVATE_KEY_PATH))

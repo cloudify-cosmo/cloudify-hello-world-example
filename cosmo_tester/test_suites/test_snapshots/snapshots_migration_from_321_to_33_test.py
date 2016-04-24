@@ -203,14 +203,13 @@ class HelloWorldSnapshotMigrationFrom_3_2_1_To_3_3_Test(TestCase):
                 {'dns_nameservers': ['8.8.4.4', '8.8.8.8']}
             )
 
+        self.addCleanup(self._teardown_manager_3_3)
         self.cfy.bootstrap(
             blueprint_path,
             os.path.join(self.workdir, NEW_MANAGER_INPUTS_NAME),
         )
 
         self.client = create_rest_client(self.cfy.get_management_ip())
-
-        self.addCleanup(self._teardown_manager_3_3)
 
         self._run_code_on_manager_3_3('sudo yum install -y gcc python-devel')
 
@@ -329,14 +328,13 @@ class HelloWorldSnapshotMigrationFrom_3_2_1_To_3_3_Test(TestCase):
             BOOTSTRAP_SCRIPT_NAME
         )
 
+        self.addCleanup(self._teardown_manager_3_2_1)
         rc = self._run_script(BOOTSTRAP_SCRIPT_NAME)
         if rc:
             self.fail(
                 'Bootstrapping manager 3.2.1 failed with exit code: {0}'
                 .format(rc)
             )
-
-        self.addCleanup(self._teardown_manager_3_2_1)
 
     def _teardown_manager_3_2_1(self):
         self.logger.info('Tearing down manager 3.2.1')

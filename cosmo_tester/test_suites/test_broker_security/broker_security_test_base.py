@@ -76,23 +76,22 @@ class BrokerSecurityTestBase(TestCase):
         return {}
 
     def _bootstrap(self):
+        self.addCleanup(self.cfy.teardown)
         self.cfy.bootstrap(blueprint_path=self.test_manager_blueprint_path,
                            inputs_file=self.test_inputs_path,
                            task_retries=5,
                            install_plugins=self.env.install_plugins)
-        self.addCleanup(self.cfy.teardown)
 
     def set_rest_client(self):
         self.client = CloudifyClient(
             host=self.env.management_ip)
 
     def _running_env_setup(self):
-        self.env.management_ip = self.cfy.get_management_ip()
-        self.set_rest_client()
-
         def clean_mgmt_ip():
             self.env.management_ip = None
         self.addCleanup(clean_mgmt_ip)
+        self.env.management_ip = self.cfy.get_management_ip()
+        self.set_rest_client()
 
         response = self.client.manager.get_status()
         if not response['status'] == 'running':

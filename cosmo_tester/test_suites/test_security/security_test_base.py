@@ -170,11 +170,11 @@ class SecurityTestBase(TestCase):
         return overrides
 
     def _bootstrap(self):
+        self.addCleanup(self.cfy.teardown)
         self.cfy.bootstrap(blueprint_path=self.test_manager_blueprint_path,
                            inputs_file=self.test_inputs_path,
                            task_retries=5,
                            install_plugins=self.env.install_plugins)
-        self.addCleanup(self.cfy.teardown)
 
     def _set_credentials_env_vars(self):
         os.environ[constants.CLOUDIFY_USERNAME_ENV] = self.TEST_CFY_USERNAME
@@ -191,14 +191,14 @@ class SecurityTestBase(TestCase):
                                          password=self.TEST_CFY_PASSWORD))
 
     def _running_env_setup(self):
-        self.env.management_ip = self.cfy.get_management_ip()
-        self.set_rest_client()
 
         def clear_mgmt_and_security_settings():
             self.env.management_ip = None
             self.env.rest_client = None
             self._unset_credentials_env_vars()
         self.addCleanup(clear_mgmt_and_security_settings)
+        self.env.management_ip = self.cfy.get_management_ip()
+        self.set_rest_client()
 
         response = self.client.manager.get_status()
         if not response['status'] == 'running':

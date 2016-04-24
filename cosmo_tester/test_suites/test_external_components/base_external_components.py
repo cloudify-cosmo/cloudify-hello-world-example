@@ -34,6 +34,10 @@ class BaseExternalComponentsTest(AbstractHelloWorldTest,
             name=self._testMethodName,
             ignored_modules=cli_constants.IGNORED_LOCAL_WORKFLOW_MODULES)
 
+        self.addCleanup(self.env.handler.remove_keypairs_from_local_env,
+                        self.ext_local_env)
+        self.addCleanup(self.cleanup_ext)
+
         self.logger.info('starting vm to serve as the management vm')
         self.ext_local_env.execute('install',
                                    task_retries=10,
@@ -44,7 +48,6 @@ class BaseExternalComponentsTest(AbstractHelloWorldTest,
         self.external_components_private_ip = \
             self.ext_local_env.outputs()[
                 'external_components_vm_private_ip_address']
-        self.addCleanup(self.cleanup_ext)
 
     def cleanup_ext(self):
         self.ext_local_env.execute('uninstall',
