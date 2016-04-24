@@ -63,7 +63,7 @@ class DeploymentResourceTest(TestCase):
         self.assertEquals(RESOURCE_CONTENT, get_resource)
         self.assertEquals(RESOURCE_CONTENT, download_resource)
 
-        self.client.deployments.delete(deployment_id)
+        self.client.deployments.delete(deployment_id, ignore_live_nodes=True)
         with self.manager_env_fabric():
             self.assertFalse(
                 contrib.files.exists(deployment_folder_on_manager))
