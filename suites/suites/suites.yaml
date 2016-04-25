@@ -30,6 +30,7 @@ variables:
   datacentred_openstack_windows_image_name: Windows Server 2012 R2 Standard
   datacentred_openstack_windows_image_id: 07a93cc5-b3f1-499b-a7f2-ab420526ae1f
 
+  ubuntu_image_user: ubuntu
   rhel_7_image_user: ec2-user
   aws_ec2_eu_central_1_ami_ubuntu_trusty_image_id: ami-00dae61d
   aws_ec2_eu_central_1_ami_centos_7_image_id: ami-e68f82fb
@@ -356,6 +357,7 @@ handler_properties:
     windows_server_2012_user: '{{aws_ec2_windows_user}}'
     medium_instance_type: '{{aws_ec2_medium_instance_type}}'
     micro_instance_type: '{{aws_ec2_micro_instance_type}}'
+    ubuntu_image_user:  '{{ubuntu_image_user}}'
     rhel_7_image_user: '{{rhel_7_image_user}}'
     availability_zone: '{{aws_ec2_eu_central_1b_availability_zone}}'
     ec2_domain_name: '{{aws_ec2_eu_central_1_domain_name}}'
@@ -737,6 +739,11 @@ tests:
     tests:
       - system_tests/test_rhel_bootstrap.py
 
+  cli_packager_debian:
+    external: *packager_external
+    tests:
+      - system_tests/test_ubuntu_bootstrap.py
+
   diamond_snmp_extension:
     external: *diamond_snmp_extension_external
     tests:
@@ -875,6 +882,11 @@ test_suites:
     handler_configuration: aws_ec2
     tests:
       - cli_packager_rhel
+
+  ec2_ubuntu_cli_package:
+    handler_configuration: aws_ec2
+    tests:
+      - cli_packager_debian
 
   agent:
     requires: [openstack, datacentred]
