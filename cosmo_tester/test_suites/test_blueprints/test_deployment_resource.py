@@ -15,7 +15,7 @@
 
 import uuid
 
-from fabric import contrib
+import fabric.contrib.files
 
 from cosmo_tester.framework.testenv import TestCase
 
@@ -66,4 +66,4 @@ class DeploymentResourceTest(TestCase):
         self.client.deployments.delete(deployment_id, ignore_live_nodes=True)
         with self.manager_env_fabric():
             self.assertFalse(
-                contrib.files.exists(deployment_folder_on_manager))
+                fabric.contrib.files.exists(deployment_folder_on_manager))
