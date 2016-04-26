@@ -82,8 +82,8 @@ class SuiteRunner(object):
             'cli_branch', self.branch_name_core)
         self.windows_cli_package_url = \
             self.variables['windows_cli_package_url']
-        self.centos_rhel_cli_package_url = \
-            self.variables['centos_rhel_cli_package_url']
+        self.rhel_centos_cli_package_url = \
+            self.variables['rhel_centos_cli_package_url']
         self.debian_cli_package_url = \
             self.variables['debian_cli_package_url']
         self.cloudify_automation_token = \
@@ -109,8 +109,8 @@ class SuiteRunner(object):
         os.environ['SUITES_YAML_PATH'] = self.generated_suites_yaml_path
         os.environ['BRANCH_NAME_CORE'] = self.branch_name_core
         os.environ['WINDOWS_CLI_PACKAGE_URL'] = self.windows_cli_package_url
-        os.environ['CENTOS_RHEL_CLI_PACKAGE_URL'] = \
-            self.centos_rhel_cli_package_url
+        os.environ['RHEL_CENTOS_CLI_PACKAGE_URL'] = \
+            self.rhel_centos_cli_package_url
         os.environ['DEBIAN_CLI_PACKAGE_URL'] = \
             self.debian_cli_package_url
         os.environ['CLOUDIFY_AUTOMATION_TOKEN'] = \

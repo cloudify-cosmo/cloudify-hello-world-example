@@ -69,7 +69,7 @@ variables:
   centos_package_agent_url: _
   docker_image_url: _
   windows_cli_package_url: _
-  centos_rhel_cli_package_url: _
+  rhel_centos_cli_package_url: _
 
   system_tests_lab_os_username: _
   system_tests_lab_os_password: _
