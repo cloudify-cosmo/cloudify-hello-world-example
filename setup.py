@@ -32,7 +32,7 @@ setup(
         'path.py>=8.1.2',
         'nose',
         'retrying==1.3.3',
-        'cloudify==3.4a4',
+        'cloudify==3.4a5',
         'elasticsearch',
         'Jinja2==2.7.2',
         'influxdb==0.1.13',
