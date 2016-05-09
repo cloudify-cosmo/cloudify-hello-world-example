@@ -362,11 +362,7 @@ class BaseAuthTest(security_test_base.SecurityTestBase):
 
         # ...but simple users should not
         self._login_cli(self.no_role_username, self.no_role_password)
-        # self._assert_unauthorized(self.cfy.list_executions)
-        # this is a temporary work around a bug in the cli: CFY-4339
-        out, err = self._execute_and_get_streams(self.cfy.list_executions)
-        self.assertIn('Deployment None does not exist', out)
-        self.assertEqual('', err)
+        self._assert_unauthorized(self.cfy.list_executions)
 
     def _assert_get_execution(self, execution_id):
 
