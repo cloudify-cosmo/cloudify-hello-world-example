@@ -56,7 +56,7 @@ class DownloadBlueprintTest(TestCase):
         self._extract_tar_file()
         downloaded_blueprint_file = os.path.join(
             self.download_path,
-            'mocks/single-node-blueprint.yaml')
+            'single-node-blueprint/single-node-blueprint.yaml')
         self.assertTrue(os.path.exists(downloaded_blueprint_file))
         self.assertTrue(filecmp.cmp(blueprint_yaml, downloaded_blueprint_file))
 
