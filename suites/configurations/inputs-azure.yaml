@@ -1,0 +1,24 @@
+subscription_id: ''
+tenant_id: ''
+client_id: ''
+client_secret: ''
+location: ''
+vm_size: ''
+vm_os_family: ''
+vm_image_publisher: ''
+vm_image_offer: ''
+vm_image_sku: ''
+vm_image_version: ''
+vm_os_username: ''
+vm_os_password: ''
+vm_os_pubkeys:
+    - path: '/home/centos/.ssh/authorized_keys'
+      keyData:
+        "ssh-rsa ..."
+agent_remote_key_path: '/home/centos/.ssh/agent_key.pem'
+agent_local_key_path: '~/.ssh/shared-systemt-tests-key.pem'
+ssh_key_filename: '~/.ssh/shared-systemt-tests-key.pem'
+ssh_user: centos
+resource_prefix: ''
+resource_suffix: ''
+retry_after: 30
