@@ -80,9 +80,11 @@ class OpenStackScaleNodeCellarTest(OpenStackNodeCellarTestBase):
         return 8 + 3 * nodejs_instances
 
     def _scale(self, delta):
-        self.cfy.execute_workflow('scale', self.test_id,
-                                  parameters=dict(node_id='nodecellar',
-                                                  delta=delta))
+        self.cfy.execute_workflow(
+            'scale', self.test_id,
+            parameters=dict(scalable_entity_name='nodecellar',
+                            delta=delta,
+                            scale_compute=True))
 
     def _test_cleanup(self):
         try:
