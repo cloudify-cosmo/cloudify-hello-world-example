@@ -14,19 +14,23 @@
 #    * limitations under the License.
 
 from contextlib import contextmanager
-import tempfile
-import shutil
-import json
 import os
+import json
+import shutil
 import logging
+import tempfile
 
 import sh
+import yaml
+import requests
 from path import path
 
 from cloudify_cli.utils import (load_cloudify_working_dir_settings,
                                 get_configuration_path,
                                 update_wd_settings)
-from cosmo_tester.framework.util import sh_bake, YamlPatcher
+from cosmo_tester.framework.util import (sh_bake,
+                                         YamlPatcher,
+                                         download_file)
 
 
 cfy = sh_bake(sh.cfy)
@@ -97,6 +101,38 @@ class CfyHelper(object):
                 task_retry_interval=task_retry_interval,
                 verbose=verbose,
                 debug=debug).wait()
+            self.upload_plugins()
+
+    def _download_wagons(self):
+        self.logger.info('Downloading Wagons...')
+
+        wagon_paths = []
+
+        plugin_urls_location = (
+            'https://raw.githubusercontent.com/cloudify-cosmo/'
+            'cloudify-versions/{branch}/plugin-urls.yaml'.format(
+                branch=os.environ.get('BRANCH_NAME_CORE', 'master'),
+            )
+        )
+
+        plugins = yaml.load(
+            requests.get(plugin_urls_location).text
+        )['plugins']
+        for plugin in plugins:
+            self.logger.info(
+                'Downloading: {0}...'.format(plugin['wgn_url'])
+            )
+            wagon_paths.append(
+                download_file(plugin['wgn_url'])
+            )
+        return wagon_paths
+
+    def upload_plugins(self):
+        downloaded_wagon_paths = self._download_wagons()
+        for wagon in downloaded_wagon_paths:
+            self.logger.info('Uploading {0}'.format(wagon))
+            upload = cfy.plugins.upload(p=wagon, verbose=True)
+            upload.wait()
 
     def recover(self, snapshot_path, task_retries=5):
         with self.workdir:
