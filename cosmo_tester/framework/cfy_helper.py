@@ -13,7 +13,7 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
-
+from contextlib import contextmanager
 import tempfile
 import shutil
 import json
@@ -385,3 +385,33 @@ class CfyHelper(object):
         return self._get_dict_in_temp_file(dictionary=parameters,
                                            prefix=parameters_prefix,
                                            suffix='-parameters.json')
+
+    def upgrade_manager(self, blueprint_path, inputs_file=None):
+        if not inputs_file:
+            inputs_file = self._get_inputs_in_temp_file({}, 'manager')
+        with self.workdir:
+            cfy.upgrade(
+                blueprint_path=blueprint_path,
+                inputs=inputs_file).wait()
+
+    def rollback_manager(self, blueprint_path, inputs_file=None):
+        if not inputs_file:
+            inputs_file = self._get_inputs_in_temp_file({}, 'manager')
+        with self.workdir:
+            cfy.rollback(
+                blueprint_path=blueprint_path,
+                inputs=inputs_file).wait()
+
+    def set_maintenance_mode(self, activate):
+        maintenance_handler = cfy.bake('maintenance-mode')
+        with self.workdir:
+            if activate:
+                maintenance_handler.activate(wait=True).wait()
+            else:
+                maintenance_handler.deactivate().wait()
+
+    @contextmanager
+    def maintenance_mode(self):
+        self.set_maintenance_mode(True)
+        yield
+        self.set_maintenance_mode(False)
