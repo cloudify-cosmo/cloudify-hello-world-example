@@ -1,0 +1,41 @@
+tosca_definitions_version: cloudify_dsl_1_3
+
+imports:
+    - http://www.getcloudify.org/spec/cloudify/3.4m5/types.yaml
+    - http://www.getcloudify.org/spec/openstack-plugin/1.3.1/plugin.yaml
+
+inputs:
+
+  image:
+    description: >
+      Image to be used when launching agent VM's
+
+  flavor:
+    description: >
+      Flavor of the agent VM's
+
+  agent_user:
+    description: >
+      User for connecting to agent VM's
+
+node_templates:
+
+    mock_vm:
+      type: cloudify.openstack.nodes.Server
+      properties:
+        cloudify_agent:
+          user: { get_input: agent_user }
+
+        image: { get_input: image }
+        flavor: { get_input: flavor }
+
+    mock_node:
+      type: cloudify.nodes.ApplicationServer
+      relationships:
+        - type: cloudify.relationships.contained_in
+          target: mock_vm
+      interfaces:
+        cloudify.interfaces.lifecycle:
+          create:
+            implementation: continous_retry.py
+            max_retries: -1
