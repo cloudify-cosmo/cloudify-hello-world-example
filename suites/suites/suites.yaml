@@ -658,6 +658,10 @@ tests:
     tests:
       - cosmo_tester/test_suites/test_manager_recovery
 
+  maintenance_mode:
+    tests:
+      - cosmo_tester/test_suites/test_manager_maintenance
+
   openstack_plugin:
     tests:
       - cosmo_tester/test_suites/test_openstack_plugin
@@ -791,6 +795,11 @@ test_suites:
     requires: [openstack, datacentred]
     tests:
       - manager_recovery
+
+  openstack_maintenance_mode:
+    requires: [openstack, datacentred]
+    tests:
+      - maintenance_mode
 
   openstack_plugin_and_docker_tests:
     requires: [openstack, datacentred]
