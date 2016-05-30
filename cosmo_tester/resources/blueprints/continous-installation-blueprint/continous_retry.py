@@ -1,3 +1,3 @@
 from cloudify import ctx
 
-ctx.operations.retry(message='Retry')
+ctx.retry_operation(message='Retry')
