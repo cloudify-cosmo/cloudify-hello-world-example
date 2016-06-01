@@ -778,6 +778,10 @@ tests:
     tests:
       - cosmo_tester/test_suites/backwards/test_nodecellar_backwards_compatibility
 
+  manager_upgrade:
+    tests:
+      - cosmo_tester/test_suites/test_manager_upgrade
+
 #####################################################################################
 
 test_suites:
@@ -802,6 +806,11 @@ test_suites:
     requires: [openstack, datacentred]
     tests:
       - maintenance_mode
+
+  openstack_manager_upgrade:
+    requires: [openstack, datacentred]
+    tests:
+      - manager_upgrade
 
   openstack_plugin_and_docker_tests:
     requires: [openstack, datacentred]
