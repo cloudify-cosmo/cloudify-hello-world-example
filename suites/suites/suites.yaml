@@ -318,6 +318,7 @@ handler_properties:
     medium_flavor_id: 3
 
   datacentred_openstack_properties:
+    ubuntu_image_user: '{{ubuntu_image_user}}'
     ubuntu_precise_image_name: '{{datacentred_openstack_ubuntu_precise_image_name}}'
     ubuntu_trusty_image_name: '{{datacentred_openstack_ubuntu_trusty_image_name}}'
     ubuntu_precise_image_id: '{{datacentred_openstack_ubuntu_precise}}'
