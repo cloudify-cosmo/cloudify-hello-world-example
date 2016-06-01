@@ -172,7 +172,7 @@ templates:
 
   - &openstack_plugin_external
     repo: cloudify-openstack-plugin
-    branch: 'master'
+    branch: '1.4'
 
   - &softlayer_plugin_external
     repo: cloudify-softlayer-plugin
@@ -205,7 +205,7 @@ templates:
 
   - &psutil_plugin_external
     repo: cloudify-psutil-plugin
-    branch: '1.0.1'
+    branch: '1.0.2'
 
   - &docker_plugin_external
     repo: cloudify-docker-plugin
