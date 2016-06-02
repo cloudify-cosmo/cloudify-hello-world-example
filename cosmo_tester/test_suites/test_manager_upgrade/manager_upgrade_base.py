@@ -72,6 +72,17 @@ class BaseManagerUpgradeTest(TestCase):
 
     @contextmanager
     def _manager_fabric_env(self, **kwargs):
+        """Push a fabric context connecting to the manager.
+
+        Inside this contextmanager, use fabric's methods to interact with
+        the manager that was bootstrapped during the test.
+        """
+        # Note that bootstrapping the manager is part of the test, so we can't
+        # use the testenv manager - we can't use the self.manager_env_fabric
+        # method.
+        if self.upgrade_manager_ip is None:
+            raise RuntimeError("Can't SSH to the manager before bootstrapping")
+
         inputs = self.manager_inputs
         settings = {
             'host_string': self.upgrade_manager_ip,
@@ -92,6 +103,9 @@ class BaseManagerUpgradeTest(TestCase):
 
     def _blueprint_rpm_versions(self, blueprint_path, inputs):
         """RPM filenames that should be installed on the manager.
+
+        Currently, only amqpinflux, restservice and mgmtworker are installed
+        from RPMs during the bootstrap.
         """
         env = local.init_env(
             blueprint_path,
@@ -117,6 +131,11 @@ class BaseManagerUpgradeTest(TestCase):
             return fabric.sudo('rpm -qa | grep cloudify')
 
     def check_rpm_versions(self, blueprint_path, inputs):
+        """Check if installed RPMs are the versions declared in the blueprint.
+
+        Parse the blueprint to retrieve package RPM filenames, and verify
+        that `rpm -qa` on the manager reports these exact versions.
+        """
         blueprint_rpms = self._blueprint_rpm_versions(blueprint_path, inputs)
         installed_rpms = self._cloudify_rpm_versions()
         for service_name, rpm_filename in blueprint_rpms.items():
@@ -271,6 +290,12 @@ class BaseManagerUpgradeTest(TestCase):
         return deployment_id
 
     def get_upgrade_blueprint(self):
+        """Path to the blueprint using for upgrading the manager.
+
+        Note that upgrade uses a simple blueprint, even though the manager
+        was installed using the openstack blueprint. Upgrade does not need to
+        use the same blueprint.
+        """
         repo_dir = tempfile.mkdtemp(prefix='manager-upgrade-')
         self.addCleanup(shutil.rmtree, repo_dir)
         upgrade_blueprint_path = clone(UPGRADE_REPO_URL,

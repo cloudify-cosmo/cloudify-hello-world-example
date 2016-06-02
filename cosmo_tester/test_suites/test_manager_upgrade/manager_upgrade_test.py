@@ -17,7 +17,6 @@ from manager_upgrade_base import BaseManagerUpgradeTest
 
 
 class ManagerUpgradeTest(BaseManagerUpgradeTest):
-
     def test_manager_upgrade(self):
         """Bootstrap a manager, upgrade it, rollback it, examine the results.
 
