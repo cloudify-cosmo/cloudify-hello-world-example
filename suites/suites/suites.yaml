@@ -38,6 +38,7 @@ variables:
   aws_ec2_eu_west_1_ami_rhel_7_image_id: ami-25158352
   aws_ec2_frankfurt_rhel_7_image_id: ami-dafdcfc7
   aws_ec2_frankfurt_rhel_65_image_id: ami-12ccfa0f
+  aws_ec2_large_instance_type: m3.large
   aws_ec2_medium_instance_type: m3.medium
   aws_ec2_micro_instance_type: t2.micro
   aws_ec2_eu_central_1_region_name: eu-central-1
@@ -357,6 +358,7 @@ handler_properties:
     rhel_65_image_id: '{{aws_ec2_frankfurt_rhel_65_image_id}}'
     windows_server_2012_r2_image_id: '{{aws_ec2_eu_central_1_windows_server_2012_r2_image_id}}'
     windows_server_2012_user: '{{aws_ec2_windows_user}}'
+    large_instance_type: '{{aws_ec2_large_instance_type}}'
     medium_instance_type: '{{aws_ec2_medium_instance_type}}'
     micro_instance_type: '{{aws_ec2_micro_instance_type}}'
     ubuntu_image_user:  '{{ubuntu_image_user}}'
@@ -611,7 +613,7 @@ handler_configurations:
       aws_access_key_id: '{{system_tests_aws_access_key_id}}'
       aws_secret_access_key: '{{system_tests_aws_secret_access_key}}'
       image_id: '{{aws_ec2_eu_central_1_ami_centos_7_image_id}}'
-      instance_type: '{{aws_ec2_medium_instance_type}}'
+      instance_type: '{{aws_ec2_large_instance_type}}'
       ec2_region_name: '{{aws_ec2_eu_central_1_region_name}}'
       minimum_required_total_physical_memory_in_mb: 2048
 
