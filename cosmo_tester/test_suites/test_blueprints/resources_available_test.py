@@ -41,15 +41,4 @@ class ResourcesAvailableTest(TestCase):
         except ConnectionError:
             pass
 
-        valid_resource_url = 'http://{0}:53229/blueprints/{1}/{2}' \
-            .format(self.env.management_ip, self.test_id, blueprint_name)
-
-        try:
-            result = requests.head(valid_resource_url)
-            self.assertEqual(
-                result.status_code, 200,
-                "Resources are not available through the port 53229.")
-        except ConnectionError:
-            self.fail("Resources are not available through the port 53229.")
-
         self.cfy.delete_blueprint(self.test_id)
