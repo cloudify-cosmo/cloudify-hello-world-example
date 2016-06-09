@@ -63,6 +63,10 @@ class SecurityTestBase(TestCase):
     def get_security_settings(self):
         settings = {
             '{0}.enabled'.format(SECURITY_PROP_PATH): self.get_enabled(),
+            '{0}.admin_username'.format(SECURITY_PROP_PATH):
+                self.TEST_CFY_USERNAME,
+            '{0}.admin_password'.format(SECURITY_PROP_PATH):
+                self.TEST_CFY_PASSWORD
         }
 
         authentication_providers = self.get_authentication_providers()
