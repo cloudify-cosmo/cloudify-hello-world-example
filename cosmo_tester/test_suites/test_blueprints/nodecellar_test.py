@@ -266,7 +266,7 @@ class OpenStackNodeCellarTestBase(NodecellarAppTest):
 
         self.addCleanup(self._do_uninstall, deployment_id=self.test_id)
         self.addCleanup(self.env.handler.remove_keypairs_from_manager,
-                        deployment_id=self.test_id)
+                        deployment_id=self.test_id, rest_client=self.client)
 
         self._test_nodecellar_impl(blueprint_file)
 
