@@ -177,14 +177,14 @@ class RebootManagerTest(TestCase):
         try:
             self.cfy.ssh_list()
         except sh.ErrorReturnCode_1 as ex:
-            self.assertIn('tmux executable not found on Manager', str(ex))
+            self.assertIn('tmux executable not found on manager', str(ex))
 
         self.logger.info('Installing tmux...')
         sudo('yum install tmux -y')
 
         self.logger.info('Test listing sessions when non are available..')
         output = self.cfy.ssh_list().stdout.splitlines()[-1]
-        self.assertIn('No sessions are available.', output)
+        self.assertIn('No sessions are available', output)
         sudo('yum remove tmux -y')
 
         self.logger.info('Test running ssh command...')
