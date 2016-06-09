@@ -793,6 +793,10 @@ test_suites:
     requires: [openstack, datacentred]
     tests:
       - openstack_blueprints_without_chef_puppet_docker_windows
+
+  host_pool_plugin:
+    requires: [openstack, datacentred]
+    tests:
       - host_pool_plugin
 
   openstack_manager_status:
