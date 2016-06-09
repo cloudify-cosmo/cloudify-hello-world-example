@@ -140,7 +140,7 @@ class BaseAuthTest(security_test_base.SecurityTestBase):
             out, err = self._execute_and_get_streams(self.cfy.upload_blueprint,
                                                      blueprint_id,
                                                      self.blueprint_path)
-            self._assert_in_output(out, 'Uploaded blueprint')
+            self._assert_in_output(out, 'Blueprint uploaded')
             self.assertEqual('', err)
 
         # admins and deployers should be able to upload blueprints...
@@ -214,7 +214,7 @@ class BaseAuthTest(security_test_base.SecurityTestBase):
         def _delete_and_assert():
             out, err = self._execute_and_get_streams(
                 self.cfy.delete_blueprint, blueprint_id)
-            self._assert_in_output(out, 'Deleted blueprint successfully')
+            self._assert_in_output(out, 'Blueprint deleted')
             self.assertEqual('', err)
 
         # admins should be able to delete blueprints...
@@ -295,7 +295,7 @@ class BaseAuthTest(security_test_base.SecurityTestBase):
         def _delete_and_assert():
             out, err = self._execute_and_get_streams(
                 self.cfy.delete_deployment, deployment_ids[0])
-            self._assert_in_output(out, 'Deleted deployment successfully')
+            self._assert_in_output(out, 'Deployment deleted')
             self.assertEqual('', err)
 
         # admins should be able to delete deployments...
