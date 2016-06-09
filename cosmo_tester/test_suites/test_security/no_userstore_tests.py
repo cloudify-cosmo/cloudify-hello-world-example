@@ -29,6 +29,9 @@ CUSTOM_AUTH_PROVIDER_PLUGIN = 'mock-auth-provider-with-no-userstore'
 
 class NoUserstoreTests(security_test_base.SecurityTestBase):
 
+    TEST_CFY_USERNAME = 'not_the_default_username'
+    TEST_CFY_PASSWORD = 'something'
+
     def setUp(self):
         super(NoUserstoreTests, self).setUp()
         self.setup_secured_manager()
@@ -68,12 +71,6 @@ class NoUserstoreTests(security_test_base.SecurityTestBase):
 
     def get_authorization_provider(self):
         return ''
-
-    def set_rest_client(self):
-        self.client = CloudifyClient(
-            host=self.env.management_ip,
-            headers=util.get_auth_header(username='not_the_default_username',
-                                         password='something'))
 
     def _assert_unauthorized_user_fails(self):
         client = CloudifyClient(host=self.env.management_ip,
