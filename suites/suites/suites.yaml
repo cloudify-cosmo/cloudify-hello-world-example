@@ -930,7 +930,7 @@ test_suites:
     tests:
       - manager_upgrade
 
-  openstack_plugin_and_docker_tests:
+  openstack_plugin:
     requires: [openstack, datacentred]
     tests:
       - openstack_plugin
