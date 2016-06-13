@@ -14,22 +14,22 @@
 #    * limitations under the License.
 
 
-import unittest
-import logging
-import sys
-import shutil
-import tempfile
-import time
-import copy
 import os
-import importlib
+import sys
+import time
 import json
+import copy
+import shutil
+import logging
+import tempfile
+import unittest
+import importlib
 from contextlib import contextmanager
 
 import yaml
-from path import path
 import fabric.api
 import fabric.context_managers
+from path import path
 
 from cosmo_tester.framework.cfy_helper import (CfyHelper,
                                                DEFAULT_EXECUTE_TIMEOUT)
@@ -98,7 +98,6 @@ def teardown():
 
 # Singleton class
 class TestEnvironment(object):
-    # Singleton class
     def __init__(self):
         self._initial_cwd = os.getcwd()
         self._global_cleanup_context = None
