@@ -10,8 +10,11 @@ install:
     - pip install https://github.com/cloudify-cosmo/cloudify-plugins-common/archive/3.4rc1.zip
     - pip install https://github.com/cloudify-cosmo/cloudify-script-plugin/archive/1.4.zip
     - pip install https://github.com/cloudify-cosmo/cloudify-cli/archive/3.4rc1.zip
+    - pip install https://github.com/cloudify-cosmo/cloudify-aws-plugin/archive/1.4.zip
 
 script:
     - cfy init
     - cfy blueprints validate -p blueprint.yaml
     - cfy blueprints validate -p singlehost-blueprint.yaml
+    - cfy blueprints validate -p ec2-blueprint.yaml
+    - cfy blueprints validate -p ec2-windows-blueprint.yaml

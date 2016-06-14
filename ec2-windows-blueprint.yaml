@@ -1,0 +1,93 @@
+tosca_definitions_version: cloudify_dsl_1_3
+
+description: >
+  This blueprint defines a Windows Server 2012 R2 VM on AWS EC2 and an elastic IP
+  and a security group are also created and associated with the VM all using Cloudify's AWS plugin.
+  In addition, a simple web server is created and started using Cloudify's script plugin.
+  Note: This blueprint can also work with a Windows Server 2008 R2 VM on AWS EC2.
+        To do so omit the single quotes in the vm user_data under the node_templates section below.
+
+
+imports:
+  - http://www.getcloudify.org/spec/cloudify/3.4rc1/types.yaml
+  - http://www.getcloudify.org/spec/aws-plugin/1.4/plugin.yaml
+
+inputs:
+  webserver_port:
+    description: The HTTP web server port
+    default: 8080
+  agent_user:
+    description: User name used to access the AWS EC2 VM
+    default: Administrator
+  image_id:
+    description: AWS EC2 image id to use for the server
+  instance_type:
+    description: AWS EC2 instance type to use for the server
+    default: m3.medium
+
+node_templates:
+  elastic_ip:
+    type: cloudify.aws.nodes.ElasticIP
+
+  security_group:
+    type: cloudify.aws.nodes.SecurityGroup
+    properties:
+      description: Security group for Hello World VM
+      rules:
+        - ip_protocol: tcp
+          cidr_ip: 0.0.0.0/0
+          from_port: { get_property: [ http_web_server, port ] }
+          to_port: { get_property: [ http_web_server, port ] }
+  vm:
+    type: cloudify.aws.nodes.WindowsInstance
+    properties:
+      cloudify_agent:
+        user: { get_input: agent_user }
+      image_id: { get_input: image_id }
+      instance_type: { get_input: instance_type }
+      parameters:
+        user_data: |
+          <powershell>
+          &winrm quickconfig -q
+          &winrm set winrm/config              '@{MaxTimeoutms="1800000"}'
+          &winrm set winrm/config/winrs        '@{MaxShellsPerUser="2147483647"}'
+          &winrm set winrm/config/service      '@{AllowUnencrypted="true";MaxConcurrentOperationsPerUser="4294967295"}'
+          &winrm set winrm/config/service/auth '@{Basic="true"}'
+          &netsh advfirewall firewall add rule name="WinRM 5985" protocol=TCP dir=in localport=5985 action=allow
+          &netsh advfirewall firewall add rule name="WinRM 5986" protocol=TCP dir=in localport=5986 action=allow
+          Set-ExecutionPolicy Unrestricted
+          </powershell>
+    relationships:
+      - type: cloudify.aws.relationships.instance_connected_to_elastic_ip
+        target: elastic_ip
+      - type: cloudify.aws.relationships.instance_connected_to_security_group
+        target: security_group
+  http_web_server:
+    type: cloudify.nodes.WebServer
+    properties:
+      port: { get_input: webserver_port }
+    relationships:
+      - type: cloudify.relationships.contained_in
+        target: vm
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        configure:
+          implementation: scripts/powershell/configure.ps1
+          inputs:
+            process:
+              command_prefix: powershell
+        start:
+          implementation: scripts/powershell/start.ps1
+          inputs:
+            process:
+              command_prefix: powershell
+        stop:
+          implementation: scripts/powershell/stop.ps1
+          inputs:
+            process:
+              command_prefix: powershell
+outputs:
+  http_endpoint:
+    description: Web server's external endpoint
+    value: { concat: ['http://', { get_attribute: [elastic_ip, aws_resource_id] },
+                      ':', { get_property: [http_web_server, port] }] }
