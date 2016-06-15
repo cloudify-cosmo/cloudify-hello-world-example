@@ -274,6 +274,44 @@ class CfyHelper(object):
             cfy.deployments.get(
                 deployment_id=deployment_id, verbose=verbose).wait()
 
+    def update_deployment(self,
+                          deployment_id,
+                          blueprint_path=None,
+                          inputs=None,
+                          blueprint_filename=None,
+                          archive_location=None,
+                          skip_install=False,
+                          skip_uninstall=False,
+                          workflow_id=None,
+                          force=False,
+                          include_logs=None,
+                          json=None):
+
+        deployment_update_kwargs = {
+            'skip_install': skip_install,
+            'skip_uninstall': skip_uninstall,
+            'force': force
+        }
+
+        if blueprint_path:
+            deployment_update_kwargs['blueprint_path'] = blueprint_path
+        if inputs:
+            deployment_update_kwargs['inputs'] = inputs
+        if blueprint_filename:
+            deployment_update_kwargs['blueprint_filename'] = blueprint_filename
+        if archive_location:
+            deployment_update_kwargs['archive_location'] = archive_location
+        if workflow_id:
+            deployment_update_kwargs['workflow_id'] = workflow_id
+        if include_logs:
+            deployment_update_kwargs['include_logs'] = include_logs
+        if json:
+            deployment_update_kwargs['json'] = json
+
+        with self.workdir:
+            cfy.deployments.update(deployment_id=deployment_id,
+                                   **deployment_update_kwargs)
+
     def get_execution(self, execution_id, verbose=False):
         with self.workdir:
             cfy.executions.get(
