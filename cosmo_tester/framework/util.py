@@ -92,8 +92,21 @@ def generate_unique_configurations(
 
 
 def sh_bake(command):
-    return command.bake(_out=lambda line: sys.stdout.write(line),
-                        _err=lambda line: sys.stderr.write(line))
+    """Make the command also print its stderr and stdout to our stdout/err."""
+    # we need to pass the received lines back to the process._stdout/._stderr
+    # so that they're not only printed out, but also saved as .stderr/.sdtout
+    # on the return value or on the exception.
+    return command.bake(_out=pass_stdout, _err=pass_stderr)
+
+
+def pass_stdout(line, input_queue, process):
+    process._stdout.append(line.encode(process.call_args['encoding']))
+    sys.stdout.write(line)
+
+
+def pass_stderr(line, input_queue, process):
+    process._stderr.append(line.encode(process.call_args['encoding']))
+    sys.stderr.write(line)
 
 
 def get_blueprint_path(blueprint_name, blueprints_dir=None):
