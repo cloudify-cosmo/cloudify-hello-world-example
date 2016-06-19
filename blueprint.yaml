@@ -33,7 +33,7 @@ node_templates:
   vm:
     type: cloudify.openstack.nodes.Server
     properties:
-      cloudify_agent:
+      agent_config:
         user: { get_input: agent_user }
       image: { get_input: image }
       flavor: { get_input: flavor }
