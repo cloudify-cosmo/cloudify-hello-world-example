@@ -28,7 +28,7 @@ node_templates:
     type: cloudify.nodes.Compute
     properties:
       ip: { get_input: server_ip }
-      cloudify_agent:
+      agent_config:
         user: { get_input: agent_user }
         key: { get_input: agent_private_key_path }
     interfaces:
