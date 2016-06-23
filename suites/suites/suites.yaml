@@ -896,6 +896,10 @@ tests:
     tests:
       - cosmo_tester/test_suites/test_manager_upgrade
 
+  manager_upgrade_validations:
+    tests:
+      - cosmo_tester/test_suites/test_preupgrade_validations
+
   deployment_update:
     tests:
     - cosmo_tester/test_suites/test_deployment_update/deployment_update_test.py:DeploymentUpdateOSTest
@@ -933,6 +937,11 @@ test_suites:
     requires: [openstack, datacentred]
     tests:
       - manager_upgrade
+
+  openstack_manager_upgrade_validations:
+    requires: [openstack, datacentred]
+    tests:
+      - manager_upgrade_validations
 
   openstack_deployment_update:
     requires: [openstack, datacentred]
