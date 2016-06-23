@@ -148,9 +148,9 @@ class RebootManagerTest(TestCase):
 
         fd, tmp_log_archive = tempfile.mkstemp()
         os.close(fd)
-        self.logger.info('Testing `cfy logs get`')
+        self.logger.info('Testing `cfy logs download`')
         try:
-            self.cfy.get_logs(destination_path=tmp_log_archive)
+            self.cfy.download_logs(output=tmp_log_archive)
             with closing(tarfile.open(name=tmp_log_archive)) as tar:
                 files = [f.name for f in tar.getmembers()]
                 self.assertIn('cloudify/journalctl.log', files)

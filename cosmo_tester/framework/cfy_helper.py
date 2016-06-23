@@ -13,12 +13,12 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
-from contextlib import contextmanager
 import os
 import json
 import shutil
 import logging
 import tempfile
+from contextlib import contextmanager
 
 import sh
 import yaml
@@ -411,10 +411,10 @@ class CfyHelper(object):
                 include_logs=include_logs,
                 parameters=params_file).wait()
 
-    def get_logs(self, destination_path=os.getcwd()):
+    def download_logs(self, output=os.getcwd()):
         with self.workdir:
-            cfy.logs.get(
-                destination_path=destination_path,
+            cfy.logs.download(
+                output=output,
                 verbose=True).wait()
 
     def purge_logs(self, force=True, backup_first=False):
