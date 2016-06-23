@@ -68,9 +68,3 @@ class ManagerUpgradeIdempotencyTest(BaseManagerUpgradeTest):
             'ssh_user': self.manager_inputs['ssh_user'],
             'sanity_app_source_url': 'fake_path.tar.gz'
         }
-
-    # a failed copy command on centos outputs an error with illegal chars.
-    # replacing them in order to be able to print the output, and find
-    # a required string in the error message.
-    def replace_illegal_chars(self, s):
-        return s.replace(u'\u2019', "'").replace(u'\u2018', "'")

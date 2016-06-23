@@ -45,28 +45,58 @@ UPGRADE_BRANCH = 'master'
 
 
 class BaseManagerUpgradeTest(TestCase):
+    """Base for manager upgrade tests, with methods for bootstrap/upgrade.
+
+    When writing a manager upgrade test, inherit from this, and use the
+    .prepare_manager, .upgrade_manager, .rollback_manager, etc. methods -
+    but note that upgrade, rollback and other methods rely on state stored
+    during the .prepare_manager method.
+
+    For debugging purposes, we can skip bootstrapping the manager that will
+    be used in the test, and use a pre-existing one: see the
+    ._use_external_manager method
+    """
+
+    @property
+    def _use_external_manager(self):
+        """Check if the handler config has a valid upgrade_manager setting.
+
+        To use a pre-bootstrapped manager for this test, handler configuration
+        needs to contain a "upgrade_manager" key, referencing an object
+        with the following keys: manager_key, agents_key (filepaths to the ssh
+        keys), public_ip, private_ip.
+
+        Only use this when working on the test itself.
+        """
+        return 'upgrade_manager' in self.env.handler_configuration
 
     @contextmanager
-    def _manager_fabric_env(self):
+    def _manager_fabric_env(self, **kwargs):
         inputs = self.manager_inputs
-        with fabric.context_managers.settings(
-                host_string=self.upgrade_manager_ip,
-                user=inputs['ssh_user'],
-                key_filename=inputs['ssh_key_filename']):
+        settings = {
+            'host_string': self.upgrade_manager_ip,
+            'user': inputs['ssh_user'],
+            'key_filename': inputs['ssh_key_filename'],
+            # use keepalive to make sure fabric doesn't hang, when a connection
+            # dies after a long period of inactivity (eg. running an upgrade)
+            'keepalive': 30,
+        }
+        settings.update(kwargs)
+        with fabric.context_managers.settings(**settings):
             yield fabric.api
 
     def _bootstrap_local_env(self, workdir):
         storage = local.FileStorage(
-                os.path.join(workdir, '.cloudify', 'bootstrap'))
+            os.path.join(workdir, '.cloudify', 'bootstrap'))
         return local.load_env('manager', storage=storage)
 
     def _blueprint_rpm_versions(self, blueprint_path, inputs):
         """RPM filenames that should be installed on the manager.
         """
         env = local.init_env(
-                blueprint_path,
-                inputs=inputs,
-                ignored_modules=cli_constants.IGNORED_LOCAL_WORKFLOW_MODULES)
+            blueprint_path,
+            inputs=inputs,
+            ignored_modules=cli_constants.IGNORED_LOCAL_WORKFLOW_MODULES)
 
         storage = env.storage
 
@@ -102,26 +132,39 @@ class BaseManagerUpgradeTest(TestCase):
         self.cfy_workdir = tempfile.mkdtemp(prefix='manager-upgrade-')
         self.addCleanup(shutil.rmtree, self.cfy_workdir)
         self.manager_cfy = CfyHelper(cfy_workdir=self.cfy_workdir)
-
         self.manager_inputs = self._get_bootstrap_inputs()
 
-        self.bootstrap_manager()
+        if self._use_external_manager:
+            upgrade_config = self.env.handler_configuration['upgrade_manager']
+            self.upgrade_manager_ip = upgrade_config['public_ip']
+            self.manager_private_ip = upgrade_config['private_ip']
+            self.manager_cfy.use(self.upgrade_manager_ip)
+        else:
+            self.bootstrap_manager()
 
         self.rest_client = create_rest_client(self.upgrade_manager_ip)
 
         self.bootstrap_manager_version = LooseVersion(
-                self.rest_client.manager.get_version()['version'])
+            self.rest_client.manager.get_version()['version'])
+
+    def _get_keys(self, prefix):
+        if self._use_external_manager:
+            upgrade_config = self.env.handler_configuration['upgrade_manager']
+            return upgrade_config['manager_key'], upgrade_config['agents_key']
+        else:
+            ssh_key_filename = os.path.join(self.workdir, 'manager.key')
+            self.addCleanup(self.env.handler.remove_keypair,
+                            prefix + '-manager-key')
+
+            agent_key_path = os.path.join(self.workdir, 'agents.key')
+            self.addCleanup(self.env.handler.remove_keypair,
+                            prefix + '-agents-key')
+            return ssh_key_filename, agent_key_path
 
     def _get_bootstrap_inputs(self):
         prefix = self.test_id
 
-        ssh_key_filename = os.path.join(self.workdir, 'manager.key')
-        self.addCleanup(self.env.handler.remove_keypair,
-                        prefix + '-manager-key')
-
-        agent_key_path = os.path.join(self.workdir, 'agents.key')
-        self.addCleanup(self.env.handler.remove_keypair,
-                        prefix + '-agents-key')
+        ssh_key_filename, agent_key_path = self._get_keys(prefix)
 
         return {
             'keystone_username': self.env.keystone_username,
@@ -154,7 +197,13 @@ class BaseManagerUpgradeTest(TestCase):
             'manager_security_group_name': prefix + '-m-sg',
             'agents_security_group_name': prefix + '-a-sg',
             'manager_port_name': prefix + '-port',
-            'management_subnet_dns_nameservers': ['8.8.8.8', '8.8.4.4']
+            'management_subnet_dns_nameservers': ['8.8.8.8', '8.8.4.4'],
+
+            # we'll be using the openstack plugin to install a deployment.
+            # We need to either upload the plugin (using the CLI or the REST
+            # client), or install a compiler so that the plugin can be
+            # installed from source on the manager.
+            'install_python_compilers': True
         }
 
     def get_bootstrap_blueprint(self):
@@ -187,17 +236,14 @@ class BaseManagerUpgradeTest(TestCase):
     def bootstrap_manager(self):
         self.bootstrap_blueprint = self.get_bootstrap_blueprint()
         inputs_path = self.manager_cfy._get_inputs_in_temp_file(
-                self.manager_inputs, self._testMethodName)
+            self.manager_inputs, self._testMethodName)
 
         self.manager_cfy.bootstrap(self.bootstrap_blueprint,
                                    inputs_file=inputs_path)
 
         self.upgrade_manager_ip = self.manager_cfy.get_management_ip()
         self.manager_private_ip = self._load_private_ip_from_env(
-                self.cfy_workdir)
-
-        # TODO: why is this needed?
-        self.manager_cfy.use(management_ip=self.upgrade_manager_ip)
+            self.cfy_workdir)
 
     def deploy_hello_world(self, prefix=''):
         """Install the hello world app."""
@@ -205,9 +251,9 @@ class BaseManagerUpgradeTest(TestCase):
         deployment_id = prefix + self.test_id
         hello_repo_dir = tempfile.mkdtemp(prefix='manager-upgrade-')
         hello_repo_path = clone(
-                'https://github.com/cloudify-cosmo/'
-                'cloudify-hello-world-example.git',
-                hello_repo_dir
+            'https://github.com/cloudify-cosmo/'
+            'cloudify-hello-world-example.git',
+            hello_repo_dir
         )
         self.addCleanup(shutil.rmtree, hello_repo_dir)
         hello_blueprint_path = hello_repo_path / 'blueprint.yaml'
@@ -240,9 +286,9 @@ class BaseManagerUpgradeTest(TestCase):
             # make sure we also re-install ES
             with YamlPatcher(self.upgrade_blueprint) as patch:
                 patch.set_value(
-                        ('node_templates.elasticsearch.properties'
-                         '.use_existing_on_upgrade'),
-                        False)
+                    ('node_templates.elasticsearch.properties'
+                     '.use_existing_on_upgrade'),
+                    False)
 
         self.upgrade_inputs = inputs or {
             'private_ip': self.manager_private_ip,
@@ -250,15 +296,14 @@ class BaseManagerUpgradeTest(TestCase):
             'ssh_key_filename': self.manager_inputs['ssh_key_filename'],
             'ssh_user': self.manager_inputs['ssh_user'],
             'elasticsearch_endpoint_port': 9900
-
         }
         upgrade_inputs_file = self.manager_cfy._get_inputs_in_temp_file(
-                self.upgrade_inputs, self._testMethodName)
+            self.upgrade_inputs, self._testMethodName)
 
         with self.manager_cfy.maintenance_mode():
             self.manager_cfy.upgrade_manager(
-                    blueprint_path=self.upgrade_blueprint,
-                    inputs_file=upgrade_inputs_file)
+                blueprint_path=self.upgrade_blueprint,
+                inputs_file=upgrade_inputs_file)
 
     def post_upgrade_checks(self, preupgrade_deployment_id):
         """To check if the upgrade succeeded:
@@ -270,7 +315,7 @@ class BaseManagerUpgradeTest(TestCase):
               creating, installing and uninstalling deployments correctly
         """
         upgrade_manager_version = LooseVersion(
-                self.rest_client.manager.get_version()['version'])
+            self.rest_client.manager.get_version()['version'])
         self.assertGreaterEqual(upgrade_manager_version,
                                 self.bootstrap_manager_version)
         self.check_rpm_versions(self.upgrade_blueprint, self.upgrade_inputs)
@@ -314,35 +359,36 @@ class BaseManagerUpgradeTest(TestCase):
         """
         try:
             response = urllib2.urlopen('http://{0}:{1}'.format(
-                    self.upgrade_manager_ip, port))
+                self.upgrade_manager_ip, port))
             response = json.load(response)
             if response['status'] != 200:
                 raise ValueError('Incorrect status {0}'.format(
-                        response['status']))
+                    response['status']))
         except (ValueError, urllib2.URLError):
             self.fail('elasticsearch isnt listening on the changed port')
 
     def uninstall_deployment(self, deployment_id):
         self.manager_cfy.execute_uninstall(deployment_id)
 
-    def rollback_manager(self):
-        rollback_inputs = {
+    def rollback_manager(self, blueprint=None, inputs=None):
+        blueprint = blueprint or self.upgrade_blueprint
+        rollback_inputs = inputs or {
             'private_ip': self.manager_private_ip,
             'public_ip': self.upgrade_manager_ip,
             'ssh_key_filename': self.manager_inputs['ssh_key_filename'],
-            'ssh_user': self.manager_inputs['ssh_user'],
+            'ssh_user': self.manager_inputs['ssh_user']
         }
         rollback_inputs_file = self.manager_cfy._get_inputs_in_temp_file(
-                rollback_inputs, self._testMethodName)
+            rollback_inputs, self._testMethodName)
 
         with self.manager_cfy.maintenance_mode():
             self.manager_cfy.rollback_manager(
-                    blueprint_path=self.upgrade_blueprint,
-                    inputs_file=rollback_inputs_file)
+                blueprint_path=blueprint,
+                inputs_file=rollback_inputs_file)
 
     def post_rollback_checks(self, preupgrade_deployment_id):
         rollback_manager_version = LooseVersion(
-                self.rest_client.manager.get_version()['version'])
+            self.rest_client.manager.get_version()['version'])
         self.assertEqual(rollback_manager_version,
                          self.bootstrap_manager_version)
         self.check_rpm_versions(self.bootstrap_blueprint, self.manager_inputs)
@@ -352,4 +398,11 @@ class BaseManagerUpgradeTest(TestCase):
         self.check_influx(preupgrade_deployment_id)
 
     def teardown_manager(self):
-        self.manager_cfy.teardown(ignore_deployments=True)
+        if not self._use_external_manager:
+            self.manager_cfy.teardown(ignore_deployments=True)
+
+    # a failed copy command on centos outputs an error with illegal chars.
+    # replacing them in order to be able to print the output, and find
+    # a required string in the error message.
+    def replace_illegal_chars(self, s):
+        return s.replace(u'\u2019', "'").replace(u'\u2018', "'")
