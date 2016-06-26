@@ -21,9 +21,9 @@ import tempfile
 import time
 import urllib2
 
-from distutils.version import LooseVersion
 import fabric
 from influxdb import InfluxDBClient
+from pkg_resources import parse_version
 
 from cloudify_cli import constants as cli_constants
 from cloudify.workflows import local
@@ -144,7 +144,7 @@ class BaseManagerUpgradeTest(TestCase):
 
         self.rest_client = create_rest_client(self.upgrade_manager_ip)
 
-        self.bootstrap_manager_version = LooseVersion(
+        self.bootstrap_manager_version = parse_version(
             self.rest_client.manager.get_version()['version'])
 
     def _get_keys(self, prefix):
@@ -314,7 +314,7 @@ class BaseManagerUpgradeTest(TestCase):
               and uninstall it: to check that the manager still allows
               creating, installing and uninstalling deployments correctly
         """
-        upgrade_manager_version = LooseVersion(
+        upgrade_manager_version = parse_version(
             self.rest_client.manager.get_version()['version'])
         self.assertGreaterEqual(upgrade_manager_version,
                                 self.bootstrap_manager_version)
@@ -387,7 +387,7 @@ class BaseManagerUpgradeTest(TestCase):
                 inputs_file=rollback_inputs_file)
 
     def post_rollback_checks(self, preupgrade_deployment_id):
-        rollback_manager_version = LooseVersion(
+        rollback_manager_version = parse_version(
             self.rest_client.manager.get_version()['version'])
         self.assertEqual(rollback_manager_version,
                          self.bootstrap_manager_version)
