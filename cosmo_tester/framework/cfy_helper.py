@@ -101,7 +101,9 @@ class CfyHelper(object):
                 task_retry_interval=task_retry_interval,
                 verbose=verbose,
                 debug=debug).wait()
-            self.upload_plugins()
+
+            if not validate_only:
+                self.upload_plugins()
 
     def _download_wagons(self):
         self.logger.info('Downloading Wagons...')
