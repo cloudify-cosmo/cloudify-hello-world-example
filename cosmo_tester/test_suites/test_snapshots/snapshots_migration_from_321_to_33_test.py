@@ -19,6 +19,8 @@ import pkg_resources
 import subprocess
 import shutil
 
+from nose.tools import nottest
+
 import cosmo_tester
 from cosmo_tester.framework.testenv import TestCase
 from cosmo_tester.framework.git_helper import clone, checkout
@@ -552,6 +554,7 @@ class HelloWorldSnapshotMigrationFrom_3_2_1_To_3_3_Test(TestCase):
             self.fail("Runtime property '{0}' not found"
                       .format(RUNTIME_PROPERTY_NAME))
 
+    @nottest
     def test_snapshot_from_321_to_33(self):
 
         # manager 3.2.1 actions
