@@ -1016,8 +1016,8 @@ test_suites:
   docker_plugin:
     requires: [openstack, datacentred]
     tests:
-      - docker_plugin
       - docker_nodecellar
+      - docker_plugin
 
   psutil_plugin:
     handler_configuration: aws_ec2
