@@ -79,7 +79,7 @@ class TwoDeploymentsTest(TestCase):
         with YamlPatcher(blueprint_path) as patch:
             vm_properties_path = 'node_templates.vm.properties'
             patch.merge_obj(
-                '{0}.cloudify_agent'.format(vm_properties_path), {
+                '{0}.agent_config'.format(vm_properties_path), {
                     'user': self.env.cloudify_agent_user,
                 })
             patch.merge_obj('{0}'.format(vm_properties_path), {
