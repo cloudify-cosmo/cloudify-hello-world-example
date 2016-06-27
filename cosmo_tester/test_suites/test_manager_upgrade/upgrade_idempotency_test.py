@@ -47,7 +47,6 @@ class ManagerUpgradeIdempotencyTest(BaseManagerUpgradeTest):
                         self.replace_illegal_chars(
                             test_stdout.getvalue())))
 
-        self.manager_cfy.set_maintenance_mode(False)
         self.upgrade_manager()
         self.post_upgrade_checks(preupgrade_deployment_id)
         self.teardown_manager()
