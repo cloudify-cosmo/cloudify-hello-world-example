@@ -892,9 +892,14 @@ tests:
     tests:
       - cosmo_tester/test_suites/backwards/test_nodecellar_backwards_compatibility
 
+  manager_rollback:
+    tests:
+      - cosmo_tester/test_suites/test_manager_upgrade/rollback_idempotency_test.py
+
   manager_upgrade:
     tests:
-      - cosmo_tester/test_suites/test_manager_upgrade
+      - cosmo_tester/test_suites/test_manager_upgrade/manager_upgrade_test.py
+      - cosmo_tester/test_suites/test_manager_upgrade/upgrade_idempotency_test.py
 
   manager_upgrade_validations:
     tests:
@@ -937,6 +942,11 @@ test_suites:
     requires: [openstack, datacentred]
     tests:
       - manager_upgrade
+
+  openstack_manager_rollback:
+    requires: [openstack, datacentred]
+    tests:
+      - manager_rollback
 
   openstack_manager_upgrade_validations:
     requires: [openstack, datacentred]
