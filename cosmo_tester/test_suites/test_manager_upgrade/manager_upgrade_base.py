@@ -14,6 +14,7 @@
 #    * limitations under the License.
 
 from contextlib import contextmanager
+import subprocess
 import json
 import os
 import shutil
@@ -37,6 +38,7 @@ from cosmo_tester.framework.util import create_rest_client, YamlPatcher
 
 BOOTSTRAP_REPO_URL = 'https://github.com/cloudify-cosmo/' \
                      'cloudify-manager-blueprints.git'
+
 BOOTSTRAP_BRANCH = '3.4rc1'
 
 UPGRADE_REPO_URL = 'https://github.com/cloudify-cosmo/' \
@@ -257,17 +259,52 @@ class BaseManagerUpgradeTest(TestCase):
         env = self._bootstrap_local_env(workdir)
         return env.outputs()['private_ip']
 
+    def _load_public_ip_from_env(self, workdir):
+        env = self._bootstrap_local_env(workdir)
+        return env.outputs()['manager_ip']
+
     def bootstrap_manager(self):
         self.bootstrap_blueprint = self.get_bootstrap_blueprint()
         inputs_path = self.manager_cfy._get_inputs_in_temp_file(
             self.manager_inputs, self._testMethodName)
 
-        self.manager_cfy.bootstrap(self.bootstrap_blueprint,
-                                   inputs_file=inputs_path)
+        try:
+            bootstrap_cli_env = tempfile.mkdtemp()
+            # create bootstrap venv
+            create_venv_cmd = 'virtualenv {0}'.format(bootstrap_cli_env)
+            self._execute_command(create_venv_cmd.split())
+            # install cli matching the bootstrap manager version
+            install_cli_cmd = '{0}/bin/pip install cloudify=={1}' \
+                .format(bootstrap_cli_env, BOOTSTRAP_BRANCH)
+            self._execute_command(install_cli_cmd.split())
+            # init temp workdir
+            cfy_path = os.path.join(bootstrap_cli_env, 'bin', 'cfy')
+            cfy_init_cmd = 'cfy init -r'
+            self._execute_command(cfy_init_cmd.split())
+            # execute bootstrap
+            bootstrap_cmd = '{0} bootstrap -p {1} -i {2} --install-plugins' \
+                .format(cfy_path, self.bootstrap_blueprint, inputs_path)
+            self._execute_command(bootstrap_cmd.split())
 
-        self.upgrade_manager_ip = self.manager_cfy.get_management_ip()
-        self.manager_private_ip = self._load_private_ip_from_env(
-            self.cfy_workdir)
+            self.upgrade_manager_ip = self._load_public_ip_from_env(
+                    os.getcwd())
+            self.manager_private_ip = self._load_private_ip_from_env(
+                    os.getcwd())
+            self.manager_cfy.use(self.upgrade_manager_ip)
+        finally:
+            if os.path.isdir(bootstrap_cli_env):
+                shutil.rmtree(bootstrap_cli_env, ignore_errors=True)
+            tmp_workdir = os.path.join(os.getcwd(), '.cloudify')
+            if os.path.isdir(tmp_workdir):
+                shutil.rmtree(tmp_workdir, ignore_errors=True)
+
+    def _execute_command(self, command):
+        process = subprocess.Popen(command, stdout=subprocess.PIPE)
+
+        while process.poll() is None:
+            line = process.stdout.readline()
+            self.logger.info(line)
+        self.logger.info(process.stdout.read())
 
     def deploy_hello_world(self, prefix=''):
         """Install the hello world app."""
