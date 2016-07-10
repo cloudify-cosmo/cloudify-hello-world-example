@@ -65,5 +65,6 @@ class ManagerUpgradeIdempotencyTest(BaseManagerUpgradeTest):
             'public_ip': self.upgrade_manager_ip,
             'ssh_key_filename': self.manager_inputs['ssh_key_filename'],
             'ssh_user': self.manager_inputs['ssh_user'],
+            'ssh_port': 22,
             'sanity_app_source_url': 'fake_path.tar.gz'
         }
