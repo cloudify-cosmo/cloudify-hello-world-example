@@ -14,11 +14,14 @@
 #    * limitations under the License.
 
 import os
+import subprocess
 from requests.exceptions import SSLError
+
 from cloudify_cli import constants
 from cloudify_rest_client import CloudifyClient
 
 from cosmo_tester.framework import util
+from cosmo_tester.framework.util import YamlPatcher
 from cosmo_tester.test_suites.test_blueprints.nodecellar_test import \
     OpenStackNodeCellarTestBase
 from cosmo_tester.test_suites.test_security.security_ssl_test_base import \
@@ -28,15 +31,53 @@ USE_EXISTING_FLOATING_IP_INPUT_PROP = 'inputs.use_existing_floating_ip'
 USE_EXISTING_FLOATING_IP_INPUT = 'use_existing_floating_ip'
 FLOATING_IP_INPUT_PROP = 'inputs.floating_ip'
 FLOATING_IP_INPUT = 'floating_ip'
+MANAGER_SERVER_NAME_INPUT = 'manager_server_name'
 
 USE_EXTERNAL_RESOURCE_PROPERTY = \
     'node_templates.manager_server_ip.properties.use_external_resource'
 RESOURCE_ID_PROPERTY = \
     'node_templates.manager_server_ip.properties.resource_id'
+PUBLIC_IP_PROPERTY = \
+    'node_templates.manager_configuration.relationships[0].' \
+    'target_interfaces.cloudify\.interfaces\.relationship_lifecycle.' \
+    'postconfigure.inputs.public_ip'
 
 
-class SecuredWithSSLManagerTests(OpenStackNodeCellarTestBase,
-                                 SSLTestBase):
+class SecuredSSLVerifyUserHostnameCertOpenstackNodecellarTest(
+      OpenStackNodeCellarTestBase, SSLTestBase):
+
+    @staticmethod
+    def _get_user_data_etc_hosts_text(ip_address, hostname):
+        return """#!/bin/bash -ex grep -q "{1}" /etc/hosts ||
+        echo "{0} {1}" >> /etc/hosts"""\
+            .format(ip_address, hostname)
+
+    @staticmethod
+    def _get_etc_hosts_update_text(ip_address, hostname):
+        return """grep -q "{1}" /etc/hosts || echo "{0} {1}" |
+        sudo tee -a /etc/hosts"""\
+            .format(ip_address, hostname)
+
+    @staticmethod
+    def run_command(command):
+        proc = subprocess.Popen(command, stdout=subprocess.PIPE, shell=True)
+        return proc.communicate()
+
+    def test_secured_ssl_verify_user_hostname_cert_openstack_nodecellar(self):
+        self.setup_secured_manager()
+        self._test_openstack_nodecellar('openstack-blueprint.yaml')
+
+    def modify_blueprint(self):
+        rest_host_name = 'rest_host'
+        rest_private_ip = self.env.cloudify_config['manager_server_name']
+        userdata = self._get_user_data_etc_hosts_text(rest_private_ip,
+                                                      rest_host_name)
+        with YamlPatcher(self.blueprint_yaml) as blueprint:
+            for node_name in ('mongod_host', 'nodejs_host'):
+                host = blueprint.obj['node_templates'][node_name]
+                server_props = host['properties']['server']
+                server_props['userdata'] = userdata
+            self.logger.warning('modified blueprint: {0}\n'.format(blueprint))
 
     def get_manager_blueprint_additional_props_override(self):
         return {
@@ -53,39 +94,43 @@ class SecuredWithSSLManagerTests(OpenStackNodeCellarTestBase,
             },
             RESOURCE_ID_PROPERTY: {
                 'get_input': FLOATING_IP_INPUT
+            },
+            PUBLIC_IP_PROPERTY: {
+                'get_input': MANAGER_SERVER_NAME_INPUT
             }
         }
 
-    def test_secured_manager_with_certificate(self):
-        # setup and bootstrap manager with ssl enabled configured
-        self.setup_secured_manager()
-        # send request and verify certificate
-        self._test_verify_cert()
-        # send request without certificate verification
-        self._test_no_verify_cert()
-        # send request that is missing a certificate
-        self._test_verify_missing_cert()
-        # send request with wrong certificate
-        self._test_verify_wrong_cert()
-        # send request to non secured port
-        # test commented out until functionality fixed - Jira CFY-3766
-        self._test_try_to_connect_to_manager_on_non_secured_port()
-        # test nodecellar without certificate verification
-        self._test_openstack_nodecellar('openstack-blueprint.yaml')
+    def get_manager_blueprint_inputs_override(self):
+        inputs = \
+            super(SecuredSSLVerifyUserHostnameCertOpenstackNodecellarTest,
+                  self).get_manager_blueprint_inputs_override()
+        inputs['agent_verify_rest_certificate'] = True
+        inputs['rest_host_internal_endpoint_type'] = 'public_ip'
+        inputs['rest_host_external_endpoint_type'] = 'public_ip'
+        return inputs
 
     def _handle_ssl_files(self):
         ssl_dir = os.path.join(self.workdir, 'manager-blueprint/resources/ssl')
         if not os.path.isdir(ssl_dir):
             os.mkdir(ssl_dir)
-        self.cert_path = os.path.join(ssl_dir, 'server.crt')
-        self.key_path = os.path.join(ssl_dir, 'server.key')
-        # create floating ip
+        self.cert_path = os.path.join(ssl_dir, 'external_rest_host.crt')
+        self.key_path = os.path.join(ssl_dir, 'external_rest_host.key')
         self.floating_ip = self.create_floating_ip()
+        self.server_host_name = 'noak-cloudify-manager'
+        command = self._get_etc_hosts_update_text(self.floating_ip,
+                                                  self.server_host_name)
+        print 'running command {0}'.format(command)
+        (out, err) = self.run_command(command)
+        if out:
+            print 'command output: {0}'.format(out)
+        if err:
+            print 'command error: {0}'.format(err)
+
         # create certificate with the ip intended to be used for this manager
         SSLTestBase.create_self_signed_certificate(
             target_certificate_path=self.cert_path,
             target_key_path=self.key_path,
-            common_name=self.floating_ip)
+            common_name=self.server_host_name)
 
     def _test_try_to_connect_to_manager_on_non_secured_port(self):
         client = CloudifyClient(
