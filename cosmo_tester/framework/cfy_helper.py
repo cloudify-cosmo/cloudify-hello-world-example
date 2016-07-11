@@ -466,14 +466,16 @@ class CfyHelper(object):
     def upgrade_manager(self,
                         blueprint_path,
                         inputs_file=None,
-                        validate_only=False):
+                        validate_only=False,
+                        install_plugins=True):
         if not inputs_file:
             inputs_file = self._get_inputs_in_temp_file({}, 'manager')
         with self.workdir:
             cfy.upgrade(
                 blueprint_path=blueprint_path,
                 inputs=inputs_file,
-                validate_only=validate_only).wait()
+                validate_only=validate_only,
+                install_plugins=install_plugins).wait()
 
     def rollback_manager(self, blueprint_path, inputs_file=None):
         if not inputs_file:

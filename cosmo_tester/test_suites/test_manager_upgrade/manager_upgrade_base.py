@@ -274,32 +274,31 @@ class BaseManagerUpgradeTest(TestCase):
             create_venv_cmd = 'virtualenv {0}'.format(bootstrap_cli_env)
             self._execute_command(create_venv_cmd.split())
             # install cli matching the bootstrap manager version
-            install_cli_cmd = '{0}/bin/pip install cloudify=={1}' \
-                .format(bootstrap_cli_env, BOOTSTRAP_BRANCH)
+            py_bin_path = os.path.join(bootstrap_cli_env, 'bin')
+            install_cli_cmd = '{0}/pip install cloudify=={1}' \
+                .format(py_bin_path, BOOTSTRAP_BRANCH)
             self._execute_command(install_cli_cmd.split())
             # init temp workdir
-            cfy_path = os.path.join(bootstrap_cli_env, 'bin', 'cfy')
-            cfy_init_cmd = 'cfy init -r'
-            self._execute_command(cfy_init_cmd.split())
+            cfy_init_cmd = '{0}/cfy init -r'.format(py_bin_path)
+
+            self._execute_command(cfy_init_cmd.split(), cwd=self.cfy_workdir)
             # execute bootstrap
-            bootstrap_cmd = '{0} bootstrap -p {1} -i {2} --install-plugins' \
-                .format(cfy_path, self.bootstrap_blueprint, inputs_path)
-            self._execute_command(bootstrap_cmd.split())
+            bootstrap_cmd = '{0}/cfy bootstrap -p {1} -i {2} ' \
+                            '--install-plugins'\
+                .format(py_bin_path, self.bootstrap_blueprint, inputs_path)
+            self._execute_command(bootstrap_cmd.split(), cwd=self.cfy_workdir)
 
             self.upgrade_manager_ip = self._load_public_ip_from_env(
-                    os.getcwd())
+                    self.cfy_workdir)
             self.manager_private_ip = self._load_private_ip_from_env(
-                    os.getcwd())
+                    self.cfy_workdir)
             self.manager_cfy.use(self.upgrade_manager_ip)
         finally:
             if os.path.isdir(bootstrap_cli_env):
                 shutil.rmtree(bootstrap_cli_env, ignore_errors=True)
-            tmp_workdir = os.path.join(os.getcwd(), '.cloudify')
-            if os.path.isdir(tmp_workdir):
-                shutil.rmtree(tmp_workdir, ignore_errors=True)
 
-    def _execute_command(self, command):
-        process = subprocess.Popen(command, stdout=subprocess.PIPE)
+    def _execute_command(self, command, cwd=None):
+        process = subprocess.Popen(command, cwd=cwd, stdout=subprocess.PIPE)
 
         while process.poll() is None:
             line = process.stdout.readline()
@@ -362,6 +361,7 @@ class BaseManagerUpgradeTest(TestCase):
             'public_ip': self.upgrade_manager_ip,
             'ssh_key_filename': self.manager_inputs['ssh_key_filename'],
             'ssh_user': self.manager_inputs['ssh_user'],
+            'ssh_port': 22,
             'elasticsearch_endpoint_port': 9900
         }
         upgrade_inputs_file = self.manager_cfy._get_inputs_in_temp_file(
@@ -370,7 +370,8 @@ class BaseManagerUpgradeTest(TestCase):
         with self.manager_cfy.maintenance_mode():
             self.manager_cfy.upgrade_manager(
                 blueprint_path=self.upgrade_blueprint,
-                inputs_file=upgrade_inputs_file)
+                inputs_file=upgrade_inputs_file,
+                install_plugins=self.env.install_plugins)
 
     def post_upgrade_checks(self, preupgrade_deployment_id):
         """To check if the upgrade succeeded:
@@ -442,6 +443,7 @@ class BaseManagerUpgradeTest(TestCase):
             'private_ip': self.manager_private_ip,
             'public_ip': self.upgrade_manager_ip,
             'ssh_key_filename': self.manager_inputs['ssh_key_filename'],
+            'ssh_port': 22,
             'ssh_user': self.manager_inputs['ssh_user']
         }
         rollback_inputs_file = self.manager_cfy._get_inputs_in_temp_file(
