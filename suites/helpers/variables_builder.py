@@ -23,7 +23,7 @@ import password_store
 
 SYSTEM_TESTS_PASSWORD_STORE_REPO = 'system_tests_password_store_repo'
 CLI_PACKAGES_URL_FORMAT = 'https://raw.githubusercontent.com/cloudify-cosmo' \
-                          '/cloudify-versions/{0}/packages_urls' \
+                          '/cloudify-versions/{0}/packages-urls' \
                           '/cli-packages-blueprint.yaml'
 
 
