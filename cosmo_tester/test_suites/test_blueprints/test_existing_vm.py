@@ -67,7 +67,8 @@ class ExistingVMTest(TestCase):
             fetch_state=False,
             inputs=dict(
                 ip=private_server_ip,
-                agent_key=remote_key_path
+                agent_key=remote_key_path,
+                agent_user='ubuntu'
             ))
 
         instances = self.client.node_instances.list(deployment_id=self.test_id)

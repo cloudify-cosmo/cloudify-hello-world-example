@@ -909,6 +909,10 @@ tests:
     tests:
     - cosmo_tester/test_suites/test_deployment_update/deployment_update_test.py:DeploymentUpdateOSTest
 
+  dockercompute:
+    tests:
+    - cosmo_tester/test_suites/test_dockercompute
+
 #####################################################################################
 
 test_suites:
@@ -1068,6 +1072,11 @@ test_suites:
     requires: [openstack, datacentred]
     tests:
       - nodecellar_backwards_compatibility_tests
+
+  dockercompute:
+    requires: [openstack]
+    tests:
+      - dockercompute
 
   #####################################################################
 

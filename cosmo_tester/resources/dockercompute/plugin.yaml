@@ -1,0 +1,13 @@
+plugins:
+  dockercompute:
+    executor: central_deployment_agent
+    package_name: cloudify-dockercompute-plugin
+    package_version: '0.1'
+
+node_types:
+  cloudify.nodes.docker.Compute:
+    derived_from: cloudify.nodes.Compute
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        start: dockercompute.dockercompute.start
+        delete: dockercompute.dockercompute.delete

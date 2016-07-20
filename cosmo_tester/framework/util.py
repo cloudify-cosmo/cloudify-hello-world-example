@@ -29,6 +29,7 @@ import yaml
 import jinja2
 from path import path
 from itsdangerous import base64_encode
+from wagon.wagon import Wagon
 
 from cloudify_cli import constants
 from cloudify_rest_client import CloudifyClient
@@ -315,3 +316,8 @@ class YamlPatcher(object):
 def generate_password(length=13):
     chars = string.ascii_letters + string.digits + '!@#$%^&*()'
     return ''.join(random.choice(chars) for _ in range(length))
+
+
+def create_wagon(source_dir, target_dir):
+    wagon_client = Wagon(source_dir)
+    return wagon_client.create(archive_destination_dir=target_dir, force=True)
