@@ -112,7 +112,7 @@ class CfyHelper(object):
 
         plugin_urls_location = (
             'https://raw.githubusercontent.com/cloudify-cosmo/'
-            'cloudify-versions/{branch}/plugin-urls.yaml'.format(
+            'cloudify-versions/{branch}/packages_urls/plugin-urls.yaml'.format(
                 branch=os.environ.get('BRANCH_NAME_CORE', 'master'),
             )
         )
