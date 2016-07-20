@@ -294,7 +294,8 @@ class TestManagerPreupgradeValidations(TestCase):
             'private_ip': self.cfy.get_management_ip(),
             'public_ip': self.cfy.get_management_ip(),
             'ssh_key_filename': self.env.management_key_path,
-            'ssh_user': self.env.management_user_name
+            'ssh_user': self.env.management_user_name,
+            'ssh_port': 22
         }
         inputs.update(override)
         return self.cfy._get_inputs_in_temp_file(inputs, 'upgrade')
