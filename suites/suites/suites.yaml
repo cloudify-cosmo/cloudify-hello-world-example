@@ -34,7 +34,7 @@ variables:
   rhel_7_image_user: ec2-user
   aws_ec2_eu_central_1_ami_ubuntu_trusty_image_id: ami-00dae61d
   aws_ec2_eu_central_1_ami_centos_7_image_id: ami-e68f82fb
-  aws_ec2_eu_central_1_windows_server_2012_r2_image_id: ami-3acf2f55
+  aws_ec2_eu_central_1_windows_server_2012_r2_image_id: ami-09e61366
   aws_ec2_eu_west_1_ami_rhel_7_image_id: ami-25158352
   aws_ec2_frankfurt_rhel_7_image_id: ami-dafdcfc7
   aws_ec2_frankfurt_rhel_65_image_id: ami-12ccfa0f
