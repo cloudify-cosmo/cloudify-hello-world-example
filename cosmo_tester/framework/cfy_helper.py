@@ -49,7 +49,7 @@ class CfyHelper(object):
                  management_ip=None,
                  management_user=None,
                  management_key=None,
-                 management_port=22):
+                 management_port='22'):
         self.logger = logging.getLogger('TESTENV')
         self.logger.setLevel(logging.INFO)
         self._cfy_workdir = cfy_workdir
