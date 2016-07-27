@@ -48,7 +48,8 @@ class CfyHelper(object):
                  cfy_workdir=None,
                  management_ip=None,
                  management_user=None,
-                 management_key=None):
+                 management_key=None,
+                 management_port=22):
         self.logger = logging.getLogger('TESTENV')
         self.logger.setLevel(logging.INFO)
         self._cfy_workdir = cfy_workdir
@@ -59,9 +60,10 @@ class CfyHelper(object):
         self.workdir = path(self._cfy_workdir)
         if management_ip is not None:
             self.use(management_ip)
-            if management_user and management_key:
+            if management_user and management_key and management_port:
                 try:
-                    self._set_management_creds(management_user, management_key)
+                    self._set_management_creds(management_user, management_key,
+                                               management_port)
                 except Exception as ex:
                     self.logger.warn(
                         'Failed to set management creds. Note that you will '
@@ -377,10 +379,11 @@ class CfyHelper(object):
             settings = load_cloudify_working_dir_settings()
             return settings.get_management_server()
 
-    def _set_management_creds(self, user, key):
+    def _set_management_creds(self, user, key, port):
         with self.workdir, update_wd_settings() as ws_settings:
             ws_settings.set_management_user(user)
             ws_settings.set_management_key(key)
+            ws_settings.set_management_port(port)
 
     def get_provider_context(self):
         with self.workdir:
