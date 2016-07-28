@@ -94,7 +94,9 @@ class SecurityTestBase(TestCase):
             'security_enabled': self.is_security_enabled(),
             'ssl_enabled': self.is_ssl_enabled(),
             'admin_username': self.TEST_CFY_USERNAME,
-            'admin_password': self.TEST_CFY_PASSWORD
+            'admin_password': self.TEST_CFY_PASSWORD,
+            'agent_rest_username': self.TEST_CFY_USERNAME,
+            'agent_rest_password': self.TEST_CFY_PASSWORD
         }
 
     def is_security_enabled(self):
