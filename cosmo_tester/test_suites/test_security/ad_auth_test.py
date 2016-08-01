@@ -68,7 +68,22 @@ class ADAuthenticationAuthorizationTest(auth_test_base.BaseAuthTest):
         self._modify_test_users_to_upn()
         self.inject_upn_userstore_users()
         self.inject_upn_auth_config()
+        self.inject_upn_rest_config()
         self._test_authentication_and_authorization()
+
+    def inject_upn_rest_config(self):
+        rest_security_conf = tempfile.NamedTemporaryFile(delete=False)
+        with self.manager_env_fabric() as api:
+            api.get(REMOTE_SECURITY_CONF_PATH, rest_security_conf.name)
+
+            with util.YamlPatcher(rest_security_conf.name) as patch:
+                patch.set_value('rest_username',
+                                self.admin_username)
+            api.put(use_sudo=True,
+                    local_path=rest_security_conf.name,
+                    remote_path=REMOTE_SECURITY_CONF_PATH)
+
+        self.restart_rest_service()
 
     def inject_upn_userstore_users(self):
         upn_userstore_users = self.get_userstore_users()
@@ -77,8 +92,7 @@ class ADAuthenticationAuthorizationTest(auth_test_base.BaseAuthTest):
         }
         userstore_file = tempfile.NamedTemporaryFile(delete=False)
         with self.manager_env_fabric() as api:
-            with open(userstore_file.name) as f:
-                api.get(REMOTE_USERSTORE_PATH, f.name)
+            api.get(REMOTE_USERSTORE_PATH, userstore_file.name)
 
             with util.YamlPatcher(userstore_file.name) as patch:
                 for key, value in userstore_config.iteritems():
@@ -137,8 +151,7 @@ class ADAuthenticationAuthorizationTest(auth_test_base.BaseAuthTest):
 
         rest_security_file = tempfile.NamedTemporaryFile(delete=False)
         with self.manager_env_fabric() as api:
-            with open(rest_security_file.name) as f:
-                api.get(REMOTE_SECURITY_CONF_PATH, f.name)
+            api.get(REMOTE_SECURITY_CONF_PATH, rest_security_file.name)
 
             with util.YamlPatcher(rest_security_file.name) as patch:
                 for key, value in security_config.iteritems():
@@ -148,7 +161,11 @@ class ADAuthenticationAuthorizationTest(auth_test_base.BaseAuthTest):
                     local_path=rest_security_file.name,
                     remote_path=REMOTE_SECURITY_CONF_PATH)
 
-            # Restart the rest service
+        # Restart the rest service
+        self.restart_rest_service()
+
+    def restart_rest_service(self):
+        with self.manager_env_fabric() as api:
             api.run('sudo systemctl restart cloudify-restservice.service')
         self.wait_for_resource(self.client.manager.get_status, timeout_sec=60)
 
@@ -270,6 +287,9 @@ class ADAuthenticationAuthorizationTest(auth_test_base.BaseAuthTest):
                 'groups': ['users']
             }
         ]
+
+    def get_auth_token_generator(self):
+        return {}
 
     def get_file_userstore_enabled(self):
         return True

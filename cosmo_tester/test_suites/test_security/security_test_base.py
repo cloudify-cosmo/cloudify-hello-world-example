@@ -82,7 +82,7 @@ class SecurityTestBase(TestCase):
                 userstore_drive
 
         auth_token_generator = self.get_auth_token_generator()
-        if auth_token_generator:
+        if auth_token_generator is not None:
             settings[
                 '{0}.auth_token_generator'.format(SECURITY_PROP_PATH)] = \
                 auth_token_generator
