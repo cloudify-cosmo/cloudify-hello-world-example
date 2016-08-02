@@ -72,6 +72,9 @@ class NoUserstoreTests(security_test_base.SecurityTestBase):
     def get_authorization_provider(self):
         return ''
 
+    def get_auth_token_generator(self):
+        return {}
+
     def _assert_unauthorized_user_fails(self):
         client = CloudifyClient(host=self.env.management_ip,
                                 headers=util.get_auth_header(
