@@ -93,6 +93,7 @@ class SecuredSSLVerifyUserCertOpenstackNodecellarTest(
             target_certificate_path=self.cert_path,
             target_key_path=self.key_path,
             common_name=self.floating_ip)
+        os.environ['LOCAL_REST_CERT_FILE'] = self.cert_path
 
     def _test_try_to_connect_to_manager_on_non_secured_port(self):
         client = CloudifyClient(
