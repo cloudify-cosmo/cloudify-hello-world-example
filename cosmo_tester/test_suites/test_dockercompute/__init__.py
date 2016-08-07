@@ -71,7 +71,7 @@ def _install_docker_and_configure_image():
             with fabric.context_managers.cd(workdir):
                 ssh.put(util.get_resource_path('dockercompute/Dockerfile'),
                         'Dockerfile', use_sudo=True)
-                ssh.run('docker build -t cloudify/centos:7 .')
+                ssh.sudo('docker build -t cloudify/centos:7 .')
             _restart_management_worker_workaround()
 
 
