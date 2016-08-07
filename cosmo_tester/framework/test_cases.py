@@ -13,7 +13,6 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
-
 from influxdb import InfluxDBClient
 from cosmo_tester.framework.testenv import TestCase
 
@@ -23,21 +22,29 @@ class MonitoringTestCase(TestCase):
     def assert_deployment_monitoring_data_exists(self,
                                                  deployment_id=None,
                                                  influx_host_ip=None):
-        if deployment_id is None:
-            deployment_id = self.test_id
-        if influx_host_ip is None:
-            influx_host_ip = self.env.management_ip
-        influx_client = InfluxDBClient(influx_host_ip, 8086,
-                                       'root', 'root', 'cloudify')
-        try:
-            # select monitoring events for deployment from
-            # the past 5 seconds. a NameError will be thrown only if NO
-            # deployment events exist in the DB regardless of time-span
-            # in query.
-            influx_client.query('select * from /^{0}\./i '
-                                'where time > now() - 5s'
-                                .format(deployment_id))
-        except NameError as e:
-            self.fail('monitoring events list for deployment with ID {0} were'
-                      ' not found on influxDB. error is: {1}'
-                      .format(deployment_id, e))
+        assert_deployment_monitoring_data_exists(self,
+                                                 deployment_id,
+                                                 influx_host_ip)
+
+
+def assert_deployment_monitoring_data_exists(test_case,
+                                             deployment_id=None,
+                                             influx_host_ip=None):
+    if deployment_id is None:
+        deployment_id = test_case.test_id
+    if influx_host_ip is None:
+        influx_host_ip = test_case.env.management_ip
+    influx_client = InfluxDBClient(influx_host_ip, 8086,
+                                   'root', 'root', 'cloudify')
+    try:
+        # select monitoring events for deployment from
+        # the past 5 seconds. a NameError will be thrown only if NO
+        # deployment events exist in the DB regardless of time-span
+        # in query.
+        influx_client.query('select * from /^{0}\./i '
+                            'where time > now() - 5s'
+                            .format(deployment_id))
+    except NameError as e:
+        test_case.fail('monitoring events list for deployment with ID {0} were'
+                       ' not found on influxDB. error is: {1}'
+                       .format(deployment_id, e))

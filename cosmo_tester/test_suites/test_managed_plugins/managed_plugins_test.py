@@ -19,8 +19,6 @@ import shutil
 import tarfile
 import tempfile
 
-from wagon.wagon import Wagon
-
 from cosmo_tester.framework import util
 from cosmo_tester.framework.testenv import TestCase
 
@@ -42,11 +40,10 @@ class DownloadInstallPluginTest(TestCase):
         super(DownloadInstallPluginTest, self).tearDown()
 
     def _create_sample_wheel(self):
-        src = util.get_resource_path('plugins/{0}'.format(TEST_PACKAGE_NAME))
-        wagon_client = Wagon(src)
-        return wagon_client.create(
-            archive_destination_dir=tempfile.mkdtemp(dir=self.workdir),
-            force=True)
+        source_dir = util.get_resource_path('plugins/{0}'.format(
+            TEST_PACKAGE_NAME))
+        target_dir = tempfile.mkdtemp(dir=self.workdir)
+        return util.create_wagon(source_dir=source_dir, target_dir=target_dir)
 
     def test_download_plugin(self):
         # upload the plugin

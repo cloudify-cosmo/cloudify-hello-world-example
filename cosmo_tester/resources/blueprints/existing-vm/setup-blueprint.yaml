@@ -1,0 +1,11 @@
+tosca_definitions_version: cloudify_dsl_1_3
+
+imports:
+    - http://www.getcloudify.org/spec/cloudify/3.5m1/types.yaml
+
+node_templates:
+  setup_host:
+    type: cloudify.nodes.docker.Compute
+    properties:
+      agent_config:
+        install_method: none

@@ -11,6 +11,7 @@ plugins:
 inputs:
     ip: {}
     agent_key: {}
+    agent_user: {}
 
 node_templates:
     host:
@@ -19,6 +20,7 @@ node_templates:
             ip: { get_input: ip }
             cloudify_agent:
                 key: { get_input: agent_key }
+                user: { get_input: agent_user }
     middle:
         type: cloudify.nodes.SoftwareComponent
         relationships:
