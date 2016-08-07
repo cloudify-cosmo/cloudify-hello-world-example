@@ -1074,7 +1074,7 @@ test_suites:
       - nodecellar_backwards_compatibility_tests
 
   dockercompute:
-    requires: [openstack]
+    requires: [openstack, datacentred]
     tests:
       - dockercompute
 
