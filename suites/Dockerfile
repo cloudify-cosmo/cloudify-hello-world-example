@@ -3,8 +3,11 @@ FROM ubuntu:14.04
 ENV HOME /root
 ENV LANG C.UTF-8
 
+RUN apt-get update
+RUN apt-get -f install -y
+RUN apt-get install software-properties-common -y
+RUN add-apt-repository ppa:fkrull/deadsnakes-python2.7 -y
 RUN apt-get update && \
-    apt-get -f install -y && \
     apt-get install -y \
         curl \
         wget \
