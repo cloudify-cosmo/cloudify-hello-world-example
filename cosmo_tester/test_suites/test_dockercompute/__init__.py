@@ -18,6 +18,7 @@ import sys
 import shutil
 
 import fabric
+import fabric.network
 import fabric.api as ssh
 import fabric.context_managers
 from path import path
@@ -64,10 +65,26 @@ def _install_docker_and_configure_image():
                 'systemctl status docker',
             ]
             ssh.sudo(' && '.join(commands))
+            # Need to reset the connection so subsequent docker calls don't
+            # need sudo
+            fabric.network.disconnect_all()
             with fabric.context_managers.cd(workdir):
                 ssh.put(util.get_resource_path('dockercompute/Dockerfile'),
                         'Dockerfile', use_sudo=True)
-                ssh.sudo('docker build -t cloudify/centos:7 .')
+                ssh.run('docker build -t cloudify/centos:7 .')
+            _restart_management_worker_workaround()
+
+
+def _restart_management_worker_workaround():
+    # This works around an issue that should be fixed in which
+    # Initial invocations running concurrently (i.e. two operations happening
+    # at the same time, specifically, starting at the same time so dispatched
+    # to the celery process pool very closely) seem to mess up celery process
+    # pool. the gatekeeper component may have something to do with this but i'm
+    # not sure. # For some reason, it also seems that after manually restarting
+    # the management worker, future scenarios of concurrent executions will
+    # cause no trouble what so ever.
+    ssh.sudo('systemctl restart cloudify-mgmtworker')
 
 
 def _upload_dockercompute_plugin():
