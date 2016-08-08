@@ -25,6 +25,7 @@ import requests
 import fabric.api
 import fabric.context_managers
 from path import path
+from nose.tools import nottest
 
 from cosmo_tester.framework.testenv import TestCase
 from cosmo_tester.framework.util import YamlPatcher, get_actual_keypath
@@ -306,5 +307,6 @@ class PuppetPluginStandaloneTest(TestCase):
     def test_puppet_standalone_with_resource(self):
         self._test_puppet_standalone_with_download(False)
 
+    @nottest
     def test_puppet_standalone_with_url(self):
         self._test_puppet_standalone_with_download(True)
