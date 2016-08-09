@@ -24,12 +24,11 @@ class ManyInstancesTest(TestCase):
         blueprint_path = self.copy_blueprint('many-instances')
         self.blueprint_yaml = blueprint_path / 'blueprint.yaml'
 
-        self.cfy.upload_blueprint(
-            blueprint_id=self.test_id,
-            blueprint_path=self.blueprint_yaml)
-        self.cfy.create_deployment(
-            blueprint_id=self.test_id,
-            deployment_id=self.test_id)
+        self.cfy.blueprints.upload(
+            self.blueprint_yaml,
+            blueprint_id=self.test_id
+        )
+        self.create_deployment()
 
         # elasticsearch takes its time, so it might initially fail
         # with IndexError

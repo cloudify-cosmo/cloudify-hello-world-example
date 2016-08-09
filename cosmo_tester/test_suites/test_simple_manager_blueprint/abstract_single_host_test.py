@@ -93,8 +93,8 @@ class AbstractSingleHostTest(object):
 
         # preparing inputs file for bootstrap
         self.test_inputs_path = \
-            self.cfy._get_inputs_in_temp_file(self.bootstrap_inputs,
-                                              self._testMethodName)
+            self.cfy.get_inputs_in_temp_file(self.bootstrap_inputs,
+                                             self._testMethodName)
         self._bootstrap()
         self._running_env_setup(self.public_ip_address)
 
@@ -106,10 +106,11 @@ class AbstractSingleHostTest(object):
                            self.remote_manager_key_path)
 
     def _bootstrap(self):
-        self.addCleanup(self.cfy.teardown)
-        self.cfy.bootstrap(blueprint_path=self.test_manager_blueprint_path,
-                           inputs_file=self.test_inputs_path,
-                           task_retries=5)
+        self.addCleanup(self.cfy.teardown, force=True)
+        self.bootstrap(
+            self.test_manager_blueprint_path,
+            inputs=self.test_inputs_path,
+        )
 
     def _running_env_setup(self, management_ip):
         self.addCleanup(self.clear_management_ip)

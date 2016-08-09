@@ -82,13 +82,16 @@ class BaseAuthTest(security_test_base.SecurityTestBase):
         self._login_cli(self.admin_username, self.admin_password)
         # item 0 has already been deleted in _assert_delete_blueprint
         for blueprint_id in blueprint_ids[1:]:
-            self.cfy.delete_blueprint(blueprint_id)
+            self.cfy.blueprints.delete(blueprint_id)
 
     def _assert_deployment_operations(self):
         blueprint_id = 'test_deployment_blueprint1'
         # setup
         self._login_cli(self.admin_username, self.admin_password)
-        self.cfy.upload_blueprint(blueprint_id, self.blueprint_path)
+        self.cfy.blueprints.upload(
+            self.blueprint_path,
+            blueprint_id=blueprint_id
+        )
 
         # test
         deployment_ids = self._assert_create_deployment(blueprint_id)
@@ -99,8 +102,8 @@ class BaseAuthTest(security_test_base.SecurityTestBase):
         self._login_cli(self.admin_username, self.admin_password)
         # item 0 has already been deleted in _assert_delete_deployment
         for deployment_id in deployment_ids[1:]:
-            self.cfy.delete_deployment(deployment_id)
-        self.cfy.delete_blueprint(blueprint_id)
+            self.cfy.deployments.delete(deployment_id)
+        self.cfy.blueprints.delete(blueprint_id)
 
     def _assert_execution_operations(self):
         blueprint_id = 'test_execution_blueprint1'
@@ -109,9 +112,15 @@ class BaseAuthTest(security_test_base.SecurityTestBase):
                           'test_execution_deployment3']
         # setup
         self._login_cli(self.admin_username, self.admin_password)
-        self.cfy.upload_blueprint(blueprint_id, self.blueprint_path)
+        self.cfy.blueprints.upload(
+            self.blueprint_path,
+            blueprint_id=blueprint_id
+        )
         for deployment_id in deployment_ids:
-            self.cfy.create_deployment(blueprint_id, deployment_id)
+            self.cfy.deployments.create(
+                blueprint_id=blueprint_id,
+                deployment_id=deployment_id
+            )
             self.wait_until_all_deployment_executions_end(
                 deployment_id=deployment_id,
                 verify_no_failed_execution=True)
@@ -128,8 +137,8 @@ class BaseAuthTest(security_test_base.SecurityTestBase):
         self._login_cli(self.admin_username, self.admin_password)
         for deployment_id in deployment_ids:
             self.wait_until_all_deployment_executions_end(deployment_id)
-            self.cfy.delete_deployment(deployment_id, ignore_live_nodes=True)
-        self.cfy.delete_blueprint(blueprint_id)
+            self.cfy.deployments.delete(deployment_id, force=True)
+        self.cfy.blueprints.delete(blueprint_id)
 
     ##############################
     # blueprint tests
@@ -137,9 +146,11 @@ class BaseAuthTest(security_test_base.SecurityTestBase):
     def _assert_upload_blueprint(self):
 
         def _upload_and_assert(blueprint_id):
-            out, err = self._execute_and_get_streams(self.cfy.upload_blueprint,
-                                                     blueprint_id,
-                                                     self.blueprint_path)
+            out, err = self._execute_and_get_streams(
+                self.cfy.blueprints.upload,
+                self.blueprint_path,
+                blueprint_id=blueprint_id
+            )
             self._assert_in_output(out, 'Blueprint uploaded')
             self.assertEqual('', err)
 
@@ -155,21 +166,25 @@ class BaseAuthTest(security_test_base.SecurityTestBase):
 
         # ...but viewers and simple users should not
         self._login_cli(self.viewer_username, self.viewer_password)
-        self._assert_unauthorized(self.cfy.upload_blueprint,
-                                  'dummy_bp',
-                                  self.blueprint_path)
+        self._assert_unauthorized(
+            self.cfy.blueprints.upload,
+            self.blueprint_path,
+            blueprint_id='dummy_bp'
+        )
 
         self._login_cli(self.no_role_username, self.no_role_password)
-        self._assert_unauthorized(self.cfy.upload_blueprint,
-                                  'dummy_bp',
-                                  self.blueprint_path)
+        self._assert_unauthorized(
+            self.cfy.blueprints.upload,
+            self.blueprint_path,
+            blueprint_id='dummy_bp'
+        )
 
         return blueprint1_id, blueprint2_id
 
     def _assert_list_blueprint(self, blueprint_ids):
 
         def _list_and_assert():
-            out, err = self._execute_and_get_streams(self.cfy.list_blueprints)
+            out, err = self._execute_and_get_streams(self.cfy.blueprints.list)
             self._assert_in_output(out, *blueprint_ids)
             self.assertEqual('', err)
 
@@ -185,13 +200,15 @@ class BaseAuthTest(security_test_base.SecurityTestBase):
 
         # ...but simple users should not
         self._login_cli(self.no_role_username, self.no_role_password)
-        self._assert_unauthorized(self.cfy.list_blueprints)
+        self._assert_unauthorized(self.cfy.blueprints.list)
 
     def _assert_get_blueprint(self, blueprint_id):
 
         def _get_and_assert():
             out, err = self._execute_and_get_streams(
-                self.cfy.get_blueprint, blueprint_id)
+                self.cfy.blueprints.get,
+                blueprint_id
+            )
             self._assert_in_output(out, blueprint_id)
             self.assertEqual('', err)
 
@@ -207,13 +224,15 @@ class BaseAuthTest(security_test_base.SecurityTestBase):
 
         # ...but simple users should not
         self._login_cli(self.no_role_username, self.no_role_password)
-        self._assert_unauthorized(self.cfy.get_blueprint, blueprint_id)
+        self._assert_unauthorized(self.cfy.blueprints.get, blueprint_id)
 
     def _assert_delete_blueprint(self, blueprint_id):
 
         def _delete_and_assert():
             out, err = self._execute_and_get_streams(
-                self.cfy.delete_blueprint, blueprint_id)
+                self.cfy.blueprints.delete,
+                blueprint_id
+            )
             self._assert_in_output(out, 'Blueprint deleted')
             self.assertEqual('', err)
 
@@ -224,13 +243,13 @@ class BaseAuthTest(security_test_base.SecurityTestBase):
 
         # ...but deployers, viewers and simple users should not
         self._login_cli(self.deployer_username, self.deployer_password)
-        self._assert_unauthorized(self.cfy.delete_blueprint, blueprint_id)
+        self._assert_unauthorized(self.cfy.blueprints.delete, blueprint_id)
 
         self._login_cli(self.viewer_username, self.viewer_password)
-        self._assert_unauthorized(self.cfy.delete_blueprint, blueprint_id)
+        self._assert_unauthorized(self.cfy.blueprints.delete, blueprint_id)
 
         self._login_cli(self.no_role_username, self.no_role_password)
-        self._assert_unauthorized(self.cfy.delete_blueprint, blueprint_id)
+        self._assert_unauthorized(self.cfy.blueprints.delete, blueprint_id)
 
     ##############################
     # deployment tests
@@ -239,7 +258,10 @@ class BaseAuthTest(security_test_base.SecurityTestBase):
 
         def _create_and_assert(deployment_id):
             out, err = self._execute_and_get_streams(
-                self.cfy.create_deployment, blueprint_id, deployment_id)
+                self.cfy.deployments.create,
+                blueprint_id=blueprint_id,
+                deployment_id=deployment_id
+            )
             self._assert_in_output(out, 'Deployment created')
 
             # polling for deployments requires an authorized client
@@ -258,21 +280,27 @@ class BaseAuthTest(security_test_base.SecurityTestBase):
 
         # ...but viewers and simple users should not
         self._login_cli(self.viewer_username, self.viewer_password)
-        self._assert_unauthorized(self.cfy.create_deployment,
-                                  blueprint_id,
-                                  'dummy_dp')
+        self._assert_unauthorized(
+            self.cfy.deployments.create,
+            blueprint_id=blueprint_id,
+            deployment_id='dummy_dp'
+        )
 
         self._login_cli(self.no_role_username, self.no_role_password)
-        self._assert_unauthorized(self.cfy.create_deployment,
-                                  blueprint_id,
-                                  'dummy_dp')
+        self._assert_unauthorized(
+            self.cfy.deployments.create,
+            blueprint_id=blueprint_id,
+            deployment_id='dummy_dp'
+        )
 
         return deployment1_id, deployment2_id
 
     def _assert_list_deployment(self, deployment_ids):
 
         def _list_and_assert():
-            out, err = self._execute_and_get_streams(self.cfy.list_deployments)
+            out, err = self._execute_and_get_streams(
+                self.cfy.deployments.list
+            )
             self._assert_in_output(out, *deployment_ids)
             self.assertEqual('', err)
 
@@ -288,13 +316,15 @@ class BaseAuthTest(security_test_base.SecurityTestBase):
 
         # ...but simple users should not
         self._login_cli(self.no_role_username, self.no_role_password)
-        self._assert_unauthorized(self.cfy.list_deployments)
+        self._assert_unauthorized(self.cfy.deployments.list)
 
     def _assert_delete_deployment(self, deployment_ids):
 
         def _delete_and_assert():
             out, err = self._execute_and_get_streams(
-                self.cfy.delete_deployment, deployment_ids[0])
+                self.cfy.deployments.delete,
+                deployment_ids[0]
+            )
             self._assert_in_output(out, 'Deployment deleted')
             self.assertEqual('', err)
 
@@ -304,15 +334,15 @@ class BaseAuthTest(security_test_base.SecurityTestBase):
 
         # ...but deployers, viewers and simple users should not
         self._login_cli(self.deployer_username, self.deployer_password)
-        self._assert_unauthorized(self.cfy.delete_deployment,
+        self._assert_unauthorized(self.cfy.deployments.delete,
                                   deployment_ids[1])
 
         self._login_cli(self.viewer_username, self.viewer_password)
-        self._assert_unauthorized(self.cfy.delete_deployment,
+        self._assert_unauthorized(self.cfy.deployments.delete,
                                   deployment_ids[1])
 
         self._login_cli(self.no_role_username, self.no_role_password)
-        self._assert_unauthorized(self.cfy.delete_deployment,
+        self._assert_unauthorized(self.cfy.deployments.delete,
                                   deployment_ids[1])
 
     ##############################
@@ -323,7 +353,10 @@ class BaseAuthTest(security_test_base.SecurityTestBase):
 
         def _start_and_assert(deployment_id):
             out, err = self._execute_and_get_streams(
-                self.cfy.execute_workflow, workflow, deployment_id)
+                self.cfy.executions.start,
+                workflow,
+                deployment_id=deployment_id
+            )
             self._assert_in_output(out, 'Finished executing workflow')
             self.assertEqual('', err)
 
@@ -337,16 +370,22 @@ class BaseAuthTest(security_test_base.SecurityTestBase):
         # ...but viewers and simple users should not
         self._login_cli(self.viewer_username, self.viewer_password)
         self._assert_unauthorized(
-            self.cfy.execute_workflow, workflow, deployment_ids[2])
+            self.cfy.executions.start,
+            workflow,
+            deployment_id=deployment_ids[2]
+        )
 
         self._login_cli(self.no_role_username, self.no_role_password)
         self._assert_unauthorized(
-            self.cfy.execute_workflow, workflow, deployment_ids[2])
+            self.cfy.executions.start,
+            workflow,
+            deployment_id=deployment_ids[2]
+        )
 
     def _assert_list_executions(self, execution_ids):
 
         def _list_and_assert():
-            out, err = self._execute_and_get_streams(self.cfy.list_executions)
+            out, err = self._execute_and_get_streams(self.cfy.executions.list)
             self._assert_in_output(out, *execution_ids)
             self.assertEqual('', err)
 
@@ -362,13 +401,13 @@ class BaseAuthTest(security_test_base.SecurityTestBase):
 
         # ...but simple users should not
         self._login_cli(self.no_role_username, self.no_role_password)
-        self._assert_unauthorized(self.cfy.list_executions)
+        self._assert_unauthorized(self.cfy.executions.list)
 
     def _assert_get_execution(self, execution_id):
 
         def _get_and_assert():
             out, err = self._execute_and_get_streams(
-                self.cfy.get_execution, execution_id)
+                self.cfy.executions.get, execution_id)
             self._assert_in_output(out, execution_id)
             self.assertEqual('', err)
 
@@ -384,13 +423,13 @@ class BaseAuthTest(security_test_base.SecurityTestBase):
 
         # ...but simple users should not
         self._login_cli(self.no_role_username, self.no_role_password)
-        self._assert_unauthorized(self.cfy.get_execution, execution_id)
+        self._assert_unauthorized(self.cfy.executions.get, execution_id)
 
     def _assert_cancel_executions(self, execution_id1, execution_id2):
 
         def _cancel_and_assert(execution_id):
             out, err = self._execute_and_get_streams(
-                self.cfy.cancel_execution, execution_id)
+                self.cfy.executions.cancel, execution_id)
             cancelling_msg = 'A cancel request for execution {0} has been' \
                              ' sent'.format(execution_id)
             already_terminated_msg = 'in status terminated'
@@ -408,10 +447,10 @@ class BaseAuthTest(security_test_base.SecurityTestBase):
 
         # ...but viewers and simple users should not
         self._login_cli(self.viewer_username, self.viewer_password)
-        self._assert_unauthorized(self.cfy.cancel_execution, execution_id1)
+        self._assert_unauthorized(self.cfy.executions.cancel, execution_id1)
 
         self._login_cli(self.no_role_username, self.no_role_password)
-        self._assert_unauthorized(self.cfy.cancel_execution, execution_id1)
+        self._assert_unauthorized(self.cfy.executions.cancel, execution_id1)
 
     ###############################
     # utility methods and wrappers
@@ -429,10 +468,10 @@ class BaseAuthTest(security_test_base.SecurityTestBase):
             sys.stdout = old_out
             sys.stderr = old_err
 
-    def _execute_and_get_streams(self, method, *args):
+    def _execute_and_get_streams(self, method, *args, **kwargs):
         with self._capture_streams() as (out, err):
             try:
-                method(*args)
+                method(*args, **kwargs)
             except ErrorReturnCode:
                 pass
             except UserUnauthorizedError as e:
@@ -509,8 +548,8 @@ class BaseAuthTest(security_test_base.SecurityTestBase):
             self.fail('Failed to get manager status using username and '
                       'password')
 
-    def _assert_unauthorized(self, method, *args):
-        out, err = self._execute_and_get_streams(method, *args)
+    def _assert_unauthorized(self, method, *args, **kwargs):
+        out, err = self._execute_and_get_streams(method, *args, **kwargs)
         self.assertIn('401: user unauthorized', out)
         self.assertEqual('', err)
 

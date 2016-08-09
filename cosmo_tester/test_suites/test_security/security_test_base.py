@@ -178,11 +178,12 @@ class SecurityTestBase(TestCase):
         return overrides
 
     def _bootstrap(self):
-        self.addCleanup(self.cfy.teardown)
-        self.cfy.bootstrap(blueprint_path=self.test_manager_blueprint_path,
-                           inputs_file=self.test_inputs_path,
-                           task_retries=5,
-                           install_plugins=self.env.install_plugins)
+        self.addCleanup(self.cfy.teardown, force=True)
+        self.bootstrap(
+            self.test_manager_blueprint_path,
+            inputs=self.test_inputs_path,
+            install_plugins=self.env.install_plugins
+        )
 
     def _set_credentials_env_vars(self):
         os.environ[constants.CLOUDIFY_USERNAME_ENV] = self.TEST_CFY_USERNAME

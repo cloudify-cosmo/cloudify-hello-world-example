@@ -71,12 +71,13 @@ class OpenstackPluginTests(TestCase):
                                                         neutron_url):
         inputs['nova_url'] = nova_url
         inputs['neutron_url'] = neutron_url
-        inputs_file = self.cfy._get_inputs_in_temp_file(inputs, self.test_id)
-        self.cfy.bootstrap(self.blueprint_path,
-                           inputs_file=inputs_file,
-                           reset_config=True,
-                           validate_only=True,
-                           task_retries=1)
+
+        self.bootstrap(
+            self.blueprint_path,
+            inputs=inputs,
+            validate_only=True,
+            task_retries=1
+        )
 
     def _bootstrap_validation_expected_to_fail(self, inputs, nova_url,
                                                neutron_url,

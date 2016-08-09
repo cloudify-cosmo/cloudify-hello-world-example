@@ -53,11 +53,18 @@ class DockerHAProxyNodeCellar(DockerNodeCellar):
         return self._ip
 
     def scale(self, delta):
-        self.test_case.cfy.execute_workflow(
-            'scale', self.deployment_id,
-            parameters=dict(scalable_entity_name='nodecellar',
-                            delta=delta,
-                            scale_compute=True))
+        parameters = dict(
+            scalable_entity_name='nodecellar',
+            delta=delta,
+            scale_compute=True
+        )
+        parameters = self.test_case.get_parameters_in_temp_file(parameters,
+                                                                'scale')
+        self.test_case.cfy.executions.start(
+            'scale',
+            deployment_id=self.deployment_id,
+            parameters=parameters
+        )
 
     def assert_post_scale(self, expected_instances):
         initial_stats = self._read_haproxy_stats()

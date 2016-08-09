@@ -119,7 +119,10 @@ class ManyDeploymentsTest(MonitoringTestCase):
         manager_memory_total = self.get_manager_memory_total()
         prev_manager_memory_available = self.get_manager_memory_available()
         prev_space_available = self.get_manager_disk_available()
-        self.upload_blueprint(blueprint_id=self.test_id)
+        self.cfy.blueprints.upload(
+            self.blueprint_yaml,
+            blueprint_id=self.test_id
+        )
         deployment_dict = {"deployment_number": 0,
                            "manager_memory_available":
                                prev_manager_memory_available,
@@ -136,10 +139,9 @@ class ManyDeploymentsTest(MonitoringTestCase):
         try:
             while True:
                 start_time = time.time()
-                self.create_deployment(blueprint_id=self.test_id,
-                                       deployment_id=self.test_id+str(
-                                           number_of_deployments),
-                                       inputs='')
+                self.create_deployment(
+                    deployment_id=self.test_id+str(number_of_deployments)
+                )
                 self.wait_until_all_deployment_executions_end(
                     deployment_id=self.test_id+str(number_of_deployments))
                 end_create_deployment_time = time.time()

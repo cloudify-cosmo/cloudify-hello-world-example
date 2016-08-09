@@ -4,6 +4,6 @@ cd {{ work_dir }}
 source {{ venv_name }}/bin/activate
 cd {{ venv_name }}
 
-cfy executions start -w uninstall -d {{ app_name }}
-cfy deployments delete -d {{ app_name }}
-cfy blueprints delete -b {{ app_name }}
+cfy executions start uninstall -d {{ app_name }}
+cfy deployments delete {{ app_name }}
+cfy blueprints delete {{ app_name }}

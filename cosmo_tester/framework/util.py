@@ -15,6 +15,7 @@
 
 import os
 import re
+import sh
 import sys
 import time
 import json
@@ -98,6 +99,14 @@ def sh_bake(command):
     # so that they're not only printed out, but also saved as .stderr/.sdtout
     # on the return value or on the exception.
     return command.bake(_out=pass_stdout, _err=pass_stderr)
+
+
+def get_cfy():
+    return sh.cfy.bake(
+        _err_to_out=True,
+        _out=lambda l: sys.stdout.write(l),
+        _tee=True
+    )
 
 
 def pass_stdout(line, input_queue, process):

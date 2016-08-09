@@ -20,7 +20,7 @@ from influxdb import InfluxDBClient
 from cloudify_rest_client.exceptions import CloudifyClientError
 from cosmo_tester.framework.git_helper import clone
 from cosmo_tester.framework.test_cases import MonitoringTestCase
-from cosmo_tester.framework.cfy_helper import DEFAULT_EXECUTE_TIMEOUT
+from cosmo_tester.framework.testenv import DEFAULT_EXECUTE_TIMEOUT
 
 
 class NodecellarAppTest(MonitoringTestCase):
@@ -33,16 +33,13 @@ class NodecellarAppTest(MonitoringTestCase):
 
         self.modify_blueprint()
 
-        before, after = self.install(
+        before, after = self.upload_deploy_and_execute_install(
             inputs=self.get_inputs(),
-            execute_timeout=execute_timeout
+            timeout=execute_timeout
         )
 
         self.post_install_assertions(before, after)
-
-        self.execute_uninstall(deployment_id=self.test_id,
-                               delete_deployment_and_blueprint=True)
-
+        self.uninstall_delete_deployment_and_blueprint()
         self.post_uninstall_assertions()
 
     def modify_blueprint(self):
@@ -259,8 +256,7 @@ class OpenStackNodeCellarTestBase(NodecellarAppTest):
             else:
                 raise  # some other error? we'd better not hide it
         else:
-            self.execute_uninstall(deployment_id=deployment_id,
-                                   delete_deployment_and_blueprint=True)
+            self.execute_uninstall(deployment_id=deployment_id)
 
     def _test_openstack_nodecellar(self, blueprint_file):
 

@@ -3,4 +3,4 @@ set -eax
 
 cd $manager_dir
 source $activate_path
-cfy executions start -w uninstall -d test
+cfy executions start uninstall -d test

@@ -17,13 +17,12 @@ import os
 import random
 import shutil
 import string
-import tempfile
 
 from cloudify_rest_client.exceptions import CloudifyClientError
 
-from cosmo_tester.framework.cfy_helper import CfyHelper
 from cosmo_tester.framework.testenv import bootstrap, teardown
-from cosmo_tester.framework.util import create_rest_client, YamlPatcher
+from cosmo_tester.framework.util import create_rest_client, \
+    YamlPatcher, get_cfy
 from cosmo_tester.test_suites.test_blueprints.hello_world_bash_test import (
     HelloWorldBashTest)
 
@@ -47,9 +46,8 @@ class TwoManagersTest(HelloWorldBashTest):
 
     def setUp(self):
         super(TwoManagersTest, self).setUp()
-        self.workdir2 = tempfile.mkdtemp(prefix='cloudify-testenv-')
 
-        self.cfy2 = CfyHelper(self.workdir2, testcase=self)
+        self.cfy2 = get_cfy()
         second_manager_blueprint_path = '{}_existing'.format(
             self.env._manager_blueprint_path)
 
@@ -81,15 +79,17 @@ class TwoManagersTest(HelloWorldBashTest):
                 patch.append_value(prop, '2')
 
         self.cfy2.bootstrap(
-            blueprint_path=second_manager_blueprint_path,
-            inputs_file=second_cloudify_config_path,
+            second_manager_blueprint_path,
+            inputs=second_cloudify_config_path,
             install_plugins=self.env.install_plugins,
             keep_up_on_failure=False,
             task_retries=5,
             verbose=False
         )
 
-        self.client2 = create_rest_client(self.cfy2.get_management_ip())
+        # Bootstrap updates the active profile, so get_manager_ip returns
+        # the IP of the second manager
+        self.client2 = create_rest_client(self.get_manager_ip())
 
     def _start_execution_and_wait(self, client, deployment, workflow_id):
         execution = client.executions.start(deployment, workflow_id)
@@ -155,11 +155,12 @@ class TwoManagersTest(HelloWorldBashTest):
         self.logger.info('Installed new agents.')
         return context
 
-    def execute_uninstall(self, deployment_id=None, cfy=None):
-        super(TwoManagersTest, self).execute_uninstall(
-            cfy=self.cfy2)
+    def execute_uninstall(self, deployment_id=None,
+                          cfy=None,
+                          delete_deployment_and_blueprint=False):
+        super(TwoManagersTest, self).execute_uninstall(cfy=self.cfy2)
 
-    def _assert_nodes_deleted(self):
+    def _assert_nodes_deleted(self, client=None):
         super(TwoManagersTest, self)._assert_nodes_deleted(self.client2)
 
     @property

@@ -51,7 +51,7 @@ class TwoDeploymentsTest(TestCase):
             self.modify_yaml(blueprint_path=blueprint_yaml,
                              security_group_name=sg)
 
-            self.cfy.upload_deploy_and_execute_install(
+            self.upload_deploy_and_execute_install(
                 blueprint_path=blueprint_yaml,
                 blueprint_id=blueprint_id,
                 deployment_id=deployment_id,
@@ -67,7 +67,7 @@ class TwoDeploymentsTest(TestCase):
             self.logger.info('Deployment outputs: {0}'.format(outputs))
             bash.verify_webserver_running(outputs['http_endpoint'])
 
-            self.cfy.execute_uninstall(deployment_id=deployment_id)
+            self.execute_uninstall(deployment_id=deployment_id)
         except Exception, e:
             queue.put(e)
         else:

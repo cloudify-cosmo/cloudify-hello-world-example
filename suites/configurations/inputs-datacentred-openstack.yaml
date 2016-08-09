@@ -6,7 +6,7 @@ image_id: ''
 keystone_url: https://compute.datacentred.io:5000/v2.0
 manager_public_key_name: shared-systemt-tests
 agent_public_key_name: shared-systemt-tests
-flavor_id: 8f4b7ae1-b8c2-431f-bb0c-362a5ece0381
+flavor_id: 9cf6e43b-e191-47ca-8665-f8592e2d6227
 external_network_name: external
 
 use_existing_manager_keypair: true
