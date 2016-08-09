@@ -72,19 +72,6 @@ def _install_docker_and_configure_image():
                 ssh.put(util.get_resource_path('dockercompute/Dockerfile'),
                         'Dockerfile', use_sudo=True)
                 ssh.sudo('docker build -t cloudify/centos:7 .')
-            _restart_management_worker_workaround()
-
-
-def _restart_management_worker_workaround():
-    # This works around an issue that should be fixed in which
-    # Initial invocations running concurrently (i.e. two operations happening
-    # at the same time, specifically, starting at the same time so dispatched
-    # to the celery process pool very closely) seem to mess up celery process
-    # pool. the gatekeeper component may have something to do with this but i'm
-    # not sure. # For some reason, it also seems that after manually restarting
-    # the management worker, future scenarios of concurrent executions will
-    # cause no trouble what so ever.
-    ssh.sudo('systemctl restart cloudify-mgmtworker')
 
 
 def _upload_dockercompute_plugin():

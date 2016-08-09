@@ -25,8 +25,8 @@ variables:
   datacentred_openstack_ubuntu_precise: 2f91391d-ff21-4410-a063-d4e947845980
   datacentred_openstack_ubuntu_trusty: 6c3047c6-17b1-4aaf-a657-9229bb481e50
   datacentred_openstack_centos_6_5_image_name: CentOS 6.6 dccloud
-  datacentred_openstack_centos_7_image_name: CentOS 7.0
-  datacentred_openstack_centos_7_image_id: 74ff4015-aee1-4e02-aaa8-1c77b2650394
+  datacentred_openstack_centos_7_image_name: CentOS 7.2
+  datacentred_openstack_centos_7_image_id: ebab03e6-a674-4b6e-8f60-691c90fbcdc6
   datacentred_openstack_windows_image_name: Windows Server 2012 R2 Standard
   datacentred_openstack_windows_image_id: 07a93cc5-b3f1-499b-a7f2-ab420526ae1f
 
