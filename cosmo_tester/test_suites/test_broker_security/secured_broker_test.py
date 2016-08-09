@@ -31,11 +31,11 @@ from cosmo_tester.test_suites.test_broker_security import (
 logging.basicConfig()
 
 
-BROKER_SSL_ENABLED_INPUT = 'inputs.rabbitmq_ssl_enabled'
-BROKER_SSL_CERT_PUBLIC_INPUT = 'inputs.rabbitmq_cert_public'
-BROKER_SSL_CERT_PRIVATE_INPUT = 'inputs.rabbitmq_cert_private'
-BROKER_USERNAME_INPUT = 'inputs.rabbitmq_username'
-BROKER_PASSWORD_INPUT = 'inputs.rabbitmq_password'
+BROKER_SSL_ENABLED_INPUT = 'rabbitmq_ssl_enabled'
+BROKER_SSL_CERT_PUBLIC_INPUT = 'rabbitmq_cert_public'
+BROKER_SSL_CERT_PRIVATE_INPUT = 'rabbitmq_cert_private'
+BROKER_USERNAME_INPUT = 'rabbitmq_username'
+BROKER_PASSWORD_INPUT = 'rabbitmq_password'
 USE_EXISTING_FLOATING_IP_INPUT_PROP = 'inputs.use_existing_floating_ip'
 USE_EXISTING_FLOATING_IP_INPUT = 'use_existing_floating_ip'
 FLOATING_IP_INPUT_PROP = 'inputs.floating_ip'
@@ -51,31 +51,28 @@ class SecuredBrokerManagerTests(
     broker_security_test_base.BrokerSecurityTestBase,
 ):
 
-    def get_manager_blueprint_additional_props_override(self):
+    def get_manager_blueprint_inputs_override(self):
         self.broker_security_inputs = inputs.BrokerSecurity(
             cert_path=self.cert_path,
             key_path=self.key_path,
         )
         return {
-            BROKER_SSL_ENABLED_INPUT: {
-                'default': True,
-                'type': 'boolean'
+            BROKER_SSL_ENABLED_INPUT: True,
+            BROKER_SSL_CERT_PUBLIC_INPUT:
+                self.broker_security_inputs.public_cert,
+            BROKER_SSL_CERT_PRIVATE_INPUT:
+                self.broker_security_inputs.private_key,
+            BROKER_USERNAME_INPUT: self.broker_security_inputs.username,
+            BROKER_PASSWORD_INPUT: self.broker_security_inputs.password,
+        }
+
+    def get_manager_blueprint_additional_props_override(self):
+        return {
+            USE_EXTERNAL_RESOURCE_PROPERTY: {
+                'get_input': USE_EXISTING_FLOATING_IP_INPUT
             },
-            BROKER_SSL_CERT_PUBLIC_INPUT: {
-                'default': self.broker_security_inputs.public_cert,
-                'type': 'string'
-            },
-            BROKER_SSL_CERT_PRIVATE_INPUT: {
-                'default': self.broker_security_inputs.private_key,
-                'type': 'string'
-            },
-            BROKER_USERNAME_INPUT: {
-                'default': self.broker_security_inputs.username,
-                'type': 'string'
-            },
-            BROKER_PASSWORD_INPUT: {
-                'default': self.broker_security_inputs.password,
-                'type': 'string'
+            RESOURCE_ID_PROPERTY: {
+                'get_input': FLOATING_IP_INPUT
             },
             USE_EXISTING_FLOATING_IP_INPUT_PROP: {
                 'default': True,
@@ -84,12 +81,6 @@ class SecuredBrokerManagerTests(
             FLOATING_IP_INPUT_PROP: {
                 'default': self.floating_ip,
                 'type': 'string'
-            },
-            USE_EXTERNAL_RESOURCE_PROPERTY: {
-                'get_input': USE_EXISTING_FLOATING_IP_INPUT
-            },
-            RESOURCE_ID_PROPERTY: {
-                'get_input': FLOATING_IP_INPUT
             },
         }
 
@@ -171,7 +162,7 @@ class SecuredBrokerManagerTests(
             self.fail('SSL connection should fail without cert')
         except pika.exceptions.AMQPConnectionError as err:
             self.assertIn(
-                'error:0B084002:x509 certificate routines',
+                'certificate verify failed',
                 str(err.message),
             )
 

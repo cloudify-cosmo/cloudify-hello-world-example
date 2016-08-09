@@ -72,7 +72,15 @@ class BrokerSecurityTestBase(TestCase):
             for key, value in props.items():
                 patch.set_value(key, value)
 
+        props = self.get_manager_blueprint_inputs_override()
+        with util.YamlPatcher(self.test_inputs_path) as patch:
+            for key, value in props.items():
+                patch.set_value(key, value)
+
     def get_manager_blueprint_additional_props_override(self):
+        return {}
+
+    def get_manager_blueprint_inputs_override(self):
         return {}
 
     def _bootstrap(self):
