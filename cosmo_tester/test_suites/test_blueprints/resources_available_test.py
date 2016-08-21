@@ -28,7 +28,10 @@ class ResourcesAvailableTest(TestCase):
         self.repo_dir = clone(self.repo_url, self.workdir)
         self.blueprint_yaml = self.repo_dir / blueprint_name
 
-        self.upload_blueprint(self.test_id)
+        self.cfy.blueprints.upload(
+            self.blueprint_yaml,
+            blueprint_id=self.test_id
+        )
 
         invalid_resource_url = 'http://{0}/resources/blueprints/{1}/{2}' \
             .format(self.env.management_ip, self.test_id, blueprint_name)
@@ -41,4 +44,4 @@ class ResourcesAvailableTest(TestCase):
         except ConnectionError:
             pass
 
-        self.cfy.delete_blueprint(self.test_id)
+        self.cfy.blueprints.delete(self.test_id)

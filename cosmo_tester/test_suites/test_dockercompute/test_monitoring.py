@@ -29,7 +29,7 @@ class MonitoringTest(DockerComputeTestCase):
         expected_service_contains = 'example'
         expected_metric = 42.0
 
-        self.install(fetch_state=False)
+        self.upload_deploy_and_execute_install(fetch_state=False)
 
         self.wait_for_expected_outputs(
             expected_service_contains,
@@ -40,7 +40,7 @@ class MonitoringTest(DockerComputeTestCase):
               .format(self.env.management_ip, self.test_id)
         self.assert_grafana_path_active(url)
 
-        self.execute_uninstall(delete_deployment_and_blueprint=True)
+        self.uninstall_delete_deployment_and_blueprint()
 
     def wait_for_expected_outputs(self,
                                   expected_service_contains,

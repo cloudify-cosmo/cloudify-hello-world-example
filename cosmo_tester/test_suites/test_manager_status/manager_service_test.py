@@ -150,7 +150,7 @@ class RebootManagerTest(TestCase):
         os.close(fd)
         self.logger.info('Testing `cfy logs download`')
         try:
-            self.cfy.download_logs(output=tmp_log_archive)
+            self.cfy.logs.download(output_path=tmp_log_archive)
             with closing(tarfile.open(name=tmp_log_archive)) as tar:
                 files = [f.name for f in tar.getmembers()]
                 self.assertIn('cloudify/journalctl.log', files)
@@ -160,13 +160,17 @@ class RebootManagerTest(TestCase):
             os.remove(tmp_log_archive)
 
         self.logger.info('Testing `cfy logs backup`')
-        self.cfy.backup_logs()
-        self.assertTrue(
-            sudo('tar -xzvf /var/log/cloudify-manager-logs_*').succeeded)
-        self.logger.info('Success!')
+        self.cfy.logs.backup(verbose=True)
+        try:
+            self.assertTrue(
+                sudo('tar -xzvf /var/log/cloudify-manager-logs_*').succeeded)
+            self.logger.info('Success!')
+        finally:
+            # Clear the newly created backups
+            sudo('rm /var/log/cloudify-manager-logs_*')
 
         self.logger.info('Testing `cfy logs purge`')
-        self.cfy.purge_logs()
+        self.cfy.logs.purge(force=True)
         self.assertTrue(run(
             '[ ! -s /var/log/cloudify/nginx/cloudify.access.log ]',).succeeded)
         self.logger.info('Success!')
@@ -175,20 +179,20 @@ class RebootManagerTest(TestCase):
         self._update_fabric_env()
         self.logger.info('Test list without tmux installed...')
         try:
-            self.cfy.ssh_list()
+            self.cfy.ssh(list_sessions=True)
         except sh.ErrorReturnCode_1 as ex:
-            self.assertIn('tmux executable not found on manager', str(ex))
+            self.assertIn('tmux executable not found on manager', ex.stdout)
 
         self.logger.info('Installing tmux...')
         sudo('yum install tmux -y')
 
         self.logger.info('Test listing sessions when non are available..')
-        output = self.cfy.ssh_list().stdout.splitlines()[-1]
+        output = self.cfy.ssh(list_sessions=True).stdout.splitlines()[-1]
         self.assertIn('No sessions are available', output)
         sudo('yum remove tmux -y')
 
         self.logger.info('Test running ssh command...')
-        self.cfy.ssh_run_command('echo yay! > /tmp/ssh_test_output_file')
+        self.cfy.ssh(command='echo yay! > /tmp/ssh_test_output_file')
         self._check_remote_file_content('/tmp/ssh_test_output_file', 'yay!')
 
     def _check_remote_file_content(self, remote_path, desired_content):
@@ -300,31 +304,3 @@ class RebootManagerTest(TestCase):
                             'Verifying compressed log exists: {0}...'.format(
                                 compressed_log_path))
                         self.assertTrue(exists(compressed_log_path))
-
-    def test_07_rabbitmq_policies(self):
-        """Tests that rabbitmq policies are set accordingly.
-
-        The order of the policies matter. We create them according to a certain
-        order in the manager blueprint and that it is the order in which they
-        are tested. If we change the order in the policy creation mechanism, we
-        need to note that in the test to verify that they are kept in order.
-        """
-        self._update_fabric_env()
-        default_policy = r'{"message-ttl":\d+,"max-length":\d+}'
-        policies = sudo('rabbitmqctl list_policies').stdout.split('\n')[1:]
-
-        self.logger.info('Verifying pattern in {0}...'.format(policies[0]))
-        self.assertIn('^cloudify-events$', policies[0])
-        self.assertRegexpMatches(policies[0], default_policy)
-
-        self.logger.info('Verifying pattern in {0}...'.format(policies[1]))
-        self.assertIn('^cloudify-logs$', policies[1])
-        self.assertRegexpMatches(policies[1], default_policy)
-
-        self.logger.info('Verifying pattern in {0}...'.format(policies[2]))
-        self.assertIn('^amq\\\\.gen.*$', policies[2])
-        self.assertRegexpMatches(policies[2], default_policy)
-
-        self.logger.info('Verifying pattern in {0}...'.format(policies[3]))
-        self.assertIn('^.*-riemann$', policies[3])
-        self.assertRegexpMatches(policies[3], default_policy)

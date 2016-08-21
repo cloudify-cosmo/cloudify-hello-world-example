@@ -27,16 +27,19 @@ class ExistingVMTest(DockerComputeTestCase):
         self.blueprint_path = self.copy_blueprint('existing-vm')
         self.blueprint_yaml = self.blueprint_path / 'setup-blueprint.yaml'
         self.add_plugin_yaml_to_blueprint()
-        self.install(fetch_state=False,
-                     blueprint_id=setup_blueprint_id,
-                     deployment_id=self.setup_deployment_id)
-        self.addCleanup(self.execute_uninstall,
-                        deployment_id=self.setup_deployment_id,
-                        delete_deployment_and_blueprint=True)
+        self.upload_deploy_and_execute_install(
+            fetch_state=False,
+            blueprint_id=setup_blueprint_id,
+            deployment_id=self.setup_deployment_id
+        )
+        self.addCleanup(
+            self.uninstall_delete_deployment_and_blueprint,
+            deployment_id=self.setup_deployment_id
+        )
 
     def test_existing_vm(self):
         self.blueprint_yaml = self.blueprint_path / 'blueprint.yaml'
-        self.install(
+        self.upload_deploy_and_execute_install(
             fetch_state=False,
             inputs={
                 'ip': self.ip('setup_host',
@@ -51,4 +54,4 @@ class ExistingVMTest(DockerComputeTestCase):
         middle_runtime_properties = [i.runtime_properties for i in instances
                                      if i.node_id == 'middle'][0]
         self.assertDictEqual({'working': True}, middle_runtime_properties)
-        self.execute_uninstall(delete_deployment_and_blueprint=True)
+        self.uninstall_delete_deployment_and_blueprint()

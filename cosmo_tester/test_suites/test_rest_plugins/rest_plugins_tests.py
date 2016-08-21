@@ -86,8 +86,9 @@ class RestPluginsTests(TestCase):
         self.assertIn('mock_attribute_value', output)
 
     def _bootstrap(self):
-        self.cfy.bootstrap(blueprint_path=self.test_manager_blueprint_path,
-                           inputs_file=self.test_inputs_path,
-                           task_retries=5,
-                           install_plugins=self.env.install_plugins)
-        self.addCleanup(self.cfy.teardown)
+        self.bootstrap(
+            self.test_manager_blueprint_path,
+            inputs=self.test_inputs_path,
+            install_plugins=self.env.install_plugins
+        )
+        self.addCleanup(self.cfy.teardown, force=True)

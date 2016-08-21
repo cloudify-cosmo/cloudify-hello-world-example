@@ -54,13 +54,16 @@ class DockerHelloWorld(object):
         self.test_case.add_plugin_yaml_to_blueprint()
 
     def install(self):
-        self.test_case.install(fetch_state=False,
-                               blueprint_id=self.blueprint_id,
-                               deployment_id=self.deployment_id)
+        self.test_case.upload_deploy_and_execute_install(
+            fetch_state=False,
+            blueprint_id=self.blueprint_id,
+            deployment_id=self.deployment_id
+        )
 
     def uninstall(self):
-        self.test_case.execute_uninstall(delete_deployment_and_blueprint=True,
-                                         deployment_id=self.deployment_id)
+        self.test_case.uninstall_delete_deployment_and_blueprint(
+            deployment_id=self.deployment_id
+        )
 
     def assert_installed(self):
         self.assert_events()

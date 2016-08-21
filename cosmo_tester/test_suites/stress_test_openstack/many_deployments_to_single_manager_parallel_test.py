@@ -123,10 +123,12 @@ class MultiDeploymentParallelExecutionTest(MonitoringTestCase):
         inputs = params_dict.get('inputs', '')
         self.logger.info("creating deployment {0}"
                          .format(deployment_id))
-        result = self.create_deployment(blueprint_id,
-                                        deployment_id,
-                                        inputs)
-        self.active_threads = self.active_threads - 1
+        result = self.create_deployment(
+            blueprint_id,
+            deployment_id,
+            inputs
+        )
+        self.active_threads -= 1
         return result
 
     @retry(stop_max_delay=10000,
@@ -136,8 +138,11 @@ class MultiDeploymentParallelExecutionTest(MonitoringTestCase):
             blueprint_id):
         self.logger.info("uploading blueprint {0}"
                          .format(blueprint_id))
-        result = self.upload_blueprint(blueprint_id)
-        self.active_threads = self.active_threads - 1
+        result = self.cfy.blueprints.upload(
+            self.blueprint_yaml,
+            blueprint_id=blueprint_id
+        )
+        self.active_threads -= 1
         return result
 
     @retry(stop_max_delay=10000,
@@ -150,7 +155,7 @@ class MultiDeploymentParallelExecutionTest(MonitoringTestCase):
         self.logger.info("executing install on deployment {0}"
                          .format(deployment_id))
         result = self.execute_install(deployment_id, fetch_state)
-        self.active_threads = self.active_threads - 1
+        self.active_threads -= 1
         return result
 
     def many_deployments_stress_test(self):
@@ -210,7 +215,7 @@ class MultiDeploymentParallelExecutionTest(MonitoringTestCase):
                     self.logger.info("executing install on deployment {0}"
                                      .format(self.installed))
                     deployment_name = self.test_id+str(self.installed)
-                    self.installed = self.installed + 1
+                    self.installed += 1
                     self.run_thread_with_this(
                         func=self.execute_install_retry,
                         args=[deployment_name])

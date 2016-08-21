@@ -8,4 +8,4 @@ source $activate_path
 pip install -r $cli_requirements_path
 pip install -e $cli_repo_dir
 cfy init -r
-cfy bootstrap --install-plugins -p $blueprint_path -i $inputs_path
+cfy bootstrap --install-plugins $blueprint_path -i $inputs_path

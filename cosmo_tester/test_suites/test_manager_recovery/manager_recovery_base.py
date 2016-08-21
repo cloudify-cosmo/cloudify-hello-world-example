@@ -34,14 +34,14 @@ class BaseManagerRecoveryTest(TestCase):
         self._copy_manager_blueprint()
 
         # bootstrap and install
-        self.bootstrap()
+        self._bootstrap()
         self._install_blueprint()
 
     def _pre_recover_actions(self):
         self.snapshot_id = self._get_snapshot_id()
         self.snapshot_file_path = '{0}.zip'.format(
             os.path.join(self.workdir, self.snapshot_id))
-        self.cfy.create_snapshot(self.snapshot_id)
+        self.cfy.snapshots.create(self.snapshot_id)
 
         # waiting for snapshot file to be created on the manager
         start_time = time.time()
@@ -53,7 +53,10 @@ class BaseManagerRecoveryTest(TestCase):
                     snapshot_created = True
                     break
 
-        self.cfy.download_snapshot(self.snapshot_id, self.snapshot_file_path)
+        self.cfy.snapshots.download(
+            self.snapshot_id,
+            output_path=self.snapshot_file_path
+        )
 
     def _sort_workflows_list_in_state_by_name(self, state):
         for deployment in state['deployments'].values():
@@ -114,13 +117,15 @@ class BaseManagerRecoveryTest(TestCase):
         # this will verify that the private ip of the manager remained
         # the same. this will also test that the workflows worker is still
         # responding to tasks.
-
-        self.cfy.execute_workflow(
+        parameters = {'operation': 'cloudify.interfaces.greet.hello'}
+        parameters = self.get_parameters_in_temp_file(
+            parameters,
+            self.deployment_id
+        )
+        self.cfy.executions.start(
             'execute_operation',
-            self.deployment_id,
-            parameters={
-                'operation': 'cloudify.interfaces.greet.hello'
-            }
+            deployment_id=self.deployment_id,
+            parameters=parameters
         )
 
         # there is only one node instance in the blueprint
@@ -134,7 +139,7 @@ class BaseManagerRecoveryTest(TestCase):
         self.execute_uninstall(self.deployment_id)
 
         # this will test the management worker is still responding
-        self.cfy.delete_deployment(self.deployment_id)
+        self.cfy.deployments.delete(self.deployment_id)
 
     def _copy_manager_blueprint(self):
         inputs_path, mb_path = util.generate_unique_configurations(
@@ -168,19 +173,20 @@ class BaseManagerRecoveryTest(TestCase):
 
         def recover():
             snapshot_path = self.snapshot_file_path
-            self.cfy.recover(task_retries=10, snapshot_path=snapshot_path)
+            self.cfy.recover(snapshot_path, task_retries=10, force=True)
 
         return self._make_operation_with_before_after_states(
             recover,
             fetch_state=True)
 
-    def bootstrap(self):
-        self.cfy.bootstrap(blueprint_path=self.test_manager_blueprint_path,
-                           inputs_file=self.test_inputs_path,
-                           task_retries=5,
-                           install_plugins=self.env.install_plugins)
+    def _bootstrap(self):
+        self.bootstrap(
+            self.test_manager_blueprint_path,
+            inputs=self.test_inputs_path,
+            install_plugins=self.env.install_plugins
+        )
 
         # override the client instance to use the correct ip
-        self.client = CloudifyClient(self.cfy.get_management_ip())
+        self.client = CloudifyClient(self.get_manager_ip())
 
-        self.addCleanup(self.cfy.teardown)
+        self.addCleanup(self.cfy.teardown, force=True)

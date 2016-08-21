@@ -4,4 +4,4 @@ set -eax
 
 cd $manager_dir
 source $activate_path
-cfy executions start -w execute_operation -d test -p operation=cloudify.interfaces.lifecycle.stop
+cfy executions start execute_operation -d test -p operation=cloudify.interfaces.lifecycle.stop

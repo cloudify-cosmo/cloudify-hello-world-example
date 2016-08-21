@@ -80,17 +80,22 @@ class OpenStackScaleNodeCellarTest(OpenStackNodeCellarTestBase):
         return 8 + 3 * nodejs_instances
 
     def _scale(self, delta):
-        self.cfy.execute_workflow(
-            'scale', self.test_id,
-            parameters=dict(scalable_entity_name='nodecellar',
-                            delta=delta,
-                            scale_compute=True))
+        parameters = dict(
+            scalable_entity_name='nodecellar',
+            delta=delta,
+            scale_compute=True
+        )
+        parameters = self.get_parameters_in_temp_file(parameters, 'scale')
+        self.cfy.executtion.start(
+            'scale',
+            deployment_id=self.test_id,
+            parameters=parameters
+        )
 
     def _test_cleanup(self):
         try:
-            self.cfy.delete_deployment(deployment_id=self.test_id,
-                                       ignore_live_nodes=True)
-            self.cfy.delete_blueprint(blueprint_id=self.test_id)
+            self.cfy.deployments.delete(self.test_id, force=True)
+            self.cfy.blueprints.delete(self.test_id)
         except Exception as e:
             self.logger.info('During cleanup: {0}'.format(e))
 

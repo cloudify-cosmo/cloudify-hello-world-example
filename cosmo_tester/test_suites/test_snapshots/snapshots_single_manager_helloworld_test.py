@@ -64,15 +64,21 @@ class SnapshotsHelloWorldTest(TestCase):
         super(SnapshotsHelloWorldTest, self).tearDown()
 
     def _deploy(self, deployment_id, blueprint_id=None):
-        if blueprint_id is None:
-            blueprint_id = deployment_id
-        self.upload_blueprint(blueprint_id)
+        blueprint_id = blueprint_id or deployment_id
+        self.cfy.blueprints.upload(
+            self.blueprint_yaml,
+            blueprint_id=blueprint_id
+        )
         inputs = {
             'agent_user': self.env.cloudify_agent_user,
             'image': self.env.ubuntu_trusty_image_name,
             'flavor': self.env.flavor_name
         }
-        self.create_deployment(blueprint_id, deployment_id, inputs=inputs)
+        self.create_deployment(
+            blueprint_id,
+            deployment_id,
+            inputs=inputs
+        )
         self.wait_until_all_deployment_executions_end(deployment_id)
 
     def _delete(self, deployment_id, blueprint_id=None):
@@ -163,7 +169,10 @@ class SnapshotsHelloWorldTest(TestCase):
 
     def test_force_with_blueprint_conflict(self):
         blueprint = self._uuid()
-        self.upload_blueprint(blueprint)
+        self.cfy.blueprints.upload(
+            self.blueprint_yaml,
+            blueprint_id=blueprint
+        )
         snapshot = self._uuid()
         self._create_snapshot(snapshot)
         execution = self._restore_snapshot_failure_expected(snapshot,

@@ -40,12 +40,17 @@ class ManagerMaintenanceModeTest(TestCase):
             'blueprint.yaml'
         )
 
-        self.upload_blueprint(self.test_id)
-        self.create_deployment(self.test_id, self.test_id, inputs={
-            'image': self.env.ubuntu_trusty_image_id,
-            'flavor': self.env.small_flavor_id,
-            'agent_user': 'ubuntu'
-        })
+        self.cfy.blueprints.upload(
+            self.blueprint_yaml,
+            blueprint_id=self.test_id
+        )
+        self.create_deployment(
+            inputs={
+                'image': self.env.ubuntu_trusty_image_id,
+                'flavor': self.env.small_flavor_id,
+                'agent_user': 'ubuntu'
+            }
+        )
 
         # Running not blocking installation
         execution = self._execute_install()
@@ -63,7 +68,7 @@ class ManagerMaintenanceModeTest(TestCase):
                         exception_class=AssertionError, args=['activating'])
 
         self.logger.info('cancelling installation')
-        self.cfy.cancel_execution(execution['id'])
+        self.cfy.executions.cancel(execution['id'])
 
         self.logger.info(
             "checking if maintenance status has changed to 'activated'")
@@ -77,4 +82,4 @@ class ManagerMaintenanceModeTest(TestCase):
         self.repetitive(self._check_maintenance_status, timeout=60,
                         exception_class=AssertionError, args=['deactivated'])
 
-        self.execute_uninstall(self.test_id, self.cfy, True)
+        self.uninstall_delete_deployment_and_blueprint()

@@ -31,9 +31,8 @@ from cloudify.workflows import local
 
 from cosmo_tester.framework.testenv import TestCase
 from cosmo_tester.framework.git_helper import clone
-from cosmo_tester.framework.cfy_helper import CfyHelper
-
-from cosmo_tester.framework.util import create_rest_client, YamlPatcher
+from cosmo_tester.framework.util import create_rest_client, \
+    YamlPatcher, get_cfy
 
 
 BOOTSTRAP_REPO_URL = 'https://github.com/cloudify-cosmo/' \
@@ -158,7 +157,7 @@ class BaseManagerUpgradeTest(TestCase):
         # the testenv ones
         self.cfy_workdir = tempfile.mkdtemp(prefix='manager-upgrade-')
         self.addCleanup(shutil.rmtree, self.cfy_workdir)
-        self.manager_cfy = CfyHelper(cfy_workdir=self.cfy_workdir)
+        self.manager_cfy = get_cfy()
         self.manager_inputs = self._get_bootstrap_inputs()
 
         if self._use_external_manager:
@@ -265,7 +264,7 @@ class BaseManagerUpgradeTest(TestCase):
 
     def bootstrap_manager(self):
         self.bootstrap_blueprint = self.get_bootstrap_blueprint()
-        inputs_path = self.manager_cfy._get_inputs_in_temp_file(
+        inputs_path = self.get_inputs_in_temp_file(
             self.manager_inputs, self._testMethodName)
 
         try:
@@ -283,8 +282,7 @@ class BaseManagerUpgradeTest(TestCase):
 
             self._execute_command(cfy_init_cmd.split(), cwd=self.cfy_workdir)
             # execute bootstrap
-            bootstrap_cmd = '{0}/cfy bootstrap -p {1} -i {2} ' \
-                            '--install-plugins'\
+            bootstrap_cmd = '{0}/cfy bootstrap {1} -i {2} --install-plugins'\
                 .format(py_bin_path, self.bootstrap_blueprint, inputs_path)
             self._execute_command(bootstrap_cmd.split(), cwd=self.cfy_workdir)
 
@@ -317,17 +315,27 @@ class BaseManagerUpgradeTest(TestCase):
         )
         self.addCleanup(shutil.rmtree, hello_repo_dir)
         hello_blueprint_path = hello_repo_path / 'blueprint.yaml'
-        self.manager_cfy.upload_blueprint(blueprint_id, hello_blueprint_path)
+        self.cfy.blueprints.upload(
+            hello_blueprint_path,
+            blueprint_id=blueprint_id
+        )
 
         inputs = {
             'agent_user': self.env.ubuntu_image_user,
             'image': self.env.ubuntu_trusty_image_name,
             'flavor': self.env.flavor_name
         }
-        self.manager_cfy.create_deployment(blueprint_id, deployment_id,
-                                           inputs=inputs)
+        inputs = self.get_inputs_in_temp_file(inputs, deployment_id)
+        self.manager_cfy.deployments.create(
+            deployment_id,
+            blueprint_id=blueprint_id,
+            inputs=inputs
+        )
 
-        self.manager_cfy.execute_install(deployment_id=deployment_id)
+        self.manager_cfy.executions.start(
+            'install',
+            deployment_id=deployment_id
+        )
         return deployment_id
 
     def get_upgrade_blueprint(self):
@@ -364,14 +372,17 @@ class BaseManagerUpgradeTest(TestCase):
             'ssh_port': 22,
             'elasticsearch_endpoint_port': 9900
         }
-        upgrade_inputs_file = self.manager_cfy._get_inputs_in_temp_file(
-            self.upgrade_inputs, self._testMethodName)
+        upgrade_inputs_file = self.get_inputs_in_temp_file(
+            self.upgrade_inputs,
+            self._testMethodName
+        )
 
-        with self.manager_cfy.maintenance_mode():
-            self.manager_cfy.upgrade_manager(
-                blueprint_path=self.upgrade_blueprint,
-                inputs_file=upgrade_inputs_file,
-                install_plugins=self.env.install_plugins)
+        with self.maintenance_mode():
+            self.manager_cfy.upgrade(
+                self.upgrade_blueprint,
+                inputs=upgrade_inputs_file,
+                install_plugins=self.env.install_plugins
+            )
 
     def post_upgrade_checks(self, preupgrade_deployment_id):
         """To check if the upgrade succeeded:
@@ -435,7 +446,10 @@ class BaseManagerUpgradeTest(TestCase):
             self.fail('elasticsearch isnt listening on the changed port')
 
     def uninstall_deployment(self, deployment_id):
-        self.manager_cfy.execute_uninstall(deployment_id)
+        self.manager_cfy.executions.start(
+            'uninstall',
+            deployment_id=deployment_id
+        )
 
     def rollback_manager(self, blueprint=None, inputs=None):
         blueprint = blueprint or self.upgrade_blueprint
@@ -446,13 +460,13 @@ class BaseManagerUpgradeTest(TestCase):
             'ssh_port': 22,
             'ssh_user': self.manager_inputs['ssh_user']
         }
-        rollback_inputs_file = self.manager_cfy._get_inputs_in_temp_file(
-            rollback_inputs, self._testMethodName)
+        rollback_inputs_file = self.get_inputs_in_temp_file(
+            rollback_inputs,
+            self._testMethodName
+        )
 
-        with self.manager_cfy.maintenance_mode():
-            self.manager_cfy.rollback_manager(
-                blueprint_path=blueprint,
-                inputs_file=rollback_inputs_file)
+        with self.maintenance_mode():
+            self.manager_cfy.rollback(blueprint, inputs=rollback_inputs_file)
 
     def post_rollback_checks(self, preupgrade_deployment_id):
         rollback_manager_version = self.get_curr_version()

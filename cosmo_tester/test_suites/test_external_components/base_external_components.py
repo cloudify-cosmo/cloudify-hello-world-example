@@ -21,8 +21,7 @@ class BaseExternalComponentsTest(AbstractHelloWorldTest,
 
         if self.env.install_plugins:
             self.logger.info('installing required plugins')
-            self.cfy.install_plugins_locally(
-                blueprint_path=self.blueprint_yaml)
+            self.cfy.blueprints.install_plugins(self.blueprint_yaml)
 
         self.logger.info('initialize external '
                          'components local env for running the '

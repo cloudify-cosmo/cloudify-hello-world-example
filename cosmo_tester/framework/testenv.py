@@ -18,28 +18,29 @@ import os
 import sys
 import time
 import json
+import yaml
 import copy
 import shutil
 import logging
+import requests
 import tempfile
 import unittest
 import importlib
+import fabric.api
+from path import path
+import fabric.context_managers
 from contextlib import contextmanager
 
-import yaml
-import fabric.api
-import fabric.context_managers
-from path import path
-
-from cosmo_tester.framework.cfy_helper import (CfyHelper,
-                                               DEFAULT_EXECUTE_TIMEOUT)
+from cloudify_cli.env import get_profile_context
+from cloudify_rest_client.executions import Execution
+from cloudify_cli.config.config import CLOUDIFY_CONFIG_PATH
 from cosmo_tester.framework.util import (get_blueprint_path,
                                          process_variables,
                                          YamlPatcher,
+                                         download_file,
                                          generate_unique_configurations,
-                                         create_rest_client)
-
-from cloudify_rest_client.executions import Execution
+                                         create_rest_client,
+                                         get_cfy)
 
 root = logging.getLogger()
 root.setLevel(logging.INFO)
@@ -58,8 +59,9 @@ root.addHandler(ch)
 logger = logging.getLogger('TESTENV')
 logger.setLevel(logging.INFO)
 
-HANDLER_CONFIGURATION = 'HANDLER_CONFIGURATION'
+DEFAULT_EXECUTE_TIMEOUT = 1800
 SUITES_YAML_PATH = 'SUITES_YAML_PATH'
+HANDLER_CONFIGURATION = 'HANDLER_CONFIGURATION'
 
 test_environment = None
 
@@ -206,36 +208,82 @@ class TestEnvironment(object):
 
         self._global_cleanup_context = self.handler.CleanupContext(
             'testenv', self)
-        cfy = CfyHelper(cfy_workdir=self._workdir)
 
-        self.handler.before_bootstrap()
+        self._bootstrap(self._manager_blueprint_path,
+                        inputs_path=self.cloudify_config_path,
+                        install_plugins=self.install_plugins,
+                        keep_up_on_failure=False,
+                        task_retries=task_retries,
+                        verbose=True)
+
+    def _bootstrap(self,
+                   blueprint_path,
+                   inputs_path=None,
+                   install_plugins=None,
+                   keep_up_on_failure=False,
+                   validate_only=False,
+                   task_retries=5,
+                   task_retry_interval=90,
+                   subgraph_retries=2,
+                   verbose=False,
+                   create_rest_client_func=None):
+
+        if install_plugins is None:
+            install_plugins = test_environment.install_plugins
+
+        cfy = get_cfy()
+        cfy.init(reset_context=True)
+
+        with YamlPatcher(CLOUDIFY_CONFIG_PATH) as patch:
+            prop_path = ('local_provider_context.'
+                         'cloudify.workflows.subgraph_retries')
+            patch.set_value(prop_path, subgraph_retries)
+
+        if not validate_only:
+            # TODO: add manager_blueprint_path and inputs path arguments to
+            # openstack_plugin
+            try:
+                self.before_bootstrap(
+                    manager_blueprint_path=blueprint_path,
+                    inputs_path=inputs_path)
+            except TypeError:
+                self.before_bootstrap()
+
         cfy.bootstrap(
-            self._manager_blueprint_path,
-            inputs_file=self.cloudify_config_path,
-            install_plugins=self.install_plugins,
-            keep_up_on_failure=False,
+            blueprint_path,
+            inputs=inputs_path,
+            install_plugins=install_plugins,
+            keep_up_on_failure=keep_up_on_failure,
+            validate_only=validate_only,
             task_retries=task_retries,
-            verbose=True)
-        self._running_env_setup(cfy.get_management_ip())
-        self.handler.after_bootstrap(cfy.get_provider_context())
+            task_retry_interval=task_retry_interval,
+            verbose=verbose,
+        )
+
+        if not validate_only:
+            self._upload_plugins()
+            self._running_env_setup(get_profile_context().manager_ip,
+                                    create_rest_client_func)
+            self.after_bootstrap(get_profile_context().provider_context)
 
     def teardown(self):
         if self._global_cleanup_context is None:
             return
         self.setup()
-        cfy = CfyHelper(cfy_workdir=self._workdir)
+        cfy = get_cfy()
         try:
             cfy.use(self.management_ip)
-            cfy.teardown(verbose=True)
+            cfy.teardown(force=True, verbose=True)
         finally:
             self._global_cleanup_context.cleanup()
             self.handler.after_teardown()
             if os.path.exists(self._workdir):
                 shutil.rmtree(self._workdir)
 
-    def _running_env_setup(self, management_ip):
+    def _running_env_setup(self, management_ip, create_rest_client_func=None):
+        create_rest_client_func = create_rest_client_func or create_rest_client
         self.management_ip = management_ip
-        self.rest_client = create_rest_client(management_ip)
+        self.rest_client = create_rest_client_func(management_ip)
         response = self.rest_client.manager.get_status()
         if not response['status'] == 'running':
             raise RuntimeError('Manager at {0} is not running.'
@@ -259,6 +307,36 @@ class TestEnvironment(object):
         else:
             raise AttributeError(
                 'Property \'{0}\' was not found in env'.format(item))
+
+    def _download_wagons(self):
+        self.logger.info('Downloading Wagons...')
+
+        wagon_paths = []
+
+        plugin_urls_location = (
+            'https://raw.githubusercontent.com/cloudify-cosmo/'
+            'cloudify-versions/{branch}/packages-urls/plugin-urls.yaml'.format(
+                branch=os.environ.get('BRANCH_NAME_CORE', 'master'),
+            )
+        )
+
+        plugins = yaml.load(
+            requests.get(plugin_urls_location).text
+        )['plugins']
+        for plugin in plugins:
+            self.logger.info(
+                'Downloading: {0}...'.format(plugin['wgn_url'])
+            )
+            wagon_paths.append(
+                download_file(plugin['wgn_url'])
+            )
+        return wagon_paths
+
+    def _upload_plugins(self):
+        downloaded_wagon_paths = self._download_wagons()
+        for wagon in downloaded_wagon_paths:
+            self.logger.info('Uploading {0}'.format(wagon))
+            get_cfy().plugins.upload(wagon, verbose=True)
 
 
 class TestCase(unittest.TestCase):
@@ -316,8 +394,7 @@ class TestCase(unittest.TestCase):
                 self.logger.error('Failed executions found.')
             for e in executions:
                 self.logger.error('Execution {0} logs:'.format(e.id))
-                self.logger.error(self.cfy.list_events(
-                    execution_id=e.id, verbosity='-vv'))
+                self.logger.error(self.cfy.events.list(e.id, '-vv'))
 
         return
 
@@ -329,36 +406,50 @@ class TestCase(unittest.TestCase):
         self.assertEqual(expected_outputs, outputs)
 
     def setUp(self):
-        global test_environment
         self.env = test_environment.setup()
         self.logger = logging.getLogger(self._testMethodName)
         self.logger.setLevel(logging.INFO)
+        # TODO: remove before merging
+        # logger = logging.getLogger('sh.command')
+        # logger.setLevel(logging.WARNING)
+        # logger = logging.getLogger('sh.stream_bufferer')
+        # logger.setLevel(logging.WARNING)
+        # logger = logging.getLogger('cloudify.rest_client')
+        # logger.setLevel(logging.WARNING)
         self.logger.info('Starting test setUp')
         self.workdir = tempfile.mkdtemp(prefix='cosmo-test-')
         management_user = getattr(self.env, 'management_user_name', None)
+        management_port = getattr(self.env, 'management_port', 22)
         management_key_path = getattr(self.env, 'management_key_path', None)
-        self.cfy = CfyHelper(cfy_workdir=self.workdir,
-                             management_ip=self.env.management_ip,
-                             management_user=management_user,
-                             management_key=management_key_path)
+
         self.client = self.env.rest_client
         self.test_id = 'system-test-{0}-{1}'.format(
             self._testMethodName,
             time.strftime("%Y%m%d-%H%M"))
+
+        self.cfy = get_cfy()
+        if self.env.management_ip:
+            self.cfy.use(
+                self.env.management_ip,
+                manager_user=management_user,
+                manager_key=management_key_path,
+                manager_port=management_port
+            )
+
         self.blueprint_yaml = None
         self._test_cleanup_context = self.env.handler.CleanupContext(
             self._testMethodName, self.env)
-        # register cleanup
         self.addCleanup(self._cleanup)
         self.maxDiff = 1024 * 1024 * 10
 
     def _cleanup(self):
+        self.logger.info('Starting test cleanup')
         self.env.setup()
         self._test_cleanup_context.cleanup()
         shutil.rmtree(self.workdir)
 
     def tearDown(self):
-        self.logger.info('Starting test tearDown')
+        pass
         # note that the cleanup function is registered in setUp
         # because it is called regardless of whether setUp succeeded or failed
         # unlike tearDown which is not called when setUp fails (which might
@@ -404,80 +495,6 @@ class TestCase(unittest.TestCase):
         for node_id in before['nodes'].keys():
             del after['nodes'][node_id]
         return after
-
-    def execute_install(self,
-                        deployment_id=None,
-                        fetch_state=True):
-        self.logger.info("attempting to execute install on deployment {0}"
-                         .format(deployment_id))
-        return self._make_operation_with_before_after_states(
-            self.cfy.execute_install,
-            fetch_state,
-            deployment_id=deployment_id)
-
-    def install(
-            self,
-            blueprint_id=None,
-            deployment_id=None,
-            fetch_state=True,
-            execute_timeout=DEFAULT_EXECUTE_TIMEOUT,
-            inputs=None):
-
-        return self._make_operation_with_before_after_states(
-            self.cfy.install,
-            fetch_state,
-            str(self.blueprint_yaml),
-            blueprint_id=blueprint_id or self.test_id,
-            deployment_id=deployment_id or self.test_id,
-            execute_timeout=execute_timeout,
-            inputs=inputs)
-
-    upload_deploy_and_execute_install = install
-
-    def upload_blueprint(
-            self,
-            blueprint_id):
-        self.logger.info("attempting to upload blueprint {0}"
-                         .format(blueprint_id))
-        return self.cfy.upload_blueprint(
-            blueprint_id=blueprint_id,
-            blueprint_path=str(self.blueprint_yaml))
-
-    def create_deployment(
-            self,
-            blueprint_id,
-            deployment_id,
-            inputs):
-        self.logger.info("attempting to create_deployment deployment {0}"
-                         .format(deployment_id))
-        return self.cfy.create_deployment(
-            blueprint_id=blueprint_id,
-            deployment_id=deployment_id,
-            inputs=inputs)
-
-    def _make_operation_with_before_after_states(self, operation, fetch_state,
-                                                 *args, **kwargs):
-        before_state = None
-        after_state = None
-        if fetch_state:
-            before_state = self.get_manager_state()
-        operation(*args, **kwargs)
-        if fetch_state:
-            after_state = self.get_manager_state()
-        return before_state, after_state
-
-    def execute_uninstall(self, deployment_id=None, cfy=None,
-                          delete_deployment_and_blueprint=False):
-        cfy = cfy or self.cfy
-        if delete_deployment_and_blueprint:
-            cfy.uninstall(deployment_id=deployment_id or self.test_id,
-                          workflow_id='uninstall',
-                          parameters=None,
-                          allow_custom_parameters=False,
-                          timeout=DEFAULT_EXECUTE_TIMEOUT,
-                          include_logs=True)
-        else:
-            cfy.execute_uninstall(deployment_id=deployment_id or self.test_id)
 
     def copy_blueprint(self, blueprint_dir_name, blueprints_dir=None):
         blueprint_path = path(self.workdir) / blueprint_dir_name
@@ -527,7 +544,7 @@ class TestCase(unittest.TestCase):
     @contextmanager
     def manager_env_fabric(self, **kwargs):
         with fabric.context_managers.settings(
-                host_string=self.cfy.get_management_ip(),
+                host_string=self.env.management_ip or self.get_manager_ip(),
                 user=self.env.management_user_name,
                 key_filename=self.env.management_key_path,
                 **kwargs):
@@ -575,3 +592,159 @@ class TestCase(unittest.TestCase):
                 logger.info('predicate function raised an error; {error}'
                             .format(error=e))
             time.sleep(1)
+
+    def get_manager_ip(self, profile_name=None):
+        return get_profile_context(profile_name).manager_ip
+
+    def get_provider_context(self, profile_name=None):
+        return get_profile_context(profile_name).provider_context
+
+    def _make_operation_with_before_after_states(self, operation, fetch_state,
+                                                 *args, **kwargs):
+        before_state = None
+        after_state = None
+        if fetch_state:
+            before_state = self.get_manager_state()
+        operation(*args, **kwargs)
+        if fetch_state:
+            after_state = self.get_manager_state()
+        return before_state, after_state
+
+    def upload_deploy_and_execute_install(
+            self,
+            blueprint_path=None,
+            blueprint_id=None,
+            deployment_id=None,
+            fetch_state=True,
+            timeout=DEFAULT_EXECUTE_TIMEOUT,
+            inputs=None):
+
+        blueprint_path = blueprint_path or str(self.blueprint_yaml)
+        inputs = self.get_inputs_in_temp_file(inputs, deployment_id)
+
+        return self._make_operation_with_before_after_states(
+            self.cfy.install,
+            fetch_state,
+            blueprint_path,
+            blueprint_id=blueprint_id or self.test_id,
+            deployment_id=deployment_id or self.test_id,
+            timeout=timeout,
+            inputs=inputs
+        )
+
+    def execute_install(self,
+                        deployment_id=None,
+                        fetch_state=True):
+        self.logger.info("attempting to execute install on deployment {0}"
+                         .format(deployment_id))
+        return self._make_operation_with_before_after_states(
+            self.cfy.executions.start,
+            fetch_state,
+            'install',
+            deployment_id=deployment_id
+        )
+
+    def execute_uninstall(self, deployment_id=None, cfy=None):
+        cfy = cfy or self.cfy
+        cfy.executions.start(
+            'uninstall',
+            deployment_id=deployment_id or self.test_id,
+            timeout=DEFAULT_EXECUTE_TIMEOUT,
+            include_logs=True
+        )
+
+    def uninstall_delete_deployment_and_blueprint(
+            self,
+            deployment_id=None,
+            cfy=None):
+
+        cfy = cfy or self.cfy
+        cfy.uninstall(
+            deployment_id or self.test_id,
+            workflow_id='uninstall',
+            parameters=self.get_parameters_in_temp_file({}, 'uninstall'),
+            allow_custom_parameters=False,
+            timeout=DEFAULT_EXECUTE_TIMEOUT,
+            include_logs=True
+        )
+
+    def _get_dict_in_temp_file(self, dictionary, prefix, suffix):
+        # If the input is None/{}/[]/'' just pass an empty string
+        if not dictionary:
+            return ''
+
+        # In case it's a path/string representing a path, we can return it as
+        # is
+        try:
+            if os.path.isfile(dictionary):
+                # Cast from path to string, if necessary
+                return str(dictionary)
+        except TypeError:
+            pass
+
+        file_ = tempfile.mktemp(prefix='{0}-'.format(prefix),
+                                suffix=suffix,
+                                dir=self.workdir)
+        with open(file_, 'w') as f:
+            f.write(yaml.dump(dictionary))
+        return file_
+
+    def get_inputs_in_temp_file(self, inputs, inputs_prefix):
+        return self._get_dict_in_temp_file(dictionary=inputs,
+                                           prefix=inputs_prefix,
+                                           suffix='-inputs.yaml')
+
+    def get_parameters_in_temp_file(self, parameters, parameters_prefix):
+        return self._get_dict_in_temp_file(dictionary=parameters,
+                                           prefix=parameters_prefix,
+                                           suffix='-parameters.yaml')
+
+    def create_deployment(
+            self,
+            blueprint_id=None,
+            deployment_id=None,
+            inputs=''):
+        self.logger.info("Attempting to create_deployment deployment {0}"
+                         .format(deployment_id))
+
+        blueprint_id = blueprint_id or self.test_id
+        deployment_id = deployment_id or self.test_id
+        inputs = self.get_inputs_in_temp_file(inputs, deployment_id)
+
+        return self.cfy.deployments.create(
+            blueprint_id=blueprint_id,
+            deployment_id=deployment_id,
+            inputs=inputs
+        )
+
+    def bootstrap(self,
+                  blueprint_path,
+                  inputs=None,
+                  install_plugins=None,
+                  keep_up_on_failure=False,
+                  validate_only=False,
+                  task_retries=5,
+                  task_retry_interval=90,
+                  subgraph_retries=2,
+                  verbose=False,
+                  create_rest_client_func=None):
+        self.env._bootstrap(
+            blueprint_path,
+            inputs_path=self.get_inputs_in_temp_file(inputs, 'manager'),
+            install_plugins=install_plugins,
+            keep_up_on_failure=keep_up_on_failure,
+            validate_only=validate_only,
+            task_retries=task_retries,
+            task_retry_interval=task_retry_interval,
+            subgraph_retries=subgraph_retries,
+            verbose=verbose,
+            create_rest_client_func=create_rest_client_func)
+        self.client = self.env.rest_client
+
+    @contextmanager
+    def maintenance_mode(self):
+        self.cfy.maintenance_mode.activate(wait=True)
+        try:
+            yield
+        finally:
+            self.cfy.maintenance_mode.deactivate(wait=True)
