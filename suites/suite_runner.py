@@ -245,6 +245,9 @@ class SuiteRunner(object):
             elif isinstance(test, basestring):
                 test = {'tests': [test]}
 
+            if 'external' in self.test_suite:
+                test['external'] = self.test_suite['external']
+
             if 'external' in test:
                 external = test['external']
                 external = _process_variables(self.suites_yaml, external)
