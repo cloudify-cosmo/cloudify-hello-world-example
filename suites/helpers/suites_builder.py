@@ -43,12 +43,24 @@ def parse_descriptor(suites_yaml, custom_descriptor):
     for i, suite_descriptor in enumerate(suite_descriptors, start=1):
         if '@' in suite_descriptor:
             # custom suite
-            tests, handler_configuration = suite_descriptor.split('@')
+            descriptor_parts = suite_descriptor.split('@')
+            tests, handler_configuration = \
+                descriptor_parts[0], descriptor_parts[-1]
+
             tests = [s.strip() for s in tests.split(',')]
             handler_configuration = [
                 s.strip() for s in handler_configuration.split(',')]
             suite_id = '{0}_{1}'.format('-'.join(handler_configuration), i)
             result[suite_id] = {'tests': tests}
+
+            if len(descriptor_parts) == 3:
+                external = descriptor_parts[1]
+                external = external.split(';')
+                external = [e.split('=') for e in external]
+                external = {key.strip(): value.strip()
+                            for key, value in external}
+                result[suite_id]['external'] = external
+
             if len(handler_configuration) == 1 and handler_configuration[0] \
                     in configurations:
                 result[suite_id]['handler_configuration'] = \
