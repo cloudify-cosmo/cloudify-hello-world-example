@@ -165,7 +165,10 @@ class ChefPluginClientTest(TestCase):
         self.chef_server_id = self.test_id + '-chef-server'
         id_ = self.chef_server_id
         before, after = self.upload_deploy_and_execute_install(
-            id_, id_, inputs=inputs)
+            blueprint_id=id_,
+            deployment_id=id_,
+            inputs=inputs
+        )
 
         fip_node = find_node_state('ip', after['node_state'][id_])
         self.chef_server_ip = fip_node['runtime_properties'][
@@ -211,7 +214,10 @@ class ChefPluginClientTest(TestCase):
 
         id_ = self.test_id + '-chef-client-' + str(int(time.time()))
         before, after = self.upload_deploy_and_execute_install(
-            id_, id_, inputs=inputs)
+            blueprint_id=id_,
+            deployment_id=id_,
+            inputs=inputs
+        )
 
         fip_node = find_node_state('ip', after['node_state'][id_])
         chef_client_ip = fip_node['runtime_properties']['floating_ip_address']
@@ -254,7 +260,10 @@ class ChefPluginSoloTest(TestCase):
 
         id_ = self.test_id + '-chef-solo-' + str(int(time.time()))
         before, after = self.upload_deploy_and_execute_install(
-            id_, id_, inputs=inputs)
+            blueprint_id=id_,
+            deployment_id=id_,
+            inputs=inputs
+        )
 
         fip_node = find_node_state('ip', after['node_state'][id_])
         chef_solo_ip = fip_node['runtime_properties']['floating_ip_address']

@@ -75,7 +75,7 @@ class RestPluginsTests(TestCase):
                 timeout=30,
                 user=self.env.management_user_name,
                 key_filename=manager_key_path,
-                host_string=self.cfy.get_management_ip(),
+                host_string=self.get_manager_ip(),
                 warn_only=False):
             fabric_api.put(local_script_path, remote_script_path)
             output = fabric_api.run(

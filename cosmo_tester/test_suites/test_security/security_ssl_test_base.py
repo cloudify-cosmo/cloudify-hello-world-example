@@ -47,7 +47,7 @@ class SSLTestBase(SecurityTestBase):
             trust_all=True)
 
     # def _running_env_setup(self):
-    #     self.env.management_ip = self.cfy.get_management_ip()
+    #     self.env.management_ip = self.get_manager_ip()
     #     self.set_rest_client()
 
         def clean_mgmt_ip():

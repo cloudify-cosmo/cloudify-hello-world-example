@@ -206,7 +206,7 @@ class SecurityTestBase(TestCase):
             self.env.management_ip = None
             self._unset_credentials_env_vars()
         self.addCleanup(clear_mgmt_and_security_settings)
-        self.env.management_ip = self.cfy.get_management_ip()
+        self.env.management_ip = self.get_manager_ip()
         self.set_rest_client()
 
         response = self.client.manager.get_status()

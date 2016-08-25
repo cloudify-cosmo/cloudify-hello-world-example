@@ -291,8 +291,8 @@ class TestManagerPreupgradeValidations(TestCase):
     def get_upgrade_inputs(self, **override):
         """Default inputs that can be used for upgrading."""
         inputs = {
-            'private_ip': self.cfy.get_management_ip(),
-            'public_ip': self.cfy.get_management_ip(),
+            'private_ip': self.get_manager_ip(),
+            'public_ip': self.get_manager_ip(),
             'ssh_key_filename': self.env.management_key_path,
             'ssh_user': self.env.management_user_name,
             'ssh_port': 22

@@ -211,7 +211,7 @@ class HelloWorldSnapshotMigrationFrom_3_2_1_To_3_3_Test(TestCase):
             inputs=os.path.join(self.workdir, NEW_MANAGER_INPUTS_NAME),
         )
 
-        self.client = create_rest_client(self.cfy.get_management_ip())
+        self.client = create_rest_client(self.get_manager_ip())
 
         self._run_code_on_manager_3_3('sudo yum install -y gcc python-devel')
 
@@ -223,7 +223,7 @@ class HelloWorldSnapshotMigrationFrom_3_2_1_To_3_3_Test(TestCase):
     def _run_code_on_manager_3_3(self, code):
         self.logger.info("Running custom code on manager 3.3: '{0}'"
                          .format(code))
-        ip = self.cfy.get_management_ip()
+        ip = self.get_manager_ip()
         user = self.env.centos_7_image_user
 
         from path import path

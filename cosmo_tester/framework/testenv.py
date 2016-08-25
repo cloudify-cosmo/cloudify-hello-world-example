@@ -273,7 +273,7 @@ class TestEnvironment(object):
         cfy = get_cfy()
         try:
             cfy.use(self.management_ip)
-            cfy.teardown(force=True, verbose=True)
+            cfy.teardown(force=True, verbose=True, ignore_deployments=True)
         finally:
             self._global_cleanup_context.cleanup()
             self.handler.after_teardown()
@@ -743,8 +743,9 @@ class TestCase(unittest.TestCase):
 
     @contextmanager
     def maintenance_mode(self):
-        self.cfy.maintenance_mode.activate(wait=True)
+        # sh doesn't auto convert _ to -, so can't do cfy.maintenance_mode
+        self.cfy('maintenance-mode').activate(wait=True)
         try:
             yield
         finally:
-            self.cfy.maintenance_mode.deactivate(wait=True)
+            self.cfy('maintenance-mode').deactivate(wait=True)
