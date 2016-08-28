@@ -748,4 +748,4 @@ class TestCase(unittest.TestCase):
         try:
             yield
         finally:
-            self.cfy('maintenance-mode', 'deactivate', '--wait')
+            self.cfy('maintenance-mode', 'deactivate')
