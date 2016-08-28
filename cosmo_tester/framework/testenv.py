@@ -744,8 +744,8 @@ class TestCase(unittest.TestCase):
     @contextmanager
     def maintenance_mode(self):
         # sh doesn't auto convert _ to -, so can't do cfy.maintenance_mode
-        self.cfy('maintenance-mode').activate(wait=True)
+        self.cfy('maintenance-mode', 'activate', '--wait')
         try:
             yield
         finally:
-            self.cfy('maintenance-mode').deactivate(wait=True)
+            self.cfy('maintenance-mode', 'deactivate', '--wait')
