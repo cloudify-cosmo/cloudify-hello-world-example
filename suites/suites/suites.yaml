@@ -220,7 +220,7 @@ templates:
 
   - &openstack_plugin_external
     repo: cloudify-openstack-plugin
-    branch: '1.4'
+    branch: '1.5'
 
   - &softlayer_plugin_external
     repo: cloudify-softlayer-plugin
