@@ -29,7 +29,7 @@ import tempfile
 import yaml
 import jinja2
 from path import path
-from itsdangerous import base64_encode
+from base64 import urlsafe_b64encode
 from wagon.wagon import Wagon
 
 from cloudify_cli import constants
@@ -217,7 +217,7 @@ def get_auth_header(username=None, password=None, token=None):
     header = {}
     if username and password:
         credentials = '{0}:{1}'.format(username, password)
-        header[CLOUDIFY_AUTHORIZATION_HEADER] = base64_encode(credentials)
+        header[CLOUDIFY_AUTHORIZATION_HEADER] = urlsafe_b64encode(credentials)
     elif token:
         header[CLOUDIFY_AUTH_TOKEN_HEADER] = token
     return header
