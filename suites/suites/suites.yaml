@@ -446,17 +446,6 @@ handler_properties:
 
 handler_configurations:
 
-  stress_datacentred_openstack_system_tests4:
-    <<: *datacentred_openstack_handler_configuration
-    env: datacentred_openstack_4
-    inputs_override:
-      <<: *datacentred_openstack_credentials_inputs
-      <<: *datacentred_openstack_inputs
-      keystone_tenant_name: gigaspaces_system-test-4
-      flavor_id: 9cf6e43b-e191-47ca-8665-f8592e2d6227
-
-  ############################################################################
-
   lab_openstack_system_tests1:
     <<: *lab_openstack_handler_configuration
     env: lab_openstack_1
@@ -726,22 +715,9 @@ handler_configurations:
 
 tests:
 
-  openstack_blueprints_without_chef_puppet_docker_windows:
+  openstack_blueprints:
     tests:
-      - cosmo_tester/test_suites/test_blueprints -e puppet -e chef -e docker -e test_manager_after_reboot
-
-  manager_after_reboot:
-    tests:
-      - cosmo_tester/test_suites/test_blueprints/manager_after_reboot_test.py
-
-  openstack_blueprints_chef_puppet:
-    tests:
-      - cosmo_tester/test_suites/test_blueprints/chef_plugin_test.py
-      - cosmo_tester/test_suites/test_blueprints/puppet_plugin_test.py
-
-  managed_plugins_tests:
-    tests:
-      - cosmo_tester/test_suites/test_managed_plugins
+      - cosmo_tester/test_suites/test_blueprints
 
   snapshots_tests:
     tests:
@@ -756,29 +732,13 @@ tests:
         - cosmo_tester/test_suites/test_blueprints/nodecellar_test_autoheal.py
         - cosmo_tester/test_suites/test_blueprints/nodecellar_test_scale.py
 
-  stress:
-      tests:
-        - cosmo_tester/test_suites/stress_test_openstack
-
-  manager_status:
-    tests:
-      - cosmo_tester/test_suites/test_manager_status
-
   manager_recovery:
     tests:
       - cosmo_tester/test_suites/test_manager_recovery
 
-  maintenance_mode:
-    tests:
-      - cosmo_tester/test_suites/test_manager_maintenance
-
   openstack_plugin:
     tests:
       - cosmo_tester/test_suites/test_openstack_plugin
-
-  openstack_rest_plugins:
-    tests:
-      - cosmo_tester/test_suites/test_rest_plugins
 
   simple_manager_blueprint:
     tests:
@@ -825,11 +785,6 @@ tests:
       - system_tests/manager
       - system_tests/local
 
-  manager_security:
-    tests:
-      # runs all security tests EXCEPT ad_auth_test
-      - cosmo_tester/test_suites/test_security -e ad_auth_test
-
   active_dir_authentication:
     tests:
       - cosmo_tester/test_suites/test_security/ad_auth_test.py
@@ -838,10 +793,6 @@ tests:
     external: *psutil_plugin_external
     tests:
       - system_tests
-
-  broker_security:
-    tests:
-      - cosmo_tester/test_suites/test_broker_security
 
   cli_packager_windows:
     external: *packager_external
@@ -883,11 +834,6 @@ tests:
     tests:
       - system_tests/manager
 
-  agent_tests:
-    external: *agent_external
-    tests:
-      - system_tests/manager
-
   nodecellar_backwards_compatibility_tests:
     tests:
       - cosmo_tester/test_suites/backwards/test_nodecellar_backwards_compatibility
@@ -907,20 +853,16 @@ tests:
 
   deployment_update:
     tests:
-    - cosmo_tester/test_suites/test_deployment_update/deployment_update_test.py:DeploymentUpdateOSTest
-
-  dockercompute:
-    tests:
-    - cosmo_tester/test_suites/test_dockercompute
+      - cosmo_tester/test_suites/test_deployment_update/deployment_update_test.py:DeploymentUpdateOSTest
 
 #####################################################################################
 
 test_suites:
 
-  openstack_blueprints_no_chef_puppet_docker:
+  openstack_blueprints:
     requires: [openstack, datacentred]
     tests:
-      - openstack_blueprints_without_chef_puppet_docker_windows
+      - openstack_blueprints
 
   host_pool_plugin:
     requires: [openstack, datacentred]
@@ -977,45 +919,15 @@ test_suites:
     tests:
       - simple_manager_blueprint
 
-  #####################################################################
-
-  stress:
-    handler_configuration: stress_datacentred_openstack_system_tests4
-    tests:
-      - stress
-
-  #####################################################################
-
-  openstack_chef_puppet:
-    requires: [openstack, datacentred]
-    tests:
-      - openstack_blueprints_chef_puppet
-
   snapshots:
     requires: [openstack, datacentred]
     tests:
       - snapshots_tests
 
-  managed_plugins:
-    requires: [openstack, datacentred]
-    tests:
-      - managed_plugins_tests
-
-  rest_plugins:
-    requires: [openstack, datacentred]
-    tests:
-      - openstack_rest_plugins
-
   diamond_snmp:
     requires: [openstack, datacentred]
     tests:
       - diamond_snmp_extension
-
-  openstack_security:
-    requires: [openstack, datacentred]
-    tests:
-      - broker_security
-      - manager_security
 
   external_components:
     requires: [openstack, datacentred]
@@ -1058,62 +970,35 @@ test_suites:
     tests:
       - cli_packager_debian
 
-  agent:
-    requires: [openstack, datacentred]
-    tests:
-      - agent_tests
-
-  openstack_manager_after_reboot:
-    requires: [openstack, datacentred]
-    tests:
-      - manager_after_reboot
-
   openstack_backwards_nodecellar:
     requires: [openstack, datacentred]
     tests:
       - nodecellar_backwards_compatibility_tests
-
-  dockercompute:
-    requires: [openstack, datacentred]
-    tests:
-      - dockercompute
-
-  #####################################################################
 
   pclab47_devstack_nova_net:
     handler_configuration: pclab47_devstack_nova_net
     tests:
       - openstack_nova_net
 
-  #####################################################################
-
   vsphere:
     handler_configuration: vsphere_handler_config
     tests:
       - vsphere_blueprints
-
-  #####################################################################
 
   vcloud:
     handler_configuration: vcloud_handler_config
     tests:
       - vcloud_blueprints
 
-  ########################################################################
-
   softlayer:
     handler_configuration: softlayer
     tests:
       - softlayer_blueprints
 
-  ########################################################################
-
   ec2:
     handler_configuration: aws_ec2
     tests:
       - ec2
-
-  ########################################################################
 
   azure:
     handler_configuration: azure

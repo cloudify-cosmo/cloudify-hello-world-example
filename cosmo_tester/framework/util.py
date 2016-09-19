@@ -21,8 +21,6 @@ import time
 import json
 import socket
 import shutil
-import string
-import random
 import urllib
 import tempfile
 
@@ -30,7 +28,6 @@ import yaml
 import jinja2
 from path import path
 from base64 import urlsafe_b64encode
-from wagon.wagon import Wagon
 
 from cloudify_cli import constants
 from cloudify_rest_client import CloudifyClient
@@ -124,12 +121,6 @@ def get_blueprint_path(blueprint_name, blueprints_dir=None):
     blueprints_dir = blueprints_dir or os.path.join(resources_dir,
                                                     'blueprints')
     return os.path.join(blueprints_dir, blueprint_name)
-
-
-def get_plugin_path(plugin_name):
-    resources_dir = os.path.dirname(resources.__file__)
-    plugins_dir = os.path.join(resources_dir, 'plugins')
-    return os.path.join(plugins_dir, plugin_name)
 
 
 def get_resource_path(resource):
@@ -320,13 +311,3 @@ class YamlPatcher(object):
     @staticmethod
     def _raise_illegal(prop_path):
         raise RuntimeError('illegal path: {0}'.format(prop_path))
-
-
-def generate_password(length=13):
-    chars = string.ascii_letters + string.digits + '!@#$%^&*()'
-    return ''.join(random.choice(chars) for _ in range(length))
-
-
-def create_wagon(source_dir, target_dir):
-    wagon_client = Wagon(source_dir)
-    return wagon_client.create(archive_destination_dir=target_dir, force=True)
