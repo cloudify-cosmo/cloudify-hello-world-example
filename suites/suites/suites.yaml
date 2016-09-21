@@ -243,10 +243,6 @@ templates:
     password: '{{opencm_git_pwd}}'
     branch: '{{core_branch}}'
 
-  - &packager_external
-    repo: cloudify-packager
-    branch: '{{core_branch}}'
-
   - &diamond_snmp_extension_external
     repo: cloudify-diamond-snmp-extension
     branch: '{{core_branch}}'
@@ -271,9 +267,13 @@ templates:
     repo: tosca-vcloud-plugin
     branch: '1.3.1'
 
-  - &agent_external
-    repo: cloudify-agent
-    branch: '{{core_branch}}'
+  - &chef_plugin_external
+    repo: cloudify-chef-plugin
+    branch: '1.3.1'
+
+  - &puppet_plugin_external
+    repo: cloudify-puppet-plugin
+    branch: '1.3.1'
 
   - &azure_plugin_external
     repo: cloudify-azure-plugin
@@ -719,6 +719,18 @@ tests:
     tests:
       - cosmo_tester/test_suites/test_blueprints
 
+  chef:
+    external: *chef_plugin_external
+    tests:
+      - system_tests/manager
+      - system_tests/local
+
+  puppet:
+    external: *puppet_plugin_external
+    tests:
+      - system_tests/manager
+      - system_tests/local
+
   snapshots_tests:
     tests:
       - cosmo_tester/test_suites/test_snapshots -e test_hello_world_on*
@@ -795,25 +807,21 @@ tests:
       - system_tests
 
   cli_packager_windows:
-    external: *packager_external
     tests:
-      - system_tests/test_windows_bootstrap.py
+      - cosmo_tester/test_suites/cli/test_windows_bootstrap.py
 
   cli_packager_centos:
-    external: *packager_external
     tests:
-      - system_tests/test_centos6_5_bootstrap.py
-      - system_tests/test_centos7_bootstrap.py
+      - cosmo_tester/test_suites/cli/test_centos6_5_bootstrap.py
+      - cosmo_tester/test_suites/cli/test_centos7_bootstrap.py
 
   cli_packager_rhel:
-    external: *packager_external
     tests:
-      - system_tests/test_rhel_bootstrap.py
+      - cosmo_tester/test_suites/cli/test_rhel_bootstrap.py
 
   cli_packager_debian:
-    external: *packager_external
     tests:
-      - system_tests/test_ubuntu_bootstrap.py
+      - cosmo_tester/test_suites/cli/test_ubuntu_bootstrap.py
 
   diamond_snmp_extension:
     external: *diamond_snmp_extension_external
@@ -824,10 +832,6 @@ tests:
     external: *docker_plugin_external
     tests:
       - system_tests/manager
-
-  docker_nodecellar:
-    tests:
-      - cosmo_tester/test_suites/test_blueprints/docker_plugin_nodecellar_test.py
 
   host_pool_plugin:
     external: *host_pool_plugin_external
@@ -854,6 +858,10 @@ tests:
   deployment_update:
     tests:
       - cosmo_tester/test_suites/test_deployment_update/deployment_update_test.py:DeploymentUpdateOSTest
+
+  agent_tests:
+    tests:
+      - cosmo_tester/test_suites/agent
 
 #####################################################################################
 
@@ -904,6 +912,11 @@ test_suites:
     tests:
     - deployment_update
 
+  agent:
+    requires: [openstack, datacentred]
+    tests:
+      - agent_tests
+
   openstack_plugin:
     requires: [openstack, datacentred]
     tests:
@@ -918,6 +931,16 @@ test_suites:
     requires: [openstack, datacentred]
     tests:
       - simple_manager_blueprint
+
+  openstack_chef:
+    requires: [openstack, datacentred]
+    tests:
+      - chef
+
+  openstack_puppet:
+    requires: [openstack, datacentred]
+    tests:
+      - puppet
 
   snapshots:
     requires: [openstack, datacentred]
@@ -942,7 +965,6 @@ test_suites:
   docker_plugin:
     requires: [openstack, datacentred]
     tests:
-      - docker_nodecellar
       - docker_plugin
 
   psutil_plugin:
