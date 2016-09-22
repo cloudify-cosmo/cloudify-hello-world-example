@@ -27,14 +27,13 @@ import yaml
 
 import fabric.api as fab
 from cloudify.workflows import local
-from cloudify_rest_client import CloudifyClient
 from cloudify_cli import constants as cli_constants
 from cosmo_tester.framework.testenv import TestCase
-from cosmo_tester.framework.util import sh_bake, get_resource_path
+from cosmo_tester.framework import util
 from fabric.context_managers import settings as fab_env, cd
 
 # The cfy helper doesn't provide an init method, so we'll do it ourselves
-cfy = sh_bake(sh.cfy)
+cfy = util.sh_bake(sh.cfy)
 
 # If we get a recycled floating IP we'll have a bad day without this
 fab.env['disable_known_hosts'] = True
@@ -131,7 +130,7 @@ class TestCliPackage(TestCase):
         relative_blueprint_path = os.path.join('blueprints',
                                                'cli',
                                                blueprint_filename)
-        blueprint_path = get_resource_path(relative_blueprint_path)
+        blueprint_path = util.get_resource_path(relative_blueprint_path)
 
         self.test_id = 'stest-{0}'.format(
             time.strftime("%Y%m%d-%H%M"))
@@ -330,7 +329,7 @@ class TestCliPackage(TestCase):
         self.assertIn('Bootstrap complete', out, 'Bootstrap has failed')
 
         self.manager_ip = self._manager_ip()
-        self.client = CloudifyClient(self.manager_ip)
+        self.client = util.create_rest_client(self.manager_ip)
         self.addCleanup(self.teardown_manager)
         with self.cfy.workdir:
             cfy.init()

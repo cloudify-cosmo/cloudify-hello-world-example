@@ -20,7 +20,6 @@ import sys
 
 from sh import ErrorReturnCode
 
-from cloudify_rest_client.client import CloudifyClient
 from cloudify_rest_client.exceptions import UserUnauthorizedError
 from cosmo_tester.framework import util
 from cosmo_tester.test_suites.test_security import security_test_base
@@ -501,8 +500,8 @@ class BaseAuthTest(security_test_base.SecurityTestBase):
         user_pass_header = util.get_auth_header(username=username,
                                                 password=password,
                                                 token=token)
-        return CloudifyClient(host=self.env.management_ip,
-                              headers=user_pass_header)
+        return util.create_rest_client(self.env.management_ip,
+                                       headers=user_pass_header)
 
     def _get_execution_ids(self):
         alice_client = self._create_client(self.admin_username,
@@ -539,7 +538,7 @@ class BaseAuthTest(security_test_base.SecurityTestBase):
         self._assert_unauthorized(self.client.manager.get_status)
 
     def _assert_no_credentials_or_token_fails(self):
-        self.client = CloudifyClient(host=self.env.management_ip)
+        self.client = util.create_rest_client(self.env.management_ip)
         self._assert_unauthorized(self.client.manager.get_status)
 
     def _assert_authorized(self):

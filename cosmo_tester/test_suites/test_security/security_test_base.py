@@ -17,7 +17,6 @@ import os
 from path import path
 
 from cloudify_cli import constants
-from cloudify_rest_client.client import CloudifyClient
 from cosmo_tester.framework import util
 
 from cosmo_tester.framework.testenv import TestCase
@@ -194,8 +193,8 @@ class SecurityTestBase(TestCase):
         os.environ.pop(constants.CLOUDIFY_PASSWORD_ENV, None)
 
     def set_rest_client(self):
-        self.client = CloudifyClient(
-            host=self.env.management_ip,
+        self.client = util.create_rest_client(
+            self.env.management_ip,
             headers=util.get_auth_header(username=self.TEST_CFY_USERNAME,
                                          password=self.TEST_CFY_PASSWORD))
         self.env.rest_client = self.client
