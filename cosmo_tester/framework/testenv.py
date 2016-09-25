@@ -32,6 +32,7 @@ import fabric.context_managers
 from contextlib import contextmanager
 
 from cloudify_cli.env import get_profile_context
+from cloudify_cli.constants import CLOUDIFY_USERNAME_ENV, CLOUDIFY_PASSWORD_ENV
 from cloudify_rest_client.executions import Execution
 from cloudify_cli.config.config import CLOUDIFY_CONFIG_PATH
 from cosmo_tester.framework.util import (get_blueprint_path,
@@ -62,6 +63,9 @@ logger.setLevel(logging.INFO)
 DEFAULT_EXECUTE_TIMEOUT = 1800
 SUITES_YAML_PATH = 'SUITES_YAML_PATH'
 HANDLER_CONFIGURATION = 'HANDLER_CONFIGURATION'
+
+CLOUDIFY_ADMIN_USERNAME = 'admin'
+CLOUDIFY_ADMIN_PASSWORD = 'admin'
 
 test_environment = None
 
@@ -109,6 +113,9 @@ class TestEnvironment(object):
         self.handler = None
         self._manager_blueprint_path = None
         self._workdir = tempfile.mkdtemp(prefix='cloudify-testenv-')
+
+        os.environ[CLOUDIFY_USERNAME_ENV] = CLOUDIFY_ADMIN_USERNAME
+        os.environ[CLOUDIFY_PASSWORD_ENV] = CLOUDIFY_ADMIN_PASSWORD
 
         if HANDLER_CONFIGURATION not in os.environ:
             raise RuntimeError('handler configuration name must be configured '

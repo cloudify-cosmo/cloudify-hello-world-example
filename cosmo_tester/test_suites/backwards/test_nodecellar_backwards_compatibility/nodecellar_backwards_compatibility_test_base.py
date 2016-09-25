@@ -16,9 +16,7 @@
 import os
 from path import path
 
-from cloudify_rest_client.client import CloudifyClient
 from cosmo_tester.framework import util
-
 from cosmo_tester.framework.testenv import TestCase
 
 
@@ -71,7 +69,7 @@ class NodecellarBackwardsCompatibilityTestBase(TestCase):
         )
 
     def set_rest_client(self):
-        self.client = CloudifyClient(host=self.env.management_ip)
+        self.client = util.create_rest_client(self.env.management_ip)
 
     def _running_env_setup(self):
         def clean_mgmt_ip():

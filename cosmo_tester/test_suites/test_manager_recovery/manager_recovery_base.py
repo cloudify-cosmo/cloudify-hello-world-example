@@ -18,8 +18,6 @@ import time
 from operator import itemgetter
 from path import path
 
-from cloudify_rest_client import CloudifyClient
-
 from cosmo_tester.framework.testenv import TestCase
 from cosmo_tester.resources import blueprints
 from cosmo_tester.framework import util
@@ -187,6 +185,6 @@ class BaseManagerRecoveryTest(TestCase):
         )
 
         # override the client instance to use the correct ip
-        self.client = CloudifyClient(self.get_manager_ip())
+        self.client = util.create_rest_client(self.get_manager_ip())
 
         self.addCleanup(self.cfy.teardown, force=True)
