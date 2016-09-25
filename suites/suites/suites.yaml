@@ -384,7 +384,7 @@ handler_properties:
     windows_image_id: '{{datacentred_openstack_windows_image_id}}'
     flavor_name: dc1.2x2.40
     small_flavor_id: c4b193d2-f331-4250-9b15-bbfde97c462a
-    medium_flavor_id: 8f4b7ae1-b8c2-431f-bb0c-362a5ece0381
+    medium_flavor_id: d87de0ca-9c0e-4759-a704-8621883c3415
 
   pclab47_devstack_nova_net:
     ubuntu_precise_image_name: ubuntu
