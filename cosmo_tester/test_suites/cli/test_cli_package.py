@@ -386,7 +386,8 @@ class TestCliPackage(TestCase):
         self.prepare_manager_blueprint()
         self.add_dns_nameservers_to_manager_blueprint(
             os.path.join(os.path.dirname(__file__),
-                         'resources/add_nameservers_to_subnet.py'))
+                         '../../resources/scripts/'
+                         'add_nameservers_to_subnet.py'))
         self.bootstrap_manager(self.bootstrap_inputs)
         blueprint_id = self.publish_hello_world_blueprint(self.helloworld_url)
         self.deployment_id = self.create_deployment(blueprint_id)
