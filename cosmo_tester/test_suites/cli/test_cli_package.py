@@ -331,10 +331,8 @@ class TestCliPackage(TestCase):
         self.manager_ip = self._manager_ip()
         self.client = util.create_rest_client(self.manager_ip)
         self.addCleanup(self.teardown_manager)
-        with self.cfy.workdir:
-            cfy.init()
         self.cfy.use(self.manager_ip)
-        self.cfy.upload_plugins()
+        self.env._upload_plugins()
 
     def publish_hello_world_blueprint(self, source_archive):
         blueprint_id = 'blueprint-{0}'.format(uuid.uuid4())
