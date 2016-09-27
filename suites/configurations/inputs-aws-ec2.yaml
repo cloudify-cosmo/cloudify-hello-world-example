@@ -35,4 +35,4 @@ ec2_region_name: ''
 # This user will also be included in the simple userstore repostiroty if the
 # simple userstore implementation is used.
 #admin_username: 'admin'
-#admin_password: 'admin'
+#admin_password: ''

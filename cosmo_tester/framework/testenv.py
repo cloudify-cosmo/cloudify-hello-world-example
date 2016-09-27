@@ -219,7 +219,6 @@ class TestEnvironment(object):
         self._bootstrap(self._manager_blueprint_path,
                         inputs_path=self.cloudify_config_path,
                         install_plugins=self.install_plugins,
-                        keep_up_on_failure=False,
                         task_retries=task_retries,
                         verbose=True)
 
@@ -233,7 +232,8 @@ class TestEnvironment(object):
                    task_retry_interval=90,
                    subgraph_retries=2,
                    verbose=False,
-                   create_rest_client_func=None):
+                   create_rest_client_func=None,
+                   dont_save_password_in_profile=False):
 
         if install_plugins is None:
             install_plugins = test_environment.install_plugins
@@ -265,6 +265,7 @@ class TestEnvironment(object):
             task_retries=task_retries,
             task_retry_interval=task_retry_interval,
             verbose=verbose,
+            dont_save_password_in_profile=dont_save_password_in_profile
         )
 
         if not validate_only:
@@ -444,9 +445,9 @@ class TestCase(unittest.TestCase):
         if self.env.management_ip:
             self.cfy.use(
                 self.env.management_ip,
-                manager_user=management_user,
-                manager_key=management_key_path,
-                manager_port=management_port
+                ssh_user=management_user,
+                ssh_key=management_key_path,
+                ssh_port=management_port
             )
 
         self.blueprint_yaml = None
@@ -740,7 +741,8 @@ class TestCase(unittest.TestCase):
                   task_retry_interval=90,
                   subgraph_retries=2,
                   verbose=False,
-                  create_rest_client_func=None):
+                  create_rest_client_func=None,
+                  dont_save_password_in_profile=False):
         self.env._bootstrap(
             blueprint_path,
             inputs_path=self.get_inputs_in_temp_file(inputs, 'manager'),
@@ -751,7 +753,8 @@ class TestCase(unittest.TestCase):
             task_retry_interval=task_retry_interval,
             subgraph_retries=subgraph_retries,
             verbose=verbose,
-            create_rest_client_func=create_rest_client_func)
+            create_rest_client_func=create_rest_client_func,
+            dont_save_password_in_profile=dont_save_password_in_profile)
         self.client = self.env.rest_client
 
     @contextmanager
