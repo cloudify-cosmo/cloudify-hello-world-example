@@ -30,7 +30,8 @@ from cloudify.workflows import local
 from cloudify_cli import constants as cli_constants
 from cosmo_tester.framework.testenv import TestCase
 from cosmo_tester.framework import util
-from fabric.context_managers import settings as fab_env, cd
+from fabric.context_managers import settings as fab_env, cd, shell_env
+
 
 # The cfy helper doesn't provide an init method, so we'll do it ourselves
 cfy = util.sh_bake(sh.cfy)
@@ -204,11 +205,16 @@ class TestCliPackage(TestCase):
             self.logger.info('Executing command: ***')
 
         while True:
-            with fab_env(**fabric_env):
-                if sudo:
-                    out = fab.sudo(cmd, warn_only=warn_only)
-                else:
-                    out = fab.run(cmd, warn_only=warn_only)
+            with shell_env(
+                    CLOUDIFY_USERNAME=os.environ.get(
+                            cli_constants.CLOUDIFY_USERNAME_ENV),
+                    CLOUDIFY_PASSWORD=os.environ.get(
+                            cli_constants.CLOUDIFY_PASSWORD_ENV)):
+                with fab_env(**fabric_env):
+                    if sudo:
+                        out = fab.sudo(cmd, warn_only=warn_only)
+                    else:
+                        out = fab.run(cmd, warn_only=warn_only)
 
             self.logger.info("""Command execution result:
     Status code: {0}
@@ -339,7 +345,7 @@ class TestCliPackage(TestCase):
         self.logger.info('Publishing hello-world example from: {0} [{1}]'
                          .format(source_archive, blueprint_id))
         self.client_executor(
-            'blueprints publish-archive -l {0} -n {1} -b {2}'
+            'blueprints upload {0} -n {1} -b {2}'
             .format(source_archive, self.app_blueprint_file, blueprint_id),
             fabric_env=self.centos_client_env,
             within_cfy_env=True)
@@ -350,8 +356,8 @@ class TestCliPackage(TestCase):
 
         self.logger.info('Creating deployment: {0}'.format(deployment_id))
         self.client_executor(
-            """deployments create -b {0} -d {1} -i "{2}" """
-            .format(blueprint_id, deployment_id, json.dumps(
+            """deployments create {0} -b {1} -i "{2}" """
+            .format(deployment_id, blueprint_id, json.dumps(
                 self.deployment_inputs).replace(
                 '"', "'").replace(' ', '')),
             fabric_env=self.centos_client_env,
@@ -365,7 +371,7 @@ class TestCliPackage(TestCase):
         time.sleep(15)
         self.logger.info('Installing deployment...')
         self.client_executor(
-            'executions start -d {0} -w install'
+            'executions start -d {0} install'
             .format(deployment_id),
             fabric_env=self.centos_client_env,
             within_cfy_env=True, retries=2)
@@ -373,10 +379,14 @@ class TestCliPackage(TestCase):
     def uninstall_deployment(self):
         self.logger.info('Uninstalling deployment...')
         self.client_executor(
-            'executions start -d {0} -w uninstall'
+            'executions start -d {0} uninstall'
             .format(self.deployment_id),
             fabric_env=self.centos_client_env,
             within_cfy_env=True)
+
+    def set_username_and_password(self):
+        # On linux this is done using fabric's shell_env
+        pass
 
     def _test_cli_package(self):
         self.prepare_cli()
@@ -387,6 +397,7 @@ class TestCliPackage(TestCase):
                          '../../resources/scripts/'
                          'add_nameservers_to_subnet.py'))
         self.bootstrap_manager(self.bootstrap_inputs)
+        self.set_username_and_password()
         blueprint_id = self.publish_hello_world_blueprint(self.helloworld_url)
         self.deployment_id = self.create_deployment(blueprint_id)
         self.addCleanup(self.uninstall_deployment)
@@ -419,7 +430,7 @@ class TestCliPackage(TestCase):
 
     def _get_app_property(self, property_name):
         outputs_raw = (self.client_executor(
-            'deployments outputs -d {0}'.format(self.deployment_id),
+            'deployments outputs {0}'.format(self.deployment_id),
             fabric_env=self.centos_client_env, within_cfy_env=True))
         self.logger.info(outputs_raw)
 
@@ -459,7 +470,7 @@ class TestCliPackage(TestCase):
         self.logger.info('Tearing down Cloudify manager...')
         self.client_executor(
             'teardown -f --ignore-deployments',
-            within_cfy_env=True)
+            within_cfy_env=True, warn_only=True)
 
     def go_offline(self, fabric_env):
         self._execute_command_on_linux('chmod +w /etc/resolv.conf',

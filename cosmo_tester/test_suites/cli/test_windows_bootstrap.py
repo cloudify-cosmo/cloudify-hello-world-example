@@ -12,6 +12,7 @@
 #    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
+
 import os
 from contextlib import contextmanager
 import socket
@@ -19,8 +20,11 @@ import time
 import stat
 import base64
 
+from nose.tools import nottest
 import winrm
 import yaml
+
+from cloudify_cli import constants as cli_constants
 
 from cosmo_tester.framework.util import YamlPatcher
 from test_cli_package import TestCliPackage, CHECK_URL
@@ -314,9 +318,9 @@ $client.DownloadFile($url, $file)""".format(resource_address,
 
     def _manager_ip(self):
         return self._execute_command_on_windows("""
-{0}\embedded\python.exe -c "from cloudify_cli import utils;
-print utils.get_management_server_ip()"
-""".format(self.client_cfy_work_dir)).strip()
+{0}\embedded\python.exe -c "import os;
+print([x for x in os.listdir(os.path.expanduser('~/.cloudify/profiles')) if 'temp' not in x])[0]"
+""".format(self.client_cfy_work_dir)).strip()  # noqa
 
     def go_offline(self, *_):
         self._execute_command_on_windows(
@@ -366,6 +370,14 @@ print utils.get_management_server_ip()"
         self.bootstrap_manager(bootstrap_inputs_path,
                                inputs_is_file=True)
 
+    def set_username_and_password(self):
+        cmd = """
+$env:CLOUDIFY_USERNAME = "{0}"
+$env:CLOUDIFY_PASSWORD = "{1}"
+""".format(os.environ.get(cli_constants.CLOUDIFY_USERNAME_ENV),
+           os.environ.get(cli_constants.CLOUDIFY_PASSWORD_ENV))
+        self._execute_command_on_windows(cmd)
+
 
 class TestWindowsBootstrap(TestWindowsBase):
 
@@ -379,6 +391,7 @@ class TestWindowsBootstrap(TestWindowsBase):
 
 class TestWindowsOfflineBootstrap(TestWindowsBase, TestOfflineCliPackage):
 
+    @nottest
     def test_offline_windows_cli_package(self):
         self._test_cli_package()
 
