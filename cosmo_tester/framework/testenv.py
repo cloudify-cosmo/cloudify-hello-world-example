@@ -271,7 +271,13 @@ class TestEnvironment(object):
             self._upload_plugins()
             self._running_env_setup(get_profile_context().manager_ip,
                                     create_rest_client_func)
-            self.after_bootstrap(get_profile_context().provider_context)
+            # A hacky workaround where a test bootstraps a manager
+            # using simple manager blueprint and provider context does
+            # not contain a 'resources' key as expected by openstack's
+            # handler after_bootstrap method.
+            # should be probably handled better.
+            if 'simple' not in path(blueprint_path).basename():
+                self.after_bootstrap(get_profile_context().provider_context)
 
     def teardown(self):
         if self._global_cleanup_context is None:

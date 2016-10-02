@@ -82,7 +82,7 @@ class AbstractHelloWorldTest(MonitoringTestCase):
             influx_host_ip=influx_host_ip)
 
         self.logger.info('Uninstalling deployment...')
-        self.execute_uninstall()
+        self.uninstall_delete_deployment_and_blueprint()
 
         self.logger.info('Performing post uninstall assertions...')
         self._do_post_uninstall_assertions(context)

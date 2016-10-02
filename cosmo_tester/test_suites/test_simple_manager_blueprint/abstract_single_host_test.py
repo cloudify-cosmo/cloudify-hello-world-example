@@ -58,7 +58,6 @@ class AbstractSingleHostTest(object):
             name=self._testMethodName,
             ignored_modules=cli_constants.IGNORED_LOCAL_WORKFLOW_MODULES)
 
-        self.addCleanup(self.uninstall_client)
         self.addCleanup(self.env.handler.remove_keypairs_from_local_env,
                         self.local_env)
 
@@ -122,9 +121,12 @@ class AbstractSingleHostTest(object):
                                .format(management_ip))
 
     def uninstall_client(self):
-        self.local_env.execute('uninstall',
-                               task_retries=40,
-                               task_retry_interval=30)
+        try:
+            self.local_env.execute('uninstall',
+                                   task_retries=40,
+                                   task_retry_interval=30)
+        except Exception as e:
+            self.logger.warning('Error occurred on uninstall: {}'.format(e))
 
     def clear_management_ip(self):
         self.env.management_ip = None
