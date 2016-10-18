@@ -19,9 +19,7 @@ import argparse
 import requests
 import yaml
 
-import password_store
 
-SYSTEM_TESTS_PASSWORD_STORE_REPO = 'system_tests_password_store_repo'
 CLI_PACKAGES_URL_FORMAT = 'https://raw.githubusercontent.com/cloudify-cosmo' \
                           '/cloudify-versions/{0}/packages-urls' \
                           '/cli-packages-blueprint.yaml'
@@ -33,6 +31,11 @@ def read_jenkins_parameters(jenkins_parameters_path):
     return {parameter['key']: parameter['value'] for parameter in parameters}
 
 
+def read_secrets(secrets_yaml_path):
+    with open(secrets_yaml_path, 'r') as f:
+        return yaml.load(f)
+
+
 def read_cli_package_urls(cloudify_versions_branch):
     cli_packages_url = CLI_PACKAGES_URL_FORMAT.format(cloudify_versions_branch)
     cli_packages_raw_yaml = requests.get(cli_packages_url).text
@@ -42,9 +45,9 @@ def read_cli_package_urls(cloudify_versions_branch):
 
 def parse_arguments():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--gpg-secret-key-path', required=True)
     parser.add_argument('--jenkins-parameters-path', required=True)
     parser.add_argument('--variables-output-path', required=True)
+    parser.add_argument('--secrets-file-path', required=True)
     return parser.parse_args()
 
 
@@ -53,9 +56,7 @@ def main():
     jenkins_vars = read_jenkins_parameters(args.jenkins_parameters_path)
     cli_packages_vars = read_cli_package_urls(
         cloudify_versions_branch=jenkins_vars.pop('versions_branch'))
-    pass_vars = password_store.read_pass(
-        gpg_secret_key_path=args.gpg_secret_key_path,
-        password_store_repo=jenkins_vars.pop(SYSTEM_TESTS_PASSWORD_STORE_REPO))
+    pass_vars = read_secrets(args.secrets_file_path)
     variables = jenkins_vars
     variables.update(cli_packages_vars)
     variables.update(pass_vars)
