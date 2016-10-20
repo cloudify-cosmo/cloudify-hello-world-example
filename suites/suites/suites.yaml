@@ -622,11 +622,6 @@ tests:
     tests:
       - system_tests/manager
 
-  watchdog_tests:
-    external: *watchdog_external
-    tests:
-      - system_tests/manager/test_watchdog.py:WatchdogNoRecoveryTests
-
   softlayer_blueprints:
     external: *softlayer_plugin_external
     tests:
@@ -757,11 +752,6 @@ test_suites:
     requires: [openstack, datacentred]
     tests:
       - openstack_plugin
-
-  openstack_watchdog:
-    requires: [openstack, datacentred]
-    tests:
-      - watchdog_tests
 
   openstack_simple_manager:
     requires: [openstack, datacentred]
