@@ -3,23 +3,6 @@
 # using `{{variable_name}}` syntax
 variables:
 
-  lab_openstack_ubuntu_precise_image_name: ubuntu_12.04
-  lab_openstack_ubuntu_trusty_image_name: ubuntu_14.04
-  lab_openstack_centos_6_5_image_name: centos_6.5
-  lab_openstack_centos_7_image_name: centos_7
-  lab_openstack_centos_7_image_id: a4bbfb75-a681-4d02-beae-ba1e91f72dfa
-  lab_openstack_windows_image_name: windows-server-2012
-  lab_openstack_ubuntu_precise: d81ccdfe-7482-460e-a7ce-69ea29aa129b
-  lab_openstack_ubuntu_trusty: c6d36e11-f4d5-4221-b6e8-4e97914c67e9
-
-  mirantis_openstack_ubuntu_precise_image_name: ubuntu_12_04
-  mirantis_openstack_ubuntu_trusty_image_name: Ubuntu 14.04 x64 LTS
-  mirantis_openstack_ubuntu_precise: c19a4a25-958b-4a10-88bd-6b6d89b69e99
-  mirantis_openstack_ubuntu_trusty: 798e43f2-252e-43f5-a0a8-97371a3c8afa
-  mirantis_openstack_centos_6_5_image_name: centos_6_5
-  mirantis_openstack_centos_7_image_name: centos_7
-  mirantis_openstack_windows_image_name: windows_2012_r2
-
   datacentred_openstack_ubuntu_precise_image_name: Ubuntu 12.04
   datacentred_openstack_ubuntu_trusty_image_name: Ubuntu 14.04
   datacentred_openstack_ubuntu_precise: 2f91391d-ff21-4410-a063-d4e947845980
@@ -29,6 +12,16 @@ variables:
   datacentred_openstack_centos_7_image_id: ebab03e6-a674-4b6e-8f60-691c90fbcdc6
   datacentred_openstack_windows_image_name: Windows Server 2012 R2 Standard
   datacentred_openstack_windows_image_id: 07a93cc5-b3f1-499b-a7f2-ab420526ae1f
+
+  rackspace_openstack_ubuntu_precise_image_name: ???
+  rackspace_openstack_ubuntu_trusty_image_name: 'Ubuntu 14.04.1 LTS Trusty Tahr (cloudimg)'
+  rackspace_openstack_ubuntu_precise: ???
+  rackspace_openstack_ubuntu_trusty: e41430f7-9131-495b-927f-e7dc4b8994c8
+  rackspace_openstack_centos_6_5_image_name: ???
+  rackspace_openstack_centos_7_image_name: 'CentOS-7-x86_64-GenericCloud-1608'
+  rackspace_openstack_centos_7_image_id: c76d5b15-bf64-4402-bea6-9f4957ac0c6d
+  rackspace_openstack_windows_image_name: ???
+  rackspace_openstack_windows_image_id: ???
 
   ubuntu_image_user: ubuntu
   rhel_7_image_user: ec2-user
@@ -99,14 +92,11 @@ variables:
   windows_cli_package_url: _
   rhel_centos_cli_package_url: _
 
-  system_tests_lab_os_username: _
-  system_tests_lab_os_password: _
-
-  system_tests_mirantis_os_username: _
-  system_tests_mirantis_os_password: _
-
   system_tests_datacentred_os_username: _
   system_tests_datacentred_os_password: _
+
+  system_tests_rackspace_os_username: _
+  system_tests_rackspace_os_password: _
 
   system_tests_aws_access_key_id: _
   system_tests_aws_secret_access_key: _
@@ -118,9 +108,6 @@ variables:
 
   system_test_vcloud_username: _
   system_test_vcloud_password: _
-
-  system_tests_softlayer_username: _
-  system_tests_softlayer_api_key: _
 
   system_tests_azure_subscription_id: _
   system_tests_azure_tenant_id: _
@@ -157,11 +144,6 @@ templates:
     'node_templates.management_security_group.properties.rules[append]':
       port: 8086
       remote_ip_prefix: 0.0.0.0/0
-
-  - &openstack_nova_manager_blueprint_sg_override
-    'node_templates.management_security_group.properties.rules[append]':
-      port: 8086
-      cidr: 0.0.0.0/0
 
   - &aws_ec2_manager_blueprint_sg_override
     'node_templates.management_security_group.properties.rules[append]':
@@ -222,26 +204,12 @@ templates:
     repo: cloudify-openstack-plugin
     branch: '1.5'
 
-  - &softlayer_plugin_external
-    repo: cloudify-softlayer-plugin
-    private: true
-    username: opencm
-    password: '{{opencm_git_pwd}}'
-    branch: '1.3.1'
-
   - &vsphere_plugin_external
     repo: cloudify-vsphere-plugin
     private: true
     username: opencm
     password: '{{opencm_git_pwd}}'
     branch: '1.4'
-
-  - &watchdog_external
-    repo: cloudify-watchdog
-    private: true
-    username: opencm
-    password: '{{opencm_git_pwd}}'
-    branch: '{{core_branch}}'
 
   - &diamond_snmp_extension_external
     repo: cloudify-diamond-snmp-extension
@@ -286,48 +254,27 @@ templates:
 
   #######################################################
 
-  - &lab_openstack_credentials_inputs
-    keystone_username: '{{system_tests_lab_os_username}}'
-    keystone_password: '{{system_tests_lab_os_password}}'
-
-  - &mirantis_openstack_credentials_inputs
-    keystone_username: '{{system_tests_mirantis_os_username}}'
-    keystone_password: '{{system_tests_mirantis_os_password}}'
-
   - &datacentred_openstack_credentials_inputs
     keystone_username: '{{system_tests_datacentred_os_username}}'
     keystone_password: '{{system_tests_datacentred_os_password}}'
 
+  - &rackspace_openstack_credentials_inputs
+    keystone_username: '{{system_tests_rackspace_os_username}}'
+    keystone_password: '{{system_tests_rackspace_os_password}}'
+
   #######################################################
-
-  - &lab_openstack_inputs
-    image_id: '{{lab_openstack_centos_7_image_id}}'
-
-  - &mirantis_openstack_inputs
-    image_id: '{{mirantis_openstack_ubuntu_trusty}}'
 
   - &datacentred_openstack_inputs
     image_id: '{{datacentred_openstack_centos_7_image_id}}'
+
+  - &rackspace_openstack_inputs
+    image_id: '{{rackspace_openstack_centos_7_image_id}}'
 
   #######################################################
 
   - &openstack_handler_configuration
     handler: openstack_handler
     external: *openstack_plugin_external
-
-  - &lab_openstack_handler_configuration
-    <<: *openstack_handler_configuration
-    inputs: inputs-lab-openstack.yaml
-    manager_blueprint: openstack-manager-blueprint.yaml
-    manager_blueprint_override: *openstack_manager_blueprint_override
-    properties: lab_openstack_properties
-
-  - &mirantis_openstack_handler_configuration
-    <<: *openstack_handler_configuration
-    inputs: inputs-mirantis-openstack.yaml
-    manager_blueprint: openstack-manager-blueprint.yaml
-    manager_blueprint_override: *openstack_manager_blueprint_override
-    properties: mirantis_openstack_properties
 
   - &datacentred_openstack_handler_configuration
     <<: *openstack_handler_configuration
@@ -336,38 +283,16 @@ templates:
     manager_blueprint_override: *datacentred_openstack_manager_blueprint_override
     properties: datacentred_openstack_properties
 
+  - &rackspace_openstack_handler_configuration
+    <<: *openstack_handler_configuration
+    inputs: inputs-rackspace-openstack.yaml
+    manager_blueprint: openstack-manager-blueprint.yaml
+    manager_blueprint_override: *openstack_manager_blueprint_override
+    properties: rackspace_openstack_properties
+
 #####################################################################################
 
 handler_properties:
-
-  lab_openstack_properties:
-    ubuntu_precise_image_name: '{{lab_openstack_ubuntu_precise_image_name}}'
-    ubuntu_trusty_image_name: '{{lab_openstack_ubuntu_trusty_image_name}}'
-    centos_image_name: '{{lab_openstack_centos_6_5_image_name}}'
-    centos_7_image_name: '{{lab_openstack_centos_7_image_name}}'
-    centos_7_image_id: '{{lab_openstack_centos_7_image_id}}'
-    windows_image_name: '{{lab_openstack_windows_image_name}}'
-    ubuntu_precise_image_id: '{{lab_openstack_ubuntu_precise}}'
-    ubuntu_trusty_image_id: '{{lab_openstack_ubuntu_trusty}}'
-    centos_image_user: cloud-user
-    centos_7_image_user: centos
-    flavor_name: m1.small
-    small_flavor_id: ba4e08fd-e4c5-4233-a906-f1bb31cb659d
-    medium_flavor_id: 8b5be402-98e6-461c-8425-56f708187c13
-
-  mirantis_openstack_properties:
-    ubuntu_precise_image_name: '{{mirantis_openstack_ubuntu_precise_image_name}}'
-    ubuntu_trusty_image_name: '{{mirantis_openstack_ubuntu_trusty_image_name}}'
-    ubuntu_precise_image_id: '{{mirantis_openstack_ubuntu_precise}}'
-    ubuntu_trusty_image_id: '{{mirantis_openstack_ubuntu_trusty}}'
-    centos_image_name: '{{mirantis_openstack_centos_6_5_image_name}}'
-    centos_image_user: root
-    centos_7_image_name: '{{mirantis_openstack_centos_7_image_name}}'
-    centos_7_image_user: centos
-    windows_image_name: '{{mirantis_openstack_windows_image_name}}'
-    flavor_name: m1.small
-    small_flavor_id: 2
-    medium_flavor_id: 3
 
   datacentred_openstack_properties:
     ubuntu_image_user: '{{ubuntu_image_user}}'
@@ -386,11 +311,22 @@ handler_properties:
     small_flavor_id: c4b193d2-f331-4250-9b15-bbfde97c462a
     medium_flavor_id: d87de0ca-9c0e-4759-a704-8621883c3415
 
-  pclab47_devstack_nova_net:
-    ubuntu_precise_image_name: ubuntu
-    flavor_name: m1.small
-    ubuntu_precise_image_id: 32533bad-fd76-42e8-91fb-93e5c9921498
+  rackspace_openstack_properties:
+    ubuntu_image_user: '{{ubuntu_image_user}}'
+    ubuntu_precise_image_name: '{{rackspace_openstack_ubuntu_precise_image_name}}'
+    ubuntu_trusty_image_name: '{{rackspace_openstack_ubuntu_trusty_image_name}}'
+    ubuntu_precise_image_id: '{{rackspace_openstack_ubuntu_precise}}'
+    ubuntu_trusty_image_id: '{{rackspace_openstack_ubuntu_trusty}}'
+    centos_image_name: '{{rackspace_openstack_centos_6_5_image_name}}'
+    centos_image_user: centos
+    centos_7_image_name: '{{rackspace_openstack_centos_7_image_name}}'
+    centos_7_image_id: '{{rackspace_openstack_centos_7_image_id}}'
+    centos_7_image_user: centos
+    windows_image_name: '{{rackspace_openstack_windows_image_name}}'
+    windows_image_id: '{{rackspace_openstack_windows_image_id}}'
+    flavor_name: m1.large
     small_flavor_id: 2
+    medium_flavor_id: 3
 
   vsphere_handler_props:
     template: systemtests-ubuntu-1404
@@ -445,91 +381,6 @@ handler_properties:
 #####################################################################################
 
 handler_configurations:
-
-  lab_openstack_system_tests1:
-    <<: *lab_openstack_handler_configuration
-    env: lab_openstack_1
-    tags: [openstack, lab]
-    inputs_override:
-      <<: *lab_openstack_credentials_inputs
-      <<: *lab_openstack_inputs
-      keystone_tenant_name: system-tests/system-test-1
-
-  lab_openstack_system_tests2:
-    <<: *lab_openstack_handler_configuration
-    env: lab_openstack_2
-    tags: [openstack, lab]
-    inputs_override:
-      <<: *lab_openstack_credentials_inputs
-      <<: *lab_openstack_inputs
-      keystone_tenant_name: system-tests/system-test-2
-
-  lab_openstack_system_tests3:
-    <<: *lab_openstack_handler_configuration
-    env: lab_openstack_3
-    tags: [openstack, lab]
-    inputs_override:
-      <<: *lab_openstack_credentials_inputs
-      <<: *lab_openstack_inputs
-      keystone_tenant_name: system-tests/system-test-3
-
-  lab_openstack_system_tests4:
-    <<: *lab_openstack_handler_configuration
-    env: lab_openstack_4
-    tags: [openstack, lab]
-    inputs_override:
-      <<: *lab_openstack_credentials_inputs
-      <<: *lab_openstack_inputs
-      keystone_tenant_name: system-tests/system-test-4
-
-  lab_openstack_system_tests5:
-    <<: *lab_openstack_handler_configuration
-    env: lab_openstack_5
-    tags: [openstack, lab]
-    inputs_override:
-      <<: *lab_openstack_credentials_inputs
-      <<: *lab_openstack_inputs
-      keystone_tenant_name: system-tests/system-test-5
-
-  ###############################################################################
-
-  mirantis_openstack_system_tests1:
-    <<: *mirantis_openstack_handler_configuration
-    env: mirantis_openstack_1
-    tags: [openstack, mirantis]
-    inputs_override:
-      <<: *mirantis_openstack_credentials_inputs
-      <<: *mirantis_openstack_inputs
-      keystone_tenant_name: system-tests/system-test-1
-
-  mirantis_openstack_system_tests2:
-    <<: *mirantis_openstack_handler_configuration
-    env: mirantis_openstack_2
-    tags: [openstack, mirantis]
-    inputs_override:
-      <<: *mirantis_openstack_credentials_inputs
-      <<: *mirantis_openstack_inputs
-      keystone_tenant_name: system-tests/system-test-2
-
-  mirantis_openstack_system_tests3:
-    <<: *mirantis_openstack_handler_configuration
-    env: mirantis_openstack_3
-    tags: [openstack, mirantis]
-    inputs_override:
-      <<: *mirantis_openstack_credentials_inputs
-      <<: *mirantis_openstack_inputs
-      keystone_tenant_name: system-tests/system-test-3
-
-  mirantis_openstack_system_tests4:
-    <<: *mirantis_openstack_handler_configuration
-    env: mirantis_openstack_4
-    tags: [openstack, mirantis]
-    inputs_override:
-      <<: *mirantis_openstack_credentials_inputs
-      <<: *mirantis_openstack_inputs
-      keystone_tenant_name: system-tests/system-test-4
-
-  ###############################################################################
 
   datacentred_openstack_system_tests1:
     <<: *datacentred_openstack_handler_configuration
@@ -605,16 +456,14 @@ handler_configurations:
 
   ###############################################################################
 
-  pclab47_devstack_nova_net:
-    <<: *openstack_handler_configuration
-    handler: openstack_nova_net_handler
-    env: pclab47_devstack_nova_net
-    inputs: inputs-nova-net-devstack.yaml
-    manager_blueprint: openstack-nova-net/openstack-nova-net-manager-blueprint.yaml
-    manager_blueprint_override:
-      <<: *manager_blueprint_override
-      <<: *openstack_nova_manager_blueprint_sg_override
-    properties: pclab47_devstack_nova_net
+  rackspace_openstack_system_tests1:
+    <<: *rackspace_openstack_handler_configuration
+    env: rackspace_openstack_1
+    tags: [openstack, rackspace]
+    inputs_override:
+      <<: *rackspace_openstack_credentials_inputs
+      <<: *rackspace_openstack_inputs
+      keystone_tenant_name: system-tests-1
 
   ###############################################################################
 
@@ -650,19 +499,6 @@ handler_configurations:
       vcloud_service_type: '{{vcloud_service_type}}'
       vcloud_instance: '{{vcloud_instance}}'
       vcloud_url: '{{vcloud_url}}'
-
-  ################################################################################
-
-  softlayer:
-    inputs: inputs-softlayer.yaml
-    handler: softlayer_handler
-    env: softlayer
-    external: *softlayer_plugin_external
-    manager_blueprint: manager-blueprint/softlayer-manager-blueprint.yaml
-    manager_blueprint_override: *manager_blueprint_commercial_override
-    inputs_override:
-      username: '{{system_tests_softlayer_username}}'
-      api_key: '{{system_tests_softlayer_api_key}}'
 
   ################################################################################
 
@@ -997,11 +833,6 @@ test_suites:
     tests:
       - nodecellar_backwards_compatibility_tests
 
-  pclab47_devstack_nova_net:
-    handler_configuration: pclab47_devstack_nova_net
-    tests:
-      - openstack_nova_net
-
   vsphere:
     handler_configuration: vsphere_handler_config
     tests:
@@ -1011,11 +842,6 @@ test_suites:
     handler_configuration: vcloud_handler_config
     tests:
       - vcloud_blueprints
-
-  softlayer:
-    handler_configuration: softlayer
-    tests:
-      - softlayer_blueprints
 
   ec2:
     handler_configuration: aws_ec2

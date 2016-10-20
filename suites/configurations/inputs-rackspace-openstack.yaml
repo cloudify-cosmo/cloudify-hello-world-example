@@ -3,16 +3,15 @@ keystone_password: ''
 keystone_tenant_name: ''
 region: ''
 image_id: ''
-keystone_url: http://192.168.9.161:5000/v2.0
-# limitation on key name length generation in openstack lab horizen
-manager_public_key_name: shared-systemt-tests
-agent_public_key_name: shared-systemt-tests
-flavor_id: 8b5be402-98e6-461c-8425-56f708187c13
-external_network_name: public
+keystone_url: https://172.29.96.9:5000/v2.0
+manager_public_key_name: shared-system-tests
+agent_public_key_name: shared-system-tests
+flavor_id: 4
+external_network_name: GATEWAY_NET
 
 use_existing_manager_keypair: true
 use_existing_agent_keypair: true
-manager_server_name: systemt-cloudify-manager
+manager_server_name: system-tests-cloudify-manager
 ssh_user: centos
 ssh_key_filename: ~/.ssh/shared-systemt-tests-key.pem
 agent_private_key_path: ~/.ssh/shared-systemt-tests-key.pem
@@ -25,3 +24,5 @@ agents_security_group_name: systemt-cloudify-sg-agents
 manager_port_name: systemt-cloudify-manager-port
 # manager_volume_name: systemt-cloudify-manager-volume
 resources_prefix: ''
+
+skip_openstack_cert_verification: true
