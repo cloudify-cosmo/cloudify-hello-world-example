@@ -622,12 +622,6 @@ tests:
     tests:
       - system_tests/manager
 
-  softlayer_blueprints:
-    external: *softlayer_plugin_external
-    tests:
-      - system_tests/manager
-      - system_tests/local
-
   active_dir_authentication:
     tests:
       - cosmo_tester/test_suites/test_security/ad_auth_test.py
