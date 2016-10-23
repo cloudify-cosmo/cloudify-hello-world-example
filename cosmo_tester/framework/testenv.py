@@ -682,6 +682,14 @@ class TestCase(unittest.TestCase):
             include_logs=True
         )
 
+    def delete_deployment(self, deployment_id=None, cfy=None):
+        cfy = cfy or self.cfy
+        cfy.deployments.delete(deployment_id or self.test_id)
+
+    def delete_blueprint(self, blueprint_id=None, cfy=None):
+        cfy = cfy or self.cfy
+        cfy.blueprints.delete(blueprint_id or self.test_id)
+
     def _get_dict_in_temp_file(self, dictionary, prefix, suffix):
         # If the input is None/{}/[]/'' just pass an empty string
         if not dictionary:

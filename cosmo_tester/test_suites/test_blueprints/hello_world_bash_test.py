@@ -49,7 +49,8 @@ class AbstractHelloWorldTest(MonitoringTestCase):
              blueprint_file='blueprint.yaml',
              is_existing_deployment=False,
              influx_host_ip=None,
-             after_install=None):
+             after_install=None,
+             delete_deployment=False):
         if not is_existing_deployment:
             self.repo_dir = clone_hello_world(self.workdir)
             self.blueprint_yaml = self.repo_dir / blueprint_file
@@ -82,10 +83,16 @@ class AbstractHelloWorldTest(MonitoringTestCase):
             influx_host_ip=influx_host_ip)
 
         self.logger.info('Uninstalling deployment...')
-        self.uninstall_delete_deployment_and_blueprint()
+        self.execute_uninstall()
 
         self.logger.info('Performing post uninstall assertions...')
         self._do_post_uninstall_assertions(context)
+
+        if delete_deployment:
+            self.logger.info('Deleting deployment...')
+            self.delete_deployment()
+            self.logger.info('Deleting blueprint...')
+            self.delete_blueprint()
 
     def _do_post_install_assertions(self):
         pass
@@ -106,7 +113,7 @@ class HelloWorldBashTest(AbstractHelloWorldTest):
             'image': self.env.ubuntu_precise_image_name,
             'flavor': self.env.flavor_name
         }
-        self._run(inputs=inputs)
+        self._run(inputs=inputs, delete_deployment=False)
         # checking reinstallation scenario
         self._run(inputs=inputs, is_existing_deployment=True)
 
