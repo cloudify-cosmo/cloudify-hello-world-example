@@ -356,7 +356,7 @@ class TestCliPackage(TestCase):
 
         self.logger.info('Creating deployment: {0}'.format(deployment_id))
         self.client_executor(
-            """deployments create -d {0} -b {1} -i "{2}" """
+            """deployments create {0} -b {1} -i "{2}" """
             .format(deployment_id, blueprint_id, json.dumps(
                 self.deployment_inputs).replace(
                 '"', "'").replace(' ', '')),
