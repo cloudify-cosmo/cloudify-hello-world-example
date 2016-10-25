@@ -384,10 +384,6 @@ class TestCliPackage(TestCase):
             fabric_env=self.centos_client_env,
             within_cfy_env=True)
 
-    def set_username_and_password(self):
-        # On linux this is done using fabric's shell_env
-        pass
-
     def _test_cli_package(self):
         self.prepare_cli()
         self.install_cli()
@@ -397,7 +393,6 @@ class TestCliPackage(TestCase):
                          '../../resources/scripts/'
                          'add_nameservers_to_subnet.py'))
         self.bootstrap_manager(self.bootstrap_inputs)
-        self.set_username_and_password()
         blueprint_id = self.publish_hello_world_blueprint(self.helloworld_url)
         self.deployment_id = self.create_deployment(blueprint_id)
         self.addCleanup(self.uninstall_deployment)

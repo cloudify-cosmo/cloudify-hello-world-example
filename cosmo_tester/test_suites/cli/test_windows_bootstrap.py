@@ -225,9 +225,14 @@ $data = [System.Convert]::FromBase64String($s)
             warn_only=False,
             *_, **__):
         if within_cfy_env:
-            cmd = '{0}\embedded\Scripts\cfy.exe {1}' \
-                .format(self.client_cfy_work_dir, cmd)
-
+            cmd = """
+$env:CLOUDIFY_USERNAME = "{0}"
+$env:CLOUDIFY_PASSWORD = "{1}"
+{2}\embedded\Scripts\cfy.exe {3}
+""".format(
+                    os.environ.get(cli_constants.CLOUDIFY_USERNAME_ENV),
+                    os.environ.get(cli_constants.CLOUDIFY_PASSWORD_ENV),
+                    self.client_cfy_work_dir, cmd)
         if log_cmd:
             self.logger.info('Executing command using winrm: {0}'.format(cmd))
         else:
@@ -369,14 +374,6 @@ print([x for x in os.listdir(os.path.expanduser('~/.cloudify/profiles')) if 'tem
         self.logger.info('Bootstrapping...')
         self.bootstrap_manager(bootstrap_inputs_path,
                                inputs_is_file=True)
-
-    def set_username_and_password(self):
-        cmd = """
-$env:CLOUDIFY_USERNAME = "{0}"
-$env:CLOUDIFY_PASSWORD = "{1}"
-""".format(os.environ.get(cli_constants.CLOUDIFY_USERNAME_ENV),
-           os.environ.get(cli_constants.CLOUDIFY_PASSWORD_ENV))
-        self._execute_command_on_windows(cmd)
 
 
 class TestWindowsBootstrap(TestWindowsBase):
