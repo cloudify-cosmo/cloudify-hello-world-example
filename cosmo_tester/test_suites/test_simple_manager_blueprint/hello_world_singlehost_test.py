@@ -29,7 +29,8 @@ class HelloWorldSingleHostTest(AbstractHelloWorldTest, AbstractSingleHostTest):
         self.bootstrap_simple_manager_blueprint()
         self._run(blueprint_file='singlehost-blueprint.yaml',
                   inputs=dict(self.access_credentials,
-                              **{'server_ip': self.public_ip_address}))
+                              **{'server_ip': self.public_ip_address}),
+                  delete_deployment=True)
 
     def _do_post_uninstall_assertions(self, context):
         instances = self.client.node_instances.list(self.test_id)

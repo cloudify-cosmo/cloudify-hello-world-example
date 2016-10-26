@@ -31,8 +31,7 @@ from path import path
 import fabric.context_managers
 from contextlib import contextmanager
 
-from cloudify_cli.env import get_profile_context
-from cloudify_cli.constants import CLOUDIFY_USERNAME_ENV, CLOUDIFY_PASSWORD_ENV
+from cloudify_cli import env as cli_env
 from cloudify_rest_client.executions import Execution
 from cloudify_cli.config.config import CLOUDIFY_CONFIG_PATH
 from cosmo_tester.framework.util import (get_blueprint_path,
@@ -63,9 +62,6 @@ logger.setLevel(logging.INFO)
 DEFAULT_EXECUTE_TIMEOUT = 1800
 SUITES_YAML_PATH = 'SUITES_YAML_PATH'
 HANDLER_CONFIGURATION = 'HANDLER_CONFIGURATION'
-
-CLOUDIFY_ADMIN_USERNAME = 'admin'
-CLOUDIFY_ADMIN_PASSWORD = 'admin'
 
 test_environment = None
 
@@ -113,9 +109,6 @@ class TestEnvironment(object):
         self.handler = None
         self._manager_blueprint_path = None
         self._workdir = tempfile.mkdtemp(prefix='cloudify-testenv-')
-
-        os.environ[CLOUDIFY_USERNAME_ENV] = CLOUDIFY_ADMIN_USERNAME
-        os.environ[CLOUDIFY_PASSWORD_ENV] = CLOUDIFY_ADMIN_PASSWORD
 
         if HANDLER_CONFIGURATION not in os.environ:
             raise RuntimeError('handler configuration name must be configured '
@@ -268,9 +261,12 @@ class TestEnvironment(object):
             dont_save_password_in_profile=dont_save_password_in_profile
         )
 
+        # Update the currently set profile
+        cli_env.profile = cli_env.get_profile_context()
+
         if not validate_only:
             self._upload_plugins()
-            self._running_env_setup(get_profile_context().manager_ip,
+            self._running_env_setup(cli_env.profile.manager_ip,
                                     create_rest_client_func)
             # A hacky workaround where a test bootstraps a manager
             # using simple manager blueprint and provider context does
@@ -278,7 +274,7 @@ class TestEnvironment(object):
             # handler after_bootstrap method.
             # should be probably handled better.
             if 'simple' not in path(blueprint_path).basename():
-                self.after_bootstrap(get_profile_context().provider_context)
+                self.after_bootstrap(cli_env.profile.provider_context)
 
     def teardown(self):
         if self._global_cleanup_context is None:
@@ -608,10 +604,10 @@ class TestCase(unittest.TestCase):
             time.sleep(1)
 
     def get_manager_ip(self, profile_name=None):
-        return get_profile_context(profile_name).manager_ip
+        return cli_env.get_profile_context(profile_name).manager_ip
 
     def get_provider_context(self, profile_name=None):
-        return get_profile_context(profile_name).provider_context
+        return cli_env.get_profile_context(profile_name).provider_context
 
     def _make_operation_with_before_after_states(self, operation, fetch_state,
                                                  *args, **kwargs):

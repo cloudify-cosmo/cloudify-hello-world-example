@@ -24,8 +24,6 @@ from nose.tools import nottest
 import winrm
 import yaml
 
-from cloudify_cli import constants as cli_constants
-
 from cosmo_tester.framework.util import YamlPatcher
 from test_cli_package import TestCliPackage, CHECK_URL
 from test_offline_cli_package import TestOfflineCliPackage
@@ -225,13 +223,7 @@ $data = [System.Convert]::FromBase64String($s)
             warn_only=False,
             *_, **__):
         if within_cfy_env:
-            cmd = """
-$env:CLOUDIFY_USERNAME = "{0}"
-$env:CLOUDIFY_PASSWORD = "{1}"
-{2}\embedded\Scripts\cfy.exe {3}
-""".format(
-                    os.environ.get(cli_constants.CLOUDIFY_USERNAME_ENV),
-                    os.environ.get(cli_constants.CLOUDIFY_PASSWORD_ENV),
+            cmd = '{0}\embedded\Scripts\cfy.exe {1}'.format(
                     self.client_cfy_work_dir, cmd)
         if log_cmd:
             self.logger.info('Executing command using winrm: {0}'.format(cmd))
@@ -364,16 +356,6 @@ print([x for x in os.listdir(os.path.expanduser('~/.cloudify/profiles')) if 'tem
         self._get_windows_resource(example_url)
 
         return os.path.basename(example_url)
-
-    def prepare_inputs_and_bootstrap(self, inputs):
-        # using inputs file and not passing all inputs in the cmd line
-        # prevents "The command line is too long" in windows.
-        bootstrap_inputs_path = self.create_inputs_file(
-            inputs,
-            'bootstrap_inputs')
-        self.logger.info('Bootstrapping...')
-        self.bootstrap_manager(bootstrap_inputs_path,
-                               inputs_is_file=True)
 
 
 class TestWindowsBootstrap(TestWindowsBase):

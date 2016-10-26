@@ -30,7 +30,7 @@ from cloudify.workflows import local
 from cloudify_cli import constants as cli_constants
 from cosmo_tester.framework.testenv import TestCase
 from cosmo_tester.framework import util
-from fabric.context_managers import settings as fab_env, cd, shell_env
+from fabric.context_managers import settings as fab_env, cd
 
 
 # The cfy helper doesn't provide an init method, so we'll do it ourselves
@@ -109,6 +109,14 @@ class TestCliPackage(TestCase):
     @property
     def manager_executor(self):
         return self._execute_command_on_linux
+
+    @property
+    def manager_username(self):
+        return 'admin'
+
+    @property
+    def manager_password(self):
+        return 'admin'
 
     @property
     def helloworld_url(self):
@@ -205,16 +213,11 @@ class TestCliPackage(TestCase):
             self.logger.info('Executing command: ***')
 
         while True:
-            with shell_env(
-                    CLOUDIFY_USERNAME=os.environ.get(
-                            cli_constants.CLOUDIFY_USERNAME_ENV),
-                    CLOUDIFY_PASSWORD=os.environ.get(
-                            cli_constants.CLOUDIFY_PASSWORD_ENV)):
-                with fab_env(**fabric_env):
-                    if sudo:
-                        out = fab.sudo(cmd, warn_only=warn_only)
-                    else:
-                        out = fab.run(cmd, warn_only=warn_only)
+            with fab_env(**fabric_env):
+                if sudo:
+                    out = fab.sudo(cmd, warn_only=warn_only)
+                else:
+                    out = fab.run(cmd, warn_only=warn_only)
 
             self.logger.info("""Command execution result:
     Status code: {0}
@@ -281,7 +284,8 @@ class TestCliPackage(TestCase):
             fab.put(local_file_path, remote_file_path, use_sudo=sudo)
 
     def create_inputs_file(self, inputs, inputs_file_name):
-        local_inputs_path = self.cfy._get_inputs_in_temp_file(
+        inputs = self._update_username_password_inputs(inputs)
+        local_inputs_path = self.get_inputs_in_temp_file(
             inputs,
             self._testMethodName)
         remote_inputs_path = os.path.join(
@@ -290,6 +294,12 @@ class TestCliPackage(TestCase):
         self.write_file_remotely(local_inputs_path, remote_inputs_path,
                                  sudo=True)
         return remote_inputs_path
+
+    def _update_username_password_inputs(self, inputs):
+        new_inputs = copy.deepcopy(inputs)
+        new_inputs['admin_username'] = self.manager_username
+        new_inputs['admin_password'] = self.manager_password
+        return new_inputs
 
     def prepare_inputs_and_bootstrap(self, inputs):
         # using inputs file and not passing all inputs in the cmd line
@@ -335,9 +345,17 @@ class TestCliPackage(TestCase):
         self.assertIn('Bootstrap complete', out, 'Bootstrap has failed')
 
         self.manager_ip = self._manager_ip()
-        self.client = util.create_rest_client(self.manager_ip)
+        self.client = util.create_rest_client(
+            self.manager_ip,
+            manager_username=self.manager_username,
+            manager_password=self.manager_password
+        )
         self.addCleanup(self.teardown_manager)
-        self.cfy.use(self.manager_ip)
+        self.cfy.use(
+            self.manager_ip,
+            manager_username=self.manager_username,
+            manager_password=self.manager_password
+        )
         self.env._upload_plugins()
 
     def publish_hello_world_blueprint(self, source_archive):
@@ -392,7 +410,8 @@ class TestCliPackage(TestCase):
             os.path.join(os.path.dirname(__file__),
                          '../../resources/scripts/'
                          'add_nameservers_to_subnet.py'))
-        self.bootstrap_manager(self.bootstrap_inputs)
+        inputs = self._update_username_password_inputs(self.bootstrap_inputs)
+        self.bootstrap_manager(inputs)
         blueprint_id = self.publish_hello_world_blueprint(self.helloworld_url)
         self.deployment_id = self.create_deployment(blueprint_id)
         self.addCleanup(self.uninstall_deployment)

@@ -29,7 +29,7 @@ import jinja2
 from path import path
 from base64 import urlsafe_b64encode
 
-from cloudify_cli.constants import CLOUDIFY_USERNAME_ENV, CLOUDIFY_PASSWORD_ENV
+from cloudify_cli import env as cli_env
 from cloudify_rest_client import CloudifyClient
 
 from cosmo_tester import resources
@@ -216,12 +216,15 @@ def get_auth_header(username=None, password=None, token=None):
     return header
 
 
-def create_rest_client(manager_ip):
+def create_rest_client(manager_ip,
+                       manager_username=None,
+                       manager_password=None):
     return CloudifyClient(
         host=manager_ip,
         headers=get_auth_header(
-            username=os.environ.get(CLOUDIFY_USERNAME_ENV),
-            password=os.environ.get(CLOUDIFY_PASSWORD_ENV)))
+            username=manager_username or cli_env.get_username(),
+            password=manager_password or cli_env.get_password())
+    )
 
 
 class YamlPatcher(object):
