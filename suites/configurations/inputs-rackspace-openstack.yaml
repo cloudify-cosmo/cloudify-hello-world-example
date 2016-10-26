@@ -22,7 +22,6 @@ management_router: systemt-cloudify-management-router
 manager_security_group_name: systemt-cloudify-sg-manager
 agents_security_group_name: systemt-cloudify-sg-agents
 manager_port_name: systemt-cloudify-manager-port
-# manager_volume_name: systemt-cloudify-manager-volume
-resources_prefix: ''
 
 skip_openstack_cert_verification: true
+management_subnet_dns_nameservers: [8.8.8.8, 8.8.4.4]
