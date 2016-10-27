@@ -261,10 +261,10 @@ class TestEnvironment(object):
             dont_save_password_in_profile=dont_save_password_in_profile
         )
 
-        # Update the currently set profile
-        cli_env.profile = cli_env.get_profile_context()
-
         if not validate_only:
+            # Update the currently set profile
+            cli_env.profile = cli_env.get_profile_context()
+
             self._upload_plugins()
             self._running_env_setup(cli_env.profile.manager_ip,
                                     create_rest_client_func)
