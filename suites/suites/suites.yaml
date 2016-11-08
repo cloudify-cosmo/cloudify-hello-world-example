@@ -693,87 +693,87 @@ tests:
 test_suites:
 
   openstack_blueprints:
-    requires: [openstack, datacentred]
+    requires: [openstack, rackspace]
     tests:
       - openstack_blueprints
 
   host_pool_plugin:
-    requires: [openstack, datacentred]
+    requires: [openstack, rackspace]
     tests:
       - host_pool_plugin
 
   openstack_manager_status:
-    requires: [openstack, datacentred]
+    requires: [openstack, rackspace]
     tests:
       - manager_status
 
   openstack_manager_recovery:
-    requires: [openstack, datacentred]
+    requires: [openstack, rackspace]
     tests:
       - manager_recovery
 
   openstack_maintenance_mode:
-    requires: [openstack, datacentred]
+    requires: [openstack, rackspace]
     tests:
       - maintenance_mode
 
   openstack_manager_upgrade:
-    requires: [openstack, datacentred]
+    requires: [openstack, rackspace]
     tests:
       - manager_upgrade
 
   openstack_manager_rollback:
-    requires: [openstack, datacentred]
+    requires: [openstack, rackspace]
     tests:
       - manager_rollback
 
   openstack_manager_upgrade_validations:
-    requires: [openstack, datacentred]
+    requires: [openstack, rackspace]
     tests:
       - manager_upgrade_validations
 
   openstack_deployment_update:
-    requires: [openstack, datacentred]
+    requires: [openstack, rackspace]
     tests:
     - deployment_update
 
   agent:
-    requires: [openstack, datacentred]
+    requires: [openstack, rackspace]
     tests:
       - agent_tests
 
   openstack_plugin:
-    requires: [openstack, datacentred]
+    requires: [openstack, rackspace]
     tests:
       - openstack_plugin
 
   openstack_simple_manager:
-    requires: [openstack, datacentred]
+    requires: [openstack, rackspace]
     tests:
       - simple_manager_blueprint
 
   openstack_chef:
-    requires: [openstack, datacentred]
+    requires: [openstack, rackspace]
     tests:
       - chef
 
   openstack_puppet:
-    requires: [openstack, datacentred]
+    requires: [openstack, rackspace]
     tests:
       - puppet
 
   snapshots:
-    requires: [openstack, datacentred]
+    requires: [openstack, rackspace]
     tests:
       - snapshots_tests
 
   diamond_snmp:
-    requires: [openstack, datacentred]
+    requires: [openstack, rackspace]
     tests:
       - diamond_snmp_extension
 
   external_components:
-    requires: [openstack, datacentred]
+    requires: [openstack, rackspace]
     tests:
       - external_components
 
@@ -783,7 +783,7 @@ test_suites:
       - active_dir_authentication
 
   docker_plugin:
-    requires: [openstack, datacentred]
+    requires: [openstack, rackspace]
     tests:
       - docker_plugin
 
@@ -798,7 +798,7 @@ test_suites:
       - cli_packager_windows
 
   openstack_centos_cli_package:
-    requires: [openstack, datacentred]
+    requires: [openstack, rackspace]
     tests:
       - cli_packager_centos
 
@@ -813,7 +813,7 @@ test_suites:
       - cli_packager_debian
 
   openstack_backwards_nodecellar:
-    requires: [openstack, datacentred]
+    requires: [openstack, rackspace]
     tests:
       - nodecellar_backwards_compatibility_tests
 
