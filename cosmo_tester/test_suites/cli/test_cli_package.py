@@ -172,7 +172,8 @@ class TestCliPackage(TestCase):
             'key_filename': self.local_env_inputs['key_pair_path'],
             'host_string': self.public_ip_address,
             'connection_attempts': 10,
-            'abort_on_prompts': True
+            'abort_on_prompts': True,
+            'abort_exception': Exception
         }
 
         self.verify_connection()
