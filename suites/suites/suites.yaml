@@ -17,7 +17,7 @@ variables:
   rackspace_openstack_ubuntu_trusty_image_name: 'Ubuntu 14.04.1 LTS Trusty Tahr (cloudimg)'
   rackspace_openstack_ubuntu_precise: ???
   rackspace_openstack_ubuntu_trusty: e41430f7-9131-495b-927f-e7dc4b8994c8
-  rackspace_openstack_centos_6_5_image_name: ???
+  rackspace_openstack_centos_6_5_image_name: 'centos_6.6'
   rackspace_openstack_centos_7_image_name: 'CentOS-7-x86_64-GenericCloud-1608'
   rackspace_openstack_centos_7_image_id: c76d5b15-bf64-4402-bea6-9f4957ac0c6d
   rackspace_openstack_windows_image_name: ???
