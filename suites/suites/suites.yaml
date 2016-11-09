@@ -465,6 +465,42 @@ handler_configurations:
       <<: *rackspace_openstack_inputs
       keystone_tenant_name: system-tests-1
 
+  rackspace_openstack_system_tests2:
+    <<: *rackspace_openstack_handler_configuration
+    env: rackspace_openstack_2
+    tags: [openstack, rackspace]
+    inputs_override:
+      <<: *rackspace_openstack_credentials_inputs
+      <<: *rackspace_openstack_inputs
+      keystone_tenant_name: system-tests-2
+
+  rackspace_openstack_system_tests3:
+    <<: *rackspace_openstack_handler_configuration
+    env: rackspace_openstack_3
+    tags: [openstack, rackspace]
+    inputs_override:
+      <<: *rackspace_openstack_credentials_inputs
+      <<: *rackspace_openstack_inputs
+      keystone_tenant_name: system-tests-3
+
+  rackspace_openstack_system_tests4:
+    <<: *rackspace_openstack_handler_configuration
+    env: rackspace_openstack_4
+    tags: [openstack, rackspace]
+    inputs_override:
+      <<: *rackspace_openstack_credentials_inputs
+      <<: *rackspace_openstack_inputs
+      keystone_tenant_name: system-tests-4
+
+  rackspace_openstack_system_tests5:
+    <<: *rackspace_openstack_handler_configuration
+    env: rackspace_openstack_5
+    tags: [openstack, rackspace]
+    inputs_override:
+      <<: *rackspace_openstack_credentials_inputs
+      <<: *rackspace_openstack_inputs
+      keystone_tenant_name: system-tests-5
+
   ###############################################################################
 
   vsphere_handler_config:
