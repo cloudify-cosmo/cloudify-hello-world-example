@@ -204,7 +204,8 @@ class TestSuite(object):
                 root = et.parse(report.realpath(), parser)
                 test_elements = root.findall('testcase')
                 for test in test_elements:
-                    test.set('name', self.suite_name)
+                    test_name = test.get('name')
+                    test.set('name', test_name)
                 tmp_file = tempfile.NamedTemporaryFile()
                 tmp_file.write(et.tostring(root, pretty_print=True))
                 # flushing remaining text in buffer before closing the file
