@@ -110,7 +110,7 @@ class HelloWorldBashTest(AbstractHelloWorldTest):
     def test_hello_world_on_ubuntu(self):
         inputs = {
             'agent_user': self.env.cloudify_agent_user,
-            'image': self.env.ubuntu_precise_image_name,
+            'image': self.env.ubuntu_trusty_image_name,
             'flavor': self.env.flavor_name
         }
         self._run(inputs=inputs, delete_deployment=False)

@@ -24,3 +24,4 @@ agents_security_group_name: systemt-cloudify-sg-agents
 manager_port_name: systemt-cloudify-manager-port
 
 management_subnet_dns_nameservers: [8.8.8.8, 8.8.4.4]
+resources_prefix: ''
