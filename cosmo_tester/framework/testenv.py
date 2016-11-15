@@ -258,7 +258,8 @@ class TestEnvironment(object):
             task_retries=task_retries,
             task_retry_interval=task_retry_interval,
             verbose=verbose,
-            dont_save_password_in_profile=dont_save_password_in_profile
+            dont_save_password_in_profile=dont_save_password_in_profile,
+            skip_validations='aws' in blueprint_path  # see AWS-66
         )
 
         if not validate_only:
