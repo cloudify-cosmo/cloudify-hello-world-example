@@ -158,15 +158,13 @@ class NeutronGaloreTest(TestCase):
         self.assert_obj_list_contains_subset(
             openstack['sg_3']['security_group_rules'],
             {'remote_ip_prefix': '0.0.0.0/0',
-             'port_range_min': 0,
-             'port_range_max': 0,
+             'port': None,
              'protocol': 'icmp',
              'direction': 'ingress'})
         self.assert_obj_list_contains_subset(
             openstack['sg_3']['security_group_rules'],
             {'remote_ip_prefix': '0.0.0.0/0',
-             'port_range_min': 0,
-             'port_range_max': 0,
+             'port': None,
              'protocol': 'icmp',
              'direction': 'egress'})
         self.assertEqual(node_states['floatingip']['floating_ip_address'],

@@ -49,5 +49,6 @@ def clean(username, password, project_id, auth_url, exclude):
 def main():
     clean(**_parse_args())
 
+
 if __name__ == '__main__':
     main()

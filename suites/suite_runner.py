@@ -363,5 +363,6 @@ def main():
     suite_runner.generate_config()
     suite_runner.run_nose()
 
+
 if __name__ == '__main__':
     main()

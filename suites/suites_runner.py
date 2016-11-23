@@ -619,5 +619,6 @@ def main():
     suites_runner.prune_containers()
     suites_runner.run_suites()
 
+
 if __name__ == '__main__':
     main()

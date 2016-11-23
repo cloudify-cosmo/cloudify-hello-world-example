@@ -63,5 +63,6 @@ def main():
     with open(os.path.expanduser(args.variables_output_path), 'w') as f:
         f.write(yaml.safe_dump(variables))
 
+
 if __name__ == '__main__':
     main()
