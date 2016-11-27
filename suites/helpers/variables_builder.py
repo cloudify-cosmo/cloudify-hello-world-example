@@ -16,13 +16,7 @@
 import os
 import argparse
 
-import requests
 import yaml
-
-
-CLI_PACKAGES_URL_FORMAT = 'https://raw.githubusercontent.com/cloudify-cosmo' \
-                          '/cloudify-versions/{0}/packages-urls' \
-                          '/cli-packages-blueprint.yaml'
 
 
 def read_jenkins_parameters(jenkins_parameters_path):
@@ -31,16 +25,9 @@ def read_jenkins_parameters(jenkins_parameters_path):
     return {parameter['key']: parameter['value'] for parameter in parameters}
 
 
-def read_secrets(secrets_yaml_path):
-    with open(secrets_yaml_path, 'r') as f:
+def read_vars_from_yaml_file(yaml_path):
+    with open(yaml_path, 'r') as f:
         return yaml.load(f)
-
-
-def read_cli_package_urls(cloudify_versions_branch):
-    cli_packages_url = CLI_PACKAGES_URL_FORMAT.format(cloudify_versions_branch)
-    cli_packages_raw_yaml = requests.get(cli_packages_url).text
-    cli_packages_yaml = yaml.safe_load(cli_packages_raw_yaml) or {}
-    return cli_packages_yaml.get('cli_package_urls', {})
 
 
 def parse_arguments():
@@ -48,15 +35,15 @@ def parse_arguments():
     parser.add_argument('--jenkins-parameters-path', required=True)
     parser.add_argument('--variables-output-path', required=True)
     parser.add_argument('--secrets-file-path', required=True)
+    parser.add_argument('--packages-urls-file-path', required=True)
     return parser.parse_args()
 
 
 def main():
     args = parse_arguments()
     jenkins_vars = read_jenkins_parameters(args.jenkins_parameters_path)
-    cli_packages_vars = read_cli_package_urls(
-        cloudify_versions_branch=jenkins_vars.pop('versions_branch'))
-    pass_vars = read_secrets(args.secrets_file_path)
+    cli_packages_vars = read_vars_from_yaml_file(args.packages_urls_file_path)
+    pass_vars = read_vars_from_yaml_file(args.secrets_file_path)
     variables = jenkins_vars
     variables.update(cli_packages_vars)
     variables.update(pass_vars)

@@ -27,7 +27,8 @@ suites_runner()
     python helpers/variables_builder.py \
         --variables-output-path="${variables_yaml_path}" \
         --jenkins-parameters-path="${EXPORT_PARAMS_FILE}" \
-        --secrets-file-path="${SYSTEM_TESTS_SECRETS}"
+        --secrets-file-path="${SYSTEM_TESTS_SECRETS}" \
+        --packages-urls-file-path="${SYSTEM_TESTS_PACKAGES}"
     exec python suites_runner.py "${variables_yaml_path}" "${SYSTEM_TESTS_DESCRIPTOR}"
 }
 
