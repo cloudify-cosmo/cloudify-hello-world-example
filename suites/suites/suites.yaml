@@ -703,10 +703,6 @@ tests:
     tests:
       - system_tests/manager
 
-  active_dir_authentication:
-    tests:
-      - cosmo_tester/test_suites/test_security/ad_auth_test.py
-
   psutil_plugin:
     external: *psutil_plugin_external
     tests:
@@ -783,20 +779,10 @@ test_suites:
     tests:
       - host_pool_plugin
 
-  openstack_manager_status:
-    requires: [openstack, rackspace]
-    tests:
-      - manager_status
-
   openstack_manager_recovery:
     requires: [openstack, rackspace]
     tests:
       - manager_recovery
-
-  openstack_maintenance_mode:
-    requires: [openstack, rackspace]
-    tests:
-      - maintenance_mode
 
   openstack_manager_upgrade:
     requires: [openstack, rackspace]
@@ -857,11 +843,6 @@ test_suites:
     requires: [openstack, rackspace]
     tests:
       - external_components
-
-  ec2_security:
-    handler_configuration: aws_ec2
-    tests:
-      - active_dir_authentication
 
   docker_plugin:
     requires: [openstack, rackspace]
