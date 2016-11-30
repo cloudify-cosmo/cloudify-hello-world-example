@@ -283,7 +283,7 @@ class TestEnvironment(object):
         self.setup()
         cfy = get_cfy()
         try:
-            cfy.use(self.management_ip)
+            cfy.profiles.use(self.management_ip)
             cfy.teardown(force=True, verbose=True, ignore_deployments=True)
         finally:
             self._global_cleanup_context.cleanup()
@@ -440,7 +440,7 @@ class TestCase(unittest.TestCase):
 
         self.cfy = get_cfy()
         if self.env.management_ip:
-            self.cfy.use(
+            self.cfy.profiles.use(
                 self.env.management_ip,
                 ssh_user=management_user,
                 ssh_key=management_key_path,

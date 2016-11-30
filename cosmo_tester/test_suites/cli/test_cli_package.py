@@ -352,7 +352,7 @@ class TestCliPackage(TestCase):
             manager_password=self.manager_password
         )
         self.addCleanup(self.teardown_manager)
-        self.cfy.use(
+        self.cfy.profiles.use(
             self.manager_ip,
             manager_username=self.manager_username,
             manager_password=self.manager_password

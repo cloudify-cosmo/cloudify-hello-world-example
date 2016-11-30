@@ -164,7 +164,7 @@ class BaseManagerUpgradeTest(TestCase):
             upgrade_config = self.env.handler_configuration['upgrade_manager']
             self.upgrade_manager_ip = upgrade_config['public_ip']
             self.manager_private_ip = upgrade_config['private_ip']
-            self.manager_cfy.use(self.upgrade_manager_ip)
+            self.manager_cfy.profiles.use(self.upgrade_manager_ip)
         else:
             self.bootstrap_manager()
 
@@ -290,7 +290,7 @@ class BaseManagerUpgradeTest(TestCase):
                     self.cfy_workdir)
             self.manager_private_ip = self._load_private_ip_from_env(
                     self.cfy_workdir)
-            self.manager_cfy.use(self.upgrade_manager_ip)
+            self.manager_cfy.profiles.use(self.upgrade_manager_ip)
         finally:
             if os.path.isdir(bootstrap_cli_env):
                 shutil.rmtree(bootstrap_cli_env, ignore_errors=True)
