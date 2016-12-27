@@ -326,7 +326,7 @@ handler_properties:
     windows_image_id: '{{rackspace_openstack_windows_image_id}}'
     flavor_name: m1.large
     small_flavor_id: 2
-    medium_flavor_id: 4
+    medium_flavor_id: e3cdac85-a546-495a-b7e8-76750fe1a84c
 
   vsphere_handler_props:
     template: systemtests-ubuntu-1404

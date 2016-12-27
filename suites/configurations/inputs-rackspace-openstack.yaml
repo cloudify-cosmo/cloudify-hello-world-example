@@ -6,7 +6,7 @@ image_id: ''
 keystone_url: https://rackspace-api.gigaspaces.com:5000/v2.0
 manager_public_key_name: shared-system-tests
 agent_public_key_name: shared-system-tests
-flavor_id: 4
+flavor_id: e3cdac85-a546-495a-b7e8-76750fe1a84c
 external_network_name: GATEWAY_NET
 
 use_existing_manager_keypair: true
