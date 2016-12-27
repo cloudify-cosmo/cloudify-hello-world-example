@@ -23,6 +23,7 @@ dependencies:
 test:
   override:
     - cfy blueprints validate blueprint.yaml
+    - cfy blueprints validate openstack-windows-blueprint.yaml
     - cfy blueprints validate singlehost-blueprint.yaml
     - cfy blueprints validate ec2-blueprint.yaml
     - cfy blueprints validate ec2-windows-blueprint.yaml

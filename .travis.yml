@@ -14,7 +14,8 @@ install:
 
 script:
     - cfy init
-    - cfy blueprints validate -p blueprint.yaml
-    - cfy blueprints validate -p singlehost-blueprint.yaml
-    - cfy blueprints validate -p ec2-blueprint.yaml
-    - cfy blueprints validate -p ec2-windows-blueprint.yaml
+    - cfy blueprints validate blueprint.yaml
+    - cfy blueprints validate openstack-windows-blueprint.yaml
+    - cfy blueprints validate singlehost-blueprint.yaml
+    - cfy blueprints validate ec2-blueprint.yaml
+    - cfy blueprints validate ec2-windows-blueprint.yaml

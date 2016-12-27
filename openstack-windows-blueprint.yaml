@@ -1,0 +1,74 @@
+tosca_definitions_version: cloudify_dsl_1_3
+
+description: >
+  The blueprint describes an OpenStack Windows vm created using Cloudify's OpenStack plugin
+  and simple web server started using Cloudify's script plugin.
+  In addition, an OpenStack floating ip and security group are created and associated with the created vm.
+
+imports:
+  - http://www.getcloudify.org/spec/cloudify/4.0m10/types.yaml
+  - http://www.getcloudify.org/spec/openstack-plugin/1.5/plugin.yaml
+
+inputs:
+  webserver_port:
+    description: The HTTP web server port
+    default: 8080
+  agent_user:
+    description: User name used when SSH-ing into the started machine
+  image:
+    description: Openstack image name or id to use for the new server
+  flavor:
+    description: Openstack flavor name or id to use for the new server
+
+node_templates:
+  virtual_ip:
+    type: cloudify.openstack.nodes.FloatingIP
+  security_group:
+    type: cloudify.openstack.nodes.SecurityGroup
+    properties:
+      rules:
+        - remote_ip_prefix: 0.0.0.0/0
+          port: { get_property: [ http_web_server, port ] }
+  vm:
+    type: cloudify.openstack.nodes.WindowsServer
+    properties:
+      agent_config:
+        user: { get_input: agent_user }
+        install_method: init_script
+      image: { get_input: image }
+      flavor: { get_input: flavor }
+    relationships:
+      - type: cloudify.openstack.server_connected_to_floating_ip
+        target: virtual_ip
+      - type: cloudify.openstack.server_connected_to_security_group
+        target: security_group
+  http_web_server:
+    type: cloudify.nodes.WebServer
+    properties:
+      port: { get_input: webserver_port }
+    relationships:
+      - type: cloudify.relationships.contained_in
+        target: vm
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        configure:
+          implementation: scripts/powershell/configure.ps1
+          inputs:
+            process:
+              command_prefix: powershell
+        start:
+          implementation: scripts/powershell/start.ps1
+          inputs:
+            process:
+              command_prefix: powershell
+        stop:
+          implementation: scripts/powershell/stop.ps1
+          inputs:
+            process:
+              command_prefix: powershell
+
+outputs:
+  http_endpoint:
+    description: Web server external endpoint
+    value: { concat: ['http://', { get_attribute: [virtual_ip, floating_ip_address] },
+                      ':', { get_property: [http_web_server, port] }] }
