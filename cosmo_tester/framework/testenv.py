@@ -348,6 +348,7 @@ class TestEnvironment(object):
         for wagon in downloaded_wagon_paths:
             self.logger.info('Uploading {0}'.format(wagon))
             get_cfy().plugins.upload(wagon, verbose=True)
+        get_cfy().plugins.list()
 
 
 class TestCase(unittest.TestCase):
