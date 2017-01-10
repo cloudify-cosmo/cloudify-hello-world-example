@@ -131,10 +131,11 @@ class TestEnvironment(object):
                 'handler_configurations'][handler_configuration]
 
         variables = self.suites_yaml['variables']
-        manager_resources_package = variables.get('manager_resources_package')
-        if manager_resources_package:
+        self.manager_resources_package = \
+            variables.get('manager_resources_package')
+        if self.manager_resources_package:
             logger.info('Going to use manager_resources_package: {0}'
-                        .format(manager_resources_package))
+                        .format(self.manager_resources_package))
 
         self.cloudify_config_path = path(os.path.expanduser(
             self.handler_configuration['inputs']))
@@ -181,9 +182,9 @@ class TestEnvironment(object):
         with self.handler.update_cloudify_config() as patch:
             inputs_override = \
                 self.handler_configuration.get('inputs_override', {})
-            if manager_resources_package:
+            if self.manager_resources_package:
                 inputs_override['manager_resources_package'] = \
-                    manager_resources_package
+                    self.manager_resources_package
             processed_inputs = process_variables(
                 self.suites_yaml,
                 inputs_override)
@@ -263,6 +264,14 @@ class TestEnvironment(object):
                     inputs_path=inputs_path)
             except TypeError:
                 self.before_bootstrap()
+
+        logger.info('########################################')
+        logger.info('Going to bootstrap with input file: {0}'.
+                    format(inputs_path))
+        with open(inputs_path, "r") as input_file:
+            inputs_content = input_file.read()
+        logger.info('Input: \n{0}'.format(inputs_content))
+        logger.info('########################################')
 
         cfy.bootstrap(
             blueprint_path,

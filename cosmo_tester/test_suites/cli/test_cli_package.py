@@ -355,7 +355,8 @@ class TestCliPackage(TestCase):
         self.cfy.profiles.use(
             self.manager_ip,
             manager_username=self.manager_username,
-            manager_password=self.manager_password
+            manager_password=self.manager_password,
+            manager_tenant=cli_constants.DEFAULT_TENANT_NAME
         )
         self.env._upload_plugins()
 

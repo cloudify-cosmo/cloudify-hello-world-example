@@ -37,6 +37,7 @@ class AbstractSingleHostTest(object):
             self.env.centos_7_image_user)
 
         self.inputs = {
+            'manager_resources_package': self.env.manager_resources_package,
             'prefix': self.prefix,
             'external_network': self.env.external_network_name,
             'os_username': self.env.keystone_username,
@@ -50,8 +51,9 @@ class AbstractSingleHostTest(object):
                                                           self.prefix)
         }
 
-        self.logger.info('initialize local env for running the '
-                         'blueprint that starts a vm')
+        self.logger.info('Initializing local env for running the '
+                         'blueprint that starts a vm, '
+                         'with input: {0}'.format(self.inputs))
         self.local_env = local.init_env(
             self.blueprint_yaml,
             inputs=self.inputs,
