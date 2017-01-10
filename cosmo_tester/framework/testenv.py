@@ -118,6 +118,8 @@ class TestEnvironment(object):
             SUITES_YAML_PATH,
             path(__file__).dirname().dirname().dirname() / 'suites' /
             'suites' / 'suites.yaml')
+
+        logger.info('Using suites.yaml: {0}'.format(suites_yaml_path))
         with open(suites_yaml_path) as f:
             self.suites_yaml = yaml.load(f.read())
         if os.path.exists(os.path.expanduser(handler_configuration)):
@@ -127,6 +129,12 @@ class TestEnvironment(object):
         else:
             self.handler_configuration = self.suites_yaml[
                 'handler_configurations'][handler_configuration]
+
+        variables = self.suites_yaml['variables']
+        manager_resources_package = variables.get('manager_resources_package')
+        if manager_resources_package:
+            logger.info('Going to use manager_resources_package: {0}'
+                        .format(manager_resources_package))
 
         self.cloudify_config_path = path(os.path.expanduser(
             self.handler_configuration['inputs']))
@@ -171,10 +179,17 @@ class TestEnvironment(object):
             self.cloudify_config,
             manager_blueprint_path=self._manager_blueprint_path)
         with self.handler.update_cloudify_config() as patch:
+            inputs_override = \
+                self.handler_configuration.get('inputs_override', {})
+            if manager_resources_package:
+                inputs_override['manager_resources_package'] = \
+                    manager_resources_package
             processed_inputs = process_variables(
                 self.suites_yaml,
-                self.handler_configuration.get('inputs_override', {}))
+                inputs_override)
             for key, value in processed_inputs.items():
+                logger.info('Updating input.. [{0} ==> {1}]'
+                            .format(key, value))
                 patch.set_value(key, value)
 
         if 'manager_ip' in self.handler_configuration:

@@ -38,6 +38,8 @@ from cosmo_tester import resources
 CLOUDIFY_AUTHORIZATION_HEADER = 'Authorization'
 BASIC_AUTH_PREFIX = 'Basic '
 CLOUDIFY_AUTH_TOKEN_HEADER = 'Authentication-Token'
+CLOUDIFY_TENANT_HEADER = 'Tenant'
+DEFAULT_TENANT_NAME = 'default_tenant'
 
 
 def download_file(url, destination=''):
@@ -219,12 +221,13 @@ def get_auth_header(username=None, password=None, token=None):
 def create_rest_client(manager_ip,
                        manager_username=None,
                        manager_password=None):
+    headers = get_auth_header(
+        username=manager_username or cli_env.get_username(),
+        password=manager_password or cli_env.get_password())
+    headers[CLOUDIFY_TENANT_HEADER] = DEFAULT_TENANT_NAME
     return CloudifyClient(
         host=manager_ip,
-        headers=get_auth_header(
-            username=manager_username or cli_env.get_username(),
-            password=manager_password or cli_env.get_password())
-    )
+        headers=headers)
 
 
 class YamlPatcher(object):

@@ -468,9 +468,10 @@ class SuitesScheduler(object):
 
 class SuitesRunner(object):
 
-    def __init__(self, variables_path, descriptor):
+    def __init__(self, variables_path, descriptor, resources_package):
         self.descriptor = descriptor
         self.variables_path = variables_path
+        self.resources_package = resources_package
         self.suites_yaml = None
         self.envs_dir = path.getcwd() / SUITE_ENVS_DIR
 
@@ -487,7 +488,8 @@ class SuitesRunner(object):
                     '\descriptor={}'.format(self.descriptor))
         test_suites_path = build_suites_yaml('suites/suites.yaml',
                                              self.variables_path,
-                                             self.descriptor)
+                                             self.descriptor,
+                                             self.resources_package)
         os.environ[TEST_SUITES_PATH] = test_suites_path
         with open(test_suites_path) as f:
             self.suites_yaml = yaml.safe_load(f)
@@ -611,8 +613,11 @@ def is_pid_of_suites_runner(pid):
 
 
 def main():
+    logger.info('Running with args: {0}'.format(sys.argv))
+    resources_package = sys.argv[3] if len(sys.argv) >= 4 else None
     suites_runner = SuitesRunner(variables_path=sys.argv[1],
-                                 descriptor=sys.argv[2])
+                                 descriptor=sys.argv[2],
+                                 resources_package=resources_package)
     suites_runner.setenv()
     suites_runner.validate()
     logger.info('Pruning containers before suites run')

@@ -29,7 +29,7 @@ suites_runner()
         --jenkins-parameters-path="${EXPORT_PARAMS_FILE}" \
         --secrets-file-path="${SYSTEM_TESTS_SECRETS}" \
         --packages-urls-file-path="${SYSTEM_TESTS_PACKAGES}"
-    exec python suites_runner.py "${variables_yaml_path}" "${SYSTEM_TESTS_DESCRIPTOR}"
+    exec python suites_runner.py "${variables_yaml_path}" "${SYSTEM_TESTS_DESCRIPTOR}" "${MANAGER_RESOURCES_PACKAGE_URL}"
 }
 
 main()

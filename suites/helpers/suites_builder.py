@@ -20,7 +20,8 @@ import yaml
 
 def build_suites_yaml(all_suites_yaml_path,
                       variables_path,
-                      descriptor):
+                      descriptor,
+                      resources_package):
     with open(variables_path) as f:
         variables = yaml.load(f.read())
     with open(all_suites_yaml_path) as f:
@@ -28,6 +29,7 @@ def build_suites_yaml(all_suites_yaml_path,
     suites_yaml_path = tempfile.mktemp(prefix='suites-', suffix='.json')
     test_suites = parse_descriptor(suites_yaml, descriptor)
     suites_yaml['variables'] = suites_yaml.get('variables', {})
+    suites_yaml['variables']['manager_resources_package'] = resources_package
     suites_yaml['variables'].update(variables)
     suites_yaml['test_suites'] = test_suites
     with open(suites_yaml_path, 'w') as f:
