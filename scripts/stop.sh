@@ -4,12 +4,13 @@ set -e
 
 TEMP_DIR="/tmp"
 PYTHON_FILE_SERVER_ROOT=${TEMP_DIR}/python-simple-http-webserver
-PID_FILE="server.pid"
 
-PID=`cat ${PYTHON_FILE_SERVER_ROOT}/${PID_FILE}`
+ctx logger info "Shutting down 'python -m SimpleHTTPServer' process"
+pkill -9 -f 'python -m SimpleHTTPServer'
 
-ctx logger info "Shutting down file server. pid = ${PID}"
-kill -9 ${PID} || exit $?
+ctx logger info "Deleting all files from hte server "
 
-ctx logger info "Deleting file server root directory (${PYTHON_FILE_SERVER_ROOT})"
-rm -rf ${PYTHON_FILE_SERVER_ROOT}
+pushd /tmp
+    shopt -s extglob
+    rm -rf  -- !(task-*|*.socket)
+popd
