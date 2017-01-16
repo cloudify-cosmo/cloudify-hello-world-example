@@ -37,7 +37,6 @@ class AbstractSingleHostTest(object):
             self.env.centos_7_image_user)
 
         self.inputs = {
-            'manager_resources_package': self.env.manager_resources_package,
             'prefix': self.prefix,
             'external_network': self.env.external_network_name,
             'os_username': self.env.keystone_username,
@@ -81,6 +80,7 @@ class AbstractSingleHostTest(object):
                          'simple-manager-blueprint.yaml')
 
         self.bootstrap_inputs = {
+            'manager_resources_package': self.env.manager_resources_package,
             'public_ip': self.public_ip_address,
             'private_ip': self.private_ip_address,
             'ssh_user': self.env.centos_7_image_user,
@@ -91,6 +91,8 @@ class AbstractSingleHostTest(object):
 
         if override_inputs is not None:
             self.bootstrap_inputs.update(override_inputs)
+
+        self.logger.info('Bootstrap inputs: {0}'.format(self.bootstrap_inputs))
 
         # preparing inputs file for bootstrap
         self.test_inputs_path = \
