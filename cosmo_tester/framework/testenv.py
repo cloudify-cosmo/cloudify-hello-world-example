@@ -241,7 +241,6 @@ class TestEnvironment(object):
                    task_retry_interval=90,
                    subgraph_retries=2,
                    verbose=False,
-                   create_rest_client_func=None,
                    dont_save_password_in_profile=False):
 
         if install_plugins is None:
@@ -291,8 +290,7 @@ class TestEnvironment(object):
             cli_env.profile = cli_env.get_profile_context()
 
             self._upload_plugins()
-            self._running_env_setup(cli_env.profile.manager_ip,
-                                    create_rest_client_func)
+            self._running_env_setup(cli_env.profile.manager_ip)
             # A hacky workaround where a test bootstraps a manager
             # using simple manager blueprint and provider context does
             # not contain a 'resources' key as expected by openstack's
@@ -315,10 +313,9 @@ class TestEnvironment(object):
             if os.path.exists(self._workdir):
                 shutil.rmtree(self._workdir)
 
-    def _running_env_setup(self, management_ip, create_rest_client_func=None):
-        create_rest_client_func = create_rest_client_func or create_rest_client
+    def _running_env_setup(self, management_ip):
         self.management_ip = management_ip
-        self.rest_client = create_rest_client_func(management_ip)
+        self.rest_client = create_rest_client(management_ip)
         response = self.rest_client.manager.get_status()
         if not response['status'] == 'running':
             raise RuntimeError('Manager at {0} is not running.'
@@ -771,7 +768,6 @@ class TestCase(unittest.TestCase):
                   task_retry_interval=90,
                   subgraph_retries=2,
                   verbose=False,
-                  create_rest_client_func=None,
                   dont_save_password_in_profile=False):
         self.env._bootstrap(
             blueprint_path,
@@ -783,7 +779,6 @@ class TestCase(unittest.TestCase):
             task_retry_interval=task_retry_interval,
             subgraph_retries=subgraph_retries,
             verbose=verbose,
-            create_rest_client_func=create_rest_client_func,
             dont_save_password_in_profile=dont_save_password_in_profile)
         self.client = self.env.rest_client
 

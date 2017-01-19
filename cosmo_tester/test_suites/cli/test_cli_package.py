@@ -348,8 +348,9 @@ class TestCliPackage(TestCase):
         self.manager_ip = self._manager_ip()
         self.client = util.create_rest_client(
             self.manager_ip,
-            manager_username=self.manager_username,
-            manager_password=self.manager_password
+            username=self.manager_username,
+            password=self.manager_password,
+            tenant=cli_constants.DEFAULT_TENANT_NAME
         )
         self.addCleanup(self.teardown_manager)
         self.cfy.profiles.use(

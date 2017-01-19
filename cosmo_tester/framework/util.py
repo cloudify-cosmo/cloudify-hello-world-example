@@ -27,16 +27,11 @@ import tempfile
 import yaml
 import jinja2
 from path import path
-from base64 import urlsafe_b64encode
 
 from cloudify_cli import env as cli_env
-from cloudify_cli import constants
 from cloudify_rest_client import CloudifyClient
 
 from cosmo_tester import resources
-
-
-CLOUDIFY_AUTH_TOKEN_HEADER = 'Authentication-Token'
 
 
 def download_file(url, destination=''):
@@ -204,27 +199,16 @@ def check_port(ip, port):
     return result == 0
 
 
-def get_auth_header(username=None, password=None, token=None):
-    header = {}
-    if username and password:
-        credentials = '{0}:{1}'.format(username, password)
-        header[constants.CLOUDIFY_AUTHENTICATION_HEADER] = \
-            constants.BASIC_AUTH_PREFIX + urlsafe_b64encode(credentials)
-    elif token:
-        header[CLOUDIFY_AUTH_TOKEN_HEADER] = token
-    return header
-
-
 def create_rest_client(manager_ip,
-                       manager_username=None,
-                       manager_password=None):
-    headers = get_auth_header(
-        username=manager_username or cli_env.get_username(),
-        password=manager_password or cli_env.get_password())
-    headers[constants.CLOUDIFY_TENANT_HEADER] = constants.DEFAULT_TENANT_NAME
+                       username=None,
+                       password=None,
+                       tenant=None):
     return CloudifyClient(
         host=manager_ip,
-        headers=headers)
+        username=username or cli_env.get_username(),
+        password=password or cli_env.get_password(),
+        tenant=tenant or cli_env.get_tenant_name()
+    )
 
 
 class YamlPatcher(object):
