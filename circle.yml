@@ -13,16 +13,17 @@ checkout:
 
 dependencies:
   override:
-    - pip install https://github.com/cloudify-cosmo/cloudify-rest-client/archive/4.0m11.zip
-    - pip install https://github.com/cloudify-cosmo/cloudify-dsl-parser/archive/4.0m11.zip
-    - pip install https://github.com/cloudify-cosmo/cloudify-plugins-common/archive/4.0m11.zip
+    - pip install https://github.com/cloudify-cosmo/cloudify-rest-client/archive/4.0m14.zip
+    - pip install https://github.com/cloudify-cosmo/cloudify-dsl-parser/archive/4.0m14.zip
+    - pip install https://github.com/cloudify-cosmo/cloudify-plugins-common/archive/4.0m14.zip
     - pip install https://github.com/cloudify-cosmo/cloudify-script-plugin/archive/1.4.zip
-    - pip install https://github.com/cloudify-cosmo/cloudify-cli/archive/4.0m11.zip
+    - pip install https://github.com/cloudify-cosmo/cloudify-cli/archive/4.0m14.zip
     - pip install https://github.com/cloudify-cosmo/cloudify-aws-plugin/archive/1.4.zip
 
 test:
   override:
     - cfy blueprints validate blueprint.yaml
+    - cfy blueprints validate openstack-blueprint.yaml
     - cfy blueprints validate openstack-windows-blueprint.yaml
     - cfy blueprints validate singlehost-blueprint.yaml
     - cfy blueprints validate ec2-blueprint.yaml
