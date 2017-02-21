@@ -501,50 +501,50 @@ handler_configurations:
       <<: *rackspace_openstack_inputs
       keystone_tenant_name: system-tests-5
 
-  rackspace_openstack_system_tests6:
-    <<: *rackspace_openstack_handler_configuration
-    env: rackspace_openstack_6
-    tags: [openstack, rackspace]
-    inputs_override:
-      <<: *rackspace_openstack_credentials_inputs
-      <<: *rackspace_openstack_inputs
-      keystone_tenant_name: system-tests-6
-
-  rackspace_openstack_system_tests7:
-    <<: *rackspace_openstack_handler_configuration
-    env: rackspace_openstack_7
-    tags: [openstack, rackspace]
-    inputs_override:
-      <<: *rackspace_openstack_credentials_inputs
-      <<: *rackspace_openstack_inputs
-      keystone_tenant_name: system-tests-7
-
-  rackspace_openstack_system_tests8:
-    <<: *rackspace_openstack_handler_configuration
-    env: rackspace_openstack_8
-    tags: [openstack, rackspace]
-    inputs_override:
-      <<: *rackspace_openstack_credentials_inputs
-      <<: *rackspace_openstack_inputs
-      keystone_tenant_name: system-tests-8
-
-  rackspace_openstack_system_tests9:
-    <<: *rackspace_openstack_handler_configuration
-    env: rackspace_openstack_9
-    tags: [openstack, rackspace]
-    inputs_override:
-      <<: *rackspace_openstack_credentials_inputs
-      <<: *rackspace_openstack_inputs
-      keystone_tenant_name: system-tests-9
-
-  rackspace_openstack_system_tests10:
-    <<: *rackspace_openstack_handler_configuration
-    env: rackspace_openstack_10
-    tags: [openstack, rackspace]
-    inputs_override:
-      <<: *rackspace_openstack_credentials_inputs
-      <<: *rackspace_openstack_inputs
-      keystone_tenant_name: system-tests-10
+#  rackspace_openstack_system_tests6:
+#    <<: *rackspace_openstack_handler_configuration
+#    env: rackspace_openstack_6
+#    tags: [openstack, rackspace]
+#    inputs_override:
+#      <<: *rackspace_openstack_credentials_inputs
+#      <<: *rackspace_openstack_inputs
+#      keystone_tenant_name: system-tests-6
+#
+#  rackspace_openstack_system_tests7:
+#    <<: *rackspace_openstack_handler_configuration
+#    env: rackspace_openstack_7
+#    tags: [openstack, rackspace]
+#    inputs_override:
+#      <<: *rackspace_openstack_credentials_inputs
+#      <<: *rackspace_openstack_inputs
+#      keystone_tenant_name: system-tests-7
+#
+#  rackspace_openstack_system_tests8:
+#    <<: *rackspace_openstack_handler_configuration
+#    env: rackspace_openstack_8
+#    tags: [openstack, rackspace]
+#    inputs_override:
+#      <<: *rackspace_openstack_credentials_inputs
+#      <<: *rackspace_openstack_inputs
+#      keystone_tenant_name: system-tests-8
+#
+#  rackspace_openstack_system_tests9:
+#    <<: *rackspace_openstack_handler_configuration
+#    env: rackspace_openstack_9
+#    tags: [openstack, rackspace]
+#    inputs_override:
+#      <<: *rackspace_openstack_credentials_inputs
+#      <<: *rackspace_openstack_inputs
+#      keystone_tenant_name: system-tests-9
+#
+#  rackspace_openstack_system_tests10:
+#    <<: *rackspace_openstack_handler_configuration
+#    env: rackspace_openstack_10
+#    tags: [openstack, rackspace]
+#    inputs_override:
+#      <<: *rackspace_openstack_credentials_inputs
+#      <<: *rackspace_openstack_inputs
+#      keystone_tenant_name: system-tests-10
 
   ###############################################################################
 
