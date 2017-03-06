@@ -239,17 +239,12 @@ class AgentInstallerTest(testenv.TestCase):
 def install_script(name, windows, user, manager_host):
 
     env_vars = {}
-    env_vars[constants.MANAGER_FILE_SERVER_URL_KEY] = '{0}://{1}:{2}'.format(
-        defaults.FILE_SERVER_PROTOCOL, manager_host, defaults.FILE_SERVER_PORT)
-    env_vars[constants.FILE_SERVER_PORT_KEY] = str(defaults.FILE_SERVER_PORT)
-    env_vars[constants.FILE_SERVER_PROTOCOL_KEY] = \
-        defaults.FILE_SERVER_PROTOCOL
-    env_vars[constants.REST_PORT_KEY] = str(defaults.REST_PORT)
-    env_vars[constants.REST_PROTOCOL_KEY] = defaults.REST_PROTOCOL
-    env_vars[constants.SECURITY_ENABLED_KEY] = str(defaults.SECURITY_ENABLED)
-    env_vars[constants.VERIFY_REST_CERTIFICATE_KEY] = \
-        str(defaults.VERIFY_REST_CERTIFICATE)
-    env_vars[constants.REST_CERT_CONTENT_KEY] = ''
+    env_vars[constants.REST_PORT_KEY] = str(defaults.INTERNAL_REST_PORT)
+    env_vars[constants.MANAGER_FILE_SERVER_URL_KEY] = \
+        'https://{0}:{1}/resources'.format(
+            manager_host,
+            defaults.INTERNAL_REST_PORT
+        )
 
     ctx = MockCloudifyContext(
         node_id='node',
@@ -258,7 +253,6 @@ def install_script(name, windows, user, manager_host):
             'windows': windows,
             'install_method': 'provided',
             'rest_host': manager_host,
-            'file_server_host': manager_host,
             'broker_ip': manager_host,
             'name': name
         }})
