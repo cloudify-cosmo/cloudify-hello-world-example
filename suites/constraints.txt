@@ -1,0 +1,8 @@
+# OpenStack dependencies are here in order to cope with pbr>=2.0.0
+# specified in new OpenStack dependencies.
+pbr<2.0.0
+stevedore<1.21.0
+oslo.i18n<=3.12.0
+oslo.serialization<=2.16.0
+oslo.utils<=3.22.0
+debtcollector<=1.11.0

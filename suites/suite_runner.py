@@ -197,6 +197,7 @@ class SuiteRunner(object):
             install_arguments.append('./{0}'.format(repo))
         if requirements:
             install_arguments += ['-r', requirements]
+        install_arguments += ['-c', self._get_constraints_file()]
         with path(self.work_dir):
             pip.install(*install_arguments).wait()
         if repo and editable:
@@ -349,6 +350,10 @@ class SuiteRunner(object):
                           message='Test should have run, but did not')
             with open(report_file_path, 'w') as report:
                 report.write(et.tostring(root, pretty_print=True))
+
+    def _get_constraints_file(self):
+        return os.path.join(
+                self.work_dir, CLOUDIFY_SYSTEM_TESTS, 'suites/constraints.txt')
 
 
 def _process_variables(suites_yaml, unprocessed_dict):
