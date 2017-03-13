@@ -27,7 +27,7 @@ setup(
     install_requires=[
         'fabric',
         'PyYAML==3.10',
-        'requests==2.7.0',
+        'requests>=2.7.0,<3.0.0',
         'sh==1.11',
         'path.py==8.1.2',
         'nose',
