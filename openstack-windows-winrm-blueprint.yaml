@@ -2,7 +2,7 @@ tosca_definitions_version: cloudify_dsl_1_3
 
 description: >
   The blueprint describes an OpenStack Windows vm created using Cloudify's OpenStack plugin
-  and simple web server started using Cloudify's script plugin.
+  and simple web server started using winrm.
   In addition, an OpenStack floating ip and security group are created and associated with the created vm.
 
 imports:
@@ -37,7 +37,6 @@ node_templates:
     type: cloudify.openstack.nodes.WindowsServer
     properties:
       agent_config:
-        service_name: "Dmitry"
         user: { get_input: agent_user }
       image: { get_input: image }
       flavor: { get_input: flavor }
