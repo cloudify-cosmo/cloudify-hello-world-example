@@ -138,4 +138,4 @@ class OpenStackAutohealNodeCellarTest(OpenStackNodeCellarTestBase):
         }
 
     def test_openstack_autoheal_nodecellar(self):
-        self._test_openstack_nodecellar('openstack-blueprint.yaml')
+        self._test_openstack_nodecellar('deprecated-openstack-blueprint.yaml')

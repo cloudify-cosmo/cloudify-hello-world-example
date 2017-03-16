@@ -278,4 +278,4 @@ class OpenStackNodeCellarTestBase(NodecellarAppTest):
 class OpenStackNodeCellarTest(OpenStackNodeCellarTestBase):
 
     def test_openstack_nodecellar(self):
-        self._test_openstack_nodecellar('openstack-blueprint.yaml')
+        self._test_openstack_nodecellar('deprecated-openstack-blueprint.yaml')
