@@ -28,6 +28,7 @@ test:
     - cfy blueprints validate -p singlehost-blueprint.yaml
     - cfy blueprints validate -p ec2-blueprint.yaml
     - cfy blueprints validate -p ec2-windows-blueprint.yaml
+    - cfy blueprints validate -p openstack-windows-winrm-blueprint.yaml
 
 deployment:
   release:
