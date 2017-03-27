@@ -79,7 +79,7 @@ class OpenStackAutohealNodeCellarTest(OpenStackNodeCellarTestBase):
 
         self.post_autoheal_assertions(after_install, after_autoheal)
 
-        self.execute_uninstall()
+        self.uninstall_delete_deployment_and_blueprint()
 
         self.post_uninstall_assertions()
 
