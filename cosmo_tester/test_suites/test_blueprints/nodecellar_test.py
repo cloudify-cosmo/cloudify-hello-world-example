@@ -12,12 +12,12 @@
 #    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
+
 import requests
 import json
 from requests.exceptions import ConnectionError
 from influxdb import InfluxDBClient
 
-from cloudify_rest_client.exceptions import CloudifyClientError
 from cosmo_tester.framework.git_helper import clone
 from cosmo_tester.framework.test_cases import MonitoringTestCase
 from cosmo_tester.framework.testenv import DEFAULT_EXECUTE_TIMEOUT
@@ -236,46 +236,3 @@ class NodecellarAppTest(MonitoringTestCase):
     @property
     def mongo_node_name(self):
         return 'mongod'
-
-
-class OpenStackNodeCellarTestBase(NodecellarAppTest):
-
-    def _do_uninstall(self, deployment_id):
-        """Make sure the deployment is uninstalled.
-
-        Even if the install workflow fails partway, this makes sure the
-        uninstall workflow runs to clean up.
-        Running the uninstall workflow might also be part of the test,
-        so the deployment might already have been uninstalled.
-        """
-        try:
-            self.client.deployments.get(deployment_id)
-        except CloudifyClientError as e:
-            if e.status_code == 404:
-                return  # already uninstalled
-            else:
-                raise  # some other error? we'd better not hide it
-        else:
-            self.execute_uninstall(deployment_id=deployment_id)
-
-    def _test_openstack_nodecellar(self, blueprint_file):
-
-        self.addCleanup(self._do_uninstall, deployment_id=self.test_id)
-        self.addCleanup(self.env.handler.remove_keypairs_from_manager,
-                        deployment_id=self.test_id, rest_client=self.client)
-
-        self._test_nodecellar_impl(blueprint_file)
-
-    def get_inputs(self):
-
-        return {
-            'image': self.env.ubuntu_trusty_image_id,
-            'flavor': self.env.small_flavor_id,
-            'agent_user': 'ubuntu'
-        }
-
-
-class OpenStackNodeCellarTest(OpenStackNodeCellarTestBase):
-
-    def test_openstack_nodecellar(self):
-        self._test_openstack_nodecellar('deprecated-openstack-blueprint.yaml')

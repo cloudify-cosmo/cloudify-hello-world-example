@@ -19,6 +19,8 @@ from neutronclient.common.exceptions import NeutronException
 from novaclient.exceptions import NotFound
 from retrying import retry
 
+from nose.tools import nottest
+
 from cosmo_tester.framework.git_helper import clone
 from cosmo_tester.framework.test_cases import MonitoringTestCase
 
@@ -107,6 +109,7 @@ class AbstractHelloWorldTest(MonitoringTestCase):
 
 class HelloWorldBashTest(AbstractHelloWorldTest):
 
+    @nottest
     def test_hello_world_on_ubuntu(self):
         inputs = {
             'agent_user': self.env.cloudify_agent_user,
@@ -119,6 +122,7 @@ class HelloWorldBashTest(AbstractHelloWorldTest):
                   is_existing_deployment=True,
                   delete_deployment=True)
 
+    @nottest
     def test_hello_world_on_centos(self):
         agent_user = self.env.centos_image_user
         inputs = {

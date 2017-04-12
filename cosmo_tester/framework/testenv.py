@@ -22,7 +22,6 @@ import yaml
 import copy
 import shutil
 import logging
-import requests
 import tempfile
 import unittest
 import importlib
@@ -38,6 +37,7 @@ from cosmo_tester.framework.util import (get_blueprint_path,
                                          process_variables,
                                          YamlPatcher,
                                          download_file,
+                                         get_plugin_wagon_urls,
                                          generate_unique_configurations,
                                          create_rest_client,
                                          get_cfy)
@@ -345,16 +345,8 @@ class TestEnvironment(object):
 
         wagon_paths = []
 
-        plugin_urls_location = (
-            'https://raw.githubusercontent.com/cloudify-cosmo/'
-            'cloudify-versions/{branch}/packages-urls/plugin-urls.yaml'.format(
-                branch=os.environ.get('BRANCH_NAME_CORE', 'master'),
-            )
-        )
+        plugins = get_plugin_wagon_urls()
 
-        plugins = yaml.load(
-            requests.get(plugin_urls_location).text
-        )['plugins']
         for plugin in plugins:
             self.logger.info(
                 'Downloading: {0}...'.format(plugin['wgn_url'])

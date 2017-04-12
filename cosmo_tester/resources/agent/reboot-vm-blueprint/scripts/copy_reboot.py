@@ -8,7 +8,7 @@ from cloudify_agent import VIRTUALENV
 
 
 def get_reboot_path():
-    plugins_dir = os.path.join(VIRTUALENV, 'plugins')
+    plugins_dir = os.path.join(VIRTUALENV, 'plugins', ctx.tenant_name)
     for entry in os.listdir(plugins_dir):
         plugin_dir = os.path.join(plugins_dir, entry)
         if (os.path.isdir(plugin_dir) and

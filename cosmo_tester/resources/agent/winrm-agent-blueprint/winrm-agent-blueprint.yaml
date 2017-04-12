@@ -10,23 +10,51 @@ plugins:
     executor: host_agent
 
 inputs:
-  image: {}
-  flavor: {}
+  image:
+    description: >
+      Image to be used when launching agent VM's
+  flavor:
+    description: >
+      Flavor of the agent VM's
+  user:
+    description: >
+      User to use during remote connection to VM.
+  network_name:
+    description: >
+      The OpenStack network the VM will be attached to.
+  private_key_path:
+    description: >
+      The private key path on the manager for connecting to the VM.
+  keypair_name:
+    description: >
+      The OpenStack keypair name to associate with the VM.
 
 node_templates:
 
+  security_group:
+    type: cloudify.openstack.nodes.SecurityGroup
+    properties:
+      rules:
+        - port: 5985
+          remote_ip_prefix: 0.0.0.0/0
+
+  keypair:
+    type: cloudify.openstack.nodes.KeyPair
+    properties:
+      use_external_resource: true
+      resource_id: { get_input: keypair_name }
+      private_key_path: { get_input: private_key_path }
+
   host:
     type: cloudify.openstack.nodes.WindowsServer
-    interfaces:
-      cloudify.interfaces.lifecycle:
-        start:
-          max_retries: 50
     properties:
       image: { get_input: image }
       flavor: { get_input: flavor }
-      cloudify_agent:
-        user: Administrator
+      agent_config:
+        user: { get_input: user }
         port: 5985
+        key: { get_input: private_key_path }
+      management_network_name: { get_input: network_name }
       server:
         userdata: |
           #ps1_sysnative
@@ -37,6 +65,22 @@ node_templates:
           winrm set winrm/config/service/auth '@{Basic="true"}'
           &netsh advfirewall firewall add rule name="WinRM 5985" protocol=TCP dir=in localport=5985 action=allow
           &netsh advfirewall firewall add rule name="WinRM 5986" protocol=TCP dir=in localport=5986 action=allow
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create:
+          inputs:
+            args:
+              security_groups: [{ get_attribute: [ security_group, external_name ]}]
+        start:
+          inputs:
+            max_retries: 50
+      cloudify.interfaces.reboot_test:
+        reboot: openstack.nova_plugin.reboot.reboot
+    relationships:
+      - type: cloudify.openstack.server_connected_to_keypair
+        target: keypair
+      - type: cloudify.openstack.server_connected_to_security_group
+        target: security_group
 
   application:
     type: cloudify.nodes.Root

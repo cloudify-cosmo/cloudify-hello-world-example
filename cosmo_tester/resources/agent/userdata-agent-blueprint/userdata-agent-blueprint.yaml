@@ -12,30 +12,44 @@ plugins:
 
 inputs:
 
-  image: {}
-  flavor: {}
-  agent_user: {}
-  os_family: {}
-  userdata: {}
-  file_path: {}
-  install_method: {}
+  image:
+    description: >
+      Image to be used when launching agent VM's
+  flavor:
+    description: >
+      Flavor of the agent VM's
+  user:
+    description: >
+      User to use during remote connection to VM.
+  network_name:
+    description: >
+      The OpenStack network the VM will be attached to.
+  private_key_path:
+    description: >
+      The private key path on the manager for connecting to the VM.
+  keypair_name:
+    description: >
+      The OpenStack keypair name to associate with the VM.
   name:
     default: ''
+  file_path:
+    type: string
+  userdata:
+    type: string
+  install_method:
+    type: string
+  os_family:
+    type: string
 
-
-node_types:
-
-  nodes.Application:
-    derived_from: cloudify.nodes.Root
-    interfaces:
-      cloudify.interfaces.lifecycle:
-        create:
-          implementation: mock.mock_plugin.tasks.run
-          inputs:
-            file_path:
-              default: { get_input: file_path }
 
 node_templates:
+
+  security_group:
+    type: cloudify.openstack.nodes.SecurityGroup
+    properties:
+      rules:
+        - port: 22
+          remote_ip_prefix: 0.0.0.0/0
 
   host:
     type: cloudify.openstack.nodes.Server
@@ -47,18 +61,39 @@ node_templates:
       image: { get_input: image }
       flavor: { get_input: flavor }
       os_family: { get_input: os_family }
+      management_network_name: { get_input: network_name }
       agent_config:
         install_method: { get_input: install_method }
-        user: { get_input: agent_user }
+        user: { get_input: user }
+        key: { get_input: private_key_path }
         env:
           MY_ENV_VAR: MY_ENV_VAR_VALUE
         extra:
           name: { get_input: name }
       server:
         userdata: { get_input: userdata }
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create:
+          inputs:
+            args:
+              security_groups: [{ get_attribute: [ security_group, external_name ]}]
+              key_name: { get_input: keypair_name }
+    relationships:
+      - type: cloudify.openstack.server_connected_to_security_group
+        target: security_group
+
 
   application:
-    type: nodes.Application
+    type: cloudify.nodes.ApplicationModule
+
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create:
+          implementation: mock.mock_plugin.tasks.run
+          inputs:
+            file_path: { get_input: file_path }
+
     relationships:
       - type: cloudify.relationships.contained_in
         target: host

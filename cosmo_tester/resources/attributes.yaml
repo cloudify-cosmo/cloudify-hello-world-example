@@ -1,0 +1,28 @@
+# the following attributes will be available for tests using the "attributes" fixture.
+
+cloudify_username: admin
+cloudify_password: admin
+cloudify_tenant: default_tenant
+
+cloudify_manager_image_name_prefix: cloudify-manager-premium
+
+centos7_username: centos
+centos7_image_name: CentOS-7-x86_64-GenericCloud-1608
+
+centos6_username: centos
+centos6_image_name: centos_6.6
+
+ubuntu_username: ubuntu
+ubuntu_14_04_image_name: 'Ubuntu 14.04.1 LTS Trusty Tahr (cloudimg)'
+ubuntu_16_04_image_name: ubuntu_16.04_xenial_with_python
+
+windows_server_2012_username: Admin
+windows_server_2012_image_name: windows_server_2012_r2_standard_eval
+
+floating_network_id: dda079ce-12cf-4309-879a-8e67aec94de4
+external_gateway: GATEWAY_NET
+large_flavor_name: m1.large
+medium_flavor_name: m1.medium
+small_flavor_name: m1.small
+
+LOCAL_REST_CERT_FILE: '/etc/cloudify/ssl/cloudify_internal_cert.pem'

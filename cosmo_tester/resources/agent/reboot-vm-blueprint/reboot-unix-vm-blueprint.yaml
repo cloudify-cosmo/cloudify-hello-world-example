@@ -11,20 +11,33 @@ inputs:
   image:
     description: >
       Image to be used when launching agent VM's
-
   flavor:
     description: >
       Flavor of the agent VM's
-
   user:
     description: >
       User to use during remote connection to VM.
-
+  network_name:
+    description: >
+      The OpenStack network the VM will be attached to.
+  private_key_path:
+    description: >
+      The private key path on the manager for connecting to the VM.
+  keypair_name:
+    description: >
+      The OpenStack keypair name to associate with the VM.
   value:
     description: >
       Unique value for validation purposes
 
 node_templates:
+
+  security_group:
+    type: cloudify.openstack.nodes.SecurityGroup
+    properties:
+      rules:
+        - port: 22
+          remote_ip_prefix: 0.0.0.0/0
 
   host:
     type: cloudify.openstack.nodes.Server
@@ -33,9 +46,20 @@ node_templates:
       flavor: { get_input: flavor }
       agent_config:
         user: { get_input: user }
+        key: { get_input: private_key_path }
+      management_network_name: { get_input: network_name }
     interfaces:
       cloudify.interfaces.reboot_test:
         reboot: openstack.nova_plugin.reboot.reboot
+      cloudify.interfaces.lifecycle:
+        create:
+          inputs:
+            args:
+              security_groups: [{ get_attribute: [ security_group, external_name ]}]
+              key_name: { get_input: keypair_name }
+    relationships:
+      - type: cloudify.openstack.server_connected_to_security_group
+        target: security_group
 
   application:
     type: nodes.Application

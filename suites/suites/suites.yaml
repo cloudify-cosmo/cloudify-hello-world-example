@@ -669,10 +669,6 @@ tests:
     tests:
       - cosmo_tester/test_suites/test_openstack_plugin
 
-  simple_manager_blueprint:
-    tests:
-      - cosmo_tester/test_suites/test_simple_manager_blueprint
-
   external_components:
     tests:
       - cosmo_tester/test_suites/test_external_components
@@ -740,10 +736,6 @@ tests:
     tests:
       - system_tests/manager
 
-  nodecellar_backwards_compatibility_tests:
-    tests:
-      - cosmo_tester/test_suites/backwards/test_nodecellar_backwards_compatibility
-
   manager_rollback:
     tests:
       - cosmo_tester/test_suites/test_manager_upgrade/rollback_idempotency_test.py
@@ -756,10 +748,6 @@ tests:
   manager_upgrade_validations:
     tests:
       - cosmo_tester/test_suites/test_preupgrade_validations
-
-  deployment_update:
-    tests:
-      - cosmo_tester/test_suites/test_deployment_update/deployment_update_test.py:DeploymentUpdateOSTest
 
   agent_tests:
     tests:
@@ -799,11 +787,6 @@ test_suites:
     tests:
       - manager_upgrade_validations
 
-  openstack_deployment_update:
-    requires: [openstack, rackspace]
-    tests:
-    - deployment_update
-
   agent:
     requires: [openstack, rackspace]
     tests:
@@ -813,11 +796,6 @@ test_suites:
     requires: [openstack, rackspace]
     tests:
       - openstack_plugin
-
-  openstack_simple_manager:
-    requires: [openstack, rackspace]
-    tests:
-      - simple_manager_blueprint
 
   openstack_chef:
     requires: [openstack, rackspace]
@@ -873,11 +851,6 @@ test_suites:
     handler_configuration: aws_ec2
     tests:
       - cli_packager_debian
-
-  openstack_backwards_nodecellar:
-    requires: [openstack, rackspace]
-    tests:
-      - nodecellar_backwards_compatibility_tests
 
   vsphere:
     handler_configuration: vsphere_handler_config

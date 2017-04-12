@@ -25,7 +25,7 @@ setup(
     description='Cosmo system tests framework',
     zip_safe=False,
     install_requires=[
-        'fabric',
+        'fabric==1.8.3',
         'PyYAML==3.10',
         'requests>=2.7.0,<3.0.0',
         'sh==1.11',
@@ -39,12 +39,18 @@ setup(
         'fasteners==0.13.0',
         # Wagon version has been left out since it better reflects the user
         # use-case
-        'wagon==0.3.2'
+        'wagon==0.3.2',
+        'pytest==3.0.4',
+        'testtools==2.2.0',
+        'openstacksdk==0.9.13'
     ],
     entry_points={
         'nose.plugins.0.10': [
             'testnameextractor = cosmo_tester.framework'
             '.tests_names_extractor:TestsNamesExtractor',
+        ],
+        'console_scripts': [
+            'cfy-systests = cosmo_tester.cli:main'
         ]
     },
 
