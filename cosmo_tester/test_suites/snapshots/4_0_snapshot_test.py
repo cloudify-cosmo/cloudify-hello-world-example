@@ -29,9 +29,7 @@ HELLO_WORLD_URL = 'https://github.com/cloudify-cosmo/cloudify-hello-world-exampl
 
 
 @pytest.fixture(scope='module')
-def cluster(
-        request, cfy, ssh_key, module_tmpdir, attributes, logger):
-    """Creates a cloudify manager from an image in rackspace OpenStack."""
+def cluster(cfy, ssh_key, module_tmpdir, attributes, logger):
     cluster = CloudifyCluster.create_image_based(
             cfy,
             ssh_key,
