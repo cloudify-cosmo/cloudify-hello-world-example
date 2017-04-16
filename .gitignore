@@ -60,3 +60,6 @@ suite-envs/
 
 # OS generated files
 .DS_Store
+
+# pytest
+.cache/
