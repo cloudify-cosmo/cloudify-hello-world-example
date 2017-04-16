@@ -1,0 +1,148 @@
+# This is a blueprint for simple wordpress installation on
+# two VMs:
+# 1. Apache + wordpress
+# 2. MySQL
+#
+# Tested on OpenStack (HP cloud) and Ubuntu. Should also work on Debian based
+# distros. For others, you should probably modify the installation path
+# below (/var/www/wordpress). Other changes might be required.
+#
+# When done, the Wordpress installation is at:
+# http://YOUR_WEB_SERVER_FLOATING_IP/wordpress/
+
+imports:
+    - http://www.getcloudify.org/spec/openstack-plugin/1.0/plugin.yaml
+    - http://www.getcloudify.org/spec/puppet-plugin/1.0/plugin.yaml
+
+types:
+    vm_host:
+        derived_from: cloudify.openstack.server
+        properties:
+            -   worker_config:
+                    user: ubuntu
+            -   server:
+                     # HP Cloud specific - start
+                     image: 8c096c29-a666-4b82-99c4-c77dc70cfb40
+                     flavor_name: standard.medium
+                     # HP Cloud specific - end
+                     security_groups: ['wp_security_group']
+
+blueprint:
+    name: wp_puppet
+    nodes:
+        -   name: ip
+            type: cloudify.openstack.floatingip
+            properties:
+                 floatingip:
+                     floating_network_name: Ext-Net
+
+        -   name: security_group
+            type: cloudify.openstack.security_group
+            properties:
+                security_group:
+                    name: wp_security_group
+                rules:
+                    -   remote_ip_prefix: 0.0.0.0/0
+                        port: 80
+                    -   remote_ip_prefix: 0.0.0.0/0
+                        port: 3306
+
+        -   name: apache_web_vm
+            type: vm_host
+            relationships:
+                -   type: cloudify.openstack.server_connected_to_floating_ip
+                    target: ip
+                -   type: cloudify.relationships.connected_to
+                    target: security_group
+
+        -   name: mysql_db_vm
+            type: vm_host
+
+        -   name: apache_web_server
+            type: cloudify.types.puppet.web_server
+            properties:
+                # Port is not used in our case
+                port: 8080
+                puppet_config:
+                    environment: helloworld
+                    modules:
+                        - puppetlabs-apache
+                        - hunner-wordpress
+                        - puppetlabs-mysql
+                    execute:
+                        create: |
+                            class {'mysql::bindings':
+                                php_enable => true
+                            } -> 
+                            class {'::apache': 
+                                mpm_module => 'prefork'
+                            }
+                            class {'::apache::mod::php':
+                            }
+            relationships:
+                -  type: cloudify.relationships.contained_in
+                   target: apache_web_vm
+
+        -   name: wordpress_app
+            type: cloudify.types.puppet.app_module
+            properties:
+                puppet_config:
+                    environment: helloworld
+                    # Note: modules are installed on first Puppet
+                    #       operation only so the following modules
+                    #       appear under apache_web_server node.
+                    # 
+                    # modules:
+                    #     - hunner-wordpress
+                    #     - puppetlabs-mysql
+                    execute:
+                        postconfigure: |
+                            class {'wordpress':
+                                create_db      => false,
+                                create_db_user => false,
+                                db_host        => $cloudify_related_host_ip,
+                                install_dir    => '/var/www/wordpress',
+                            }
+            relationships:
+                -  type: cloudify.relationships.contained_in
+                   target: apache_web_server
+                -  type: cloudify.puppet.connected_to
+                   target: mysql_database
+
+
+        -   name: mysql_database
+            type: cloudify.types.puppet.db_server
+            properties:
+                puppet_config:
+                    environment: helloworld
+                    # based on https://github.com/hunner/puppet-wordpress/blob/master/manifests/db.pp
+                    modules:
+                       - puppetlabs-mysql
+                    execute:
+                        create: |
+                            class { '::mysql::server':
+                                restart          => true,
+                                root_password    => 'password',
+                                override_options => {
+                                    'mysqld' => {
+                                        'bind_address' => '0.0.0.0'
+                                    }
+                                }
+                            }
+                            include mysql::client
+
+                            mysql_database { 'wordpress':
+                                charset => 'utf8',
+                            }
+                            mysql_user { "wordpress@%":
+                                password_hash => mysql_password('password'),
+                            }
+                            mysql_grant { "wordpress@%/wordpress.*":
+                                table      => "wordpress.*",
+                                user       => "wordpress@%",
+                                privileges => ['ALL'],
+                            }
+
+            relationships:
+                -   type: cloudify.relationships.contained_in
+                    target: mysql_db_vm
