@@ -51,6 +51,7 @@ class _CloudifyManager(object):
         self.ip_address = public_ip_address
         self.private_ip_address = private_ip_address
         self.client = rest_client
+        self.deleted = False
         self._ssh_key = ssh_key
         self._cfy = cfy
         self._attributes = attributes
@@ -95,6 +96,7 @@ class _CloudifyManager(object):
         self._logger.info('Deleting server.. [id=%s]', self.server_id)
         self._openstack.compute.delete_server(self.server_id)
         self._wait_for_server_to_be_deleted()
+        self.deleted = True
 
     @retrying.retry(stop_max_attempt_number=12, wait_fixed=5000)
     def _wait_for_server_to_be_deleted(self):
@@ -114,6 +116,13 @@ class _CloudifyManager(object):
         for service in status['services']:
             for instance in service['instances']:
                 assert instance['SubState'] == 'running'
+
+
+class _ManagerConfig(object):
+
+    def __init__(self):
+        self.image_name = None
+        self.upload_plugins = None
 
 
 class CloudifyCluster(object):
@@ -137,19 +146,34 @@ class CloudifyCluster(object):
         self._terraform = util.sh_bake(sh.terraform)
         self._terraform_inputs_file = self._tmpdir / 'terraform-vars.json'
         self._managers = None
+        self._managers_config = [self._get_default_manager_config()
+                                 for _ in range(number_of_managers)]
+
+    def _get_default_manager_config(self):
+        config = _ManagerConfig()
+        config.image_name = self._get_latest_manager_image_name()
+        config.upload_plugins = True
+        return config
 
     def _bootstrap_managers(self):
         pass
 
     @abstractmethod
-    def _get_manager_image_name(self):
+    def _get_latest_manager_image_name(self):
         """Returns the image name for the manager's VM."""
         pass
 
     @staticmethod
     def create_image_based(
-            cfy, ssh_key, tmpdir, attributes, logger, number_of_managers=1):
-        """Creates an image based Cloudify manager."""
+            cfy, ssh_key, tmpdir, attributes, logger, number_of_managers=1,
+            create=True):
+        """Creates an image based Cloudify manager.
+        :param create: Determines whether to actually create the environment
+         in this invocation. If set to False, create() should be invoked in
+         order to create the environment. Setting it to False allows to
+         change the servers configuration using the servers_config property
+         before calling create().
+        """
         cluster = ImageBasedCloudifyCluster(
                 cfy,
                 ssh_key,
@@ -157,9 +181,8 @@ class CloudifyCluster(object):
                 attributes,
                 logger,
                 number_of_managers=number_of_managers)
-        logger.info('Creating an image based cloudify cluster '
-                    '[number_of_managers=%d]', number_of_managers)
-        cluster.create()
+        if create:
+            cluster.create()
         return cluster
 
     @staticmethod
@@ -185,11 +208,20 @@ class CloudifyCluster(object):
             raise RuntimeError('_managers is not set')
         return self._managers
 
+    @property
+    def managers_config(self):
+        """Returns a list containing a manager configuration obj per manager
+         to be created."""
+        return self._managers_config
+
     def create(self):
         """Creates the OpenStack infrastructure for a Cloudify manager.
 
         The openstack credentials file and private key file for SSHing
         to provisioned VMs are uploaded to the server."""
+        self._logger.info('Creating an image based cloudify cluster '
+                          '[number_of_managers=%d]', self._number_of_managers)
+
         openstack_config_file = self._tmpdir / 'openstack_config.json'
         openstack_config_file.write_text(json.dumps({
             'username': os.environ['OS_USERNAME'],
@@ -207,20 +239,16 @@ class CloudifyCluster(object):
             terraform_template = f.read()
 
         output = jinja2.Template(terraform_template).render({
-            'servers': range(self._number_of_managers)
+            'servers': self.managers_config
         })
 
         terraform_template_file.write_text(output)
-
-        image_name = self._get_manager_image_name()
-        self._logger.info('Cloudify manager image name: %s', image_name)
 
         self._terraform_inputs_file.write_text(json.dumps({
             'resource_suffix': str(uuid.uuid4()),
             'public_key_path': self._ssh_key.public_key_path,
             'private_key_path': self._ssh_key.private_key_path,
-            'flavor': self._get_server_flavor(),
-            'image': image_name,
+            'flavor': self._get_server_flavor()
         }, indent=2))
 
         try:
@@ -239,12 +267,13 @@ class CloudifyCluster(object):
             for manager in self.managers:
                 manager.verify_services_are_running()
 
-            for manager in self._managers:
+            for i, manager in enumerate(self._managers):
                 manager.use()
                 self._upload_necessary_files_to_manager(manager,
                                                         openstack_config_file)
-                self._upload_plugin_to_manager(manager,
-                                               'openstack_centos_core')
+                if self.managers_config[i].upload_plugins:
+                    self._upload_plugin_to_manager(
+                            manager, 'openstack_centos_core')
 
             self._logger.info('Cloudify cluster successfully created!')
 
@@ -339,7 +368,7 @@ class ImageBasedCloudifyCluster(CloudifyCluster):
     Starts a manager from an image on OpenStack.
     """
 
-    def _get_manager_image_name(self):
+    def _get_latest_manager_image_name(self):
         """
         Returns the manager image name based on installed CLI version.
         For CLI version "4.0.0-m15"
@@ -365,7 +394,7 @@ class BootstrapBasedCloudifyCluster(CloudifyCluster):
     def _get_server_flavor(self):
         return self._attributes.large_flavor_name
 
-    def _get_manager_image_name(self):
+    def _get_latest_manager_image_name(self):
         return self._attributes.centos7_image_name
 
     def _bootstrap_managers(self):

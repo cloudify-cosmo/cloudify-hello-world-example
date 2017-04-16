@@ -69,8 +69,6 @@ def hello_world(cfy, cluster, attributes, ssh_key, tmpdir, logger):
 def _assert_snapshot_created(snapshot_id, client):
     snapshot = client.snapshots.get(snapshot_id)
     assert snapshot.status == 'created', 'Snapshot not in created status'
-    if snapshot.status != 'created':
-        raise AssertionError('Snapshot expected to be ')
 
 
 @retrying.retry(stop_max_attempt_number=6, wait_fixed=5000)
@@ -81,8 +79,8 @@ def _assert_restore_workflow_terminated(execution_id, client, logger):
     assert execution.status == 'terminated'
 
 
-def test_create_and_restore_snapshot(cfy, cluster, hello_world, attributes,
-                                     ssh_key, logger, tmpdir):
+def test_restore_snapshot_and_agents_upgrade(
+        cfy, cluster, hello_world, attributes, ssh_key, logger, tmpdir):
     manager1 = cluster.managers[0]
     manager2 = cluster.managers[1]
 

@@ -4,6 +4,7 @@ cloudify_username: admin
 cloudify_password: admin
 cloudify_tenant: default_tenant
 
+cloudify_manager_4_0_image_name: cloudify-manager-premium-4.0
 cloudify_manager_image_name_prefix: cloudify-manager-premium
 
 centos7_username: centos

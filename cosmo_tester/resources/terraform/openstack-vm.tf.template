@@ -2,7 +2,6 @@
 variable "resource_suffix" {}
 variable "public_key_path" {}
 variable "private_key_path" {}
-variable "image" {}
 variable "flavor" {}
 
 output "router_name" { value = "${openstack_networking_router_v2.router.name}" }
@@ -92,7 +91,7 @@ resource "openstack_networking_floatingip_v2" "floatingip{{ loop.index0 }}" {
 
 resource "openstack_compute_instance_v2" "server{{ loop.index0 }}" {
   name = "server-{{ loop.index0 }}-${var.resource_suffix}"
-  image_name = "${var.image}"
+  image_name = "{{ server.image_name }}"
   flavor_name = "${var.flavor}"
   key_pair = "${openstack_compute_keypair_v2.keypair.name}"
   security_groups = ["${openstack_compute_secgroup_v2.security_group.name}"]
