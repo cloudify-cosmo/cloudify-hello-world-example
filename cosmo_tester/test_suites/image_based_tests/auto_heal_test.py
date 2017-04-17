@@ -37,6 +37,7 @@ def nodecellar(cfy, manager, attributes, ssh_key, tmpdir, logger):
     nc.cleanup()
 
 
+@pytest.mark.skip(reason='Riemann modifications in progress...')
 def test_nodecellar_auto_healing(cfy, manager, nodecellar, logger):
     nodecellar.clone_example()
 
