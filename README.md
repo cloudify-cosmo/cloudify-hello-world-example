@@ -8,13 +8,17 @@ The system tests framework uses pytest fixtures in order to create the required
 resources for testing Cloudify.
 
 
-
-
 ## Installation
+
+### Install system tests framework
 
 * Checkout the repository.
 * cd cloudify-system-tests
 * pip install -e . -r test-requirements.txt -c suites/constraints.txt
+
+### Install Terraform
+
+Download terraform from [here](https://www.terraform.io/downloads.html), and follow the installation instructions [here](https://www.terraform.io/intro/getting-started/install.html).
 
 
 ## Running tests
@@ -22,16 +26,37 @@ resources for testing Cloudify.
 For tests running on an OpenStack environment, the framework assumes
 a manager image is available in the environment (i.e. cloudify-manager-premium-4.0).
 
-Before running a test, make sure that:
-1. Terraform binary is available in path.
-2. Source your OpenStack openrc file.
+Before running a test, make sure to source your OpenStack openrc file.
+The openrc file contains the authentication details for your OpenStack account.
+Information about downloading it from an OpenStack environment can be found [here](https://docs.openstack.org/user-guide/common/cli-set-environment-variables-using-openstack-rc.html).
 
-Make sure your openrc file is set to use the OpenStack v2 API.
+OpenStack openrc file example (my-openrc.sh):
+```bash
+#!/bin/bash
+
+export OS_AUTH_URL=https://rackspace-api.gigaspaces.com:5000/v2.0
+export OS_TENANT_NAME="idan-tenant"
+export OS_PROJECT_NAME="idan-tenant"
+export OS_USERNAME="idan"
+export OS_PASSWORD="GUESS-ME"
+export OS_REGION_NAME="RegionOne"
+export OS_IDENTITY_API_VERSION=2
+```
+
+Make sure your openrc file is set to use the OpenStack v2 API in both `OS_AUTH_URL` and `OS_IDENTITY_API_VERSION` environment variables.
+
+Source the openrc file:
+```bash
+source my-openrc.sh
+```
 
 Run:
 ```python
 pytest -s hello_world_test.py::test_hello_world_on_centos_7
 ```
+
+Please note it is important to run tests with the `-s` flag as the framework uses `Fabric` which is known to have problems with pytest's output capturing (https://github.com/pytest-dev/pytest/issues/1585).
+
 
 ## Writing tests
 
