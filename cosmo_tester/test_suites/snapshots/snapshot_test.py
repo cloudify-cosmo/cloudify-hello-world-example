@@ -80,7 +80,7 @@ def _assert_restore_workflow_terminated(execution_id, client, logger):
 
 
 def test_restore_snapshot_and_agents_upgrade(
-        cfy, cluster, hello_world, attributes, ssh_key, logger, tmpdir):
+        cfy, cluster, hello_world, logger, tmpdir):
     manager1 = cluster.managers[0]
     manager2 = cluster.managers[1]
 
@@ -94,8 +94,10 @@ def test_restore_snapshot_and_agents_upgrade(
     logger.info('Creating snapshot on manager1..')
     manager1.client.snapshots.create(snapshot_id, True, True)
 
-    _assert_snapshot_created(snapshot_id, manager1.client)
-    cfy.snapshots.list()
+    try:
+        _assert_snapshot_created(snapshot_id, manager1.client)
+    finally:
+        cfy.snapshots.list()
 
     snapshot_archive_path = str(tmpdir / 'snapshot.zip')
 
