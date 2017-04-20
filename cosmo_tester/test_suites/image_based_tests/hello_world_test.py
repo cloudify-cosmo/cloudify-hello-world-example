@@ -63,6 +63,22 @@ def test_hello_world_on_ubuntu_16_04(hello_world, attributes):
     hello_world.verify_all()
 
 
+def test_hello_world_on_rhel_7_3(hello_world, attributes):
+    hello_world.inputs.update({
+        'agent_user': attributes.rhel_7_3_username,
+        'image': attributes.rhel_7_3_image_name,
+    })
+    hello_world.verify_all()
+
+
+def test_hello_world_on_rhel_6_9(hello_world, attributes):
+    hello_world.inputs.update({
+        'agent_user': attributes.rhel_6_9_username,
+        'image': attributes.rhel_6_9_image_name,
+    })
+    hello_world.verify_all()
+
+
 def test_hello_world_on_windows_2012_server(hello_world, attributes):
     hello_world.blueprint_file = 'openstack-windows-blueprint.yaml'
     hello_world.inputs.update({
