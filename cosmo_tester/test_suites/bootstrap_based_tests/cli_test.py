@@ -101,12 +101,26 @@ def test_cli_on_windows_2012(windows_cli_package_tester, attributes):
     windows_cli_package_tester.run_test()
 
 
-def test_cli_on_rhel_7():
-    pytest.skip('Not implemented!')
+def test_cli_on_rhel_7_3(cli_package_tester, attributes):
+    cli_package_tester.inputs.update({
+        'cli_image': attributes.rhel_7_3_image_name,
+        'cli_user': attributes.rhel_7_3_username,
+        'manager_image': attributes.centos7_image_name,
+        'manager_user': attributes.centos7_username,
+        'cli_package_url': _get_cli_package_url('rhel_centos_cli_package_url')
+    })
+    cli_package_tester.run_test()
 
 
-def test_cli_on_rhel_6():
-    pytest.skip('Not implemented!')
+def test_cli_on_rhel_6_9(cli_package_tester, attributes):
+    cli_package_tester.inputs.update({
+        'cli_image': attributes.rhel_6_9_image_name,
+        'cli_user': attributes.rhel_6_9_username,
+        'manager_image': attributes.centos7_image_name,
+        'manager_user': attributes.centos7_username,
+        'cli_package_url': _get_cli_package_url('rhel_centos_cli_package_url')
+    })
+    cli_package_tester.run_test()
 
 
 def _get_cli_package_url(name):

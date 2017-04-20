@@ -13,6 +13,12 @@ centos7_image_name: CentOS-7-x86_64-GenericCloud-1608
 centos6_username: centos
 centos6_image_name: centos_6.6
 
+rhel_7_3_username: cloud-user
+rhel_7_3_image_name: rhel-guest-image-7.3-35.x86_64.qcow2
+
+rhel_6_9_username: cloud-user
+rhel_6_9_image_name: rhel-guest-image-6.9-120.x86_64.qcow2
+
 ubuntu_username: ubuntu
 ubuntu_14_04_image_name: 'Ubuntu 14.04.1 LTS Trusty Tahr (cloudimg)'
 ubuntu_16_04_image_name: ubuntu_16.04_xenial_with_python
