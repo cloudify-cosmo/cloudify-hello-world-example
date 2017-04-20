@@ -1,6 +1,0 @@
-sh
-path.py==5.1
-PyYAML==3.10
-nose
-xmltodict
-requests

@@ -10,4 +10,3 @@ install:
 
 script:
     - flake8 .
-    - nosetests suites/tests

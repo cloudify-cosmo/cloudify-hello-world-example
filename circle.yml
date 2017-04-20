@@ -21,7 +21,7 @@ dependencies:
 
 test:
   override:
-    - case $CIRCLE_NODE_INDEX in 0) flake8 . ;; 1) nosetests suites/tests ;; esac:
+    - case $CIRCLE_NODE_INDEX in 0) flake8 . ;; esac:
         parallel: true  
 
 deployment:
