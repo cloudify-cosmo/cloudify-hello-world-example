@@ -295,7 +295,7 @@ def get_cli_package_urls():
     and GITHUB_PASSWORD exists in env) or locally if the cloudify-premium
     repository is checked out under the same folder the cloudify-system-tests
     repo is checked out."""
-    branch = os.environ.get('BRANCH_NANE_CORE', 'master')
+    branch = os.environ.get('BRANCH_NAME_CORE', 'master')
     auth = None
     if 'GITHUB_USERNAME' in os.environ:
         auth = (os.environ['GITHUB_USERNAME'], os.environ['GITHUB_PASSWORD'])

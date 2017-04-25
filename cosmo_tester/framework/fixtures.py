@@ -19,7 +19,7 @@ def image_based_manager(
 @pytest.fixture(scope='module')
 def bootstrap_based_manager(
         request, cfy, ssh_key, module_tmpdir, attributes, logger):
-    """Creates a cloudify manager from an image in rackspace OpenStack."""
+    """Bootstraps a cloudify manager on a VM in rackspace OpenStack."""
     cluster = CloudifyCluster.create_bootstrap_based(
             cfy, ssh_key, module_tmpdir, attributes, logger)
 

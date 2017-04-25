@@ -146,6 +146,7 @@ class CloudifyCluster(object):
         self._terraform = util.sh_bake(sh.terraform)
         self._terraform_inputs_file = self._tmpdir / 'terraform-vars.json'
         self._managers = None
+        self.preconfigure_callback = None
         self._managers_config = [self._get_default_manager_config()
                                  for _ in range(number_of_managers)]
 
@@ -186,7 +187,8 @@ class CloudifyCluster(object):
         return cluster
 
     @staticmethod
-    def create_bootstrap_based(cfy, ssh_key, tmpdir, attributes, logger):
+    def create_bootstrap_based(cfy, ssh_key, tmpdir, attributes, logger,
+                               preconfigure_callback=None):
         """Bootstraps a Cloudify manager using simple manager blueprint."""
         cluster = BootstrapBasedCloudifyCluster(cfy,
                                                 ssh_key,
@@ -195,6 +197,8 @@ class CloudifyCluster(object):
                                                 logger)
         logger.info('Bootstrapping cloudify manager using simple '
                     'manager blueprint..')
+        if preconfigure_callback:
+            cluster.preconfigure_callback = preconfigure_callback
         cluster.create()
         return cluster
 
@@ -261,6 +265,9 @@ class CloudifyCluster(object):
                                         ['-json']).stdout).items()})
             self._attributes.update(outputs)
             self._create_managers_list(outputs)
+
+            if self.preconfigure_callback:
+                self.preconfigure_callback(self.managers)
 
             self._bootstrap_managers()
 
