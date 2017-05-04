@@ -108,14 +108,16 @@ class _CloudifyManager(object):
         assert len(servers) == 0
         self._logger.info('Server terminated!')
 
-    @retrying.retry(stop_max_attempt_number=12, wait_fixed=5000)
+    @retrying.retry(stop_max_attempt_number=24, wait_fixed=5000)
     def verify_services_are_running(self):
         self._logger.info('Verifying all services are running on manager%d..',
                           self.index)
         status = self.client.manager.get_status()
         for service in status['services']:
             for instance in service['instances']:
-                assert instance['SubState'] == 'running'
+                assert instance['SubState'] == 'running', \
+                    'service {0} is in {1} state'.format(
+                            service['display_name'], instance['SubState'])
 
 
 class _ManagerConfig(object):
@@ -341,7 +343,7 @@ class CloudifyCluster(object):
             fabric_ssh.put(self._ssh_key.private_key_path,
                            REMOTE_PRIVATE_KEY_PATH,
                            use_sudo=True)
-            fabric_ssh.sudo('chown root.mgmtworker {key_file}'.format(
+            fabric_ssh.sudo('chown root.cfygroup {key_file}'.format(
                 key_file=REMOTE_PRIVATE_KEY_PATH,
             ))
             fabric_ssh.sudo('chmod 440 {key_file}'.format(
