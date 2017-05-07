@@ -38,9 +38,6 @@ from cloudify_rest_client import CloudifyClient
 import cosmo_tester
 from cosmo_tester import resources
 
-MANAGER_PACKAGE_URL_FILE = 'cloudify-premium/packages-urls/manager-single-tar.yaml'  # noqa
-CLI_PACKAGE_URLS_FILE = 'cloudify-premium/packages-urls/cli-premium-packages.yaml'  # noqa
-
 
 class AttributesDict(dict):
     __getattr__ = dict.__getitem__
@@ -291,7 +288,15 @@ def get_plugin_wagon_urls():
 
 
 def get_cli_package_urls():
-    """Gets the CLI package URLs from either GitHub (if GITHUB_USERNAME
+    return yaml.load(_get_package_url('cli-premium-packages.yaml'))
+
+
+def get_manager_resources_package_url():
+    return _get_package_url('manager-single-tar.yaml').strip(os.linesep)
+
+
+def _get_package_url(filename):
+    """Gets the package URL(s) from either GitHub (if GITHUB_USERNAME
     and GITHUB_PASSWORD exists in env) or locally if the cloudify-premium
     repository is checked out under the same folder the cloudify-system-tests
     repo is checked out."""
@@ -300,37 +305,24 @@ def get_cli_package_urls():
     if 'GITHUB_USERNAME' in os.environ:
         auth = (os.environ['GITHUB_USERNAME'], os.environ['GITHUB_PASSWORD'])
     if auth:
-        url = 'https://raw.githubusercontent.com/cloudify-cosmo/cloudify-premium/{0}/packages-urls/cli-premium-packages.yaml'.format(branch)  # noqa
+        url = 'https://raw.githubusercontent.com/cloudify-cosmo/cloudify-premium/{0}/packages-urls/{1}'.format(branch, filename)  # noqa
         r = requests.get(url, auth=auth)
         if r.status_code != 200:
             raise RuntimeError(
-                    'Error getting CLI package URLs from {0} '
-                    '[status_code={1}]: {2}'.format(
-                            url, r.status_code, r.text))
-        return yaml.load(r.text)
+                'Error getting {0} URL from {1} '
+                '[status_code={2}]: {3}'.format(
+                    filename, url, r.status_code, r.text))
+        return r.text
     else:
         package_url_file = Path(
-                os.path.abspath(os.path.join(
-                        os.path.dirname(cosmo_tester.__file__),
-                        '../..',
-                        CLI_PACKAGE_URLS_FILE)))
-        if not package_url_file.exists():
-            raise IOError('File containing CLI premium package URLs not '
-                          'found: {}'.format(package_url_file))
-
-        return yaml.load(open(package_url_file, 'r'))
-
-
-def get_manager_resources_package_url():
-    package_url_file = Path(
             os.path.abspath(os.path.join(
-                    os.path.dirname(cosmo_tester.__file__),
-                    '../..',
-                    MANAGER_PACKAGE_URL_FILE)))
-    if not package_url_file.exists():
-        raise IOError('File containing manager premium single tar URL not '
-                      'found: {}'.format(package_url_file))
-    return package_url_file.text().strip(os.linesep)
+                os.path.dirname(cosmo_tester.__file__),
+                '../..',
+                os.path.join('cloudify-premium/packages-urls', filename))))
+        if not package_url_file.exists():
+            raise IOError('File containing {0} URL not '
+                          'found: {1}'.format(filename, package_url_file))
+        return package_url_file.text()
 
 
 class YamlPatcher(object):
