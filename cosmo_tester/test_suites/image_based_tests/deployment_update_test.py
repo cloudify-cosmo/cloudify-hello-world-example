@@ -14,6 +14,7 @@
 #    * limitations under the License.
 
 import json
+import shutil
 
 from path import Path
 import pytest
@@ -60,10 +61,13 @@ def test_hello_world_deployment_update(
     # Update the deployment - shutdown the http_web_server, and the
     # security_group node. Remove the relationship between the vm
     # and the security_group node. Remove the output - since no new outputs
-    # have been outputed, the check will be based on the old outputs.
+    # have been outputted, the check will be based on the old outputs.
+    blueprint_base_path = hello_world.blueprint_path.dirname()
 
-    modified_blueprint_path = \
-        hello_world.blueprint_path.dirname() / 'modified_blueprint.yaml'
+    # Remove the .git folder because its permissions mess up the upload
+    shutil.rmtree(blueprint_base_path / '.git')
+
+    modified_blueprint_path = blueprint_base_path / 'modified_blueprint.yaml'
     hello_world.blueprint_path.copy(modified_blueprint_path)
 
     _modify_blueprint(modified_blueprint_path)
