@@ -46,7 +46,8 @@ class _CloudifyManager(object):
                  ssh_key,
                  cfy,
                  attributes,
-                 logger):
+                 logger,
+                 config):
         self.index = index
         self.ip_address = public_ip_address
         self.private_ip_address = private_ip_address
@@ -59,6 +60,7 @@ class _CloudifyManager(object):
         self._openstack = util.create_openstack_client()
         self.influxdb_client = InfluxDBClient(public_ip_address, 8086,
                                               'root', 'root', 'cloudify')
+        self.config = config
 
     @property
     def remote_private_key_path(self):
@@ -124,7 +126,12 @@ class _ManagerConfig(object):
 
     def __init__(self):
         self.image_name = None
-        self.upload_plugins = None
+        self.upload_plugins = True
+
+    @property
+    def is_4_0(self):
+        # This is a temporary measure. We will probably have subclasses for it
+        return self.image_name.endswith('4.0')
 
 
 class CloudifyCluster(object):
@@ -155,7 +162,6 @@ class CloudifyCluster(object):
     def _get_default_manager_config(self):
         config = _ManagerConfig()
         config.image_name = self._get_latest_manager_image_name()
-        config.upload_plugins = True
         return config
 
     def _bootstrap_managers(self):
@@ -337,15 +343,20 @@ class CloudifyCluster(object):
                                            openstack_config_file):
         self._logger.info('Uploading necessary files to %s', manager)
         with manager.ssh() as fabric_ssh:
+            if manager.config.is_4_0:
+                openstack_json_path = '/root/openstack_config.json'
+            else:
+                openstack_json_path = REMOTE_OPENSTACK_CONFIG_PATH
             fabric_ssh.put(openstack_config_file,
-                           REMOTE_OPENSTACK_CONFIG_PATH,
+                           openstack_json_path,
                            use_sudo=True)
             fabric_ssh.put(self._ssh_key.private_key_path,
                            REMOTE_PRIVATE_KEY_PATH,
                            use_sudo=True)
-            fabric_ssh.sudo('chown root:cfyuser {key_file}'.format(
-                key_file=REMOTE_PRIVATE_KEY_PATH,
-            ))
+            if not manager.config.is_4_0:
+                fabric_ssh.sudo('chown root:cfyuser {key_file}'.format(
+                    key_file=REMOTE_PRIVATE_KEY_PATH,
+                ))
             fabric_ssh.sudo('chmod 440 {key_file}'.format(
                 key_file=REMOTE_PRIVATE_KEY_PATH,
             ))
@@ -374,7 +385,8 @@ class CloudifyCluster(object):
                                                    self._ssh_key,
                                                    self._cfy,
                                                    self._attributes,
-                                                   self._logger))
+                                                   self._logger,
+                                                   self.managers_config[i]))
 
 
 class ImageBasedCloudifyCluster(CloudifyCluster):
