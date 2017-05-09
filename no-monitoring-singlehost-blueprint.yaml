@@ -4,7 +4,7 @@ description: >
   This blueprint installs a simple web server on the manager VM using Cloudify's script plugin.
 
 imports:
-  - http://www.getcloudify.org/spec/cloudify/4.0.1/types.yaml
+  - http://www.getcloudify.org/spec/cloudify/4.1m1/types.yaml
   - http://www.getcloudify.org/spec/diamond-plugin/1.3.5/plugin.yaml
 
 inputs:
