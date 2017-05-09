@@ -6,7 +6,7 @@ description: >
   In addition, an elastic IP and a security group are created and associated with the created VM.
 
 imports:
-  - http://www.getcloudify.org/spec/cloudify/4.0.1/types.yaml
+  - http://www.getcloudify.org/spec/cloudify/4.1m1/types.yaml
   - http://www.getcloudify.org/spec/aws-plugin/1.4.3/plugin.yaml
 
 inputs:
