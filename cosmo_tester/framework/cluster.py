@@ -400,7 +400,13 @@ class ImageBasedCloudifyCluster(CloudifyCluster):
         For CLI version "4.0.0-m15"
         Returns: "cloudify-manager-premium-4.0m15"
         """
-        version = util.get_cli_version().replace('-', '').replace('0.0', '0')
+        version = util.get_cli_version()
+        version_num, version_milestone = version.split('-')
+
+        if version_num.endswith('.0') and version_num.count('.') > 1:
+            version_num = version_num[:-2]
+
+        version = version_num + version_milestone
         return '{}-{}'.format(
                 self._attributes.cloudify_manager_image_name_prefix, version)
 
