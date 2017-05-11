@@ -2,10 +2,13 @@ tosca_definitions_version: cloudify_dsl_1_3
 
 description: >
   This blueprint installs a simple web server on the manager VM using Cloudify's script plugin.
+  IMPORTANT: The VM being used must be associated with a security group that allows TCP access via
+  the port specified by the "webserver_port" input (defaults to 8080).
 
 imports:
   - http://www.getcloudify.org/spec/cloudify/4.1m1/types.yaml
   - http://www.getcloudify.org/spec/diamond-plugin/1.3.5/plugin.yaml
+  - include/inputs.yaml
 
 inputs:
   server_ip:
@@ -18,10 +21,6 @@ inputs:
     description: >
       Path to a private key that resides on the management machine.
       SSH-ing into agent machines will be done with this key.
-  webserver_port:
-    description: >
-      The HTTP web server port.
-    default: 8080
 
 node_templates:
   vm:

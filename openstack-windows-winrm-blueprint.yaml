@@ -2,44 +2,67 @@ tosca_definitions_version: cloudify_dsl_1_3
 
 description: >
   The blueprint describes an OpenStack Windows vm created using Cloudify's OpenStack plugin
-  and simple web server started using winrm.
+  and simple web server started using WinRM.
   In addition, an OpenStack floating ip and security group are created and associated with the created vm.
 
 imports:
   - http://www.getcloudify.org/spec/cloudify/4.1m1/types.yaml
   - http://www.getcloudify.org/spec/openstack-plugin/2.0.1/plugin.yaml
+  - include/openstack-inputs.yaml
+  - include/inputs.yaml
+  - include/scaling.yaml
 
 inputs:
-  webserver_port:
-    description: The HTTP web server port
-    default: 8080
   agent_user:
     description: User name used when SSH-ing into the started machine
-  image:
-    description: Openstack image name or id to use for the new server
-  flavor:
-    description: Openstack flavor name or id to use for the new server
+
+dsl_definitions:
+  openstack_configuration: &openstack_configuration
+    username: { get_input: keystone_username }
+    password: { get_input: keystone_password }
+    tenant_name: { get_input: keystone_tenant_name }
+    auth_url: { get_input: keystone_url }
+    region: { get_input: region }
 
 node_templates:
-  virtual_ip:
+  public_ip:
     type: cloudify.openstack.nodes.FloatingIP
-  security_group:
+    properties:
+      openstack_config: *openstack_configuration
+      floatingip:
+        floating_network_name: { get_input: floating_network_name }
+
+  agents_security_group:
     type: cloudify.openstack.nodes.SecurityGroup
     properties:
+      openstack_config: *openstack_configuration
+      use_external_resource: true
+      resource_id: { get_input: agents_security_group_name }
+
+  app_security_group:
+    type: cloudify.openstack.nodes.SecurityGroup
+    properties:
+      openstack_config: *openstack_configuration
       rules:
         - remote_ip_prefix: 0.0.0.0/0
           port: { get_property: [ http_web_server, port ] }
-        - remote_ip_prefix: 0.0.0.0/0
-          port: 5985
-        - remote_ip_prefix: 0.0.0.0/0
-          port: 5986
+
+  keypair:
+    type: cloudify.openstack.nodes.KeyPair
+    properties:
+      openstack_config: *openstack_configuration
+      resource_id: { get_input: key_pair_name }
+      private_key_path: { get_input: private_key_path }
+
   vm:
     type: cloudify.openstack.nodes.WindowsServer
     properties:
+      openstack_config: *openstack_configuration
       agent_config:
         user: { get_input: agent_user }
       image: { get_input: image }
       flavor: { get_input: flavor }
+      management_network_name: { get_input: network_name }
       server:
         userdata: |
           #ps1_sysnative
@@ -51,10 +74,23 @@ node_templates:
           &netsh advfirewall firewall add rule name="WinRM 5985" protocol=TCP dir=in localport=5985 action=allow
           &netsh advfirewall firewall add rule name="WinRM 5986" protocol=TCP dir=in localport=5986 action=allow 		
     relationships:
+      - type: cloudify.openstack.server_connected_to_keypair
+        target: keypair
       - type: cloudify.openstack.server_connected_to_floating_ip
-        target: virtual_ip
+        target: public_ip
       - type: cloudify.openstack.server_connected_to_security_group
-        target: security_group
+        target: app_security_group
+      - type: cloudify.openstack.server_connected_to_security_group
+        target: agents_security_group
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create:
+          inputs:
+            args:
+              # Needed until JIRA issue OPENSTACK-38 is resolved.
+              security_groups:
+                - { get_attribute: [ agents_security_group, external_name ]}
+                - { get_attribute: [ app_security_group, external_name ]}
 
   http_web_server:
     type: cloudify.nodes.WebServer
@@ -84,6 +120,5 @@ node_templates:
 outputs:
   http_endpoint:
     description: Web server external endpoint
-    value: { concat: ['http://', { get_attribute: [virtual_ip, floating_ip_address] },
+    value: { concat: ['http://', { get_attribute: [public_ip, floating_ip_address] },
                       ':', { get_property: [http_web_server, port] }] }
-
