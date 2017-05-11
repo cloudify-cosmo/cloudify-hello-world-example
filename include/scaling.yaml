@@ -1,0 +1,16 @@
+inputs:
+  default_scale_count:
+    type: integer
+    description: Number of scale units to deploy by default
+    default: 1
+
+groups:
+  vm_and_ip:
+    members: [vm, public_ip]
+
+policies:
+  scale_policy:
+    type: cloudify.policies.scaling
+    properties:
+      default_instances: { get_input: default_scale_count }
+    targets: [vm_and_ip]
