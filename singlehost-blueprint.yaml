@@ -1,9 +1,10 @@
 tosca_definitions_version: cloudify_dsl_1_3
 
 description: >
-  This blueprint installs a simple web server on the manager VM using Cloudify's script plugin.
-  IMPORTANT: The VM being used must be associated with a security group that allows TCP access via
-  the port specified by the "webserver_port" input (defaults to 8080).
+  This blueprint installs a simple web server on a pre-existing machine.
+  IMPORTANT: The VM being used must be associated with a security group (or multiple security groups)
+  that, cumulatively, allows TCP access via the port specified by the "webserver_port" input (defaults to 8080),
+  as well as TCP access for the Cloudify Agent installation process.
 
 imports:
   - http://www.getcloudify.org/spec/cloudify/4.1m1/types.yaml

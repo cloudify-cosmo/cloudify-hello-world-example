@@ -1,9 +1,10 @@
 tosca_definitions_version: cloudify_dsl_1_3
 
 description: >
-  The blueprint describes an OpenStack vm created using Cloudify's OpenStack plugin
-  and simple web server started using Cloudify's script plugin.
-  In addition, an OpenStack floating ip and security group are created and associated with the created vm.
+  The blueprint installs a simple web server on a Linux virtual machine under OpenStack.
+  Other than a VM, this blueprint creates a keypair, a security group, and a floating IP for the application.
+  This blueprint assumes that a security group for Cloudify Agents already exists; its name should
+  be provided for the "agents_security_group" input.
 
 imports:
   - http://www.getcloudify.org/spec/cloudify/4.1m1/types.yaml
@@ -16,8 +17,8 @@ imports:
 inputs:
   agent_user:
     description: >
-      User name used when SSH-ing into the hosting machine for the purpose
-      of installing the Cloudify Agent.
+      User account used when SSH-ing into the existing machine for the purpose
+      of Cloudify Agent installation.
 
 dsl_definitions:
   openstack_configuration: &openstack_configuration
