@@ -1,0 +1,21 @@
+inputs:
+  keystone_username:
+    type: string
+  keystone_password:
+    type: string
+  keystone_tenant_name:
+    type: string
+  keystone_url:
+    type: string
+  region:
+    type: string
+  floating_network_name:
+    description: The name of the network to use for allocating a floating ip
+  image:
+    description: Openstack image name or id to use for the new server
+  flavor:
+    description: Openstack flavor name or id to use for the new server
+  network_name:
+    description: Openstack network name the new server will be connected to
+  agents_security_group_name:
+    description: Name of security group to be created, to enabled access to agent hosts.

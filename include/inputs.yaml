@@ -1,0 +1,5 @@
+inputs:
+  webserver_port:
+    description: >
+      The HTTP web server port.
+    default: 8080
