@@ -110,7 +110,7 @@ class _CloudifyManager(object):
         assert len(servers) == 0
         self._logger.info('Server terminated!')
 
-    @retrying.retry(stop_max_attempt_number=6*5, wait_fixed=10000)
+    @retrying.retry(stop_max_attempt_number=6*10, wait_fixed=10000)
     def verify_services_are_running(self):
         self._logger.info('Verify image configuration is done..')
         # the manager-ip-setter script creates the `touched` file when it
