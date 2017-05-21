@@ -110,8 +110,14 @@ class _CloudifyManager(object):
         assert len(servers) == 0
         self._logger.info('Server terminated!')
 
-    @retrying.retry(stop_max_attempt_number=24, wait_fixed=5000)
+    @retrying.retry(stop_max_attempt_number=12, wait_fixed=10000)
     def verify_services_are_running(self):
+        self._logger.info('Verify image configuration is done..')
+        # the manager-ip-setter script creates the `touched` file when it
+        # is done.
+        with self.ssh() as fabric_ssh:
+            fabric_ssh.run('cat /opt/cloudify/manager-ip-setter/touched')
+
         self._logger.info('Verifying all services are running on manager%d..',
                           self.index)
         status = self.client.manager.get_status()
@@ -303,7 +309,6 @@ class CloudifyCluster(object):
                 self._logger.error('Error on terraform destroy: %s', ex)
             raise
 
-    @retrying.retry(stop_max_attempt_number=3, wait_fixed=3000)
     def _upload_plugin_to_manager(self, manager, plugin_name):
         plugins_list = util.get_plugin_wagon_urls()
         plugin_wagon = [
@@ -321,24 +326,8 @@ class CloudifyCluster(object):
                           plugin_name,
                           plugin_wagon[0],
                           manager)
-        # we keep this because plugin upload may fail but the manager
-        # will contain the uploaded plugin which is in some corrupted state.
-        plugins_ids_before_upload = [
-            x.id for x in manager.client.plugins.list()]
-        try:
-            manager.client.plugins.upload(plugin_wagon[0])
-            self._cfy.plugins.list()
-        except Exception as cce:
-            self._logger.error('Error on plugin upload: %s', cce)
-            current_plugins_ids = [x.id for x in manager.client.plugins.list()]
-            new_plugin_id = list(set(current_plugins_ids).intersection(
-                    set(plugins_ids_before_upload)))
-            if new_plugin_id:
-                self._logger.info(
-                        'Removing plugin after upload plugin failure: %s',
-                        new_plugin_id[0])
-                manager.client.plugins.delete(new_plugin_id[0])
-            raise
+        with manager.ssh() as fabric_ssh:
+            fabric_ssh.run('cfy plugins upload {0}'.format(plugin_wagon[0]))
 
     def _upload_necessary_files_to_manager(self,
                                            manager,
