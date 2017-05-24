@@ -73,6 +73,7 @@ class _CloudifyManager(object):
                 host_string=self.ip_address,
                 user=self._attributes.centos7_username,
                 key_filename=self._ssh_key.private_key_path,
+                abort_exception=Exception,
                 **kwargs):
             yield fabric_api
 
