@@ -332,7 +332,12 @@ class CloudifyCluster(object):
                           plugin_wagon[0],
                           manager)
         with manager.ssh() as fabric_ssh:
-            fabric_ssh.run('cfy plugins upload {0}'.format(plugin_wagon[0]))
+            try:
+                # This will only work for images as cfy is pre-installed there.
+                # from some reason this method is usually less error prone.
+                fabric_ssh.run('cfy plugins upload {0}'.format(plugin_wagon[0]))
+            except Exception:
+                self._cfy.plugins.upload(plugin_wagon[0])
 
     def _upload_necessary_files_to_manager(self,
                                            manager,
