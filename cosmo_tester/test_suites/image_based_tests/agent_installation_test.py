@@ -44,7 +44,7 @@ def test_3_2_agent(cfy, manager, attributes):
                 'ip_address': manager.ip_address,
                 'user': attributes.centos7_username,
                 'private_key_path': manager.remote_private_key_path
-            })
+            }, skip_plugins_validation=True)
     try:
         cfy.executions.start.install(['-d', deployment_id])
     finally:
@@ -63,7 +63,7 @@ def test_ssh_agent(cfy, manager, attributes):
                 'ip_address': manager.ip_address,
                 'user': attributes.centos7_username,
                 'private_key_path': manager.remote_private_key_path
-            })
+            }, skip_plugins_validation=True)
     try:
         cfy.executions.start.install(['-d', deployment_id])
     finally:
@@ -79,7 +79,10 @@ def _test_agent_alive_after_reboot(cfy, manager, blueprint_name, inputs):
 
     manager.client.blueprints.upload(blueprint_path, blueprint_id)
     manager.client.deployments.create(
-            deployment_id, blueprint_id, inputs=inputs)
+            deployment_id,
+            blueprint_id,
+            inputs=inputs,
+            skip_plugins_validation=True)
 
     cfy.executions.start.install(['-d', deployment_id])
     cfy.executions.start.execute_operation(
@@ -159,7 +162,7 @@ def test_winrm_agent(cfy, manager, attributes, logger):
                 'network_name': attributes.network_name,
                 'private_key_path': manager.remote_private_key_path,
                 'keypair_name': attributes.keypair_name
-            })
+            }, skip_plugins_validation=True)
     try:
         cfy.executions.start.install(['-d', deployment_id])
     finally:
@@ -301,7 +304,10 @@ def _test_userdata_agent(cfy, manager, inputs):
 
     manager.client.blueprints.upload(blueprint_path, blueprint_id)
     manager.client.deployments.create(
-            deployment_id, blueprint_id, inputs=inputs)
+            deployment_id,
+            blueprint_id,
+            inputs=inputs,
+            skip_plugins_validation=True)
 
     cfy.executions.start.install(['-d', deployment_id])
 
