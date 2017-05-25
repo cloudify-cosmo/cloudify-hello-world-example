@@ -1,0 +1,13 @@
+node_types:
+
+  cloudify.nodes.CloudConfig:
+    derived_from: cloudify.nodes.Root
+    properties:
+      resource_config:
+        default:
+          encode_base64: false
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create:
+          implementation: scripts/cloud_config/create.py
+          executor: central_deployment_agent
