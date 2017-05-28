@@ -1,0 +1,55 @@
+#####################################################
+# An example Host pool service configuration file.
+#
+# Rewrite it to suit your needs.
+#####################################################
+
+
+###########################################################################
+# These properties will be applied to any host that does not define a
+# property explicitly. This section is optional
+# Available keys:
+#   - port: Authentication port. This port will be used when the cloudify
+#           manager will attempt to log in to the host.
+#   - auth: An authentication dictionary.
+#      - username: username for authentication.
+#      - password: password for authentication
+#                 (Optional if keyfile is specified).
+#      - keyfile: key file for authentication
+#                 (Optional if password is specified).
+###########################################################################
+
+
+
+###########################################################################
+# This section is where you define the host addresses and other host
+# properties. It is a YAML list, where each list item can contain the
+# following keys:
+#   - host: The address of the host, this can be either an IP or a DNS
+#           name. This address will be used by cloudify in order to connect
+#           to the host
+#   - ip_range: CIDR notation subnet definition. Addresses from this range
+#               will be used by cloudify to connect to hosts.
+#   - auth: See 'defaults' section above.
+#   - port: See 'defaults' section above.
+#   - public_address: An externally available address to reach this
+#                     host with. This address serves of no pratical use
+#                     for cloudify (as opposed to the 'host' or 'ip_range'
+#                     parameters). It is here only so that it may be
+#                     consumed by clients of the service
+#                     (The host-pool-plugin for example)
+###########################################################################
+
+default:
+  os: linux
+
+hosts:
+
+  - name: host-pool-service-host # Seed the list
+    os: unusuable
+    credentials:
+      username: centos
+    endpoint:
+      ip: 127.0.0.1
+      port: 22
+      protocol: ssh

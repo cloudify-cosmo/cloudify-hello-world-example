@@ -46,6 +46,7 @@ class AbstractExample(testtools.TestCase):
         self.blueprint_id = 'hello-{0}'.format(str(uuid.uuid4()))
         self.deployment_id = self.blueprint_id
         self.verify_metrics = True
+        self.skip_plugins_validation = False
 
     @property
     def blueprint_file(self):
@@ -113,7 +114,8 @@ class AbstractExample(testtools.TestCase):
                 os.linesep,
                 json.dumps(self.inputs, indent=2))
         self.manager.client.deployments.create(
-                self.deployment_id, self.blueprint_id, inputs=self.inputs)
+                self.deployment_id, self.blueprint_id, inputs=self.inputs,
+                skip_plugins_validation=self.skip_plugins_validation)
         self.cfy.deployments.list()
 
     def install(self):
