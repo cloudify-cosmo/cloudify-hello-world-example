@@ -13,41 +13,58 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta, abstractproperty
 
-from contextlib import contextmanager
 import json
 import os
 import uuid
+from contextlib import contextmanager
 
-from fabric import api as fabric_api
-from fabric import context_managers as fabric_context_managers
-from influxdb import InfluxDBClient
 import jinja2
 import retrying
 import sh
+from fabric import api as fabric_api
+from fabric import context_managers as fabric_context_managers
+from influxdb import InfluxDBClient
 
 from cosmo_tester.framework import util
 from cosmo_tester.framework import git_helper
+
 
 REMOTE_PRIVATE_KEY_PATH = '/etc/cloudify/key.pem'
 REMOTE_OPENSTACK_CONFIG_PATH = '/etc/cloudify/openstack_config.json'
 
 MANAGER_BLUEPRINTS_REPO_URL = 'https://github.com/cloudify-cosmo/cloudify-manager-blueprints.git'  # noqa
 
+MANAGER_API_VERSIONS = {
+    'master': 'v3',
+    '4.0.1': 'v3',
+    '4.0': 'v3',
+    '3.4.2': 'v2',
+}
+
+
+ATTRIBUTES = util.get_attributes()
+
 
 class _CloudifyManager(object):
 
-    def __init__(self,
-                 index,
-                 public_ip_address,
-                 private_ip_address,
-                 rest_client,
-                 ssh_key,
-                 cfy,
-                 attributes,
-                 logger,
-                 config):
+    __metaclass__ = ABCMeta
+
+    def __init__(self, upload_plugins=True):
+        self.upload_plugins = upload_plugins
+
+    def create(
+            self,
+            index,
+            public_ip_address,
+            private_ip_address,
+            rest_client,
+            ssh_key,
+            cfy,
+            attributes,
+            logger,
+            ):
         self.index = index
         self.ip_address = public_ip_address
         self.private_ip_address = private_ip_address
@@ -60,7 +77,58 @@ class _CloudifyManager(object):
         self._openstack = util.create_openstack_client()
         self.influxdb_client = InfluxDBClient(public_ip_address, 8086,
                                               'root', 'root', 'cloudify')
-        self.config = config
+
+    def _upload_necessary_files(self, openstack_config_file):
+        self._logger.info('Uploading necessary files to %s', self)
+        with self.ssh() as fabric_ssh:
+            openstack_json_path = REMOTE_OPENSTACK_CONFIG_PATH
+            fabric_ssh.sudo('mkdir -p "{}"'.format(
+                os.path.dirname(REMOTE_PRIVATE_KEY_PATH)))
+            fabric_ssh.put(openstack_config_file,
+                           openstack_json_path,
+                           use_sudo=True)
+            fabric_ssh.put(self._ssh_key.private_key_path,
+                           REMOTE_PRIVATE_KEY_PATH,
+                           use_sudo=True)
+            fabric_ssh.sudo('chown root:cfyuser {key_file}'.format(
+                key_file=REMOTE_PRIVATE_KEY_PATH,
+            ))
+            fabric_ssh.sudo('chmod 440 {key_file}'.format(
+                key_file=REMOTE_PRIVATE_KEY_PATH,
+            ))
+
+    def _upload_plugin(self, plugin_name):
+        plugins_list = util.get_plugin_wagon_urls()
+        plugin_wagon = [
+            x['wgn_url'] for x in plugins_list
+            if x['name'] == plugin_name]
+        if len(plugin_wagon) != 1:
+            self._logger.error(
+                    '%s plugin wagon not found in:%s%s',
+                    plugin_name,
+                    os.linesep,
+                    json.dumps(plugins_list, indent=2))
+            raise RuntimeError(
+                    '{} plugin not found in wagons list'.format(plugin_name))
+        self._logger.info('Uploading %s plugin [%s] to %s..',
+                          plugin_name,
+                          plugin_wagon[0],
+                          self)
+
+        try:
+            with self.ssh() as fabric_ssh:
+                # This will only work for images as cfy is pre-installed there.
+                # from some reason this method is usually less error prone.
+                fabric_ssh.run(
+                    'cfy plugins upload {0}'.format(plugin_wagon[0]))
+        except Exception:
+            try:
+                self.use()
+                self._cfy.plugins.upload(plugin_wagon[0])
+            except Exception:
+                # This is needed for 3.4 managers. local cfy isn't
+                # compatible and cfy isn't installed in the image
+                self.client.plugins.upload(plugin_wagon[0])
 
     @property
     def remote_private_key_path(self):
@@ -81,12 +149,13 @@ class _CloudifyManager(object):
         return 'Cloudify manager [{}:{}]'.format(self.index, self.ip_address)
 
     @retrying.retry(stop_max_attempt_number=3, wait_fixed=3000)
-    def use(self):
-        self._cfy.profiles.use('{0} -u {1} -p {2} -t {3}'.format(
-                self.ip_address,
-                self._attributes.cloudify_username,
-                self._attributes.cloudify_password,
-                self._attributes.cloudify_tenant).split())
+    def use(self, tenant=None):
+        self._cfy.profiles.use([
+            self.ip_address,
+            '-u', self._attributes.cloudify_username,
+            '-p', self._attributes.cloudify_password,
+            '-t', tenant or self._attributes.cloudify_tenant,
+            ])
 
     @property
     def server_id(self):
@@ -134,17 +203,101 @@ class _CloudifyManager(object):
                     'service {0} is in {1} state'.format(
                             service['display_name'], instance['SubState'])
 
-
-class _ManagerConfig(object):
-
-    def __init__(self):
-        self.image_name = None
-        self.upload_plugins = True
+    @abstractproperty
+    def branch_name(Self):
+        raise NotImplementedError()
 
     @property
-    def is_4_0(self):
-        # This is a temporary measure. We will probably have subclasses for it
-        return self.image_name.endswith('4.0')
+    def image_name(self):
+        return ATTRIBUTES['cloudify_manager_{}_image_name'.format(
+                self.branch_name.replace('.', '_'))]
+
+    @property
+    def api_version(self):
+        return MANAGER_API_VERSIONS[self.branch_name]
+
+    # passed to cfy. To be overridden in pre-4.0 versions
+    restore_tenant_name = None
+    tenant_name = 'default_tenant'
+
+
+def _get_latest_manager_image_name():
+    """
+    Returns the manager image name based on installed CLI version.
+    For CLI version "4.0.0-m15"
+    Returns: "cloudify-manager-premium-4.0m15"
+    """
+    version = util.get_cli_version()
+    version_num, _, version_milestone = version.partition('-')
+
+    if version_num.endswith('.0') and version_num.count('.') > 1:
+        version_num = version_num[:-2]
+
+    version = version_num + version_milestone
+    return '{}-{}'.format(
+            ATTRIBUTES.cloudify_manager_image_name_prefix, version)
+
+
+class Cloudify3_4Manager(_CloudifyManager):
+    branch_name = '3.4.2'
+    tenant_name = restore_tenant_name = 'restore_tenant'
+
+    def _upload_necessary_files(self, openstack_config_file):
+        self._logger.info('Uploading necessary files to %s', self)
+        with self.ssh() as fabric_ssh:
+            openstack_json_path = '/root/openstack_config.json'
+            fabric_ssh.put(openstack_config_file,
+                           openstack_json_path,
+                           use_sudo=True)
+            fabric_ssh.sudo('mkdir -p "{}"'.format(
+                os.path.dirname(REMOTE_PRIVATE_KEY_PATH)))
+            fabric_ssh.put(self._ssh_key.private_key_path,
+                           REMOTE_PRIVATE_KEY_PATH,
+                           use_sudo=True)
+            fabric_ssh.sudo('chmod 440 {key_file}'.format(
+                key_file=REMOTE_PRIVATE_KEY_PATH,
+            ))
+
+
+class Cloudify4_0Manager(_CloudifyManager):
+    branch_name = '4.0'
+
+    def _upload_necessary_files(self, openstack_config_file):
+        self._logger.info('Uploading necessary files to %s', self)
+        with self.ssh() as fabric_ssh:
+            openstack_json_path = '/root/openstack_config.json'
+            fabric_ssh.put(openstack_config_file,
+                           openstack_json_path,
+                           use_sudo=True)
+            fabric_ssh.sudo('mkdir -p "{}"'.format(
+                os.path.dirname(REMOTE_PRIVATE_KEY_PATH)))
+            fabric_ssh.put(self._ssh_key.private_key_path,
+                           REMOTE_PRIVATE_KEY_PATH,
+                           use_sudo=True)
+            fabric_ssh.sudo('chmod 440 {key_file}'.format(
+                key_file=REMOTE_PRIVATE_KEY_PATH,
+            ))
+
+
+class Cloudify4_0_1Manager(_CloudifyManager):
+    branch_name = '4.0.1'
+
+
+class CloudifyMasterManager(_CloudifyManager):
+    branch_name = 'master'
+    image_name_attribute = 'cloudify_manager_image_name_prefix'
+
+    image_name = _get_latest_manager_image_name()
+
+
+MANAGERS = {
+    '3.4.2': Cloudify3_4Manager,
+    '4.0': Cloudify4_0Manager,
+    '4.0.1': Cloudify4_0_1Manager,
+    'master': CloudifyMasterManager,
+}
+
+CURRENT_MANAGER = MANAGERS['master']
 
 
 class CloudifyCluster(object):
@@ -157,38 +310,41 @@ class CloudifyCluster(object):
                  tmpdir,
                  attributes,
                  logger,
-                 number_of_managers=1):
+                 number_of_managers=1,
+                 managers=None,
+                 ):
+        """
+        managers: supply a list of _CloudifyManager instances.
+        This allows pre-configuration to happen before starting the cluster, or
+        for a list of managers of different versions to be created at once.
+        if managers is provided, number_of_managers will be ignored
+        """
         super(CloudifyCluster, self).__init__()
         self._logger = logger
         self._attributes = attributes
         self._tmpdir = tmpdir
         self._ssh_key = ssh_key
         self._cfy = cfy
-        self._number_of_managers = number_of_managers
         self._terraform = util.sh_bake(sh.terraform)
         self._terraform_inputs_file = self._tmpdir / 'terraform-vars.json'
-        self._managers = None
         self.preconfigure_callback = None
-        self._managers_config = [self._get_default_manager_config()
-                                 for _ in range(number_of_managers)]
-
-    def _get_default_manager_config(self):
-        config = _ManagerConfig()
-        config.image_name = self._get_latest_manager_image_name()
-        return config
+        if managers is not None:
+            self.managers = managers
+        else:
+            self.managers = [
+                CURRENT_MANAGER()
+                for _ in range(number_of_managers)]
 
     def _bootstrap_managers(self):
         pass
 
-    @abstractmethod
-    def _get_latest_manager_image_name(self):
-        """Returns the image name for the manager's VM."""
-        pass
-
     @staticmethod
     def create_image_based(
-            cfy, ssh_key, tmpdir, attributes, logger, number_of_managers=1,
-            create=True):
+            cfy, ssh_key, tmpdir, attributes, logger,
+            number_of_managers=1,
+            managers=None,
+            create=True,
+            ):
         """Creates an image based Cloudify manager.
         :param create: Determines whether to actually create the environment
          in this invocation. If set to False, create() should be invoked in
@@ -202,7 +358,9 @@ class CloudifyCluster(object):
                 tmpdir,
                 attributes,
                 logger,
-                number_of_managers=number_of_managers)
+                number_of_managers=number_of_managers,
+                managers=managers,
+                )
         if create:
             cluster.create()
         return cluster
@@ -220,24 +378,12 @@ class CloudifyCluster(object):
                     'manager blueprint..')
         if preconfigure_callback:
             cluster.preconfigure_callback = preconfigure_callback
+        cluster.managers[0].image_name = ATTRIBUTES['centos7_image_name']
         cluster.create()
         return cluster
 
     def _get_server_flavor(self):
         return self._attributes.medium_flavor_name
-
-    @property
-    def managers(self):
-        """Returns a list containing the managers in the cluster."""
-        if not self._managers:
-            raise RuntimeError('_managers is not set')
-        return self._managers
-
-    @property
-    def managers_config(self):
-        """Returns a list containing a manager configuration obj per manager
-         to be created."""
-        return self._managers_config
 
     def create(self):
         """Creates the OpenStack infrastructure for a Cloudify manager.
@@ -245,7 +391,7 @@ class CloudifyCluster(object):
         The openstack credentials file and private key file for SSHing
         to provisioned VMs are uploaded to the server."""
         self._logger.info('Creating an image based cloudify cluster '
-                          '[number_of_managers=%d]', self._number_of_managers)
+                          '[number_of_managers=%d]', len(self.managers))
 
         openstack_config_file = self._tmpdir / 'openstack_config.json'
         openstack_config_file.write_text(json.dumps({
@@ -264,7 +410,7 @@ class CloudifyCluster(object):
             terraform_template = f.read()
 
         output = jinja2.Template(terraform_template).render({
-            'servers': self.managers_config
+            'servers': self.managers
         })
 
         terraform_template_file.write_text(output)
@@ -285,7 +431,8 @@ class CloudifyCluster(object):
                                 self._terraform.output(
                                         ['-json']).stdout).items()})
             self._attributes.update(outputs)
-            self._create_managers_list(outputs)
+
+            self._update_managers_list(outputs)
 
             if self.preconfigure_callback:
                 self.preconfigure_callback(self.managers)
@@ -295,13 +442,9 @@ class CloudifyCluster(object):
             for manager in self.managers:
                 manager.verify_services_are_running()
 
-            for i, manager in enumerate(self._managers):
-                manager.use()
-                self._upload_necessary_files_to_manager(manager,
-                                                        openstack_config_file)
-                if self.managers_config[i].upload_plugins:
-                    self._upload_plugin_to_manager(
-                            manager, 'openstack_centos_core')
+                manager._upload_necessary_files(openstack_config_file)
+                if manager.upload_plugins:
+                    manager._upload_plugin('openstack_centos_core')
 
             self._logger.info('Cloudify cluster successfully created!')
 
@@ -314,55 +457,6 @@ class CloudifyCluster(object):
                 self._logger.error('Error on terraform destroy: %s', ex)
             raise
 
-    def _upload_plugin_to_manager(self, manager, plugin_name):
-        plugins_list = util.get_plugin_wagon_urls()
-        plugin_wagon = [
-            x['wgn_url'] for x in plugins_list
-            if x['name'] == plugin_name]
-        if len(plugin_wagon) != 1:
-            self._logger.error(
-                    '%s plugin wagon not found in:%s%s',
-                    plugin_name,
-                    os.linesep,
-                    json.dumps(plugins_list, indent=2))
-            raise RuntimeError(
-                    '{} plugin not found in wagons list'.format(plugin_name))
-        self._logger.info('Uploading %s plugin [%s] to %s..',
-                          plugin_name,
-                          plugin_wagon[0],
-                          manager)
-        with manager.ssh() as fabric_ssh:
-            try:
-                # This will only work for images as cfy is pre-installed there.
-                # from some reason this method is usually less error prone.
-                fabric_ssh.run(
-                        'cfy plugins upload {0}'.format(plugin_wagon[0]))
-            except Exception:
-                self._cfy.plugins.upload(plugin_wagon[0])
-
-    def _upload_necessary_files_to_manager(self,
-                                           manager,
-                                           openstack_config_file):
-        self._logger.info('Uploading necessary files to %s', manager)
-        with manager.ssh() as fabric_ssh:
-            if manager.config.is_4_0:
-                openstack_json_path = '/root/openstack_config.json'
-            else:
-                openstack_json_path = REMOTE_OPENSTACK_CONFIG_PATH
-            fabric_ssh.put(openstack_config_file,
-                           openstack_json_path,
-                           use_sudo=True)
-            fabric_ssh.put(self._ssh_key.private_key_path,
-                           REMOTE_PRIVATE_KEY_PATH,
-                           use_sudo=True)
-            if not manager.config.is_4_0:
-                fabric_ssh.sudo('chown root:cfyuser {key_file}'.format(
-                    key_file=REMOTE_PRIVATE_KEY_PATH,
-                ))
-            fabric_ssh.sudo('chmod 440 {key_file}'.format(
-                key_file=REMOTE_PRIVATE_KEY_PATH,
-            ))
-
     def destroy(self):
         """Destroys the OpenStack infrastructure."""
         self._logger.info('Destroying cloudify cluster..')
@@ -370,47 +464,33 @@ class CloudifyCluster(object):
             self._terraform.destroy(
                     ['-var-file', self._terraform_inputs_file, '-force'])
 
-    def _create_managers_list(self, outputs):
-        self._managers = []
-        for i in range(self._number_of_managers):
+    def _update_managers_list(self, outputs):
+        for i, manager in enumerate(self.managers):
             public_ip_address = outputs['public_ip_address_{}'.format(i)]
             private_ip_address = outputs['private_ip_address_{}'.format(i)]
-            rest_clinet = util.create_rest_client(
+            rest_client = util.create_rest_client(
                     public_ip_address,
                     username=self._attributes.cloudify_username,
                     password=self._attributes.cloudify_password,
-                    tenant=self._attributes.cloudify_tenant)
-            self._managers.append(_CloudifyManager(i,
-                                                   public_ip_address,
-                                                   private_ip_address,
-                                                   rest_clinet,
-                                                   self._ssh_key,
-                                                   self._cfy,
-                                                   self._attributes,
-                                                   self._logger,
-                                                   self.managers_config[i]))
+                    tenant=self._attributes.cloudify_tenant,
+                    api_version=manager.api_version,
+                    )
+            manager.create(
+                    i,
+                    public_ip_address,
+                    private_ip_address,
+                    rest_client,
+                    self._ssh_key,
+                    self._cfy,
+                    self._attributes,
+                    self._logger,
+                    )
 
 
 class ImageBasedCloudifyCluster(CloudifyCluster):
     """
     Starts a manager from an image on OpenStack.
     """
-
-    def _get_latest_manager_image_name(self):
-        """
-        Returns the manager image name based on installed CLI version.
-        For CLI version "4.0.0-m15"
-        Returns: "cloudify-manager-premium-4.0m15"
-        """
-        version = util.get_cli_version()
-        version_num, _, version_milestone = version.partition('-')
-
-        if version_num.endswith('.0') and version_num.count('.') > 1:
-            version_num = version_num[:-2]
-
-        version = version_num + version_milestone
-        return '{}-{}'.format(
-                self._attributes.cloudify_manager_image_name_prefix, version)
 
 
 class BootstrapBasedCloudifyCluster(CloudifyCluster):

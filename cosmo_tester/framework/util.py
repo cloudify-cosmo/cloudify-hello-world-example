@@ -12,25 +12,28 @@
 #    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
+
 import base64
+import json
+import logging
 import os
 import re
-import sh
-import sys
-import time
-import json
-import socket
 import shutil
-import urllib
+import socket
+import sys
 import tempfile
-
+import time
+import urllib
 import subprocess
-import yaml
+
 import jinja2
-from openstack import connection as openstack_connection
-from path import path
-from path import Path
 import requests
+import retrying
+import sh
+import yaml
+
+from openstack import connection as openstack_connection
+from path import path, Path
 
 from cloudify_cli import env as cli_env
 from cloudify_rest_client import CloudifyClient
@@ -41,6 +44,14 @@ from cosmo_tester import resources
 
 class AttributesDict(dict):
     __getattr__ = dict.__getitem__
+
+
+def get_attributes(logger=logging):
+    attributes_file = get_resource_path('attributes.yaml')
+    logger.info('Loading attributes from: %s', attributes_file)
+    with open(attributes_file, 'r') as f:
+        attrs = AttributesDict(yaml.load(f))
+        return attrs
 
 
 def get_cli_version():
@@ -264,16 +275,18 @@ def check_port(ip, port):
     return result == 0
 
 
-def create_rest_client(manager_ip,
-                       username=None,
-                       password=None,
-                       tenant=None):
+def create_rest_client(
+        manager_ip,
+        username=None,
+        password=None,
+        tenant=None,
+        **kwargs):
     return CloudifyClient(
         host=manager_ip,
         username=username or cli_env.get_username(),
         password=password or cli_env.get_password(),
-        tenant=tenant or cli_env.get_tenant_name()
-    )
+        tenant=tenant or cli_env.get_tenant_name(),
+        **kwargs)
 
 
 def get_plugin_wagon_urls():
@@ -414,3 +427,17 @@ class YamlPatcher(object):
     @staticmethod
     def _raise_illegal(prop_path):
         raise RuntimeError('illegal path: {0}'.format(prop_path))
+
+
+@retrying.retry(stop_max_attempt_number=10, wait_fixed=5000)
+def assert_snapshot_created(manager, snapshot_id, attributes):
+    url = 'http://{ip}/api/{version}/snapshots/{id}'.format(
+        ip=manager.ip_address,
+        version=manager.api_version,
+        id=snapshot_id)
+    headers = {'tenant': attributes.cloudify_tenant}
+    auth = (attributes.cloudify_username, attributes.cloudify_password)
+    r = requests.get(url, auth=auth, headers=headers)
+    assert r.status_code == 200
+    snapshot = AttributesDict(r.json())
+    assert snapshot.status == 'created', 'Snapshot not in created status'

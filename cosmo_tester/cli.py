@@ -22,7 +22,7 @@ from path import Path
 import sh
 
 from cosmo_tester.framework.cluster import ImageBasedCloudifyCluster
-from cosmo_tester.framework.util import sh_bake
+from cosmo_tester.framework.util import sh_bake, get_attributes
 from . import conftest
 
 
@@ -43,7 +43,7 @@ tmpdir = Path(os.getcwd()) / '.cfy-systests'
 def create_cluster_object(ssh_key):
     logger.info('Cloudify manager context will be stored in: %s', tmpdir)
     cfy = sh_bake(sh.cfy)
-    attributes = conftest.get_attributes(logger)
+    attributes = get_attributes(logger)
     cluster = ImageBasedCloudifyCluster(
             cfy,
             ssh_key,

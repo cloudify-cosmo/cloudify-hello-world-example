@@ -23,7 +23,6 @@ import tempfile
 from path import Path
 import pytest
 import sh
-import yaml
 
 from cosmo_tester.framework import util
 
@@ -84,17 +83,9 @@ def ssh_key(module_tmpdir, logger):
     key.delete()
 
 
-def get_attributes(logger):
-    attributes_file = util.get_resource_path('attributes.yaml')
-    logger.info('Loading attributes from: %s', attributes_file)
-    with open(attributes_file, 'r') as f:
-        attrs = util.AttributesDict(yaml.load(f))
-        return attrs
-
-
 @pytest.fixture(scope='module')
 def attributes(logger):
-    return get_attributes(logger)
+    return util.get_attributes(logger)
 
 
 @pytest.fixture(scope='module')

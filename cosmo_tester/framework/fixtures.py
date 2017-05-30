@@ -10,6 +10,7 @@ def image_based_manager(
     """Creates a cloudify manager from an image in rackspace OpenStack."""
     cluster = CloudifyCluster.create_image_based(
             cfy, ssh_key, module_tmpdir, attributes, logger)
+    cluster.managers[0].use()
 
     yield cluster.managers[0]
 
@@ -22,6 +23,7 @@ def bootstrap_based_manager(
     """Bootstraps a cloudify manager on a VM in rackspace OpenStack."""
     cluster = CloudifyCluster.create_bootstrap_based(
             cfy, ssh_key, module_tmpdir, attributes, logger)
+    cluster.managers[0].use()
 
     yield cluster.managers[0]
 
