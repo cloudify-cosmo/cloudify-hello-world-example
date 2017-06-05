@@ -1,21 +1,14 @@
 tosca_definitions_version: cloudify_dsl_1_3
 
-description: >
-  This Blueprint installs the nodecellar application on an Azure Cloud environment.
-
 imports:
   - http://www.getcloudify.org/spec/cloudify/4.0/types.yaml
   - https://raw.githubusercontent.com/cloudify-cosmo/cloudify-azure-plugin/1.4.3/plugin.yaml
   - http://www.getcloudify.org/spec/diamond-plugin/1.3.3/plugin.yaml
-  - types/nodecellar.yaml
-  - types/azure-types.yaml
-  - types/haproxy/haproxy.yaml
-  - types/scale/scale.yaml
 
 inputs:
 
   resource_prefix:
-    default: nc
+    default: hw
 
   resource_suffix:
     default: '0'
@@ -57,40 +50,35 @@ dsl_definitions:
 
 node_templates:
 
-  nodecellar:
-    type: nodecellar.nodes.NodecellarApplicationModule
-    relationships:
-      - type: node_connected_to_mongo
-        target: mongod
-      - type: node_contained_in_nodejs
-        target: nodejs
-      - type: app_connected_to_haproxy
-        target: haproxy
-
-  mongod:
-    type: nodecellar.nodes.MonitoredMongoDatabase
+  http_web_server:
+    type: cloudify.nodes.WebServer
+    properties:
+      port: { get_input: webserver_port }
     relationships:
       - type: cloudify.relationships.contained_in
-        target: mongo_host
+        target: host
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        configure: scripts/configure.sh
+        start: scripts/start.sh
+        stop: scripts/stop.sh
 
-  nodejs:
-    type: nodecellar.nodes.NodeJSServer
-    relationships:
-      - type: cloudify.relationships.contained_in
-        target: nodejs_host
-
-  haproxy:
-    type: nodecellar.nodes.MonitoredHAProxy
+  host:
+    type: cloudify.azure.nodes.compute.VirtualMachine
     properties:
-      backend_app_port: { get_property: [ nodecellar, port ] }
-    relationships:
-      - target: haproxy_frontend_host
-        type: cloudify.relationships.contained_in
-
-  haproxy_frontend_host:
-    type: nodecellar.nodes.MonitoredServer
-    properties:
+      location: { get_secret: location }
+      retry_after: { get_input: retry_after }
+      os_family: linux
       azure_config: *azure_config
+      resource_config:
+        hardwareProfile: {}
+        storageProfile: {}
+        osProfile: {}
+      agent_config:
+        user: { get_input: agent_user }
+        install_method: remote
+        port: 22
+        key: { get_secret: agent_key_private }
     relationships:
     - type: cloudify.azure.relationships.contained_in_resource_group
       target: resource_group
@@ -99,66 +87,98 @@ node_templates:
     - type: cloudify.azure.relationships.connected_to_availability_set
       target: availability_set
     - type: cloudify.azure.relationships.connected_to_nic
-      target: haproxy_host_nic
+      target: host_nic
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create:
+          implementation: pkg.cloudify_azure.resources.compute.virtualmachine.create
+          inputs:
+            args:
+              hardwareProfile:
+                vmSize: { get_input: size }
+              storageProfile:
+                imageReference: { get_input: image}
+              osProfile:
+                adminUsername: { get_input: agent_user }
+                adminPassword: ''
+                linuxConfiguration:
+                  ssh:
+                    publicKeys: { get_input: ssh_public_keys }
+                  disablePasswordAuthentication: true
 
-  mongo_host:
-    type: nodecellar.nodes.MonitoredServer
+  availability_set:
+    type: cloudify.azure.nodes.compute.AvailabilitySet
     properties:
-      azure_config: *azure_config
-    relationships:
-    - type: cloudify.azure.relationships.contained_in_resource_group
-      target: resource_group
-    - type: cloudify.azure.relationships.connected_to_storage_account
-      target: storage_account
-    - type: cloudify.azure.relationships.connected_to_availability_set
-      target: availability_set
-    - type: cloudify.azure.relationships.connected_to_nic
-      target: mongo_host_nic
-
-  nodejs_host:
-    type: nodecellar.nodes.MonitoredServer
-    properties:
-      azure_config: *azure_config
-    relationships:
-    - type: cloudify.azure.relationships.contained_in_resource_group
-      target: resource_group
-    - type: cloudify.azure.relationships.connected_to_storage_account
-      target: storage_account
-    - type: cloudify.azure.relationships.connected_to_availability_set
-      target: availability_set
-    - type: cloudify.azure.relationships.connected_to_nic
-      target: nodejs_host_nic
-
-  resource_group:
-    type: cloudify.azure.nodes.ResourceGroup
-    properties:
-      name: {concat:[{get_input: resource_prefix},arg,{get_input: resource_suffix}]}
+      name: {concat:[{get_input: resource_prefix},availset,{get_input: resource_suffix}]}
       location: { get_secret: location }
       azure_config: *azure_config
+      retry_after: { get_input: retry_after }
+    relationships:
+    - type: cloudify.azure.relationships.contained_in_resource_group
+      target: resource_group
 
-  storage_account:
-    type: cloudify.azure.nodes.storage.StorageAccount
+  host_nic:
+    type: cloudify.azure.nodes.network.NetworkInterfaceCard
+    properties:
+      location: { get_secret: location }
+      azure_config: *azure_config
+      retry_after: { get_input: retry_after }
+    relationships:
+    - type: cloudify.azure.relationships.contained_in_resource_group
+      target: resource_group
+    - type: cloudify.azure.relationships.nic_connected_to_network_security_group
+      target: network_security_group
+    - type: cloudify.azure.relationships.nic_connected_to_ip_configuration
+      target: host_nic_ip_cfg
+
+  network_security_group:
+    type: cloudify.azure.nodes.network.NetworkSecurityGroup
+    properties:
+      name: {concat:[{get_input: resource_prefix},nsg,{get_input: resource_suffix}]}
+      location: { get_secret: location }
+      azure_config: *azure_config
+      retry_after: { get_input: retry_after }
+      resource_config:
+        securityRules:
+        - name: hw_ssh
+          properties:
+            description: SSH access
+            protocol: Tcp
+            sourcePortRange: '*'
+            destinationPortRange: 22
+            sourceAddressPrefix: '*'
+            destinationAddressPrefix: '*'
+            priority: 102
+            access: Allow
+            direction: Inbound
+        - name: hw_http
+          properties:
+            description: HTTP access
+            protocol: Tcp
+            sourcePortRange: '*'
+            destinationPortRange: { get_input: webserver_port }
+            sourceAddressPrefix: '*'
+            destinationAddressPrefix: '*'
+            priority: 103
+            access: Allow
+            direction: Inbound
+    relationships:
+    - type: cloudify.azure.relationships.contained_in_resource_group
+      target: resource_group
+
+  host_nic_ip_cfg:
+    type: cloudify.azure.nodes.network.IPConfiguration
     properties:
       location: { get_secret: location }
       azure_config: *azure_config
       retry_after: { get_input: retry_after }
       resource_config:
-        accountType: Standard_LRS
+        privateIPAllocationMethod: Dynamic
     relationships:
-    - type: cloudify.azure.relationships.contained_in_resource_group
-      target: resource_group
-
-  virtual_network:
-    type: cloudify.azure.nodes.network.VirtualNetwork
-    properties:
-      resource_group_name: { get_secret: mgr_resource_group_name }
-      name: { get_secret: mgr_virtual_network_name }
-      azure_config: *azure_config
-      use_external_resource: true
-      location: { get_secret: location }
-    relationships:
-    - type: cloudify.azure.relationships.contained_in_resource_group
-      target: resource_group
+    - type: cloudify.azure.relationships.ip_configuration_connected_to_subnet
+      target: subnet
+    - type: cloudify.azure.relationships.ip_configuration_connected_to_public_ip
+      target: ip
 
   subnet:
     type: cloudify.azure.nodes.network.Subnet
@@ -172,177 +192,31 @@ node_templates:
     - type: cloudify.azure.relationships.contained_in_virtual_network
       target: virtual_network
 
-  network_security_group:
-    type: cloudify.azure.nodes.network.NetworkSecurityGroup
+  virtual_network:
+    type: cloudify.azure.nodes.network.VirtualNetwork
     properties:
-      name: {concat:[{get_input: resource_prefix},nsg,{get_input: resource_suffix}]}
-      location: { get_secret: location }
+      resource_group_name: { get_secret: mgr_resource_group_name }
+      name: { get_secret: mgr_virtual_network_name }
       azure_config: *azure_config
-      retry_after: { get_input: retry_after }
-      resource_config:
-        securityRules:
-        - name: njssg_ssh
-          properties:
-            description: SSH access
-            protocol: Tcp
-            sourcePortRange: '*'
-            destinationPortRange: 22
-            sourceAddressPrefix: '*'
-            destinationAddressPrefix: '*'
-            priority: 102
-            access: Allow
-            direction: Inbound
-        - name: njssg_http
-          properties:
-            description: HTTP access
-            protocol: Tcp
-            sourcePortRange: '*'
-            destinationPortRange: { get_property: [ nodecellar, port ] }
-            sourceAddressPrefix: '*'
-            destinationAddressPrefix: '*'
-            priority: 103
-            access: Allow
-            direction: Inbound
-        - name: njssg_mongoa
-          properties:
-            description: Mongo access
-            protocol: Tcp
-            sourcePortRange: '*'
-            destinationPortRange: { get_property: [ mongod, port ] }
-            sourceAddressPrefix: '*'
-            destinationAddressPrefix: '*'
-            priority: 104
-            access: Allow
-            direction: Inbound
-        - name: njssg_mongob
-          properties:
-            description: Mongo API access
-            protocol: Tcp
-            sourcePortRange: '*'
-            destinationPortRange: 28017
-            sourceAddressPrefix: '*'
-            destinationAddressPrefix: '*'
-            priority: 105
-            access: Allow
-            direction: Inbound
-        - name: njssg_hapweb
-          properties:
-            description: HAPROXY Web access
-            protocol: Tcp
-            sourcePortRange: '*'
-            destinationPortRange: { get_property: [ haproxy, frontend_port ]}
-            sourceAddressPrefix: '*'
-            destinationAddressPrefix: '*'
-            priority: 106
-            access: Allow
-            direction: Inbound
-        - name: njssg_hapapi
-          properties:
-            description: HAPROXY API access
-            protocol: Tcp
-            sourcePortRange: '*'
-            destinationPortRange:  { get_property: [ haproxy, statistics_port ]}
-            sourceAddressPrefix: '*'
-            destinationAddressPrefix: '*'
-            priority: 107
-            access: Allow
-            direction: Inbound
+      use_external_resource: true
+      location: { get_secret: location }
     relationships:
     - type: cloudify.azure.relationships.contained_in_resource_group
       target: resource_group
 
-  availability_set:
-    type: cloudify.azure.nodes.compute.AvailabilitySet
-    properties:
-      name: {concat:[{get_input: resource_prefix},availset,{get_input: resource_suffix}]}
-      location: { get_secret: location }
-      azure_config: *azure_config
-      retry_after: { get_input: retry_after }
-    relationships:
-    - type: cloudify.azure.relationships.contained_in_resource_group
-      target: resource_group
-
-  mongo_host_nic:
-    type: cloudify.azure.nodes.network.NetworkInterfaceCard
-    properties:
-      location: { get_secret: location }
-      azure_config: *azure_config
-      retry_after: { get_input: retry_after }
-    relationships:
-    - type: cloudify.azure.relationships.contained_in_resource_group
-      target: resource_group
-    - type: cloudify.azure.relationships.nic_connected_to_network_security_group
-      target: network_security_group
-    - type: cloudify.azure.relationships.nic_connected_to_ip_configuration
-      target: mongo_host_nic_ip_cfg
-
-  nodejs_host_nic:
-    type: cloudify.azure.nodes.network.NetworkInterfaceCard
-    properties:
-      location: { get_secret: location }
-      azure_config: *azure_config
-      retry_after: { get_input: retry_after }
-    relationships:
-    - type: cloudify.azure.relationships.contained_in_resource_group
-      target: resource_group
-    - type: cloudify.azure.relationships.nic_connected_to_network_security_group
-      target: network_security_group
-    - type: cloudify.azure.relationships.nic_connected_to_ip_configuration
-      target: nodejs_host_nic_ip_cfg
-
-  haproxy_host_nic:
-    type: cloudify.azure.nodes.network.NetworkInterfaceCard
-    properties:
-      location: { get_secret: location }
-      azure_config: *azure_config
-      retry_after: { get_input: retry_after }
-    relationships:
-    - type: cloudify.azure.relationships.contained_in_resource_group
-      target: resource_group
-    - type: cloudify.azure.relationships.nic_connected_to_network_security_group
-      target: network_security_group
-    - type: cloudify.azure.relationships.nic_connected_to_ip_configuration
-      target: haproxy_host_nic_ip_cfg
-
-  mongo_host_nic_ip_cfg:
-    type: cloudify.azure.nodes.network.IPConfiguration
+  storage_account:
+    type: cloudify.azure.nodes.storage.StorageAccount
     properties:
       location: { get_secret: location }
       azure_config: *azure_config
       retry_after: { get_input: retry_after }
       resource_config:
-        privateIPAllocationMethod: Dynamic
+        accountType: Standard_LRS
     relationships:
-    - type: cloudify.azure.relationships.ip_configuration_connected_to_subnet
-      target: subnet
+    - type: cloudify.azure.relationships.contained_in_resource_group
+      target: resource_group
 
-  nodejs_host_nic_ip_cfg:
-    type: cloudify.azure.nodes.network.IPConfiguration
-    properties:
-      location: { get_secret: location }
-      azure_config: *azure_config
-      retry_after: { get_input: retry_after }
-      resource_config:
-        privateIPAllocationMethod: Dynamic
-    relationships:
-    - type: cloudify.azure.relationships.ip_configuration_connected_to_subnet
-      target: subnet
-
-  haproxy_host_nic_ip_cfg:
-    type: cloudify.azure.nodes.network.IPConfiguration
-    properties:
-      location: { get_secret: location }
-      azure_config: *azure_config
-      retry_after: { get_input: retry_after }
-      resource_config:
-        privateIPAllocationMethod: Dynamic
-    relationships:
-    - type: cloudify.azure.relationships.ip_configuration_connected_to_subnet
-      target: subnet
-    - type: cloudify.azure.relationships.ip_configuration_connected_to_public_ip
-      target: nodecellar_ip
-
-  nodecellar_ip:
+  ip:
     type: cloudify.azure.nodes.network.PublicIPAddress
     properties:
       location: { get_secret: location }
@@ -354,6 +228,13 @@ node_templates:
     - type: cloudify.azure.relationships.contained_in_resource_group
       target: resource_group
 
+  resource_group:
+    type: cloudify.azure.nodes.ResourceGroup
+    properties:
+      name: {concat:[{get_input: resource_prefix},arg,{get_input: resource_suffix}]}
+      location: { get_secret: location }
+      azure_config: *azure_config
+
 outputs:
 
   endpoint:
@@ -361,69 +242,7 @@ outputs:
     value:
       concat:
       - 'http://'
-      - { get_attribute: [ haproxy_frontend_host, public_ip ] }
+      - { get_attribute: [ host, public_ip ] }
       - ':'
-      - { get_property: [ haproxy, frontend_port ] }
+      - { get_input: webserver_port }
       - '/'
-
-
-groups:
-
-  scale_up_group:
-    members: [nodejs_host]
-    policies:
-      auto_scale_up:
-        type: scale_policy_type
-        properties:
-          policy_operates_on_group: true
-          scale_limit: 6
-          scale_direction: '<'
-          scale_threshold: 3
-          service_selector: .*nodejs_host.*.process.node.cpu.percent
-          cooldown_time: 60
-        triggers:
-          execute_scale_workflow:
-            type: cloudify.policies.triggers.execute_workflow
-            parameters:
-              workflow: scale
-              workflow_parameters:
-                delta: 1
-                scalable_entity_name: nodejs_host
-
-  scale_down_group:
-    members: [nodejs_host]
-    policies:
-      auto_scale_down:
-        type: scale_policy_type
-        properties:
-          scale_limit: 2
-          scale_direction: '>'
-          scale_threshold: 1
-          service_selector: .*nodejs_host.*.process.node.cpu.percent
-          cooldown_time: 60
-        triggers:
-          execute_scale_workflow:
-            type: cloudify.policies.triggers.execute_workflow
-            parameters:
-              workflow: scale
-              workflow_parameters:
-                delta: -1
-                scalable_entity_name: nodejs_host
-
-  heal_group:
-    members: [nodejs_host]
-    policies:
-      simple_autoheal_policy:
-        type: cloudify.policies.types.host_failure
-        properties:
-          service:
-            - .*nodejs_host.*.cpu.total.system
-          interval_between_workflows: 60
-        triggers:
-          auto_heal_trigger:
-            type: cloudify.policies.triggers.execute_workflow
-            parameters:
-              workflow: heal
-              workflow_parameters:
-                node_instance_id: { 'get_property': [ SELF, node_id ] }
-                diagnose_value: { 'get_property': [ SELF, diagnose ] }

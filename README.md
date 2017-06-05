@@ -22,7 +22,7 @@ When it is finished, you will be able to play with the wine store application.
 
 ```shell
 $ cfy install \
-    https://github.com/cloudify-examples/cloudify-hello-world-example/archive/4.0.1-pre.zip \
+    https://github.com/cloudify-examples/cloudify-hello-world-example/archive/4.0.1.1.zip \
     -b hello-world \
     -n aws-blueprint.yaml
 ```
@@ -32,7 +32,7 @@ $ cfy install \
 
 ```shell
 $ cfy install \
-    https://github.com/cloudify-examples/cloudify-hello-world-example/archive/4.0.1-pre.zip \
+    https://github.com/cloudify-examples/cloudify-hello-world-example/archive/4.0.1.1.zip \
     -b hello-world \
     -n azure-blueprint.yaml
 ```
@@ -42,7 +42,7 @@ $ cfy install \
 
 ```shell
 $ cfy install \
-    https://github.com/cloudify-examples/cloudify-hello-world-example/archive/4.0.1-pre.zip \
+    https://github.com/cloudify-examples/cloudify-hello-world-example/archive/4.0.1.1.zip \
     -b hello-world \
     -n openstack-blueprint.yaml
 ```
@@ -62,7 +62,7 @@ You should see an output like this:
 Retrieving outputs for deployment hello-world...
  - "endpoint":
      Description: Web application endpoint
-     Value: http://10.239.0.18:8080/
+     Value: http://**.***.*.**:8080/
 ```
 
 Use the URL from the endpoint output and visit that URL in a browser.

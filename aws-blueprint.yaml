@@ -113,18 +113,6 @@ node_templates:
       - type: cloudify.aws.relationships.subnet_contained_in_vpc
         target: vpc
 
-  private_subnet:
-    type: cloudify.aws.nodes.Subnet
-    properties:
-      aws_config: *aws_config
-      use_external_resource: true
-      resource_id: { get_secret: private_subnet_id }
-      cidr_block:  N/A
-      availability_zone:  N/A
-    relationships:
-      - type: cloudify.aws.relationships.subnet_contained_in_vpc
-        target: vpc
-
   security_group:
     type: cloudify.aws.nodes.SecurityGroup
     properties:
