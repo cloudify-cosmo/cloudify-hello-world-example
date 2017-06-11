@@ -382,6 +382,17 @@ class CloudifyCluster(object):
         cluster.create()
         return cluster
 
+    def create_openstack_config_file(self):
+        openstack_config_file = self._tmpdir / 'openstack_config.json'
+        openstack_config_file.write_text(json.dumps({
+            'username': os.environ['OS_USERNAME'],
+            'password': os.environ['OS_PASSWORD'],
+            'tenant_name': os.environ.get('OS_TENANT_NAME',
+                                          os.environ['OS_PROJECT_NAME']),
+            'auth_url': os.environ['OS_AUTH_URL']
+        }, indent=2))
+        return openstack_config_file
+
     def _get_server_flavor(self):
         return self._attributes.medium_flavor_name
 
@@ -393,14 +404,7 @@ class CloudifyCluster(object):
         self._logger.info('Creating an image based cloudify cluster '
                           '[number_of_managers=%d]', len(self.managers))
 
-        openstack_config_file = self._tmpdir / 'openstack_config.json'
-        openstack_config_file.write_text(json.dumps({
-            'username': os.environ['OS_USERNAME'],
-            'password': os.environ['OS_PASSWORD'],
-            'tenant_name': os.environ.get('OS_TENANT_NAME',
-                                          os.environ['OS_PROJECT_NAME']),
-            'auth_url': os.environ['OS_AUTH_URL']
-        }, indent=2))
+        openstack_config_file = self.create_openstack_config_file()
 
         terraform_template_file = self._tmpdir / 'openstack-vm.tf'
 
