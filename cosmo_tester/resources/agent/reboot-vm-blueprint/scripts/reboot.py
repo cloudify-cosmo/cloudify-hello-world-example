@@ -17,7 +17,7 @@ import time
 from cloudify import ctx
 from cloudify.decorators import operation
 from cloudify.exceptions import NonRecoverableError
-from cloudify_agent.app import app
+from cloudify.celery.app import get_celery_app
 from cloudify_agent.api.utils import get_agent_registered
 from openstack_plugin_common import with_nova_client
 from nova_plugin.server import get_server_by_context, SERVER_STATUS_ACTIVE
@@ -50,6 +50,7 @@ def reboot(nova_client, **_):
     agent_name = ctx.instance.runtime_properties['cloudify_agent']['name']
     i = 0
     agent_alive = False
+    app = get_celery_app(tenant=ctx.tenant, target=agent_name)
     while i < AGENT_ATTEMPTS and not agent_alive:
         ctx.logger.info('Waiting for agent, attempt {0}'.format(i + 1))
         time.sleep(INTERVAL)
