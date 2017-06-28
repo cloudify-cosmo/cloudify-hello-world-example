@@ -111,6 +111,7 @@ resource "openstack_compute_instance_v2" "cli_server" {
     user = "${ var.cli_user }"
     private_key = "${file("${var.private_key_path}")}"
     timeout = "10m"
+    agent = "false"
   }
 
   provisioner "file" {
@@ -155,6 +156,7 @@ resource "openstack_compute_instance_v2" "manager_server" {
     user = "${var.manager_user}"
     private_key = "${file("${var.private_key_path}")}"
     timeout = "10m"
+    agent = "false"
   }
 
   provisioner "remote-exec" {
