@@ -20,6 +20,8 @@ import requests
 
 from . import AbstractExample
 
+from cosmo_tester.framework.util import set_client_tenant
+
 
 class NodeCellarExample(AbstractExample):
 
@@ -36,12 +38,12 @@ class NodeCellarExample(AbstractExample):
                     'network_name': self.attributes.network_name,
                     'image': self.attributes.ubuntu_14_04_image_name,
                     'flavor': self.attributes.medium_flavor_name,
-                    'agent_user': self.attributes.ubuntu_username
+                    'agent_user': self.attributes.ubuntu_14_04_username
                 }
             elif self._blueprint_file == 'simple-blueprint.yaml':
                 self._inputs = {
                     'host_ip': self.manager.ip_address,
-                    'agent_user': self.attributes.centos7_username,
+                    'agent_user': self.attributes.centos_7_username,
                     'agent_private_key_path':
                         self.manager.remote_private_key_path
                 }
@@ -60,8 +62,9 @@ class NodeCellarExample(AbstractExample):
 
         # retrieve some instance id of the mongodb node
         mongo_node_name = 'mongod'
-        instance_id = self.manager.client.node_instances.list(
-                self.deployment_id, mongo_node_name)[0].id
+        with set_client_tenant(self.manager, self.tenant):
+            instance_id = self.manager.client.node_instances.list(
+                    self.deployment_id, mongo_node_name)[0].id
 
         try:
             # select metrics from the mongo collector explicitly to verify

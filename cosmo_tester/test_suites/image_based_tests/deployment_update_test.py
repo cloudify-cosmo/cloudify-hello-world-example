@@ -24,6 +24,7 @@ from retrying import retry
 from cosmo_tester.framework import util
 from cosmo_tester.framework.examples.hello_world import HelloWorldExample
 from cosmo_tester.framework.fixtures import image_based_manager
+from cosmo_tester.framework.util import get_test_tenant, set_client_tenant
 
 manager = image_based_manager
 
@@ -33,8 +34,10 @@ update_counter = 0
 
 @pytest.fixture(scope='function')
 def hello_world(cfy, manager, attributes, ssh_key, tmpdir, logger):
+    tenant = get_test_tenant('dep_update', manager, cfy)
     hw = HelloWorldExample(
-            cfy, manager, attributes, ssh_key, logger, tmpdir)
+            cfy, manager, attributes, ssh_key, logger, tmpdir,
+            tenant=tenant, suffix='update')
     hw.blueprint_file = 'openstack-blueprint.yaml'
     yield hw
     hw.cleanup()
@@ -44,8 +47,8 @@ def test_hello_world_deployment_update(
         cfy, manager, hello_world, attributes, tmpdir, logger):
 
     hello_world.inputs.update({
-        'agent_user': attributes.centos7_username,
-        'image': attributes.centos7_image_name,
+        'agent_user': attributes.centos_7_username,
+        'image': attributes.centos_7_image_name,
     })
 
     logger.info('Deploying hello world example..')
@@ -76,6 +79,7 @@ def test_hello_world_deployment_update(
     _update_deployment(cfy,
                        manager,
                        hello_world.deployment_id,
+                       hello_world.tenant,
                        modified_blueprint_path,
                        tmpdir)
 
@@ -93,6 +97,7 @@ def test_hello_world_deployment_update(
     _update_deployment(cfy,
                        manager,
                        hello_world.deployment_id,
+                       hello_world.tenant,
                        hello_world.blueprint_path,
                        tmpdir,
                        inputs={'webserver_port': modified_port})
@@ -103,26 +108,27 @@ def test_hello_world_deployment_update(
 
 def _wait_for_deployment_update_to_finish(func):
     def _update_and_wait_to_finish(
-            cfy, manager, deployment_id, *args, **kwargs):
+            cfy, manager, deployment_id, tenant, *args, **kwargs):
 
-        func(cfy, manager, deployment_id, *args, **kwargs)
+        func(cfy, manager, deployment_id, tenant, *args, **kwargs)
 
         @retry(stop_max_attempt_number=10,
                wait_fixed=5000,
                retry_on_result=lambda r: not r)
-        def repetetive_check():
-            deployment_updates_list = manager.client.deployment_updates.list(
-                    deployment_id=deployment_id)
-            executions_list = manager.client.executions.list(
-                    deployment_id=deployment_id,
-                    workflow_id='update',
-                    _include=['status']
-            )
+        def repetitive_check():
+            with set_client_tenant(manager, tenant):
+                dep_updates_list = manager.client.deployment_updates.list(
+                        deployment_id=deployment_id)
+                executions_list = manager.client.executions.list(
+                        deployment_id=deployment_id,
+                        workflow_id='update',
+                        _include=['status']
+                )
 
-            if len(deployment_updates_list) != update_counter:
+            if len(dep_updates_list) != update_counter:
                 return False
 
-            for deployment_update in deployment_updates_list:
+            for deployment_update in dep_updates_list:
                 if deployment_update.state not in ['failed', 'successful']:
                     return False
             for execution in executions_list:
@@ -133,14 +139,19 @@ def _wait_for_deployment_update_to_finish(func):
 
             return True
 
-        repetetive_check()
+        repetitive_check()
 
     return _update_and_wait_to_finish
 
 
 @_wait_for_deployment_update_to_finish
-def _update_deployment(
-        cfy, manager, deployment_id, blueprint_path, tmpdir, inputs=None):
+def _update_deployment(cfy,
+                       manager,
+                       deployment_id,
+                       tenant,
+                       blueprint_path,
+                       tmpdir,
+                       inputs=None):
     if inputs:
         inputs_file = Path(tmpdir) / 'deployment_update_inputs.json'
         inputs_file.write_text(json.dumps(inputs))
@@ -152,6 +163,7 @@ def _update_deployment(
     cfy.deployments.update(
             deployment_id,
             blueprint_path=blueprint_path,
+            tenant_name=tenant,
             **kwargs
     )
 
@@ -177,38 +189,3 @@ def _modify_blueprint(blueprint_path):
         # Remove vm interfaces - this is needed because it contains
         # a get_attribute with a reference to the deleted security group node.
         patcher.delete_property('node_templates.vm.interfaces')
-
-
-def wait_for_deployment_update_to_finish(func):
-    def _update_and_wait_to_finish(self, deployment_id, *args, **kwargs):
-        func(self, deployment_id, *args, **kwargs)
-
-        @retry(stop_max_attempt_number=10,
-               wait_fixed=5000,
-               retry_on_result=lambda r: not r)
-        def repetetive_check():
-            deployment_updates_list = self.client.deployment_updates.list(
-                    deployment_id=deployment_id)
-            executions_list = self.client.executions.list(
-                    deployment_id=deployment_id,
-                    workflow_id='update',
-                    _include=['status']
-            )
-
-            if len(deployment_updates_list) != self.update_counter:
-                return False
-
-            for deployment_update in deployment_updates_list:
-                if deployment_update.state not in ['failed', 'successful']:
-                    return False
-            for execution in executions_list:
-                if execution['status'] not in ['terminated',
-                                               'failed',
-                                               'cancelled']:
-                    return False
-
-            return True
-
-        repetetive_check()
-
-    return _update_and_wait_to_finish

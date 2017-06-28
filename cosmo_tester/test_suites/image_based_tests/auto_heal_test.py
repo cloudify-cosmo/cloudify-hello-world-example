@@ -30,8 +30,10 @@ openstack = util.create_openstack_client()
 
 @pytest.fixture(scope='function')
 def nodecellar(cfy, manager, attributes, ssh_key, tmpdir, logger):
+    tenant = util.get_test_tenant('nc_autoheal', manager, cfy)
     nc = NodeCellarExample(
-            cfy, manager, attributes, ssh_key, logger, tmpdir)
+            cfy, manager, attributes, ssh_key, logger, tmpdir,
+            tenant=tenant, suffix='autoheal')
     nc.blueprint_file = 'openstack-blueprint.yaml'
     yield nc
     nc.cleanup()
@@ -60,12 +62,14 @@ def test_nodecellar_auto_healing(cfy, manager, nodecellar, logger):
                 outputs['endpoint']['ip_address']))
 
     try:
-        _wait_for_autoheal(manager.client, nodecellar.deployment_id, logger)
+        _wait_for_autoheal(manager, nodecellar.deployment_id, logger,
+                           nodecellar.tenant)
     finally:
         _get_heal_workflow_events(cfy,
-                                  manager.client,
+                                  manager,
                                   nodecellar.deployment_id,
-                                  logger)
+                                  logger,
+                                  nodecellar.tenant)
 
     logger.info('Verifying nodecellar is working after auto healing..')
     nodecellar.verify_installation()
@@ -73,24 +77,31 @@ def test_nodecellar_auto_healing(cfy, manager, nodecellar, logger):
     nodecellar.delete_deployment()
 
 
-def _get_heal_workflow_events(cfy, client, deployment_id, logger):
+def _get_heal_workflow_events(cfy, manager, deployment_id, logger, tenant):
     logger.info('Getting heal workflow events..')
-    executions = [
-        e for e in client.executions.list(deployment_id=deployment_id)
-        if e.workflow_id == 'heal']
+    with util.set_client_tenant(manager, tenant):
+        executions = [
+            e for e in manager.client.executions.list(
+                deployment_id=deployment_id)
+            if e.workflow_id == 'heal'
+        ]
     if executions:
         assert len(executions) == 1
-        cfy.events.list(['-e', executions[0].id])
+        cfy.events.list(['-e', executions[0].id,
+                         '--tenant-name', tenant])
     else:
         logger.info('No heal executions found.')
 
 
 @retrying.retry(stop_max_attempt_number=40, wait_fixed=15000)
-def _wait_for_autoheal(client, deployment_id, logger):
+def _wait_for_autoheal(manager, deployment_id, logger, tenant):
     logger.info('Waiting for heal workflow to start/complete..')
-    executions = [
-        e for e in client.executions.list(deployment_id=deployment_id)
-        if e.workflow_id == 'heal']
+    with util.set_client_tenant(manager, tenant):
+        executions = [
+            e for e in manager.client.executions.list(
+                deployment_id=deployment_id)
+            if e.workflow_id == 'heal'
+        ]
     logger.info('Found heal executions:%s%s',
                 os.linesep,
                 json.dumps(executions, indent=2))

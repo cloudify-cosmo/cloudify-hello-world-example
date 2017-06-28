@@ -102,8 +102,8 @@ def test_nonempty_manager_join_cluster_negative(cfy, attributes, ssh_key,
             cfy, manager2, attributes, ssh_key, logger, tmpdir)
         hello_world.blueprint_file = 'openstack-blueprint.yaml'
         hello_world.inputs.update({
-            'agent_user': attributes.centos7_username,
-            'image': attributes.centos7_image_name,
+            'agent_user': attributes.centos_7_username,
+            'image': attributes.centos_7_image_name,
         })
 
         hello_world.upload_blueprint()

@@ -13,28 +13,14 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
-import pytest
-
 from cosmo_tester.framework.fixtures import bootstrap_based_manager
-from cosmo_tester.framework.examples.hello_world import HelloWorldExample
+
+from . import hello_worlds  # noqa (pytest fixture imported)
 
 
 manager = bootstrap_based_manager
 
 
-@pytest.fixture(scope='function')
-def hello_world(cfy, manager, attributes, ssh_key, tmpdir,
-                logger):
-    hw = HelloWorldExample(
-            cfy, manager, attributes, ssh_key, logger, tmpdir)
-    hw.blueprint_file = 'openstack-blueprint.yaml'
-    yield hw
-    hw.cleanup()
-
-
-def test_manager_bootstrap_and_deployment(hello_world, attributes):
-    hello_world.inputs.update({
-        'agent_user': attributes.centos7_username,
-        'image': attributes.centos7_image_name,
-    })
-    hello_world.verify_all()
+def test_manager_bootstrap_and_deployment(hello_worlds, attributes):  # noqa (pytest fixture, not redefinition of hello_worlds)
+    for hello in hello_worlds:
+        hello.verify_all()

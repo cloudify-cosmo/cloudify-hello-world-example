@@ -15,6 +15,7 @@
 
 from cosmo_tester.framework.examples.hello_world import HelloWorldExample
 from cosmo_tester.framework.fixtures import bootstrap_based_manager
+from cosmo_tester.framework.util import is_community
 from cloudify_rest_client.client import CloudifyClient
 from os.path import join
 
@@ -48,18 +49,19 @@ def test_ssl(cfy, manager, module_tmpdir, attributes, ssh_key, logger):
                                 cert=cert_path)
     manager.client = ssl_client
 
-    cfy.users.create('ssl_user', '-p', 'ssl_pass')
+    if not is_community():
+        tenant_name = 'ssl_tenant'
+        cfy.users.create('ssl_user', '-p', 'ssl_pass')
+        cfy.tenants.create(tenant_name)
 
-    cfy.tenants.create('ssl_tenant')
-
-    cfy.tenants('add-user', 'ssl_user', '-t', 'ssl_tenant')
+        cfy.tenants('add-user', 'ssl_user', '-t', tenant_name)
 
     hello_world = HelloWorldExample(
         cfy, manager, attributes, ssh_key, logger, module_tmpdir)
     hello_world.blueprint_file = 'openstack-blueprint.yaml'
     hello_world.inputs.update({
-        'agent_user': attributes.centos7_username,
-        'image': attributes.centos7_image_name,
+        'agent_user': attributes.centos_7_username,
+        'image': attributes.centos_7_image_name,
     })
 
     hello_world.upload_blueprint()
