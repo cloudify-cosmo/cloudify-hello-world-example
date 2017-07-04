@@ -24,15 +24,13 @@ from cosmo_tester.framework.cluster import (
     CloudifyCluster,
     MANAGERS,
 )
-from cosmo_tester.framework.util import (
-    create_rest_client,
-    assert_snapshot_created,
-)
+from cosmo_tester.framework.util import assert_snapshot_created
 
 # CFY-6912
 from cloudify_cli.commands.executions import (
     _get_deployment_environment_creation_execution,
     )
+from cloudify_cli.constants import CLOUDIFY_TENANT_HEADER
 
 
 HELLO_WORLD_URL = 'https://github.com/cloudify-cosmo/cloudify-hello-world-example/archive/4.0.zip'  # noqa
@@ -59,8 +57,8 @@ def cluster(request, cfy, ssh_key, module_tmpdir, attributes, logger):
     if request.param.startswith('3'):
         # Install dev tools & python headers
         with cluster.managers[1].ssh() as fabric_ssh:
-            fabric_ssh.sudo('yum -y groupinstall "Development Tools"')
-            fabric_ssh.sudo('yum -y install python-devel')
+            fabric_ssh.sudo('yum -y -q groupinstall "Development Tools"')
+            fabric_ssh.sudo('yum -y -q install python-devel')
 
     yield cluster
 
@@ -100,24 +98,34 @@ blueprint_id = deployment_id = str(uuid.uuid4())
 
 def test_restore_snapshot_and_agents_upgrade(
         cfy, cluster, attributes, logger, tmpdir):
-    manager1 = cluster.managers[0]
-    manager2 = cluster.managers[1]
+    manager0 = cluster.managers[0]
+    manager1 = cluster.managers[1]
 
     snapshot_id = str(uuid.uuid4())
 
-    logger.info('Creating snapshot on manager1..')
-    manager1.client.snapshots.create(snapshot_id, False, False, False)
-    assert_snapshot_created(manager1, snapshot_id, attributes)
+    logger.info('Creating snapshot on old manager..')
+    manager0.client.snapshots.create(snapshot_id, False, False, False)
+    assert_snapshot_created(manager0, snapshot_id, attributes)
 
     local_snapshot_path = str(tmpdir / 'snapshot.zip')
 
     logger.info('Downloading snapshot from old manager..')
-    manager1.client.snapshots.list()
-    manager1.client.snapshots.download(snapshot_id, local_snapshot_path)
+    manager0.client.snapshots.list()
+    manager0.client.snapshots.download(snapshot_id, local_snapshot_path)
 
-    manager2.use()
+    manager1.use()
+    if '3.4' in manager0.branch_name:
+        # When working with a 3.x snapshot, we need to create a new tenant
+        # into which we'll restore the snapshot
+        tenant_name = manager0.restore_tenant_name
+        manager1.client.tenants.create(tenant_name)
+
+        # Update the tenant in the manager's client and CLI
+        manager1.client._client.headers[CLOUDIFY_TENANT_HEADER] = tenant_name
+        cfy.profiles.set(['-t', tenant_name])
+
     logger.info('Uploading snapshot to latest manager..')
-    snapshot = manager2.client.snapshots.upload(local_snapshot_path,
+    snapshot = manager1.client.snapshots.upload(local_snapshot_path,
                                                 snapshot_id)
     logger.info('Uploaded snapshot:%s%s',
                 os.linesep,
@@ -126,10 +134,7 @@ def test_restore_snapshot_and_agents_upgrade(
     cfy.snapshots.list()
 
     logger.info('Restoring snapshot on latest manager..')
-    restore_execution = manager2.client.snapshots.restore(
-        snapshot_id,
-        tenant_name=manager1.restore_tenant_name,
-        )
+    restore_execution = manager1.client.snapshots.restore(snapshot_id)
     logger.info('Snapshot restore execution:%s%s',
                 os.linesep,
                 json.dumps(restore_execution, indent=2))
@@ -137,32 +142,23 @@ def test_restore_snapshot_and_agents_upgrade(
     cfy.executions.list(['--include-system-workflows'])
 
     restore_execution = wait_for_execution(
-        manager2.client,
+        manager1.client,
         restore_execution,
         logger)
     assert restore_execution.status == 'terminated'
 
     cfy.executions.list(['--include-system-workflows'])
 
-    manager2.use(tenant=manager1.restore_tenant_name)
-    client = create_rest_client(
-        manager2.ip_address,
-        username=cluster._attributes.cloudify_username,
-        password=cluster._attributes.cloudify_password,
-        tenant=manager1.tenant_name,
-        api_version=manager2.api_version,
-        )
-
     cfy.deployments.list()
-    deployments = client.deployments.list()
+    deployments = manager1.client.deployments.list()
     assert 1 == len(deployments)
 
     logger.info('Upgrading agents..')
     cfy.agents.install()
 
     logger.info('Deleting original {version} manager..'.format(
-        version=manager1.branch_name))
-    manager1.delete()
+        version=manager0.branch_name))
+    manager0.delete()
 
     logger.info('Uninstalling deployment from latest manager..')
     cfy.executions.start.uninstall(['-d', deployment_id])
