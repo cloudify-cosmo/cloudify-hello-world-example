@@ -15,9 +15,10 @@
 
 from abc import ABCMeta, abstractproperty
 
-import json
 import os
+import json
 import uuid
+from urllib import urlretrieve
 from contextlib import contextmanager
 
 import jinja2
@@ -30,11 +31,14 @@ from influxdb import InfluxDBClient
 from cosmo_tester.framework import util
 from cosmo_tester.framework import git_helper
 
+from cloudify_cli.constants import DEFAULT_TENANT_NAME
+
 
 REMOTE_PRIVATE_KEY_PATH = '/etc/cloudify/key.pem'
 REMOTE_OPENSTACK_CONFIG_PATH = '/etc/cloudify/openstack_config.json'
 
 MANAGER_BLUEPRINTS_REPO_URL = 'https://github.com/cloudify-cosmo/cloudify-manager-blueprints.git'  # noqa
+RSYNC_SCRIPT_URL = 'https://raw.githubusercontent.com/cloudify-cosmo/cloudify-dev/master/scripts/rsync.sh'  # NOQA
 
 MANAGER_API_VERSIONS = {
     'master': 'v3',
@@ -64,6 +68,7 @@ class _CloudifyManager(object):
             cfy,
             attributes,
             logger,
+            tmpdir
             ):
         self.index = index
         self.ip_address = public_ip_address
@@ -74,6 +79,9 @@ class _CloudifyManager(object):
         self._cfy = cfy
         self._attributes = attributes
         self._logger = logger
+        self._rsync_path = None
+        self._tmpdir = os.path.join(tmpdir, str(index))
+        os.makedirs(self._tmpdir)
         self._openstack = util.create_openstack_client()
         self.influxdb_client = InfluxDBClient(public_ip_address, 8086,
                                               'root', 'root', 'cloudify')
@@ -97,7 +105,7 @@ class _CloudifyManager(object):
                 key_file=REMOTE_PRIVATE_KEY_PATH,
             ))
 
-    def _upload_plugin(self, plugin_name):
+    def upload_plugin(self, plugin_name, tenant_name=DEFAULT_TENANT_NAME):
         plugins_list = util.get_plugin_wagon_urls()
         plugin_wagon = [
             x['wgn_url'] for x in plugins_list
@@ -120,11 +128,13 @@ class _CloudifyManager(object):
                 # This will only work for images as cfy is pre-installed there.
                 # from some reason this method is usually less error prone.
                 fabric_ssh.run(
-                    'cfy plugins upload {0}'.format(plugin_wagon[0]))
+                    'cfy plugins upload {0} -t {1}'.format(
+                        plugin_wagon[0], tenant_name
+                    ))
         except Exception:
             try:
                 self.use()
-                self._cfy.plugins.upload(plugin_wagon[0])
+                self._cfy.plugins.upload([plugin_wagon[0], '-t', tenant_name])
             except Exception:
                 # This is needed for 3.4 managers. local cfy isn't
                 # compatible and cfy isn't installed in the image
@@ -216,9 +226,43 @@ class _CloudifyManager(object):
     def api_version(self):
         return MANAGER_API_VERSIONS[self.branch_name]
 
+    @property
+    def rsync_path(self):
+        if not self._rsync_path:
+            self._rsync_path = os.path.join(self._tmpdir, 'rsync.sh')
+            urlretrieve(RSYNC_SCRIPT_URL, self._rsync_path)
+            os.chmod(self._rsync_path, 0755)  # Make the script executable
+
+        return self._rsync_path
+
     # passed to cfy. To be overridden in pre-4.0 versions
     restore_tenant_name = None
     tenant_name = 'default_tenant'
+
+    def stop_for_user_input(self):
+        """
+        Print out a helpful ssh command to allow the user to connect to the
+        current manager, and then wait for user input to continue the test
+        """
+        self._logger.info('#' * 80)
+        self._logger.info(
+            '\nssh -o StrictHostKeyChecking=no {user}@{ip} -i {key}'.format(
+                user=self._attributes.centos7_username,
+                ip=self.ip_address,
+                key=self._ssh_key.private_key_path)
+        )
+        raw_input('You can now connect to the manager')
+
+    def sync_local_code_to_manager(self):
+        self._logger.info('Syncing local code to the manager')
+        cmd = ' '.join([
+            self.rsync_path,
+            self.ip_address,
+            self._attributes.centos7_username,
+            self._ssh_key.private_key_path
+        ])
+        self._logger.info('Running command:\n{0}'.format(cmd))
+        os.system(cmd)
 
 
 def _get_latest_manager_image_name():
@@ -448,7 +492,7 @@ class CloudifyCluster(object):
 
                 manager._upload_necessary_files(openstack_config_file)
                 if manager.upload_plugins:
-                    manager._upload_plugin('openstack_centos_core')
+                    manager.upload_plugin('openstack_centos_core')
 
             self._logger.info('Cloudify cluster successfully created!')
 
@@ -488,6 +532,7 @@ class CloudifyCluster(object):
                     self._cfy,
                     self._attributes,
                     self._logger,
+                    self._tmpdir
                     )
 
 
