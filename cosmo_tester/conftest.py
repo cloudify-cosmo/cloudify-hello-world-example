@@ -38,6 +38,7 @@ def logger(request):
                                   datefmt='%H:%M:%S')
     ch.setFormatter(formatter)
     logger.addHandler(ch)
+    logger.propagate = False
     return logger
 
 
