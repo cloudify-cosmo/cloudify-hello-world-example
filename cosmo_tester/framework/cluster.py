@@ -80,7 +80,7 @@ class _CloudifyManager(object):
         self._attributes = attributes
         self._logger = logger
         self._rsync_path = None
-        self._tmpdir = os.path.join(tmpdir, str(index))
+        self._tmpdir = os.path.join(tmpdir, str(uuid.uuid4()))
         os.makedirs(self._tmpdir)
         self._openstack = util.create_openstack_client()
         self.influxdb_client = InfluxDBClient(public_ip_address, 8086,
