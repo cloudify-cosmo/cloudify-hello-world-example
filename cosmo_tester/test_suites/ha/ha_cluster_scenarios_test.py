@@ -192,3 +192,20 @@ def test_remove_manager_from_cluster(cfy, cluster, hello_world,
 
     ha_helper.verify_nodes_status(expected_master, cfy, logger)
     hello_world.upload_blueprint()
+
+
+def test_uninstall_dep(cfy, cluster, hello_world,
+                       logger):
+    manager1 = cluster.managers[0]
+    ha_helper.delete_active_profile()
+    manager1.use()
+    ha_helper.verify_nodes_status(manager1, cfy, logger)
+    hello_world.upload_blueprint()
+    hello_world.create_deployment()
+    hello_world.install()
+
+    manager2 = cluster.managers[-1]
+    ha_helper.set_active(manager2, cfy, logger)
+    ha_helper.delete_active_profile()
+    manager2.use()
+    hello_world.uninstall()
