@@ -46,8 +46,8 @@ class AttributesDict(dict):
     __getattr__ = dict.__getitem__
 
 
-def get_attributes(logger=logging):
-    attributes_file = get_resource_path('attributes.yaml')
+def get_attributes(logger=logging, resources_dir=None):
+    attributes_file = get_resource_path('attributes.yaml', resources_dir)
     logger.info('Loading attributes from: %s', attributes_file)
     with open(attributes_file, 'r') as f:
         attrs = AttributesDict(yaml.load(f))
@@ -194,8 +194,8 @@ def get_blueprint_path(blueprint_name, blueprints_dir=None):
     return os.path.join(blueprints_dir, blueprint_name)
 
 
-def get_resource_path(resource):
-    resources_dir = os.path.dirname(resources.__file__)
+def get_resource_path(resource, resources_dir=None):
+    resources_dir = resources_dir or os.path.dirname(resources.__file__)
     return os.path.join(resources_dir, resource)
 
 

@@ -438,7 +438,7 @@ class CloudifyCluster(object):
         return openstack_config_file
 
     def _get_server_flavor(self):
-        return self._attributes.medium_flavor_name
+        return self._attributes.manager_server_flavor_name
 
     def create(self):
         """Creates the OpenStack infrastructure for a Cloudify manager.

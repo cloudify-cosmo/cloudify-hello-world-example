@@ -33,5 +33,6 @@ external_gateway: GATEWAY_NET
 large_flavor_name: m1.large
 medium_flavor_name: m1.medium
 small_flavor_name: m1.small
+manager_server_flavor_name: m1.medium
 
 LOCAL_REST_CERT_FILE: '/etc/cloudify/ssl/cloudify_internal_cert.pem'
