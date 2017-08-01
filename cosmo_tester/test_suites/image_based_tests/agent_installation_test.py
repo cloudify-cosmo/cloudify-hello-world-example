@@ -331,13 +331,16 @@ def install_script(name, windows, user, manager, attributes, tmpdir, logger):
         fabric.get(attributes.LOCAL_REST_CERT_FILE, local_cert_path)
 
     env_vars = {
+        constants.REST_HOST_KEY: manager.private_ip_address,
         constants.REST_PORT_KEY: str(defaults.INTERNAL_REST_PORT),
         constants.BROKER_SSL_CERT_PATH: local_cert_path,
         constants.LOCAL_REST_CERT_FILE_KEY: local_cert_path,
         constants.MANAGER_FILE_SERVER_URL_KEY:
             'https://{0}:{1}/resources'.format(manager.private_ip_address,
-                                               defaults.INTERNAL_REST_PORT)
+                                               defaults.INTERNAL_REST_PORT),
+        constants.MANAGER_FILE_SERVER_ROOT_KEY: str(tmpdir)
     }
+    (tmpdir / 'cloudify_agent').mkdir()
 
     ctx = MockCloudifyContext(
             node_id='node',
@@ -360,8 +363,8 @@ def install_script(name, windows, user, manager, attributes, tmpdir, logger):
 
         init_script = script.init_script(cloudify_agent={})
     finally:
-        for var_name in env_vars.iterkeys():
-            os.environ.pop(var_name)
+        for var_name in list(env_vars):
+            os.environ.pop(var_name, None)
 
         current_ctx.clear()
     result = '\n'.join(init_script.split('\n')[:-1])
