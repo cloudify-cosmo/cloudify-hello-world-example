@@ -139,9 +139,8 @@ def test_restore_snapshot_and_agents_upgrade(
     deployments = manager1.client.deployments.list(_all_tenants=True)
     assert 3 == len(deployments)
 
-    for tenant in TENANTS:
-        logger.info('Upgrading agents on tenant `{0}`...'.format(tenant))
-        cfy.agents.install(['-t', tenant])
+    logger.info('Upgrading agents across all tenants')
+    cfy.agents.install(['--all-tenants'])
 
     logger.info('Deleting original {version} manager..'.format(
         version=manager0.branch_name))
