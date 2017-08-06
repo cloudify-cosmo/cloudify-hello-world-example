@@ -360,8 +360,8 @@ def install_script(name, windows, user, manager, attributes, tmpdir, logger):
     try:
         current_ctx.set(ctx)
         os.environ.update(env_vars)
-
-        init_script = script.init_script(cloudify_agent={})
+        agent_config = {'install_with_sudo': True}
+        init_script = script.init_script(cloudify_agent=agent_config)
     finally:
         for var_name in list(env_vars):
             os.environ.pop(var_name, None)
