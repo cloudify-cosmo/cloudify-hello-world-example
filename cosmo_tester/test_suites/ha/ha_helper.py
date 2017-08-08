@@ -17,6 +17,9 @@
 import time
 import os
 
+from requests.exceptions import ConnectionError
+from cloudify_rest_client.exceptions import CloudifyClientError
+
 
 class HighAvailabilityHelper(object):
     @staticmethod
@@ -28,12 +31,54 @@ class HighAvailabilityHelper(object):
         except Exception as e:
             logger.info('Setting active manager error message: %s', e.message)
         finally:
-            time.sleep(120)
+            HighAvailabilityHelper.wait_nodes_online([manager], logger)
 
     @staticmethod
-    def wait_leader_election(logger):
+    def wait_leader_election(managers, logger):
+        """Wait until there is a leader in the cluster"""
+        def _is_there_a_leader(nodes):
+            return any(node['master'] for node in nodes)
         logger.info('Waiting for a leader election...')
-        time.sleep(120)
+        HighAvailabilityHelper._wait_cluster_status(_is_there_a_leader,
+                                                    managers, logger)
+
+    @staticmethod
+    def wait_nodes_online(managers, logger):
+        """Wait until all of the cluster nodes are online"""
+        def _all_nodes_online(nodes):
+            return all(node['online'] for node in nodes)
+        logger.info('Waiting for all nodes to be online...')
+        HighAvailabilityHelper._wait_cluster_status(_all_nodes_online,
+                                                    managers, logger)
+
+    @staticmethod
+    def _wait_cluster_status(predicate, managers, logger, timeout=120,
+                             poll_interval=1):
+        """Wait until the cluster is in a state decided by predicate
+
+        :param predicate: a function deciding if the cluster is in the desired
+                          state, when passed in the list of nodes
+        :param managers: a list of managers that will be polled for status
+        :type managers: list of _CloudifyManager
+        :param logger: The logger to use
+        :param timeout: How long to wait for leader election
+        :param poll_interval: Interval to wait between requests
+        """
+        deadline = time.time() + timeout
+        while time.time() < deadline:
+            for manager in managers:
+                try:
+                    nodes = manager.client.cluster.nodes.list()
+                    if predicate(nodes):
+                        return
+                except (ConnectionError, CloudifyClientError):
+                    logger.debug('_wait_cluster_status: manager {0} did not '
+                                 'respond'.format(manager))
+
+            logger.debug('_wait_cluster_status: none of the nodes responded')
+            time.sleep(poll_interval)
+
+        raise RuntimeError('Timeout when waiting for cluster status')
 
     @staticmethod
     def verify_nodes_status(manager, cfy, logger):

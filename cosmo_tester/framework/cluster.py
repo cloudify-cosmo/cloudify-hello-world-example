@@ -159,13 +159,16 @@ class _CloudifyManager(object):
         return 'Cloudify manager [{}:{}]'.format(self.index, self.ip_address)
 
     @retrying.retry(stop_max_attempt_number=3, wait_fixed=3000)
-    def use(self, tenant=None):
+    def use(self, tenant=None, profile_name=None):
+        kwargs = {}
+        if profile_name is not None:
+            kwargs['profile_name'] = profile_name
         self._cfy.profiles.use([
             self.ip_address,
             '-u', self._attributes.cloudify_username,
             '-p', self._attributes.cloudify_password,
             '-t', tenant or self._attributes.cloudify_tenant,
-            ])
+            ], **kwargs)
 
     @property
     def server_id(self):

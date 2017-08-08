@@ -128,11 +128,11 @@ def test_delete_manager_node(cfy, cluster, hello_world,
                              logger):
     ha_helper.set_active(cluster.managers[1], cfy, logger)
     expected_master = cluster.managers[0]
-
     for manager in cluster.managers[1:]:
         logger.info('Deleting manager %s', manager.ip_address)
         manager.delete()
-        ha_helper.wait_leader_election(logger)
+        ha_helper.wait_leader_election(
+            [m for m in cluster.managers if not m.deleted], logger)
 
     logger.info('Expected leader %s', expected_master)
     ha_helper.verify_nodes_status(expected_master, cfy, logger)
@@ -141,33 +141,35 @@ def test_delete_manager_node(cfy, cluster, hello_world,
 
 def test_failover(cfy, cluster, hello_world,
                   logger):
+    expected_master = cluster.managers[-1]
+
     for manager in cluster.managers[:-1]:
         logger.info('Simulating manager %s failure by stopping'
                     ' nginx service', manager.ip_address)
         with manager.ssh() as fabric:
             fabric.run('sudo systemctl stop nginx')
-        ha_helper.wait_leader_election(logger)
+        ha_helper.wait_leader_election([expected_master], logger)
         cfy.cluster.nodes.list()
 
-    expected_master = cluster.managers[-1]
     ha_helper.delete_active_profile()
     expected_master.use()
     ha_helper.verify_nodes_status(expected_master, cfy, logger)
+
+    expected_master = cluster.managers[0]
 
     with expected_master.ssh() as fabric:
         logger.info('Simulating manager %s failure by stopping '
                     'cloudify-mgmtworker service',
                     expected_master.ip_address)
         fabric.run('sudo systemctl stop cloudify-mgmtworker')
-    ha_helper.wait_leader_election(logger)
+    ha_helper.wait_leader_election([expected_master], logger)
     cfy.cluster.nodes.list()
 
-    expected_master = cluster.managers[0]
     logger.info('Starting nginx service on manager %s',
                 expected_master.ip_address)
     with expected_master.ssh() as fabric:
         fabric.run('sudo systemctl start nginx')
-    ha_helper.wait_leader_election(logger)
+    ha_helper.wait_leader_election([expected_master], logger)
     ha_helper.delete_active_profile()
     expected_master.use()
     ha_helper.verify_nodes_status(expected_master, cfy, logger)
@@ -179,14 +181,15 @@ def test_remove_manager_from_cluster(cfy, cluster, hello_world,
     ha_helper.set_active(cluster.managers[1], cfy, logger)
     ha_helper.delete_active_profile()
 
+    expected_master = cluster.managers[0]
+
     for manager in cluster.managers[1:]:
         manager.use()
         logger.info('Removing the manager %s from HA cluster',
                     manager.ip_address)
         cfy.cluster.nodes.remove(manager.ip_address)
-        ha_helper.wait_leader_election(logger)
+        ha_helper.wait_leader_election([expected_master], logger)
 
-    expected_master = cluster.managers[0]
     ha_helper.delete_active_profile()
     expected_master.use()
 
