@@ -18,7 +18,7 @@ resources for testing Cloudify.
 
 ### Install Terraform
 
-Download terraform from [here](https://www.terraform.io/downloads.html), and follow the installation instructions [here](https://www.terraform.io/intro/getting-started/install.html).
+Download terraform version 0.9.11 from [here](https://releases.hashicorp.com/terraform/0.9.11), and follow the installation instructions [here](https://www.terraform.io/intro/getting-started/install.html).
 
 
 ## Running tests
