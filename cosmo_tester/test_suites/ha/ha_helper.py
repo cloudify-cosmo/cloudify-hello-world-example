@@ -37,7 +37,12 @@ class HighAvailabilityHelper(object):
     def wait_leader_election(managers, logger):
         """Wait until there is a leader in the cluster"""
         def _is_there_a_leader(nodes):
-            return any(node['master'] for node in nodes)
+            # we only consider there to be a leader, if it is online and
+            # passing all checks
+            for node in nodes:
+                if node['master'] and node['online'] and \
+                        all(node['checks'].values()):
+                    return True
         logger.info('Waiting for a leader election...')
         HighAvailabilityHelper._wait_cluster_status(_is_there_a_leader,
                                                     managers, logger)
@@ -86,7 +91,6 @@ class HighAvailabilityHelper(object):
                     'and others are replicas', manager.ip_address)
         cfy.cluster.nodes.list()
         nodes = manager.client.cluster.nodes.list()
-
         for node in nodes:
             if node.name == str(manager.ip_address):
                 assert node.master is True

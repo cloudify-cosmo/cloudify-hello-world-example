@@ -14,6 +14,8 @@
 #    * limitations under the License.
 
 import pytest
+import time
+
 from cosmo_tester.framework.examples.hello_world import HelloWorldExample
 from cosmo_tester.framework.cluster import CloudifyCluster
 from .ha_helper import HighAvailabilityHelper as ha_helper
@@ -141,38 +143,48 @@ def test_delete_manager_node(cfy, cluster, hello_world,
 
 def test_failover(cfy, cluster, hello_world,
                   logger):
-    expected_master = cluster.managers[-1]
+    """Test that the cluster fails over in case of a service failure
 
+    - stop nginx on leader
+    - check that a new leader is elected
+    - stop mgmtworker on that new leader, and restart nginx on the former
+    - check that the original leader was elected
+    """
+    expected_master = cluster.managers[-1]
+    # stop nginx on all nodes except last - force choosing the last as the
+    # leader (because only the last one has services running)
     for manager in cluster.managers[:-1]:
         logger.info('Simulating manager %s failure by stopping'
                     ' nginx service', manager.ip_address)
         with manager.ssh() as fabric:
             fabric.run('sudo systemctl stop nginx')
-        ha_helper.wait_leader_election([expected_master], logger)
+        # wait for checks to notice the service failure
+        time.sleep(20)
+        ha_helper.wait_leader_election(cluster.managers, logger)
         cfy.cluster.nodes.list()
 
-    ha_helper.delete_active_profile()
-    expected_master.use()
     ha_helper.verify_nodes_status(expected_master, cfy, logger)
 
-    expected_master = cluster.managers[0]
+    new_expected_master = cluster.managers[0]
+    # force going back to the original leader - start nginx on it, and
+    # stop mgmtworker on the current leader (simulating failure)
+    with new_expected_master.ssh() as fabric:
+        logger.info('Starting nginx service on manager %s',
+                    new_expected_master.ip_address)
+        fabric.run('sudo systemctl start nginx')
 
     with expected_master.ssh() as fabric:
         logger.info('Simulating manager %s failure by stopping '
                     'cloudify-mgmtworker service',
                     expected_master.ip_address)
         fabric.run('sudo systemctl stop cloudify-mgmtworker')
-    ha_helper.wait_leader_election([expected_master], logger)
+
+    # wait for checks to notice the service failure
+    time.sleep(20)
+    ha_helper.wait_leader_election(cluster.managers, logger)
     cfy.cluster.nodes.list()
 
-    logger.info('Starting nginx service on manager %s',
-                expected_master.ip_address)
-    with expected_master.ssh() as fabric:
-        fabric.run('sudo systemctl start nginx')
-    ha_helper.wait_leader_election([expected_master], logger)
-    ha_helper.delete_active_profile()
-    expected_master.use()
-    ha_helper.verify_nodes_status(expected_master, cfy, logger)
+    ha_helper.verify_nodes_status(new_expected_master, cfy, logger)
     hello_world.upload_blueprint()
 
 
