@@ -194,13 +194,14 @@ def test_remove_manager_from_cluster(cfy, cluster, hello_world,
     ha_helper.delete_active_profile()
 
     expected_master = cluster.managers[0]
-
+    nodes_to_check = list(cluster.managers)
     for manager in cluster.managers[1:]:
         manager.use()
         logger.info('Removing the manager %s from HA cluster',
                     manager.ip_address)
         cfy.cluster.nodes.remove(manager.ip_address)
-        ha_helper.wait_leader_election([expected_master], logger)
+        nodes_to_check.remove(manager)
+        ha_helper.wait_leader_election(nodes_to_check, logger)
 
     ha_helper.delete_active_profile()
     expected_master.use()
