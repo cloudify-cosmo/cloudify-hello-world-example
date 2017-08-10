@@ -274,15 +274,24 @@ def _get_latest_manager_image_name():
     For CLI version "4.0.0-m15"
     Returns: "cloudify-manager-premium-4.0m15"
     """
-    version = util.get_cli_version()
-    version_num, _, version_milestone = version.partition('-')
+    specific_manager_name = ATTRIBUTES.cloudify_manager_latest_image.strip()
 
-    if version_num.endswith('.0') and version_num.count('.') > 1:
-        version_num = version_num[:-2]
+    if specific_manager_name:
+        image_name = specific_manager_name
+    else:
+        version = util.get_cli_version()
+        version_num, _, version_milestone = version.partition('-')
 
-    version = version_num + version_milestone
-    return '{}-{}'.format(
-            ATTRIBUTES.cloudify_manager_image_name_prefix, version)
+        if version_num.endswith('.0') and version_num.count('.') > 1:
+            version_num = version_num[:-2]
+
+        version = version_num + version_milestone
+        image_name = '{prefix}-{suffix}'.format(
+            prefix=ATTRIBUTES.cloudify_manager_image_name_prefix,
+            suffix=version,
+        )
+
+    return image_name
 
 
 class Cloudify3_4Manager(_CloudifyManager):
