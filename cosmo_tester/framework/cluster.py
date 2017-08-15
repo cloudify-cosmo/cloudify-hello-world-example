@@ -42,6 +42,7 @@ RSYNC_SCRIPT_URL = 'https://raw.githubusercontent.com/cloudify-cosmo/cloudify-de
 
 MANAGER_API_VERSIONS = {
     'master': 'v3',
+    '4.1': 'v3',
     '4.0.1': 'v3',
     '4.0': 'v3',
     '3.4.2': 'v2',
@@ -339,6 +340,10 @@ class Cloudify4_0_1Manager(_CloudifyManager):
     branch_name = '4.0.1'
 
 
+class Cloudify4_1Manager(_CloudifyManager):
+    branch_name = '4.1'
+
+
 class CloudifyMasterManager(_CloudifyManager):
     branch_name = 'master'
     image_name_attribute = 'cloudify_manager_image_name_prefix'
@@ -346,11 +351,54 @@ class CloudifyMasterManager(_CloudifyManager):
     image_name = _get_latest_manager_image_name()
 
 
+class NotAManager(_CloudifyManager):
+    def create(
+            self,
+            index,
+            public_ip_address,
+            private_ip_address,
+            rest_client,
+            ssh_key,
+            cfy,
+            attributes,
+            logger,
+            tmpdir,
+            ):
+        self.index = index
+        self.ip_address = public_ip_address
+        self.private_ip_address = private_ip_address
+        self.client = rest_client
+        self.deleted = False
+        self._ssh_key = ssh_key
+        self._cfy = cfy
+        self._attributes = attributes
+        self._logger = logger
+        self._openstack = util.create_openstack_client()
+        self._tmpdir = os.path.join(tmpdir, str(index))
+
+    def verify_services_are_running(self):
+        return True
+
+    def use(self, tenant=None):
+        return True
+
+    def _upload_plugin(self, plugin_name):
+        return True
+
+    def _upload_necessary_files(self, openstack_config_file):
+        return True
+
+    image_name = ATTRIBUTES['notmanager_image_name']
+    branch_name = 'master'
+
+
 MANAGERS = {
     '3.4.2': Cloudify3_4Manager,
     '4.0': Cloudify4_0Manager,
     '4.0.1': Cloudify4_0_1Manager,
+    '4.1': Cloudify4_1Manager,
     'master': CloudifyMasterManager,
+    'notamanager': NotAManager,
 }
 
 CURRENT_MANAGER = MANAGERS['master']

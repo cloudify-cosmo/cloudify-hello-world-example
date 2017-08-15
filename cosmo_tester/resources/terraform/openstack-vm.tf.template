@@ -109,6 +109,7 @@ resource "openstack_compute_instance_v2" "server{{ loop.index0 }}" {
       user = "centos"
       private_key = "${file("${var.private_key_path}")}"
       timeout = "10m"
+      agent = "false"
     }
   }
 }
