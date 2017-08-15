@@ -1,0 +1,148 @@
+########
+# Copyright (c) 2017 GigaSpaces Technologies Ltd. All rights reserved
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#        http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+#    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#    * See the License for the specific language governing permissions and
+#    * limitations under the License.
+
+import pytest
+
+from . import (
+    assert_hello_worlds,
+    check_deployments,
+    check_from_source_plugin,
+    check_plugins,
+    cluster,
+    confirm_manager_empty,
+    create_helloworld_just_deployment,
+    create_snapshot,
+    delete_manager,
+    download_snapshot,
+    get_deployments_list,
+    get_nodes,
+    get_plugins_list,
+    get_secrets_list,
+    NOINSTALL_DEPLOYMENT_ID,
+    remove_and_check_deployments,
+    restore_snapshot,
+    SNAPSHOT_ID,
+    upgrade_agents,
+    upload_and_install_helloworld,
+    upload_snapshot,
+    upload_test_plugin,
+)
+
+
+def test_restore_snapshot_and_agents_upgrade_singletenant(
+        cfy, cluster_singletenant, attributes, logger, tmpdir):
+    local_snapshot_path = str(tmpdir / 'snapshot.zip')
+    old_manager = cluster_singletenant.managers[0]
+    new_manager = cluster_singletenant.managers[1]
+    hello_vm = cluster_singletenant.managers[2]
+
+    confirm_manager_empty(new_manager)
+
+    upload_and_install_helloworld(attributes, logger, old_manager,
+                                  hello_vm, tmpdir)
+    create_helloworld_just_deployment(old_manager, logger)
+
+    upload_test_plugin(old_manager, logger)
+
+    old_plugins = get_plugins_list(old_manager)
+    old_deployments = get_deployments_list(old_manager)
+
+    create_snapshot(old_manager, SNAPSHOT_ID, attributes, logger)
+    download_snapshot(old_manager, local_snapshot_path, SNAPSHOT_ID, logger)
+    upload_snapshot(new_manager, local_snapshot_path, SNAPSHOT_ID, logger)
+
+    restore_snapshot(new_manager, SNAPSHOT_ID, cfy, logger)
+
+    assert_hello_worlds([hello_vm], installed=True, logger=logger)
+
+    check_secrets_converted(new_manager, logger)
+    check_plugins(new_manager, old_plugins, logger)
+    check_deployments(new_manager, old_deployments, logger)
+    check_from_source_plugin(
+        new_manager,
+        'aws',
+        NOINSTALL_DEPLOYMENT_ID,
+        logger,
+    )
+
+    upgrade_agents(cfy, new_manager, logger)
+
+    # The old manager needs to exist until the agents install is run
+    delete_manager(old_manager, logger)
+
+    remove_and_check_deployments([hello_vm], new_manager, logger)
+
+
+@pytest.fixture(
+        scope='module',
+        params=['4.0', '3.4.2'])
+def cluster_singletenant(request, cfy, ssh_key, module_tmpdir, attributes,
+                         logger, install_dev_tools=True):
+    st_cluster = cluster(request, cfy, ssh_key, module_tmpdir, attributes,
+                         logger, 1, install_dev_tools)
+    yield st_cluster
+    st_cluster.destroy()
+
+
+def check_secrets_converted(manager, logger, tenant='default_tenant'):
+    logger.info(
+        'Checking any applicable secrets have been converted for '
+        '{tenant}'.format(tenant=tenant),
+    )
+    nodes = get_nodes(manager, tenant=tenant)
+    secrets = get_secrets_list(manager, tenant=tenant)
+
+    for node in nodes:
+        logger.info('Checking node {name}'.format(name=node.id))
+        props = node.properties
+        if 'agent_config' not in props and 'cloudify_agent' not in props:
+            # Not a compute node
+            continue
+        try:
+            # Use new config where possible
+            agent_key = props['agent_config']['key']
+        except KeyError:
+            # Get the key from the old agent config if it's there
+            agent_key = props.get('cloudify_agent', {}).get('key', None)
+
+        if agent_key is None:
+            # No key provided, so it can't be wrong
+            continue
+
+        logger.info('Checking key is getting secret...')
+        assert isinstance(agent_key, dict) and agent_key['get_secret'], (
+            'Agent key for node {deployment}/{node} was not using secrets. '
+            'Found key information: {key}'.format(
+                deployment=node.deployment_id,
+                node=node.id,
+                key=agent_key,
+            )
+        )
+        logger.info('...key is getting secret.')
+
+        logger.info('Checking secret exists...')
+        assert agent_key['get_secret'] in secrets, (
+            'Secret {name} was not found in manager secrets!'
+            'Manager secrets for {tenant} were: {secrets}'.format(
+                name=agent_key,
+                tenant=tenant,
+                secrets=', '.join(secrets),
+            )
+        )
+        logger.info('...secret exists.')
+
+    logger.info('Any applicable secrets were converted for {tenant}'.format(
+        tenant=tenant,
+    ))
