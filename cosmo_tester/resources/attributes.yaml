@@ -4,6 +4,14 @@ cloudify_username: admin
 cloudify_password: admin
 cloudify_tenant: default_tenant
 
+# This should be set to 'community' if testing a community image.
+# Otherwise, it should be set to 'premium'.
+# Any other values will be complained about.
+# This is not detected by the framework, as doing so would require either some
+# heuristics or deploying managers for each test before determining whether it
+# could be skipped, both of which have a good chance of wasting a lot of time.
+image_type: 'premium'
+
 # If the latest image name is not set, the latest image name will be generated
 # based on the image name prefix and the currently installed CLI version
 # e.g. cloudify-manager-premium-4.2.dev1

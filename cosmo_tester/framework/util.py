@@ -301,11 +301,29 @@ def get_plugin_wagon_urls():
 
 
 def get_cli_package_urls():
-    return yaml.load(_get_package_url('cli-premium-packages.yaml'))
+    if is_community():
+        filename = 'cli-packages.yaml'
+    else:
+        filename = 'cli-premium-packages.yaml'
+    return yaml.load(_get_package_url(filename))
 
 
 def get_manager_resources_package_url():
     return _get_package_url('manager-single-tar.yaml').strip(os.linesep)
+
+
+def _get_contents_from_github(repo, path, auth=None):
+    branch = os.environ.get('BRANCH_NAME_CORE', 'master')
+    url = (
+        'https://raw.githubusercontent.com/cloudify-cosmo/'
+        '{repo}/{branch}/{path}'
+    ).format(repo=repo, branch=branch, path=path)
+    r = requests.get(url, auth=auth)
+    if r.status_code != 200:
+        raise RuntimeError(
+            'Error retrieving github content from {url}'.format(url=url)
+        )
+    return r.text
 
 
 def _get_package_url(filename):
@@ -313,19 +331,21 @@ def _get_package_url(filename):
     and GITHUB_PASSWORD exists in env) or locally if the cloudify-premium
     repository is checked out under the same folder the cloudify-system-tests
     repo is checked out."""
-    branch = os.environ.get('BRANCH_NAME_CORE', 'master')
     auth = None
+    if is_community():
+        return _get_contents_from_github(
+            repo='cloudify-versions',
+            path='packages-urls/{filename}'.format(filename=filename),
+        )
+
     if 'GITHUB_USERNAME' in os.environ:
         auth = (os.environ['GITHUB_USERNAME'], os.environ['GITHUB_PASSWORD'])
     if auth:
-        url = 'https://raw.githubusercontent.com/cloudify-cosmo/cloudify-premium/{0}/packages-urls/{1}'.format(branch, filename)  # noqa
-        r = requests.get(url, auth=auth)
-        if r.status_code != 200:
-            raise RuntimeError(
-                'Error getting {0} URL from {1} '
-                '[status_code={2}]: {3}'.format(
-                    filename, url, r.status_code, r.text))
-        return r.text
+        return _get_contents_from_github(
+            repo='cloudify-premium',
+            path='packages-urls/{filename}'.format(filename=filename),
+            auth=auth,
+        )
     else:
         package_url_file = Path(
             os.path.abspath(os.path.join(
@@ -441,3 +461,27 @@ def assert_snapshot_created(manager, snapshot_id, attributes):
     assert r.status_code == 200
     snapshot = AttributesDict(r.json())
     assert snapshot.status == 'created', 'Snapshot not in created status'
+
+
+def is_community():
+    image_type = get_attributes()['image_type']
+
+    # We check the image type is valid to avoid unanticipated effects from
+    # typos.
+    community_image_types = [
+        'community',
+    ]
+    valid_image_types = community_image_types + [
+        'premium',
+    ]
+
+    if image_type not in valid_image_types:
+        raise ValueError(
+            'Invalid image_type: {specified}.\n'
+            'Valid image types are: {valid}'.format(
+                specified=image_type,
+                valid=', '.join(valid_image_types),
+            )
+        )
+
+    return image_type in community_image_types
