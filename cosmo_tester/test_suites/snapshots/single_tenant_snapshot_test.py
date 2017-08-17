@@ -30,6 +30,7 @@ from . import (
     get_nodes,
     get_plugins_list,
     get_secrets_list,
+    get_single_tenant_versions_list,
     NOINSTALL_DEPLOYMENT_ID,
     remove_and_check_deployments,
     restore_snapshot,
@@ -67,7 +68,13 @@ def test_restore_snapshot_and_agents_upgrade_singletenant(
 
     assert_hello_worlds([hello_vm], installed=True, logger=logger)
 
-    check_secrets_converted(new_manager, logger)
+    if old_manager.branch_name in ('3.4.2', '4.0'):
+        # Check we convert secrets for pre-service-user versions
+        # In 4.0.1 and beyond we are using service users so the secrets
+        # conversion was determined not to be needed any more as after
+        # that change, keys could no longer be placed in locations that
+        # would not be able to be read by the mgmtworker.
+        check_secrets_converted(new_manager, logger)
     check_plugins(new_manager, old_plugins, logger)
     check_deployments(new_manager, old_deployments, logger)
     check_from_source_plugin(
@@ -87,7 +94,7 @@ def test_restore_snapshot_and_agents_upgrade_singletenant(
 
 @pytest.fixture(
         scope='module',
-        params=['4.0', '3.4.2'])
+        params=get_single_tenant_versions_list())
 def cluster_singletenant(request, cfy, ssh_key, module_tmpdir, attributes,
                          logger, install_dev_tools=True):
     st_cluster = cluster(request, cfy, ssh_key, module_tmpdir, attributes,
