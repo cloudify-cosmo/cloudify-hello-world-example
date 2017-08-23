@@ -213,9 +213,13 @@ class _CloudifyManager(object):
         status = self.client.manager.get_status()
         for service in status['services']:
             for instance in service['instances']:
-                assert instance['SubState'] == 'running', \
-                    'service {0} is in {1} state'.format(
-                            service['display_name'], instance['SubState'])
+                if (
+                    instance['Id'] == 'cloudify-stage.service'
+                    and not util.is_community()
+                ):
+                    assert instance['SubState'] == 'running', \
+                        'service {0} is in {1} state'.format(
+                                service['display_name'], instance['SubState'])
 
     @abstractproperty
     def branch_name(Self):
@@ -635,14 +639,16 @@ class BootstrapBasedCloudifyCluster(CloudifyCluster):
     def _create_inputs_file(self):
         self._inputs_file = self._tmpdir / 'inputs.json'
         bootstrap_inputs = json.dumps({
-            'public_ip': self.managers[0].ip_address,
-            'private_ip': self.managers[0].private_ip_address,
-            'ssh_user': self._attributes.centos7_username,
-            'ssh_key_filename': self._ssh_key.private_key_path,
-            'admin_username': self._attributes.cloudify_username,
-            'admin_password': self._attributes.cloudify_password,
-            'manager_resources_package': self._manager_resources_package},
-            indent=2)
+                'public_ip': self.managers[0].ip_address,
+                'private_ip': self.managers[0].private_ip_address,
+                'ssh_user': self._attributes.centos7_username,
+                'ssh_key_filename': self._ssh_key.private_key_path,
+                'admin_username': self._attributes.cloudify_username,
+                'admin_password': self._attributes.cloudify_password,
+                'manager_resources_package': self._manager_resources_package,
+            },
+            indent=2,
+        )
         self._logger.info(
                 'Bootstrap inputs:%s%s', os.linesep, bootstrap_inputs)
         self._inputs_file.write_text(bootstrap_inputs)
