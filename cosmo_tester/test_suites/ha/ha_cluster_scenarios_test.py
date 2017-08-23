@@ -19,12 +19,6 @@ import time
 from cosmo_tester.framework.examples.hello_world import HelloWorldExample
 from cosmo_tester.framework.cluster import CloudifyCluster
 from .ha_helper import HighAvailabilityHelper as ha_helper
-from . import skip_community
-
-
-# Skip all tests in this module if we're running community tests,
-# using the pytestmark magic variable name
-pytestmark = skip_community
 
 
 @pytest.fixture(scope='function', params=[2, 3])

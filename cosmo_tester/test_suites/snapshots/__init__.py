@@ -24,7 +24,6 @@ from cosmo_tester.framework.cluster import (
 )
 from cosmo_tester.framework.util import (
     assert_snapshot_created,
-    is_community,
 )
 # CFY-6912
 from cloudify_cli.commands.executions import (
@@ -55,37 +54,6 @@ TENANT_DEPLOYMENTS_PATH = (
 DEPLOYMENT_ENVIRONMENT_PATH = (
     TENANT_DEPLOYMENTS_PATH + '/{name}'
 )
-
-# These manager versions only support single tenant snapshot restores in
-# premium
-SINGLE_TENANT_MANAGERS = (
-    '3.4.2',
-    # Technically this supports multiple tenants, but we can't restore
-    # snapshots from it with multiple tenants.
-    '4.0',
-)
-# These manager versions support multiple tenant snapshot restores in premium
-MULTI_TENANT_MANAGERS = (
-    '4.0.1',
-    '4.1',
-    'master'
-)
-
-
-def get_single_tenant_versions_list():
-    if is_community():
-        # Community only works single tenanted
-        return SINGLE_TENANT_MANAGERS + MULTI_TENANT_MANAGERS
-    else:
-        return SINGLE_TENANT_MANAGERS
-
-
-def get_multi_tenant_versions_list():
-    if is_community():
-        # Community only works single tenanted
-        return ()
-    else:
-        return MULTI_TENANT_MANAGERS
 
 
 def upgrade_agents(cfy, manager, logger, tenants=('default_tenant',)):

@@ -125,11 +125,7 @@ def test_cli_on_rhel_6_9(cli_package_tester, attributes):
 
 def _get_cli_package_url(name):
     urls = util.get_cli_package_urls()
-    if util.is_community():
-        key = 'cli_packages_urls'
-    else:
-        key = 'cli_premium_packages_urls'
-    return urls[key][name]
+    return urls['cli_premium_packages_urls'][name]
 
 
 class _CliPackageTester(object):
