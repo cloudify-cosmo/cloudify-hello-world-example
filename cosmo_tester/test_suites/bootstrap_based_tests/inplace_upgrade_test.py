@@ -69,6 +69,7 @@ def test_inplace_upgrade(cfy,
     cfy.snapshots.upload([snapshot_path, '-s', snapshot_name])
     cfy.snapshots.restore([snapshot_name, '--restore-certificates'])
     _wait_for_restore(manager)
+    cfy.agents.install(['-a'])
     hello_world.uninstall()
     hello_world.delete_deployment()
 
