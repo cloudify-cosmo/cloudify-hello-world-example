@@ -200,13 +200,13 @@ def test_ubuntu_trusty_provided_userdata_agent(cfy,
                                                logger):
     name = 'cloudify_agent'
     user = attributes.ubuntu_username
-    install_userdata = install_script(name=name,
-                                      windows=False,
-                                      user=user,
-                                      manager=manager,
-                                      attributes=attributes,
-                                      tmpdir=tmpdir,
-                                      logger=logger)
+    install_userdata = _install_script(name=name,
+                                       windows=False,
+                                       user=user,
+                                       manager=manager,
+                                       attributes=attributes,
+                                       tmpdir=tmpdir,
+                                       logger=logger)
     _test_linux_userdata_agent(
             cfy,
             manager,
@@ -254,7 +254,7 @@ def test_windows_provided_userdata_agent(cfy,
                                          tmpdir,
                                          logger):
     name = 'cloudify_agent'
-    install_userdata = install_script(
+    install_userdata = _install_script(
             name=name,
             windows=True,
             user=attributes.windows_server_2012_username,
@@ -320,7 +320,7 @@ def _test_userdata_agent(cfy, manager, inputs):
         cfy.executions.start.uninstall(['-d', deployment_id])
 
 
-def install_script(name, windows, user, manager, attributes, tmpdir, logger):
+def _install_script(name, windows, user, manager, attributes, tmpdir, logger):
     # Download cert from manager in order to include its content
     # in the init_script.
     local_cert_path = str(tmpdir / 'cloudify_internal_cert.pem')
@@ -344,35 +344,30 @@ def install_script(name, windows, user, manager, attributes, tmpdir, logger):
 
     ctx = MockCloudifyContext(
             node_id='node',
+            tenant={'name': 'default_tenant'},
+            rest_token=manager.client.tokens.get().value,
             properties={'agent_config': {
                 'user': user,
                 'windows': windows,
-                'install_method': 'provided',
+                'install_method': 'init_script',
                 'rest_host': manager.private_ip_address,
                 'broker_ip': manager.private_ip_address,
                 'name': name
             }})
-    internal_ctx_dict = getattr(ctx, '_context')
-    internal_ctx_dict.update({
-        'rest_token': manager.client.tokens.get().value,
-        'tenant_name': 'default_tenant'
-    })
+
     try:
         current_ctx.set(ctx)
         os.environ.update(env_vars)
-        agent_config = {'install_with_sudo': True}
-        init_script = script.init_script(cloudify_agent=agent_config)
+        script_builder = script._get_script_builder()
+        install_script = script_builder.install_script()
     finally:
         for var_name in list(env_vars):
             os.environ.pop(var_name, None)
 
         current_ctx.clear()
-    result = '\n'.join(init_script.split('\n')[:-1])
-    if windows:
-        return '{0}\n' \
-               'DownloadAndExtractAgentPackage\n' \
-               'ExportDaemonEnv\n' \
-               'ConfigureAgent'.format(result)
-    else:
-        return '{0}\n' \
-               'install_agent'.format(result)
+
+    # Replace the `main` call with an install call - as we only want to
+    # install the agent, but not configure/start it
+    install_method = 'InstallAgent' if windows else 'install_agent'
+    install_script = '\n'.join(install_script.split('\n')[:-1])
+    return '{0}\n{1}'.format(install_script, install_method)
