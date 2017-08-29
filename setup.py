@@ -46,10 +46,6 @@ setup(
         'openstacksdk==0.9.13'
     ],
     entry_points={
-        'nose.plugins.0.10': [
-            'testnameextractor = cosmo_tester.framework'
-            '.tests_names_extractor:TestsNamesExtractor',
-        ],
         'console_scripts': [
             'cfy-systests = cosmo_tester.cli:main'
         ]
