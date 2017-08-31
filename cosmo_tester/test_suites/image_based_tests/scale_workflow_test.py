@@ -21,14 +21,17 @@ import requests
 
 from cosmo_tester.framework.examples.nodecellar import NodeCellarExample
 from cosmo_tester.framework.fixtures import image_based_manager
-from cosmo_tester.framework.util import get_test_tenant, set_client_tenant
+from cosmo_tester.framework.util import (
+    prepare_and_get_test_tenant,
+    set_client_tenant,
+)
 
 manager = image_based_manager
 
 
 @pytest.fixture(scope='function')
 def nodecellar(cfy, manager, attributes, ssh_key, tmpdir, logger):
-    tenant = get_test_tenant('nc_scale', manager, cfy)
+    tenant = prepare_and_get_test_tenant('nc_scale', manager, cfy)
     nc = NodeCellarExample(
             cfy, manager, attributes, ssh_key, logger, tmpdir,
             tenant=tenant, suffix='scale')

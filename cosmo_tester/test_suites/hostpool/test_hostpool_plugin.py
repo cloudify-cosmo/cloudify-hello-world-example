@@ -155,7 +155,7 @@ class HostpoolNodeCellarExample(NodeCellarExample):
 
 @pytest.fixture(scope='function')
 def hostpool(cfy, manager, attributes, ssh_key, logger, tmpdir):
-    tenant = util.get_test_tenant('hostpool', manager, cfy)
+    tenant = util.prepare_and_get_test_tenant('hostpool', manager, cfy)
     hp = HostPoolExample(cfy, manager, attributes, ssh_key, logger, tmpdir,
                          tenant=tenant, suffix='hostpool')
     hp.blueprint_file = util.get_resource_path('hostpool/service-blueprint.yaml')  # noqa
@@ -176,7 +176,7 @@ def hostpool(cfy, manager, attributes, ssh_key, logger, tmpdir):
 @pytest.fixture(scope='function')
 def nodecellar_hostpool(hostpool, cfy, manager, attributes, ssh_key, tmpdir,
                         logger):
-    tenant = util.get_test_tenant('nc_hostpool', manager, cfy)
+    tenant = util.prepare_and_get_test_tenant('nc_hostpool', manager, cfy)
     nc = HostpoolNodeCellarExample(
             hostpool, cfy, manager, attributes, ssh_key, logger, tmpdir,
             tenant=tenant, suffix='nc_hostpool')

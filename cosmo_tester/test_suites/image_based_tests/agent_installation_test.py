@@ -24,7 +24,10 @@ from cloudify_agent.api import defaults
 from cloudify_agent.installer import script
 from cosmo_tester.framework import util
 from cosmo_tester.framework.fixtures import image_based_manager
-from cosmo_tester.framework.util import set_client_tenant, get_test_tenant
+from cosmo_tester.framework.util import (
+    set_client_tenant,
+    prepare_and_get_test_tenant,
+)
 
 manager = image_based_manager
 
@@ -59,20 +62,34 @@ def test_winrm_agent_alive_after_reboot(cfy, manager, attributes):
 # Two different tests for ubuntu/centos
 # because of different disable requiretty logic
 def test_centos_7_userdata_agent(cfy, manager, attributes):
+    os_name = 'centos_7'
+    tenant = prepare_and_get_test_tenant(
+        'userdata_{}'.format(os_name),
+        manager,
+        cfy,
+    )
     _test_linux_userdata_agent(
         cfy,
         manager,
         attributes,
-        os_name='centos_7',
+        os_name=os_name,
+        tenant=tenant,
     )
 
 
 def test_ubuntu_trusty_userdata_agent(cfy, manager, attributes):
+    os_name = 'ubuntu_14_04'
+    tenant = prepare_and_get_test_tenant(
+        'userdata_{}'.format(os_name),
+        manager,
+        cfy,
+    )
     _test_linux_userdata_agent(
         cfy,
         manager,
         attributes,
-        os_name='ubuntu_14_04',
+        os_name=os_name,
+        tenant=tenant,
     )
 
 
@@ -83,13 +100,21 @@ def test_ubuntu_trusty_provided_userdata_agent(cfy,
                                                logger):
     name = 'cloudify_agent'
     os_name = 'ubuntu_14_04'
-    install_userdata = _install_script(name=name,
-                                       windows=False,
-                                       user=attributes.ubuntu_14_04_username,
-                                       manager=manager,
-                                       attributes=attributes,
-                                       tmpdir=tmpdir,
-                                       logger=logger)
+    tenant = prepare_and_get_test_tenant(
+        'userdataprov_{}'.format(os_name),
+        manager,
+        cfy,
+    )
+    install_userdata = _install_script(
+        name=name,
+        windows=False,
+        user=attributes.ubuntu_14_04_username,
+        manager=manager,
+        attributes=attributes,
+        tmpdir=tmpdir,
+        logger=logger,
+        tenant=tenant,
+    )
     _test_linux_userdata_agent(
         cfy,
         manager,
@@ -98,7 +123,8 @@ def test_ubuntu_trusty_provided_userdata_agent(cfy,
         install_method='provided',
         name=name,
         install_userdata=install_userdata,
-        suffix='ubuntu_14_04_provided')
+        tenant=tenant,
+    )
 
 
 def test_windows_provided_userdata_agent(cfy,
@@ -107,6 +133,11 @@ def test_windows_provided_userdata_agent(cfy,
                                          tmpdir,
                                          logger):
     name = 'cloudify_agent'
+    tenant = prepare_and_get_test_tenant(
+        'userdataprov_windows_2012',
+        manager,
+        cfy,
+    )
     install_userdata = _install_script(
         name=name,
         windows=True,
@@ -114,14 +145,18 @@ def test_windows_provided_userdata_agent(cfy,
         manager=manager,
         attributes=attributes,
         tmpdir=tmpdir,
-        logger=logger)
+        logger=logger,
+        tenant=tenant,
+    )
     test_windows_userdata_agent(
         cfy,
         manager,
         attributes,
         install_method='provided',
         name=name,
-        install_userdata=install_userdata)
+        install_userdata=install_userdata,
+        tenant=tenant,
+    )
 
 
 def test_windows_userdata_agent(cfy,
@@ -130,7 +165,8 @@ def test_windows_userdata_agent(cfy,
                                 install_method='init_script',
                                 name=None,
                                 install_userdata=None,
-                                os_name='windows_2012'):
+                                os_name='windows_2012',
+                                tenant=None):
     user = attributes.windows_2012_username
     file_path = 'C:\\Users\\{0}\\test_file'.format(user)
     userdata = '#ps1_sysnative \nSet-Content {1} "{0}"'.format(
@@ -138,10 +174,19 @@ def test_windows_userdata_agent(cfy,
     if install_userdata:
         userdata = create_multi_mimetype_userdata([userdata,
                                                    install_userdata])
-        tenant = get_test_tenant('inst_userdata_{}'.format(os_name),
-                                 manager, cfy)
+        if not tenant:
+            tenant = prepare_and_get_test_tenant(
+                'inst_userdata_{}'.format(os_name),
+                manager,
+                cfy,
+            )
     else:
-        tenant = get_test_tenant('userdata_{}'.format(os_name), manager, cfy)
+        if not tenant:
+            tenant = prepare_and_get_test_tenant(
+                'userdata_{}'.format(os_name),
+                manager,
+                cfy,
+            )
 
     inputs = {
         'image': attributes.windows_2012_image_name,
@@ -167,7 +212,11 @@ def _test_agent(agent_type, cfy, manager, attributes):
 
     blueprint_path = util.get_resource_path(agent_blueprints[agent_type])
 
-    tenant = get_test_tenant('agent_{}'.format(agent_type), manager, cfy)
+    tenant = prepare_and_get_test_tenant(
+        'agent_{}'.format(agent_type),
+        manager,
+        cfy,
+    )
     blueprint_id = deployment_id = agent_type
 
     with set_client_tenant(manager, tenant):
@@ -200,7 +249,7 @@ def _test_agent_alive_after_reboot(cfy, manager, attributes, os_name,
     }
     blueprint_name = os_blueprints[os_name]
 
-    tenant = get_test_tenant(suffix, manager, cfy)
+    tenant = prepare_and_get_test_tenant(suffix, manager, cfy)
 
     inputs = {
         'image': attributes['{os}_image_name'.format(os=os_name)],
@@ -244,19 +293,15 @@ def _test_agent_alive_after_reboot(cfy, manager, attributes, os_name,
     assert os_name == app.runtime_properties['value']
 
 
-def _test_linux_userdata_agent(cfy, manager, attributes, os_name,
+def _test_linux_userdata_agent(cfy, manager, attributes, os_name, tenant,
                                install_userdata=None, name=None,
-                               install_method='init_script',
-                               suffix=None):
-    suffix = suffix or os_name
+                               install_method='init_script'):
     file_path = '/tmp/test_file'
     userdata = '#! /bin/bash\necho {0} > {1}\nchmod 777 {1}'.format(
         EXPECTED_FILE_CONTENT, file_path)
     if install_userdata:
         userdata = create_multi_mimetype_userdata([userdata,
                                                    install_userdata])
-
-    tenant = get_test_tenant('userdata_{}'.format(suffix), manager, cfy)
 
     inputs = {
         'image': attributes['{os}_image_name'.format(os=os_name)],
@@ -302,7 +347,8 @@ def _test_userdata_agent(cfy, manager, inputs, tenant):
                                         '--tenant-name', tenant])
 
 
-def _install_script(name, windows, user, manager, attributes, tmpdir, logger):
+def _install_script(name, windows, user, manager, attributes, tmpdir, logger,
+                    tenant):
     # Download cert from manager in order to include its content
     # in the init_script.
     local_cert_path = str(tmpdir / 'cloudify_internal_cert.pem')
@@ -327,7 +373,8 @@ def _install_script(name, windows, user, manager, attributes, tmpdir, logger):
 
     ctx = MockCloudifyContext(
         node_id='node',
-        tenant={'name': 'default_tenant'},
+        tenant={'name': tenant},
+        rest_token=manager.client.tokens.get().value,
         properties={'agent_config': {
             'user': user,
             'windows': windows,
@@ -336,11 +383,6 @@ def _install_script(name, windows, user, manager, attributes, tmpdir, logger):
             'broker_ip': manager.private_ip_address,
             'name': name
         }})
-    internal_ctx_dict = getattr(ctx, '_context')
-    internal_ctx_dict.update({
-        'rest_token': manager.client.tokens.get().value,
-        'tenant_name': 'default_tenant'
-    })
     try:
         current_ctx.set(ctx)
         os.environ.update(env_vars)

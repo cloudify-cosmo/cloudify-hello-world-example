@@ -1,7 +1,10 @@
 import pytest
 
 from cosmo_tester.framework.examples.hello_world import HelloWorldExample
-from cosmo_tester.framework.util import get_test_tenant, is_community
+from cosmo_tester.framework.util import (
+    is_community,
+    prepare_and_get_test_tenant,
+)
 
 # Importing here so that we fail fast if the required plugin is not available
 # rather than waiting for VMs to be deployed first.
@@ -27,7 +30,7 @@ def get_hello_worlds(cfy, manager, attributes, ssh_key, tmpdir, logger):
         tenants = ['default_tenant']
     else:
         tenants = [
-            get_test_tenant(name, manager, cfy)
+            prepare_and_get_test_tenant(name, manager, cfy)
             for name in ('hello1', 'hello2')
         ]
     hellos = []

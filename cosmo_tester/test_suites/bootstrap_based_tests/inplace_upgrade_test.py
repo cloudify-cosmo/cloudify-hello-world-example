@@ -44,6 +44,10 @@ def test_inplace_upgrade(cfy,
     manager = cluster.managers[0]
     snapshot_name = 'inplace_upgrade_snapshot'
     snapshot_path = join(str(module_tmpdir), snapshot_name) + '.zip'
+
+    # We can't use the hello_worlds fixture here because this test has
+    # multiple managers rather than just one (the cluster vs a single
+    # manager).
     hellos = get_hello_worlds(cfy, manager, attributes, ssh_key,
                               module_tmpdir, logger)
     for hello_world in hellos:

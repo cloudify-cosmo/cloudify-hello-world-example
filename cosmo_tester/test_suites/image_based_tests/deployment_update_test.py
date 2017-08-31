@@ -24,7 +24,10 @@ from retrying import retry
 from cosmo_tester.framework import util
 from cosmo_tester.framework.examples.hello_world import HelloWorldExample
 from cosmo_tester.framework.fixtures import image_based_manager
-from cosmo_tester.framework.util import get_test_tenant, set_client_tenant
+from cosmo_tester.framework.util import (
+    prepare_and_get_test_tenant,
+    set_client_tenant,
+)
 
 manager = image_based_manager
 
@@ -34,7 +37,7 @@ update_counter = 0
 
 @pytest.fixture(scope='function')
 def hello_world(cfy, manager, attributes, ssh_key, tmpdir, logger):
-    tenant = get_test_tenant('dep_update', manager, cfy)
+    tenant = prepare_and_get_test_tenant('dep_update', manager, cfy)
     hw = HelloWorldExample(
             cfy, manager, attributes, ssh_key, logger, tmpdir,
             tenant=tenant, suffix='update')

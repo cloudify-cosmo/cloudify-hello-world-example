@@ -144,12 +144,13 @@ class AbstractExample(testtools.TestCase):
 
     def clone_example(self):
         if not self._cloned_to:
+            # Destination will be e.g.
+            # /tmp/pytest_generated_tempdir_for_test_1/examples/bootstrap_ssl/
+            destination = os.path.join(
+                str(self.tmpdir), 'examples', self.suffix,
+            )
             self._cloned_to = git_helper.clone(self.REPOSITORY_URL,
-                                               os.path.join(
-                                                   str(self.tmpdir),
-                                                   'examples',
-                                                   self.suffix,
-                                               ),
+                                               destination,
                                                branch=self.branch)
 
     def cleanup(self):

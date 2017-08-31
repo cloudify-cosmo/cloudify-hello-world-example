@@ -30,7 +30,7 @@ openstack = util.create_openstack_client()
 
 @pytest.fixture(scope='function')
 def nodecellar(cfy, manager, attributes, ssh_key, tmpdir, logger):
-    tenant = util.get_test_tenant('nc_autoheal', manager, cfy)
+    tenant = util.prepare_and_get_test_tenant('nc_autoheal', manager, cfy)
     nc = NodeCellarExample(
             cfy, manager, attributes, ssh_key, logger, tmpdir,
             tenant=tenant, suffix='autoheal')
