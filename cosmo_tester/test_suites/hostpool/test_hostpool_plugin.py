@@ -41,8 +41,8 @@ class HostPoolExample(AbstractExample):
         if self._inputs is None:
             attributes = self.attributes
             self._inputs = {
-                'centos_image_id': attributes.centos7_image_name,
-                'windows_image_id': attributes.windows_server_2012_image_name,
+                'centos_image_id': attributes.centos_7_image_name,
+                'windows_image_id': attributes.windows_2012_image_name,
                 'ubuntu_image_id': attributes.ubuntu_14_04_image_name,
                 'flavor_id': attributes.medium_flavor_name,
                 'floating_network_id': attributes.floating_network_id,
@@ -88,7 +88,8 @@ class HostPoolExample(AbstractExample):
         parameters = ('delta={0};scalable_entity_name={1}'
                       .format(delta, node_id))
         self.cfy.executions.start('scale', deployment_id=self.deployment_id,
-                                  parameters=parameters)
+                                  parameters=parameters,
+                                  tenant_name=self.tenant)
 
 
 class HostpoolNodeCellarExample(NodeCellarExample):
@@ -137,8 +138,9 @@ class HostpoolNodeCellarExample(NodeCellarExample):
         # localhost (3)
 
         port = endpoint['port']
-        nodejs_node = self.manager.client.node_instances.list(
-            node_name='nodejs_host')[0]
+        with util.set_client_tenant(self.manager, self.tenant):
+            nodejs_node = self.manager.client.node_instances.list(
+                node_name='nodejs_host')[0]
         cloudify_agent = nodejs_node.runtime_properties['cloudify_agent']
         ssh_command = ('ssh -o StrictHostKeyChecking=no {user}@{ip} -i {key} '
                        '"curl -I localhost:{port}"'
@@ -153,7 +155,9 @@ class HostpoolNodeCellarExample(NodeCellarExample):
 
 @pytest.fixture(scope='function')
 def hostpool(cfy, manager, attributes, ssh_key, logger, tmpdir):
-    hp = HostPoolExample(cfy, manager, attributes, ssh_key, logger, tmpdir)
+    tenant = util.prepare_and_get_test_tenant('hostpool', manager, cfy)
+    hp = HostPoolExample(cfy, manager, attributes, ssh_key, logger, tmpdir,
+                         tenant=tenant, suffix='hostpool')
     hp.blueprint_file = util.get_resource_path('hostpool/service-blueprint.yaml')  # noqa
     hp.skip_plugins_validation = True
 
@@ -172,11 +176,14 @@ def hostpool(cfy, manager, attributes, ssh_key, logger, tmpdir):
 @pytest.fixture(scope='function')
 def nodecellar_hostpool(hostpool, cfy, manager, attributes, ssh_key, tmpdir,
                         logger):
+    tenant = util.prepare_and_get_test_tenant('nc_hostpool', manager, cfy)
     nc = HostpoolNodeCellarExample(
-        hostpool, cfy, manager, attributes, ssh_key, logger, tmpdir)
+            hostpool, cfy, manager, attributes, ssh_key, logger, tmpdir,
+            tenant=tenant, suffix='nc_hostpool')
     nc.blueprint_file = 'host-pool-blueprint.yaml'
     nc.skip_plugins_validation = True
-    return nc
+    yield nc
+    nc.cleanup()
 
 
 def test_nodecellar_hostpool(nodecellar_hostpool):

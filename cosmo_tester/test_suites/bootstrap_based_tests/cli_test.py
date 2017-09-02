@@ -59,10 +59,10 @@ def windows_cli_package_tester(ssh_key, attributes, tmpdir, logger):
 
 def test_cli_on_centos_7(cli_package_tester, attributes):
     cli_package_tester.inputs.update({
-        'cli_image': attributes.centos7_image_name,
-        'cli_user': attributes.centos7_username,
-        'manager_image': attributes.centos7_image_name,
-        'manager_user': attributes.centos7_username,
+        'cli_image': attributes.centos_7_image_name,
+        'cli_user': attributes.centos_7_username,
+        'manager_image': attributes.centos_7_image_name,
+        'manager_user': attributes.centos_7_username,
         'cli_package_url': _get_cli_package_url('rhel_centos_cli_package_url')
     })
     cli_package_tester.run_test()
@@ -70,10 +70,10 @@ def test_cli_on_centos_7(cli_package_tester, attributes):
 
 def test_cli_on_centos_6(cli_package_tester, attributes):
     cli_package_tester.inputs.update({
-        'cli_image': attributes.centos6_image_name,
-        'cli_user': attributes.centos6_username,
-        'manager_image': attributes.centos7_image_name,
-        'manager_user': attributes.centos7_username,
+        'cli_image': attributes.centos_6_image_name,
+        'cli_user': attributes.centos_6_username,
+        'manager_image': attributes.centos_7_image_name,
+        'manager_user': attributes.centos_7_username,
         'cli_package_url': _get_cli_package_url('rhel_centos_cli_package_url')
     })
     cli_package_tester.run_test()
@@ -82,9 +82,9 @@ def test_cli_on_centos_6(cli_package_tester, attributes):
 def test_cli_on_ubuntu_14_04(cli_package_tester, attributes):
     cli_package_tester.inputs.update({
         'cli_image': attributes.ubuntu_14_04_image_name,
-        'cli_user': attributes.ubuntu_username,
-        'manager_image': attributes.centos7_image_name,
-        'manager_user': attributes.centos7_username,
+        'cli_user': attributes.ubuntu_14_04_username,
+        'manager_image': attributes.centos_7_image_name,
+        'manager_user': attributes.centos_7_username,
         'cli_package_url': _get_cli_package_url('debian_cli_package_url')
     })
     cli_package_tester.run_test()
@@ -92,32 +92,32 @@ def test_cli_on_ubuntu_14_04(cli_package_tester, attributes):
 
 def test_cli_on_windows_2012(windows_cli_package_tester, attributes):
     windows_cli_package_tester.inputs.update({
-        'cli_image': attributes.windows_server_2012_image_name,
-        'cli_user': attributes.windows_server_2012_username,
-        'manager_image': attributes.centos7_image_name,
-        'manager_user': attributes.centos7_username,
+        'cli_image': attributes.windows_2012_image_name,
+        'cli_user': attributes.windows_2012_username,
+        'manager_image': attributes.centos_7_image_name,
+        'manager_user': attributes.centos_7_username,
         'cli_flavor': attributes.medium_flavor_name,
     })
     windows_cli_package_tester.run_test()
 
 
-def test_cli_on_rhel_7_3(cli_package_tester, attributes):
+def test_cli_on_rhel_7(cli_package_tester, attributes):
     cli_package_tester.inputs.update({
-        'cli_image': attributes.rhel_7_3_image_name,
-        'cli_user': attributes.rhel_7_3_username,
-        'manager_image': attributes.centos7_image_name,
-        'manager_user': attributes.centos7_username,
+        'cli_image': attributes.rhel_7_image_name,
+        'cli_user': attributes.rhel_7_username,
+        'manager_image': attributes.centos_7_image_name,
+        'manager_user': attributes.centos_7_username,
         'cli_package_url': _get_cli_package_url('rhel_centos_cli_package_url')
     })
     cli_package_tester.run_test()
 
 
-def test_cli_on_rhel_6_9(cli_package_tester, attributes):
+def test_cli_on_rhel_6(cli_package_tester, attributes):
     cli_package_tester.inputs.update({
-        'cli_image': attributes.rhel_6_9_image_name,
-        'cli_user': attributes.rhel_6_9_username,
-        'manager_image': attributes.centos7_image_name,
-        'manager_user': attributes.centos7_username,
+        'cli_image': attributes.rhel_6_image_name,
+        'cli_user': attributes.rhel_6_username,
+        'manager_image': attributes.centos_7_image_name,
+        'manager_user': attributes.centos_7_username,
         'cli_package_url': _get_cli_package_url('rhel_centos_cli_package_url')
     })
     cli_package_tester.run_test()

@@ -14,80 +14,92 @@
 #    * limitations under the License.
 
 import pytest
+import yaml
 
 from cosmo_tester.framework.examples.hello_world import HelloWorldExample
 from cosmo_tester.framework.fixtures import image_based_manager
+from cosmo_tester.framework.util import prepare_and_get_test_tenant
 
 manager = image_based_manager
 
 
-@pytest.fixture(scope='function')
-def hello_world(cfy, manager, attributes, ssh_key, tmpdir, logger):
+def test_hello_world(hello_world, attributes, logger):
+    hello_world.verify_all()
+
+
+def test_hello_world_backwards(hello_world_backwards_compat):
+    hello_world_backwards_compat.verify_all()
+
+
+@pytest.fixture(
+    scope='function',
+    params=[
+        'centos_6',
+        'centos_7',
+        'rhel_6',
+        'rhel_7',
+        'ubuntu_14_04',
+        'ubuntu_16_04',
+        'windows_2012',
+    ],
+)
+def hello_world(request, cfy, manager, attributes, ssh_key, tmpdir, logger):
+    tenant = prepare_and_get_test_tenant(request.param, manager, cfy)
     hw = HelloWorldExample(
-            cfy, manager, attributes, ssh_key, logger, tmpdir)
-    hw.blueprint_file = 'openstack-blueprint.yaml'
+            cfy, manager, attributes, ssh_key, logger, tmpdir,
+            tenant=tenant, suffix=request.param)
+    if 'windows' in request.param:
+        hw.blueprint_file = 'openstack-windows-blueprint.yaml'
+        hw.inputs.update({
+            'flavor': attributes['medium_flavor_name'],
+        })
+    else:
+        hw.blueprint_file = 'openstack-blueprint.yaml'
+        hw.inputs.update({
+            'agent_user': attributes['{os}_username'.format(os=request.param)],
+        })
+    hw.inputs.update({
+        'image': attributes['{os}_image_name'.format(os=request.param)],
+    })
+
+    if request.param == 'centos_6':
+        hw.disable_iptables = True
     yield hw
     hw.cleanup()
 
 
-def test_hello_world_on_centos_7(hello_world, attributes):
-    hello_world.inputs.update({
-        'agent_user': attributes.centos7_username,
-        'image': attributes.centos7_image_name,
-    })
-    hello_world.verify_all()
+@pytest.fixture(
+    scope='function',
+    params=[
+        '1.2',
+    ],
+)
+def hello_world_backwards_compat(request, cfy, manager, attributes, ssh_key,
+                                 tmpdir, logger):
+    tenant_param = 'dsl_{ver}'.format(ver=request.param)
+    tenant = prepare_and_get_test_tenant(tenant_param, manager, cfy)
 
+    dsl_git_checkout_mappings = {
+        # dsl versions 1.0 and 1.1 cannot be tested with this because they do
+        # not have usable singlehost blueprints in the hello world repo
+        '1.2': '3.3.1',
+        # 1.3 is current, and is on git checkout 4.1, but this is tested by
+        # the OS tests above
+    }
 
-def test_hello_world_on_centos_6(hello_world, attributes):
-    hello_world.inputs.update({
-        'agent_user': attributes.centos6_username,
-        'image': attributes.centos6_image_name,
-    })
-    hello_world.disable_iptables = True
-    hello_world.verify_all()
+    hw = HelloWorldExample(
+            cfy, manager, attributes, ssh_key, logger, tmpdir,
+            tenant=tenant, suffix=request.param)
 
+    hw.branch = dsl_git_checkout_mappings[request.param]
+    hw.blueprint_file = 'singlehost-blueprint.yaml'
 
-def test_hello_world_on_ubuntu_14_04(hello_world, attributes):
-    hello_world.inputs.update({
-        'agent_user': attributes.ubuntu_username,
-        'image': attributes.ubuntu_14_04_image_name,
-    })
-    hello_world.verify_all()
+    hw.clone_example()
+    version_check_ending = request.param.replace('.', '_')
+    with open(hw.blueprint_path) as blueprint_handle:
+        blueprint = yaml.load(blueprint_handle)
+    blueprint_dsl_version = blueprint['tosca_definitions_version']
+    assert blueprint_dsl_version.endswith(version_check_ending)
 
-
-def test_hello_world_on_ubuntu_16_04(hello_world, attributes):
-    hello_world.inputs.update({
-        'agent_user': attributes.ubuntu_username,
-        'image': attributes.ubuntu_16_04_image_name,
-    })
-    hello_world.verify_all()
-
-
-def test_hello_world_on_rhel_7_3(hello_world, attributes):
-    hello_world.inputs.update({
-        'agent_user': attributes.rhel_7_3_username,
-        'image': attributes.rhel_7_3_image_name,
-    })
-    hello_world.verify_all()
-
-
-def test_hello_world_on_rhel_6_9(hello_world, attributes):
-    hello_world.inputs.update({
-        'agent_user': attributes.rhel_6_9_username,
-        'image': attributes.rhel_6_9_image_name,
-    })
-    hello_world.verify_all()
-
-
-def test_hello_world_on_windows_2012_server(hello_world, attributes):
-    hello_world.blueprint_file = 'openstack-windows-blueprint.yaml'
-    hello_world.inputs.update({
-        'image': attributes.windows_server_2012_image_name,
-        'flavor': attributes.medium_flavor_name
-    })
-    hello_world.verify_all()
-
-
-def test_hello_world_single_host(hello_world):
-    hello_world.blueprint_file = 'singlehost-blueprint.yaml'
-    hello_world.verify_all()
+    yield hw
+    hw.cleanup()

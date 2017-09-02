@@ -19,7 +19,8 @@ from time import sleep
 from os.path import join
 
 from cosmo_tester.framework.cluster import CloudifyCluster
-from cosmo_tester.framework.examples.hello_world import HelloWorldExample
+
+from . import get_hello_worlds
 
 
 @pytest.fixture(scope='module')
@@ -43,17 +44,17 @@ def test_inplace_upgrade(cfy,
     manager = cluster.managers[0]
     snapshot_name = 'inplace_upgrade_snapshot'
     snapshot_path = join(str(module_tmpdir), snapshot_name) + '.zip'
-    hello_world = HelloWorldExample(
-        cfy, manager, attributes, ssh_key, logger, module_tmpdir)
-    hello_world.blueprint_file = 'openstack-blueprint.yaml'
-    hello_world.inputs.update({
-        'agent_user': attributes.centos7_username,
-        'image': attributes.centos7_image_name,
-    })
-    hello_world.upload_blueprint()
-    hello_world.create_deployment()
-    hello_world.install()
-    hello_world.verify_installation()
+
+    # We can't use the hello_worlds fixture here because this test has
+    # multiple managers rather than just one (the cluster vs a single
+    # manager).
+    hellos = get_hello_worlds(cfy, manager, attributes, ssh_key,
+                              module_tmpdir, logger)
+    for hello_world in hellos:
+        hello_world.upload_blueprint()
+        hello_world.create_deployment()
+        hello_world.install()
+        hello_world.verify_installation()
     cfy.snapshots.create([snapshot_name])
     # wait for snapshot creation to terminate
     _wait_for_func(func=_check_executions,
@@ -69,9 +70,10 @@ def test_inplace_upgrade(cfy,
     cfy.snapshots.upload([snapshot_path, '-s', snapshot_name])
     cfy.snapshots.restore([snapshot_name, '--restore-certificates'])
     _wait_for_restore(manager)
-    cfy.agents.install(['-a'])
-    hello_world.uninstall()
-    hello_world.delete_deployment()
+    for hello_world in hellos:
+        cfy.agents.install(['-t', hello_world.tenant])
+        hello_world.uninstall()
+        hello_world.delete_deployment()
 
 
 def _check_executions(manager):

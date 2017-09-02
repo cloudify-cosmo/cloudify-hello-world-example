@@ -17,8 +17,30 @@ import pytest
 
 from cosmo_tester.framework.cluster import CloudifyCluster
 
+from . import hello_worlds  # noqa (pytest fixture imported)
+
 
 pre_bootstrap_state = None
+
+
+def test_teardown(cfy, manager, hello_worlds):  # noqa (pytest fixture, not redefinition of hello_worlds)
+    cfy.teardown('-f')
+    current_state = _get_system_state(manager)
+    diffs = {}
+
+    for hello in hello_worlds:
+        hello.verify_all()
+
+    for key in current_state:
+        pre_bootstrap_set = set(pre_bootstrap_state[key])
+        current_set = set(current_state[key])
+
+        diff = current_set - pre_bootstrap_set
+        if diff:
+            diffs[key] = diff
+
+    assert not diffs, 'The following entities were not removed: ' \
+                      '{0}'.format(diffs)
 
 
 @pytest.fixture(scope='module')
@@ -32,23 +54,6 @@ def manager(request, cfy, ssh_key, module_tmpdir, attributes, logger):
     yield cluster.managers[0]
 
     cluster.destroy()
-
-
-def test_teardown(cfy, manager):
-    cfy.teardown('-f')
-    current_state = _get_system_state(manager)
-    diffs = {}
-
-    for key in current_state:
-        pre_bootstrap_set = set(pre_bootstrap_state[key])
-        current_set = set(current_state[key])
-
-        diff = current_set - pre_bootstrap_set
-        if diff:
-            diffs[key] = diff
-
-    assert not diffs, 'The following entities were not removed: ' \
-                      '{0}'.format(diffs)
 
 
 def _preconfigure_callback(managers):

@@ -23,24 +23,26 @@ cloudify_manager_4_0_image_name: cloudify-manager-premium-4.0
 cloudify_manager_3_4_2_image_name: manager3.4.2-insecure-image
 notmanager_image_name: CentOS-7-x86_64-GenericCloud-1608
 
-centos7_username: centos
-centos7_image_name: CentOS-7-x86_64-GenericCloud-1608
+centos_7_username: centos
+centos_7_image_name: CentOS-7-x86_64-GenericCloud-1608
 
-centos6_username: centos
-centos6_image_name: centos_6.6
+centos_6_username: centos
+centos_6_image_name: centos_6.6
 
-rhel_7_3_username: cloud-user
-rhel_7_3_image_name: rhel-guest-image-7.3-35.x86_64.qcow2
+rhel_7_username: cloud-user
+rhel_7_image_name: rhel-guest-image-7.3-35.x86_64.qcow2
 
-rhel_6_9_username: cloud-user
-rhel_6_9_image_name: rhel-guest-image-6.9-120.x86_64.qcow2
+rhel_6_username: cloud-user
+rhel_6_image_name: rhel-guest-image-6.9-120.x86_64.qcow2
 
-ubuntu_username: ubuntu
+ubuntu_14_04_username: ubuntu
 ubuntu_14_04_image_name: 'Ubuntu 14.04.1 LTS Trusty Tahr (cloudimg)'
+
+ubuntu_16_04_username: ubuntu
 ubuntu_16_04_image_name: ubuntu_16.04_xenial_with_python
 
-windows_server_2012_username: Admin
-windows_server_2012_image_name: windows_server_2012_r2_standard_eval
+windows_2012_username: Admin
+windows_2012_image_name: windows_server_2012_r2_standard_eval
 
 floating_network_id: dda079ce-12cf-4309-879a-8e67aec94de4
 external_gateway: GATEWAY_NET

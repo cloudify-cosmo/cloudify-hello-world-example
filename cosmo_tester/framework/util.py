@@ -14,6 +14,7 @@
 #    * limitations under the License.
 
 import base64
+from contextlib import contextmanager
 import json
 import logging
 import os
@@ -37,6 +38,7 @@ from path import path, Path
 
 from cloudify_cli import env as cli_env
 from cloudify_rest_client import CloudifyClient
+from cloudify_cli.constants import CLOUDIFY_TENANT_HEADER
 
 import cosmo_tester
 from cosmo_tester import resources
@@ -485,3 +487,37 @@ def is_community():
         )
 
     return image_type in community_image_types
+
+
+@contextmanager
+def set_client_tenant(manager, tenant):
+    if tenant:
+        original = manager.client._client.headers[CLOUDIFY_TENANT_HEADER]
+
+        manager.client._client.headers[CLOUDIFY_TENANT_HEADER] = tenant
+
+    try:
+        yield
+    except:
+        raise
+    finally:
+        if tenant:
+            manager.client._client.headers[CLOUDIFY_TENANT_HEADER] = original
+
+
+def prepare_and_get_test_tenant(test_param, manager, cfy):
+    """
+        Prepares a tenant for testing based on the test name (or other
+        identifier passed in as 'test_param'), and returns the name of the
+        tenant that should be used for this test.
+    """
+    if is_community():
+        tenant = 'default_tenant'
+        # It is expected that the plugin is already uploaded for the
+        # default tenant
+    else:
+        tenant = test_param
+        cfy.tenants.create(tenant)
+        manager.upload_plugin('openstack_centos_core',
+                              tenant_name=tenant)
+    return tenant
