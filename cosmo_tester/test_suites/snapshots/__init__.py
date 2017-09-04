@@ -74,8 +74,11 @@ MULTI_TENANT_MANAGERS = (
 
 def get_single_tenant_versions_list():
     if is_community():
-        # Community only works single tenanted
-        return SINGLE_TENANT_MANAGERS + MULTI_TENANT_MANAGERS
+        # Community only works single tenanted so should eventually be testing
+        # SINGLE_TENANT_MANAGERS + MULTI_TENANT_MANAGERS here...
+        # Unfortunately, at the moment there are resource constraints in the
+        # test environment so it will only be testing current.
+        return ['master']
     else:
         return SINGLE_TENANT_MANAGERS
 
