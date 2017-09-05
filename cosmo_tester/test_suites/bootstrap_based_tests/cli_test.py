@@ -26,7 +26,13 @@ import pytest
 import retrying
 import winrm
 
-from cosmo_tester.framework import util
+from cosmo_tester.framework.util import (
+    AttributesDict,
+    get_cli_package_url,
+    get_openstack_server_password,
+    get_resource_path,
+    sh_bake,
+)
 
 WINRM_PORT = 5985
 
@@ -63,7 +69,7 @@ def test_cli_on_centos_7(cli_package_tester, attributes):
         'cli_user': attributes.centos_7_username,
         'manager_image': attributes.centos_7_image_name,
         'manager_user': attributes.centos_7_username,
-        'cli_package_url': _get_cli_package_url('rhel_centos_cli_package_url')
+        'cli_package_url': get_cli_package_url('rhel_centos_cli_package_url')
     })
     cli_package_tester.run_test()
 
@@ -74,7 +80,7 @@ def test_cli_on_centos_6(cli_package_tester, attributes):
         'cli_user': attributes.centos_6_username,
         'manager_image': attributes.centos_7_image_name,
         'manager_user': attributes.centos_7_username,
-        'cli_package_url': _get_cli_package_url('rhel_centos_cli_package_url')
+        'cli_package_url': get_cli_package_url('rhel_centos_cli_package_url')
     })
     cli_package_tester.run_test()
 
@@ -85,7 +91,7 @@ def test_cli_on_ubuntu_14_04(cli_package_tester, attributes):
         'cli_user': attributes.ubuntu_14_04_username,
         'manager_image': attributes.centos_7_image_name,
         'manager_user': attributes.centos_7_username,
-        'cli_package_url': _get_cli_package_url('debian_cli_package_url')
+        'cli_package_url': get_cli_package_url('debian_cli_package_url')
     })
     cli_package_tester.run_test()
 
@@ -107,7 +113,7 @@ def test_cli_on_rhel_7(cli_package_tester, attributes):
         'cli_user': attributes.rhel_7_username,
         'manager_image': attributes.centos_7_image_name,
         'manager_user': attributes.centos_7_username,
-        'cli_package_url': _get_cli_package_url('rhel_centos_cli_package_url')
+        'cli_package_url': get_cli_package_url('rhel_centos_cli_package_url')
     })
     cli_package_tester.run_test()
 
@@ -118,24 +124,15 @@ def test_cli_on_rhel_6(cli_package_tester, attributes):
         'cli_user': attributes.rhel_6_username,
         'manager_image': attributes.centos_7_image_name,
         'manager_user': attributes.centos_7_username,
-        'cli_package_url': _get_cli_package_url('rhel_centos_cli_package_url')
+        'cli_package_url': get_cli_package_url('rhel_centos_cli_package_url')
     })
     cli_package_tester.run_test()
-
-
-def _get_cli_package_url(name):
-    urls = util.get_cli_package_urls()
-    if util.is_community():
-        key = 'cli_packages_urls'
-    else:
-        key = 'cli_premium_packages_urls'
-    return urls[key][name]
 
 
 class _CliPackageTester(object):
 
     def __init__(self, tmpdir, inputs, ssh_key, logger):
-        self.terraform = util.sh_bake(sh.terraform)
+        self.terraform = sh_bake(sh.terraform)
         self.tmpdir = tmpdir
         self.inputs = inputs
         self.ssh_key = ssh_key
@@ -144,10 +141,10 @@ class _CliPackageTester(object):
         os.mkdir(self.tmpdir / 'scripts')
 
     def _copy_terraform_files(self):
-        shutil.copy(util.get_resource_path(
+        shutil.copy(get_resource_path(
                 'terraform/openstack-linux-cli-test.tf'),
                 self.tmpdir / 'openstack-linux-cli-test.tf')
-        shutil.copy(util.get_resource_path(
+        shutil.copy(get_resource_path(
                 'terraform/scripts/linux-cli-test.sh'),
                 self.tmpdir / 'scripts/linux-cli-test.sh')
 
@@ -180,13 +177,13 @@ class _WindowsCliPackageTester(_CliPackageTester):
     the retrieved password).
     """
     def _copy_terraform_files(self):
-        shutil.copy(util.get_resource_path(
+        shutil.copy(get_resource_path(
                 'terraform/openstack-windows-cli-test.tf'),
                 self.tmpdir / 'openstack-windows-cli-test.tf')
-        shutil.copy(util.get_resource_path(
+        shutil.copy(get_resource_path(
                 'terraform/scripts/windows-cli-test.ps1'),
                 self.tmpdir / 'scripts/windows-cli-test.ps1')
-        shutil.copy(util.get_resource_path(
+        shutil.copy(get_resource_path(
                 'terraform/scripts/windows-userdata.ps1'),
                     self.tmpdir / 'scripts/windows-userdata.ps1')
 
@@ -195,7 +192,7 @@ class _WindowsCliPackageTester(_CliPackageTester):
         self.logger.info(
                 'Waiting for VM password retrieval.. [server_id=%s]',
                 server_id)
-        password = util.get_openstack_server_password(
+        password = get_openstack_server_password(
                 server_id, self.ssh_key.private_key_path)
         assert password is not None and len(password) > 0
         return password
@@ -216,7 +213,7 @@ class _WindowsCliPackageTester(_CliPackageTester):
         # At this stage, there are two VMs (Windows & Linux).
         # Retrieve password from OpenStack
         with self.tmpdir:
-            outputs = util.AttributesDict(
+            outputs = AttributesDict(
                     {k: v['value'] for k, v in json.loads(
                             self.terraform.output(
                                     ['-json']).stdout).items()})
@@ -253,7 +250,7 @@ $client = New-Object System.Net.WebClient
 $url = "{0}"
 $file = "{1}"
 $client.DownloadFile($url, $file)""".format(
-                _get_cli_package_url('windows_cli_package_url'),
+                get_cli_package_url('windows_cli_package_url'),
                 cli_installer_exe_path))
 
         self.logger.info('Installing CLI..')

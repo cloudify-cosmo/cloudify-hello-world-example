@@ -23,6 +23,13 @@ cloudify_manager_4_0_image_name: cloudify-manager-premium-4.0
 cloudify_manager_3_4_2_image_name: manager3.4.2-insecure-image
 notmanager_image_name: CentOS-7-x86_64-GenericCloud-1608
 
+# Set URLs for each of the keys here to override the package URL for that OS
+cli_urls_override:
+  windows_cli_package_url: null
+  rhel_centos_cli_package_url: null
+  debian_cli_package_url: null
+  osx_cli_package_url: null
+
 centos_7_username: centos
 centos_7_image_name: CentOS-7-x86_64-GenericCloud-1608
 

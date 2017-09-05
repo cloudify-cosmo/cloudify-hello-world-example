@@ -302,12 +302,48 @@ def get_plugin_wagon_urls():
     return yaml.load(requests.get(plugin_urls_location).text)['plugins']
 
 
-def get_cli_package_urls():
-    if is_community():
-        filename = 'cli-packages.yaml'
+def test_cli_package_url(url):
+    error_base = (
+        # Trailing space for better readability when cause of error
+        # is appended if there are problems.
+        '{url} does not appear to be a valid package URL. '
+    ).format(url=url)
+    try:
+        verification = requests.head(url, allow_redirects=True)
+    except requests.exceptions.RequestException as err:
+        raise RuntimeError(
+            error_base +
+            'Attempting to retrieve URL caused error: {exc}'.format(
+                exc=str(err),
+            )
+        )
+    if verification.status_code != 200:
+        raise RuntimeError(
+            error_base +
+            'Response to HEAD request was {status}'.format(
+                status=verification.status_code,
+            )
+        )
+
+
+def get_cli_package_url(platform):
+    # Override URLs if they are provided in the config
+    config_cli_urls = get_attributes()['cli_urls_override']
+
+    if config_cli_urls.get(platform):
+        url = config_cli_urls[platform]
     else:
-        filename = 'cli-premium-packages.yaml'
-    return yaml.load(_get_package_url(filename))
+        if is_community():
+            filename = 'cli-packages.yaml'
+            packages_key = 'cli_packages_urls'
+        else:
+            filename = 'cli-premium-packages.yaml'
+            packages_key = 'cli_premium_packages_urls'
+        url = yaml.load(_get_package_url(filename))[packages_key][platform]
+
+    test_cli_package_url(url)
+
+    return url
 
 
 def get_manager_resources_package_url():
