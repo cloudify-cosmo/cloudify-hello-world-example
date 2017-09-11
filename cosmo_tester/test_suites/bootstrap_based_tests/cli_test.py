@@ -245,15 +245,19 @@ Set-Content "{0}" "{1}"
 '''.format(remote_private_key_path, private_key))
 
         self.logger.info('Downloading CLI package..')
+        cli_package_url = get_cli_package_url('windows_cli_package_url')
         self._run_cmd(session, """
 $client = New-Object System.Net.WebClient
 $url = "{0}"
 $file = "{1}"
 $client.DownloadFile($url, $file)""".format(
-                get_cli_package_url('windows_cli_package_url'),
+                cli_package_url,
                 cli_installer_exe_path))
 
-        self.logger.info('Installing CLI..')
+        self.logger.info('Installing CLI...')
+        self.logger.info('Using CLI package: {url}'.format(
+            url=cli_package_url,
+        ))
         self._run_cmd(session, '''
 cd {0}
 & .\{1} /SILENT /VERYSILENT /SUPPRESSMSGBOXES /DIR="C:\cloudify-cli"'''
