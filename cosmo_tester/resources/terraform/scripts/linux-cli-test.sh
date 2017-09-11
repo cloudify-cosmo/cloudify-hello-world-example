@@ -11,6 +11,7 @@ PRIVATE_IP=$4
 MANAGER_USER=$5
 
 echo "Installing Cloudify's CLI..."
+echo "Using CLI package: ${CLI_PACKAGE_URL}"
 
 which rpm
 
