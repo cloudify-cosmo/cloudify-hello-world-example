@@ -43,4 +43,5 @@ def get_hello_worlds(cfy, manager, attributes, ssh_key, tmpdir, logger):
             'agent_user': attributes.centos_7_username,
             'image': attributes.centos_7_image_name,
         })
+        hellos.append(hello)
     return hellos
