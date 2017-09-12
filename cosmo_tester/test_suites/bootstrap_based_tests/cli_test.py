@@ -63,6 +63,19 @@ def windows_cli_package_tester(ssh_key, attributes, tmpdir, logger):
     tester.perform_cleanup()
 
 
+@pytest.fixture(scope='function')
+def osx_cli_package_tester(ssh_key, attributes, tmpdir, logger):
+    logger.info('Using temp dir: %s', tmpdir)
+    tmpdir = Path(tmpdir)
+
+    tf_inputs = get_terraform_inputs(attributes, ssh_key)
+    tester = _OSXCliPackageTester(tmpdir, tf_inputs, ssh_key, logger)
+
+    yield tester
+
+    tester.perform_cleanup()
+
+
 def test_cli_on_centos_7(cli_package_tester, attributes):
     cli_package_tester.inputs.update({
         'cli_image': attributes.centos_7_image_name,
@@ -127,6 +140,20 @@ def test_cli_on_rhel_6(cli_package_tester, attributes):
         'cli_package_url': get_cli_package_url('rhel_centos_cli_package_url')
     })
     cli_package_tester.run_test()
+
+
+def test_cli_on_osx(osx_cli_package_tester, attributes):
+    osx_cli_package_tester.inputs.update({
+        'manager_image': attributes.centos_7_AMI,
+        'manager_flavor': attributes.large_AWS_type,
+        'manager_user': attributes.centos_7_username,
+        'osx_public_ip': os.environ["MACINCLOUD_HOST"],
+        'osx_user': os.environ["MACINCLOUD_USERNAME"],
+        'osx_password': os.environ["MACINCLOUD_PASSWORD"],
+        'osx_ssh_key': os.environ["MACINCLOUD_SSH_KEY"],
+        'cli_package_url': get_cli_package_url('osx_cli_package_url'),
+    })
+    osx_cli_package_tester.run_test()
 
 
 class _CliPackageTester(object):
@@ -278,6 +305,20 @@ Set-Content "{0}" '{1}'
         bootstrap_cmd = '{0} bootstrap {1} -i "{2}" -v --keep-up-on-failure'\
             .format(cfy_exe, manager_blueprint_path, bootstrap_inputs_file)
         self._run_cmd(session, bootstrap_cmd, powershell=False)
+
+
+class _OSXCliPackageTester(_CliPackageTester):
+
+    def _copy_terraform_files(self):
+        shutil.copy(get_resource_path(
+            'terraform/aws-osx-cli-test.tf'),
+            self.tmpdir / 'aws-osx-cli-test.tf')
+        shutil.copy(get_resource_path(
+            'terraform/scripts/osx-cli-test.sh'),
+            self.tmpdir / 'scripts/osx-cli-test.sh')
+
+    def run_test(self):
+        super(_OSXCliPackageTester, self).run_test()
 
 
 def get_terraform_inputs(attributes, ssh_key):
