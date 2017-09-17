@@ -32,6 +32,7 @@ cli_urls_override:
 
 centos_7_username: centos
 centos_7_image_name: CentOS-7-x86_64-GenericCloud-1608
+centos_7_AMI: ami-7abd0209
 
 centos_6_username: centos
 centos_6_image_name: centos_6.6
@@ -54,6 +55,7 @@ windows_2012_image_name: windows_server_2012_r2_standard_eval
 floating_network_id: dda079ce-12cf-4309-879a-8e67aec94de4
 external_gateway: GATEWAY_NET
 large_flavor_name: m1.large
+large_AWS_type: t2.large
 medium_flavor_name: m1.medium
 small_flavor_name: m1.small
 manager_server_flavor_name: m1.medium
