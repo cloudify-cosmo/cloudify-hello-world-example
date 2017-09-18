@@ -24,12 +24,12 @@ pre_bootstrap_state = None
 
 
 def test_teardown(cfy, manager, hello_worlds):  # noqa (pytest fixture, not redefinition of hello_worlds)
+    for hello in hello_worlds:
+        hello.verify_all()
+
     cfy.teardown('-f')
     current_state = _get_system_state(manager)
     diffs = {}
-
-    for hello in hello_worlds:
-        hello.verify_all()
 
     for key in current_state:
         pre_bootstrap_set = set(pre_bootstrap_state[key])
