@@ -106,9 +106,15 @@ class AbstractExample(testtools.TestCase):
                                              '-t', self.tenant])
         self._cleanup_required = False
 
+    def _patch_blueprint(self):
+        """ A method that add the ability to patch the blueprint if needed """
+        pass
+
     def upload_blueprint(self):
         self.clone_example()
         blueprint_file = self._cloned_to / self.blueprint_file
+        self._patch_blueprint()
+
         self.logger.info('Uploading blueprint: %s [id=%s]',
                          blueprint_file,
                          self.blueprint_id)
