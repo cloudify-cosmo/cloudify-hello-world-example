@@ -112,7 +112,7 @@ def _wait_for_restore(manager, sleep_time=5):
     _wait_for_func(func=_check_executions,
                    manager=manager,
                    message='Timed out: An execution did not terminate',
-                   retries=60,
+                   retries=180,
                    interval=1)
     sleep(sleep_time)
     _wait_for_func(func=_check_status,
