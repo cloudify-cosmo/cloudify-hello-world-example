@@ -64,6 +64,7 @@ class _CloudifyManager(object):
             index,
             public_ip_address,
             private_ip_address,
+            networks,
             rest_client,
             ssh_key,
             cfy,
@@ -76,6 +77,7 @@ class _CloudifyManager(object):
         self.private_ip_address = private_ip_address
         self.client = rest_client
         self.deleted = False
+        self.networks = networks
         self._ssh_key = ssh_key
         self._cfy = cfy
         self._attributes = attributes
@@ -228,7 +230,7 @@ class _CloudifyManager(object):
 
     @property
     def image_name(self):
-        return ATTRIBUTES['cloudify_manager_{}_image_name'.format(
+        return self._attributes['cloudify_manager_{}_image_name'.format(
                 self.branch_name.replace('.', '_'))]
 
     @property
@@ -355,6 +357,52 @@ class CloudifyMasterManager(_CloudifyManager):
 
     image_name = _get_latest_manager_image_name()
 
+    # The MTU is set to 1450 because we're using a static BOOTPROTO here (as
+    # opposed to DHCP), which sets a lower default by default
+    NETWORK_CONFIG_TEMPLATE = """DEVICE="eth{0}"
+BOOTPROTO="static"
+ONBOOT="yes"
+TYPE="Ethernet"
+USERCTL="yes"
+PEERDNS="yes"
+IPV6INIT="no"
+PERSISTENT_DHCLIENT="1"
+IPADDR="{1}"
+NETMASK="255.255.255.128"
+DEFROUTE="no"
+MTU=1450
+"""
+
+    def enable_nics(self):
+        """
+        Extra network interfaces need to be manually enabled on the manager
+        `manager.networks` is a dict that looks like this:
+        {
+            "network_0": "10.0.0.6",
+            "network_1": "11.0.0.6",
+            "network_2": "12.0.0.6"
+        }
+        """
+
+        self._logger.info('Adding extra NICs...')
+
+        # Need to do this for each network except 0 (eth0 is already enabled)
+        for i in range(1, len(self.networks)):
+            network_file_path = self._tmpdir / 'network_cfg_{0}'.format(i)
+            ip_addr = self.networks['network_{0}'.format(i)]
+            config_content = self.NETWORK_CONFIG_TEMPLATE.format(i, ip_addr)
+
+            # Create and copy the interface config
+            network_file_path.write_text(config_content)
+            with self.ssh() as fabric_ssh:
+                fabric_ssh.put(
+                    network_file_path,
+                    '/etc/sysconfig/network-scripts/ifcfg-eth{0}'.format(i),
+                    use_sudo=True
+                )
+                # Start the interface
+                fabric_ssh.sudo('ifup eth{0}'.format(i))
+
 
 class NotAManager(_CloudifyManager):
     def create(
@@ -362,6 +410,7 @@ class NotAManager(_CloudifyManager):
             index,
             public_ip_address,
             private_ip_address,
+            networks,
             rest_client,
             ssh_key,
             cfy,
@@ -480,6 +529,7 @@ class CloudifyCluster(object):
 
     @staticmethod
     def create_bootstrap_based(cfy, ssh_key, tmpdir, attributes, logger,
+                               number_of_managers=1,
                                tf_template=None,
                                template_inputs=None,
                                preconfigure_callback=None):
@@ -490,6 +540,7 @@ class CloudifyCluster(object):
             tmpdir,
             attributes,
             logger,
+            number_of_managers=number_of_managers,
             tf_template=tf_template,
             template_inputs=template_inputs
         )
@@ -497,7 +548,8 @@ class CloudifyCluster(object):
                     'manager blueprint..')
         if preconfigure_callback:
             cluster.preconfigure_callback = preconfigure_callback
-        cluster.managers[0].image_name = ATTRIBUTES['centos_7_image_name']
+        for manager in cluster.managers:
+            manager.image_name = attributes.centos_7_image_name
         cluster.create()
         return cluster
 
@@ -590,6 +642,7 @@ class CloudifyCluster(object):
         for i, manager in enumerate(self.managers):
             public_ip_address = outputs['public_ip_address_{}'.format(i)]
             private_ip_address = outputs['private_ip_address_{}'.format(i)]
+            networks = outputs['networks_{}'.format(i)]
             rest_client = util.create_rest_client(
                     public_ip_address,
                     username=self._attributes.cloudify_username,
@@ -601,6 +654,7 @@ class CloudifyCluster(object):
                     i,
                     public_ip_address,
                     private_ip_address,
+                    networks,
                     rest_client,
                     self._ssh_key,
                     self._cfy,
@@ -626,7 +680,6 @@ class BootstrapBasedCloudifyCluster(CloudifyCluster):
         self._manager_resources_package = \
             util.get_manager_resources_package_url()
         self._manager_blueprints_path = None
-        self._inputs_file = None
 
     def _get_server_flavor(self):
         return self._attributes.large_flavor_name
@@ -638,17 +691,17 @@ class BootstrapBasedCloudifyCluster(CloudifyCluster):
         super(BootstrapBasedCloudifyCluster, self)._bootstrap_managers()
 
         self._clone_manager_blueprints()
-        self._create_inputs_file()
-        self._bootstrap_manager()
+        for manager in self.managers:
+            inputs_file = self._create_inputs_file(manager)
+            self._bootstrap_manager(inputs_file)
 
     def _clone_manager_blueprints(self):
         self._manager_blueprints_path = git_helper.clone(
                 MANAGER_BLUEPRINTS_REPO_URL,
                 str(self._tmpdir))
 
-    def _create_inputs_file(self):
-        self._inputs_file = self._tmpdir / 'inputs.json'
-        manager = self.managers[0]
+    def _create_inputs_file(self, manager):
+        inputs_file = self._tmpdir / 'inputs_{0}.json'.format(manager.index)
         bootstrap_inputs = {
             'public_ip': manager.ip_address,
             'private_ip': manager.private_ip_address,
@@ -665,9 +718,10 @@ class BootstrapBasedCloudifyCluster(CloudifyCluster):
 
         self._logger.info(
                 'Bootstrap inputs:%s%s', os.linesep, bootstrap_inputs_str)
-        self._inputs_file.write_text(bootstrap_inputs_str)
+        inputs_file.write_text(bootstrap_inputs_str)
+        return inputs_file
 
-    def _bootstrap_manager(self):
+    def _bootstrap_manager(self, inputs_file):
         manager_blueprint_path = \
             self._manager_blueprints_path / 'simple-manager-blueprint.yaml'
-        self._cfy.bootstrap([manager_blueprint_path, '-i', self._inputs_file])
+        self._cfy.bootstrap([manager_blueprint_path, '-i', inputs_file])

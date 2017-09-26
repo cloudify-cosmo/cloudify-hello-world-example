@@ -109,7 +109,7 @@ def test_restore_snapshot_and_agents_upgrade_multitenant(
     check_tenant_source_plugins(new_manager, 'aws', NOINSTALL_DEPLOYMENT_ID,
                                 noinstall_tenants, logger)
 
-    upgrade_agents(cfy, new_manager, logger, tenants=hello_tenants)
+    upgrade_agents(cfy, new_manager, logger)
 
     # The old manager needs to exist until the agents install is run
     delete_manager(old_manager, logger)

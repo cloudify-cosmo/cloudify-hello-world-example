@@ -4,35 +4,40 @@ variable "public_key_path" {}
 variable "private_key_path" {}
 variable "flavor" {}
 
-output "public_ip_address_0" { value = "${openstack_networking_floatingip_v2.floatingip.address}" }
+# Return the first one of each router, network, subnet and network_names,
+# as these should be the same for all servers
 output "router_name" { value = "${openstack_networking_router_v2.router_0.name}" }
 output "router_id" { value = "${openstack_networking_router_v2.router_0.id}" }
 output "network_name" { value = "${openstack_networking_network_v2.network_0.name}" }
 output "network_id" { value = "${openstack_networking_network_v2.network_0.id}" }
 output "subnet_name" { value = "${openstack_networking_subnet_v2.subnet_0.name}" }
 output "subnet_id" { value = "${openstack_networking_subnet_v2.subnet_0.id}" }
-output "security_group_name" { value = "${openstack_compute_secgroup_v2.security_group.name}" }
-output "security_group_id" { value = "${openstack_compute_secgroup_v2.security_group.id}" }
-output "keypair_name" { value = "${openstack_compute_keypair_v2.keypair.name}" }
-output "networks" {
-  value = {
-    {% for n in range(num_of_networks) %}
-    "network_{{ n }}" = "${openstack_compute_instance_v2.server.network.{{ n }}.fixed_ip_v4}",
-    {% endfor %}
-  }
-}
 output "network_names" {
    value = {
     {% for n in range(num_of_networks) %}
-    "network_{{ n }}" = "${openstack_compute_instance_v2.server.network.{{ n }}.name}",
+    "network_{{ n }}" = "${openstack_compute_instance_v2.server_0.network.{{ n }}.name}",
     {% endfor %}
   }
 }
-{% for n in range(num_of_networks) %}
-output "private_ip_address_{{ n }}" { value = "${openstack_compute_instance_v2.server.network.{{ n }}.fixed_ip_v4}" }
+
+output "security_group_name" { value = "${openstack_compute_secgroup_v2.security_group.name}" }
+output "security_group_id" { value = "${openstack_compute_secgroup_v2.security_group.id}" }
+output "keypair_name" { value = "${openstack_compute_keypair_v2.keypair.name}" }
+
+{% for sn in range(num_of_managers) %}
+output "networks_{{ sn }}" {
+  value = {
+    {% for n in range(num_of_networks) %}
+    "network_{{ n }}" = "${openstack_compute_instance_v2.server_{{ sn }}.network.{{ n }}.fixed_ip_v4}",
+    {% endfor %}
+  }
+}
+
+output "private_ip_address_{{ sn }}" { value = "${openstack_compute_instance_v2.server_{{ sn }}.network.0.fixed_ip_v4}" }
+output "public_ip_address_{{ sn }}" { value = "${openstack_networking_floatingip_v2.floatingip_{{ sn }}.address}" }
+output "server_name_{{ sn }}" { value = "${openstack_compute_instance_v2.server_{{ sn }}.name}" }
+output "server_id_{{ sn }}" { value = "${openstack_compute_instance_v2.server_{{ sn }}.id}" }
 {% endfor %}
-output "server_name_0" { value = "${openstack_compute_instance_v2.server.name}" }
-output "server_id_0" { value = "${openstack_compute_instance_v2.server.id}" }
 
 
 {% for n in range(num_of_networks) %}
@@ -107,12 +112,14 @@ resource "openstack_compute_keypair_v2" "keypair" {
 }
 
 
-resource "openstack_networking_floatingip_v2" "floatingip" {
+{% for sn in range(num_of_managers) %}
+
+resource "openstack_networking_floatingip_v2" "floatingip_{{ sn }}" {
   pool = "GATEWAY_NET"
 }
 
-resource "openstack_compute_instance_v2" "server" {
-  name = "server-${var.resource_suffix}"
+resource "openstack_compute_instance_v2" "server_{{ sn }}" {
+  name = "server-{{ sn }}-${var.resource_suffix}"
   image_name = "{{ image_name }}"
   flavor_name = "${var.flavor}"
   key_pair = "${openstack_compute_keypair_v2.keypair.name}"
@@ -124,7 +131,7 @@ resource "openstack_compute_instance_v2" "server" {
   }
   {% endfor %}
 
-  floating_ip = "${openstack_networking_floatingip_v2.floatingip.address}"
+  floating_ip = "${openstack_networking_floatingip_v2.floatingip_{{ sn }}.address}"
 
   provisioner "remote-exec" {
     inline = [
@@ -139,3 +146,5 @@ resource "openstack_compute_instance_v2" "server" {
     }
   }
 }
+
+{% endfor %}

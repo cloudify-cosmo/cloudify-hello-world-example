@@ -91,11 +91,11 @@ def get_multi_tenant_versions_list():
         return MULTI_TENANT_MANAGERS
 
 
-def upgrade_agents(cfy, manager, logger, tenants=('default_tenant',)):
+def upgrade_agents(cfy, manager, logger):
     manager.use()
-    for tenant in tenants:
-        _log('Upgrading agents', logger, tenant)
-        cfy.agents.install(['-t', tenant])
+    logger.info('Upgrading agents')
+    args = [] if is_community() else ['--all-tenants']
+    cfy.agents.install(args)
 
 
 def remove_and_check_deployments(hello_vms, manager, logger,

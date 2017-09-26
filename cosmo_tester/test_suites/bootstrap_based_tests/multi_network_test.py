@@ -18,57 +18,92 @@ import pytest
 
 from cosmo_tester.framework.cluster import CloudifyCluster
 from cosmo_tester.framework.examples.hello_world import HelloWorldExample
-from cosmo_tester.framework.util import (
-    is_community,
-    prepare_and_get_test_tenant,
-)
+from cosmo_tester.framework.util import prepare_and_get_test_tenant
 
-NETWORK_CONFIG_TEMPLATE = """DEVICE="eth{0}"
-BOOTPROTO="static"
-ONBOOT="yes"
-TYPE="Ethernet"
-USERCTL="yes"
-PEERDNS="yes"
-IPV6INIT="no"
-PERSISTENT_DHCLIENT="1"
-IPADDR="1{0}.0.0.5"
-NETMASK="255.255.255.128"
-DEFROUTE="no"
-"""
+from cosmo_tester.test_suites.snapshots import (
+    create_snapshot,
+    download_snapshot,
+    upload_snapshot,
+    restore_snapshot,
+    upgrade_agents,
+    delete_manager
+)
 
 
 @pytest.fixture(scope='module', params=[3])
-def manager(request, cfy, ssh_key, module_tmpdir, attributes, logger):
-    """Bootstraps a cloudify manager on a VM in rackspace OpenStack."""
+def managers(request, cfy, ssh_key, module_tmpdir, attributes, logger):
+    """Bootstraps 2 cloudify managers on a VM in rackspace OpenStack."""
+
     cluster = CloudifyCluster.create_bootstrap_based(
         cfy, ssh_key, module_tmpdir, attributes, logger,
+        number_of_managers=2,
         tf_template='openstack-multi-network-test.tf.template',
         template_inputs={
             'num_of_networks': request.param,
-            'image_name': attributes['centos_7_image_name']
+            'num_of_managers': 2,
+            'image_name': attributes.centos_7_image_name
         },
         preconfigure_callback=_preconfigure_callback
     )
 
-    yield cluster.managers[0]
+    yield cluster.managers
 
     cluster.destroy()
 
 
-def _preconfigure_callback(managers):
+def _preconfigure_callback(_managers):
+    # Calling the param `_managers` to avoid confusion with fixture
+
     # The preconfigure callback populates the networks config prior to the BS
-    mgr = managers[0]
-    networks = mgr._attributes.networks
-    mgr.bs_inputs = {'manager_networks': networks}
+    for mgr in _managers:
+        mgr.bs_inputs = {'manager_networks': mgr.networks}
 
-    # Configure NICs in order for networking to work properly
-    _enable_nics(mgr, networks, mgr._tmpdir, mgr._logger)
+        # Configure NICs in order for networking to work properly
+        mgr.enable_nics()
 
 
-def test_multiple_networks(multi_network_hello_worlds, logger):
-    logger.info('Testing manager with multiple networks')
-    for hello in multi_network_hello_worlds:
-        hello.verify_all()
+def test_multiple_networks(managers,
+                           cfy,
+                           multi_network_hello_worlds,
+                           logger,
+                           tmpdir,
+                           attributes):
+    logger.info('Testing managers with multiple networks')
+
+    # We should have at least 3 hello world objects. We will verify the first
+    # one completely on the first manager.
+    # All the other ones will be installed on the first manager,
+    # then we'll create a snapshot and restore it on the second manager, and
+    # finally, to complete the verification, we'll uninstall the remaining
+    # hellos on the new manager
+
+    old_manager = managers[0]
+    new_manager = managers[1]
+    snapshot_id = 'SNAPSHOT_ID'
+    local_snapshot_path = str(tmpdir / 'snap.zip')
+
+    first_hello = multi_network_hello_worlds[0]
+    first_hello.verify_all()
+
+    for hello in multi_network_hello_worlds[1:]:
+        hello.upload_blueprint()
+        hello.create_deployment()
+        hello.install()
+        hello.verify_installation()
+
+    create_snapshot(old_manager, snapshot_id, attributes, logger)
+    download_snapshot(old_manager, local_snapshot_path, snapshot_id, logger)
+    upload_snapshot(new_manager, local_snapshot_path, snapshot_id, logger)
+    restore_snapshot(new_manager, snapshot_id, cfy, logger)
+
+    upgrade_agents(cfy, new_manager, logger)
+    delete_manager(old_manager, logger)
+
+    new_manager.use()
+    for hello in multi_network_hello_worlds[1:]:
+        hello.manager = new_manager
+        hello.uninstall()
+        hello.delete_deployment()
 
 
 class MultiNetworkHelloWorld(HelloWorldExample):
@@ -88,27 +123,18 @@ class MultiNetworkHelloWorld(HelloWorldExample):
 
 
 @pytest.fixture(scope='function')
-def multi_network_hello_worlds(cfy, manager, attributes, ssh_key, tmpdir,
+def multi_network_hello_worlds(cfy, managers, attributes, ssh_key, tmpdir,
                                logger):
-    hellos = get_hello_worlds(cfy, manager, attributes, ssh_key, tmpdir,
-                              logger)
-    yield hellos
-    for hello in hellos:
-        hello.cleanup()
-
-
-def get_hello_worlds(cfy, manager, attributes, ssh_key, tmpdir, logger):
+    # The first manager is the initial one
+    manager = managers[0]
+    manager.use()
     hellos = []
 
-    # Add a MultiNetworkHelloWorld per network we add
-    for network_name in attributes.networks:
-        if is_community():
-            tenant = 'default_tenant'
-        else:
-            tenant = '{0}_tenant'.format(network_name)
-            prepare_and_get_test_tenant(
-                '{0}_tenant'.format(network_name), manager, cfy
-            )
+    # Add a MultiNetworkHelloWorld per management network
+    for network_name, network_id in attributes.network_names.iteritems():
+        tenant = prepare_and_get_test_tenant(
+            '{0}_tenant'.format(network_name), manager, cfy
+        )
         hello = MultiNetworkHelloWorld(
             cfy, manager, attributes, ssh_key, logger, tmpdir,
             tenant=tenant, suffix=tenant)
@@ -117,11 +143,12 @@ def get_hello_worlds(cfy, manager, attributes, ssh_key, tmpdir, logger):
             'agent_user': attributes.centos_7_username,
             'image': attributes.centos_7_image_name,
             'manager_network_name': network_name,
-            'network_name': attributes.network_names[network_name]
+            'network_name': network_id
         })
         hellos.append(hello)
 
     # Add one more hello world, that will run on the `default` network
+    # implicitly
     hw = HelloWorldExample(cfy, manager, attributes, ssh_key, logger, tmpdir)
     hw.blueprint_file = 'openstack-blueprint.yaml'
     hw.inputs.update({
@@ -130,23 +157,6 @@ def get_hello_worlds(cfy, manager, attributes, ssh_key, tmpdir, logger):
     })
     hellos.append(hw)
 
-    return hellos
-
-
-def _enable_nics(manager, networks, tmpdir, logger):
-    """ Extra network interfaces need to be manually enabled on the manager """
-
-    logger.info('Adding extra NICs...')
-    # Need to do this for each network except 0 (as eth0 is already enabled)
-    for i in range(1, len(networks)):
-        network_file_path = tmpdir / 'network_cfg_{0}'.format(i)
-        # Create and copy the interface config
-        network_file_path.write_text(NETWORK_CONFIG_TEMPLATE.format(i))
-        with manager.ssh() as fabric_ssh:
-            fabric_ssh.put(
-                network_file_path,
-                '/etc/sysconfig/network-scripts/ifcfg-eth{0}'.format(i),
-                use_sudo=True
-            )
-            # Start the interface
-            fabric_ssh.sudo('ifup eth{0}'.format(i))
+    yield hellos
+    for hello in hellos:
+        hello.cleanup()
