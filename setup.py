@@ -40,7 +40,7 @@ setup(
         'fasteners==0.13.0',
         # Wagon version has been left out since it better reflects the user
         # use-case
-        'wagon==0.3.2',
+        'wagon[venv]==0.6.0',
         'pytest==3.0.4',
         'testtools==2.2.0',
         'openstacksdk==0.9.13'
