@@ -642,7 +642,8 @@ class CloudifyCluster(object):
         for i, manager in enumerate(self.managers):
             public_ip_address = outputs['public_ip_address_{}'.format(i)]
             private_ip_address = outputs['private_ip_address_{}'.format(i)]
-            networks = outputs['networks_{}'.format(i)]
+            # Some templates don't expose networks as outputs
+            networks = outputs.get('networks_{}'.format(i), [])
             rest_client = util.create_rest_client(
                     public_ip_address,
                     username=self._attributes.cloudify_username,
