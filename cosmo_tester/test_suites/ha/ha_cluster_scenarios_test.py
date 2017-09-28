@@ -17,7 +17,7 @@ import pytest
 import time
 
 from cosmo_tester.framework.examples.hello_world import HelloWorldExample
-from cosmo_tester.framework.cluster import CloudifyCluster
+from cosmo_tester.framework.cluster import ImageBasedCloudifyCluster
 from cosmo_tester.framework.util import prepare_and_get_test_tenant
 from .ha_helper import HighAvailabilityHelper as ha_helper
 from . import skip_community
@@ -33,21 +33,15 @@ def cluster(
         request, cfy, ssh_key, module_tmpdir, attributes, logger):
     """Creates a HA cluster from an image in rackspace OpenStack."""
     logger.info('Creating HA cluster of %s managers', request.param)
-    cluster = CloudifyCluster.create_image_based(
-        cfy,
-        ssh_key,
-        module_tmpdir,
-        attributes,
-        logger,
-        number_of_managers=request.param,
-        create=False)
+    cluster = ImageBasedCloudifyCluster(cfy, ssh_key, module_tmpdir,
+                                        attributes, logger,
+                                        number_of_managers=request.param)
 
     for manager in cluster.managers[1:]:
         manager.upload_plugins = False
 
-    cluster.create()
-
     try:
+        cluster.create()
         manager1 = cluster.managers[0]
         ha_helper.delete_active_profile()
         manager1.use()
