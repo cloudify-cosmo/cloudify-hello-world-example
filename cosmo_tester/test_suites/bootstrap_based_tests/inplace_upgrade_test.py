@@ -65,7 +65,7 @@ def test_inplace_upgrade(cfy,
                    interval=1)
     cfy.snapshots.download([snapshot_name, '-o', snapshot_path])
     cfy.teardown(['-f', '--ignore-deployments'])
-    cluster._bootstrap_manager()
+    cluster._bootstrap_manager(cluster._create_inputs_file(manager))
     openstack_config_file = cluster.create_openstack_config_file()
     manager._upload_necessary_files(openstack_config_file)
     cfy.snapshots.upload([snapshot_path, '-s', snapshot_name])
