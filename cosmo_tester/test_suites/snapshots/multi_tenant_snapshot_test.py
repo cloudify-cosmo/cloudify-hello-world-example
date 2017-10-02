@@ -20,7 +20,7 @@ from . import (
     check_deployments,
     check_from_source_plugin,
     check_plugins,
-    cluster,
+    hosts,
     confirm_manager_empty,
     create_helloworld_just_deployment,
     create_snapshot,
@@ -43,7 +43,7 @@ from . import (
 
 
 def test_restore_snapshot_and_agents_upgrade_multitenant(
-        cfy, cluster_multitenant, attributes, logger, tmpdir):
+        cfy, hosts_multitenant, attributes, logger, tmpdir):
     local_snapshot_path = str(tmpdir / 'snapshot.zip')
     new_tenants = ('tenant1', 'tenant2')
     # These tenants will have hello world deployments installed on them
@@ -52,13 +52,13 @@ def test_restore_snapshot_and_agents_upgrade_multitenant(
     # not have the install workflow run on them
     noinstall_tenants = new_tenants
 
-    old_manager = cluster_multitenant.managers[0]
-    new_manager = cluster_multitenant.managers[1]
-    hello_vms = cluster_multitenant.managers[2:]
+    old_manager = hosts_multitenant.instances[0]
+    new_manager = hosts_multitenant.instances[1]
+    hello_vms = hosts_multitenant.instances[2:]
 
     hello_vm_mappings = {
-        hello_tenants[0]: cluster_multitenant.managers[2],
-        hello_tenants[1]: cluster_multitenant.managers[3],
+        hello_tenants[0]: hosts_multitenant.instances[2],
+        hello_tenants[1]: hosts_multitenant.instances[3],
     }
 
     confirm_manager_empty(new_manager)
@@ -125,12 +125,14 @@ def test_restore_snapshot_and_agents_upgrade_multitenant(
 @pytest.fixture(
         scope='module',
         params=get_multi_tenant_versions_list())
-def cluster_multitenant(request, cfy, ssh_key, module_tmpdir, attributes,
-                        logger, install_dev_tools=True):
-    mt_cluster = cluster(request, cfy, ssh_key, module_tmpdir, attributes,
-                         logger, 2, install_dev_tools)
-    yield mt_cluster
-    mt_cluster.destroy()
+def hosts_multitenant(
+        request, cfy, ssh_key, module_tmpdir, attributes,
+        logger, install_dev_tools=True):
+    mt_hosts = hosts(
+            request, cfy, ssh_key, module_tmpdir, attributes,
+            logger, 2, install_dev_tools)
+    yield mt_hosts
+    mt_hosts.destroy()
 
 
 def create_tenant_secrets(manager, tenants, logger):

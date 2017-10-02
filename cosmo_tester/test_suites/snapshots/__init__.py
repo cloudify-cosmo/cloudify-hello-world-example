@@ -18,7 +18,11 @@ import json
 import os
 
 import retrying
-from cosmo_tester.framework.cluster import ImageBasedCloudifyCluster, MANAGERS
+
+from cosmo_tester.framework.test_hosts import (
+    TestHosts,
+    IMAGES,
+)
 from cosmo_tester.framework.util import (
     assert_snapshot_created,
     is_community,
@@ -547,21 +551,24 @@ def get_nodes(manager, tenant=None):
         return manager.client.nodes.list()
 
 
-def cluster(request, cfy, ssh_key, module_tmpdir, attributes, logger,
-            hello_count, install_dev_tools=True):
+def hosts(
+        request, cfy, ssh_key, module_tmpdir, attributes, logger,
+        hello_count, install_dev_tools=True):
 
     manager_types = [request.param, 'master']
-    hello_vms = ['notamanager' for i in range(hello_count)]
-    managers = [
-        MANAGERS[mgr_type](upload_plugins=False)
+    hello_vms = ['centos' for i in range(hello_count)]
+    instances = [
+        IMAGES[mgr_type](upload_plugins=False)
         for mgr_type in manager_types + hello_vms
     ]
 
-    cluster = ImageBasedCloudifyCluster(cfy, ssh_key, module_tmpdir,
-                                        attributes, logger, managers=managers)
-    cluster.create()
+    hosts = TestHosts(
+            cfy, ssh_key, module_tmpdir,
+            attributes, logger, instances=instances)
+    hosts.create()
+
     if request.param == '4.0.1':
-        with managers[0].ssh() as fabric_ssh:
+        with instances[0].ssh() as fabric_ssh:
             fabric_ssh.sudo('yum -y -q install wget')
             fabric_ssh.sudo(
                 'cd /tmp && '
@@ -580,12 +587,12 @@ def cluster(request, cfy, ssh_key, module_tmpdir, attributes, logger,
     # managers[1].
     # The hello_world VMs don't need these so we won't waste time installing
     # them.
-    for manager in managers[:2]:
+    for manager in instances[:2]:
         with manager.ssh() as fabric_ssh:
             fabric_ssh.sudo('yum -y -q install gcc')
             fabric_ssh.sudo('yum -y -q install python-devel')
 
-    return cluster
+    return hosts
 
 
 def _log(message, logger, tenant=None):

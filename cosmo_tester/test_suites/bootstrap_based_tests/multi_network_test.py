@@ -16,7 +16,7 @@
 import yaml
 import pytest
 
-from cosmo_tester.framework.cluster import BootstrapBasedCloudifyCluster
+from cosmo_tester.framework.test_hosts import BootstrapBasedCloudifyManagers
 from cosmo_tester.framework.examples.hello_world import HelloWorldExample
 from cosmo_tester.framework.util import prepare_and_get_test_tenant
 
@@ -34,21 +34,22 @@ from cosmo_tester.test_suites.snapshots import (
 def managers(request, cfy, ssh_key, module_tmpdir, attributes, logger):
     """Bootstraps 2 cloudify managers on a VM in rackspace OpenStack."""
 
-    cluster = BootstrapBasedCloudifyCluster(
+    hosts = BootstrapBasedCloudifyManagers(
         cfy, ssh_key, module_tmpdir, attributes, logger,
-        number_of_managers=2,
+        number_of_instances=2,
         tf_template='openstack-multi-network-test.tf.template',
         template_inputs={
             'num_of_networks': request.param,
             'num_of_managers': 2,
             'image_name': attributes.centos_7_image_name
         })
-    cluster.preconfigure_callback = _preconfigure_callback
+    hosts.preconfigure_callback = _preconfigure_callback
+
     try:
-        cluster.create()
-        yield cluster.managers
+        hosts.create()
+        yield hosts.instances
     finally:
-        cluster.destroy()
+        hosts.destroy()
 
 
 def _preconfigure_callback(_managers):

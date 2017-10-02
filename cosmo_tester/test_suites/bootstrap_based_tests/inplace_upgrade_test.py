@@ -18,36 +18,36 @@ import pytest
 from time import sleep
 from os.path import join
 
-from cosmo_tester.framework.cluster import BootstrapBasedCloudifyCluster
+from cosmo_tester.framework.test_hosts import BootstrapBasedCloudifyManagers
 
 from . import get_hello_worlds
 
 
 @pytest.fixture(scope='module')
-def cluster(request, cfy, ssh_key, module_tmpdir, attributes, logger):
+def hosts(request, cfy, ssh_key, module_tmpdir, attributes, logger):
     """Bootstraps a cloudify manager on a VM in rackspace OpenStack."""
-    # need to keep the cluster to use its inputs in the second bootstrap
-    cluster = BootstrapBasedCloudifyCluster(cfy, ssh_key, module_tmpdir,
-                                            attributes, logger)
+    # need to keep the hosts to use its inputs in the second bootstrap
+    hosts = BootstrapBasedCloudifyManagers(
+            cfy, ssh_key, module_tmpdir, attributes, logger)
     try:
-        cluster.create()
-        yield cluster
+        hosts.create()
+        yield hosts
     finally:
-        cluster.destroy()
+        hosts.destroy()
 
 
 def test_inplace_upgrade(cfy,
-                         cluster,
+                         hosts,
                          attributes,
                          ssh_key,
                          module_tmpdir,
                          logger):
-    manager = cluster.managers[0]
+    manager = hosts.instances[0]
     snapshot_name = 'inplace_upgrade_snapshot'
     snapshot_path = join(str(module_tmpdir), snapshot_name) + '.zip'
 
     # We can't use the hello_worlds fixture here because this test has
-    # multiple managers rather than just one (the cluster vs a single
+    # multiple managers rather than just one (the hosts vs a single
     # manager).
     hellos = get_hello_worlds(cfy, manager, attributes, ssh_key,
                               module_tmpdir, logger)
@@ -65,8 +65,8 @@ def test_inplace_upgrade(cfy,
                    interval=1)
     cfy.snapshots.download([snapshot_name, '-o', snapshot_path])
     cfy.teardown(['-f', '--ignore-deployments'])
-    cluster._bootstrap_manager(cluster._create_inputs_file(manager))
-    openstack_config_file = cluster.create_openstack_config_file()
+    hosts._bootstrap_manager(hosts._create_inputs_file(manager))
+    openstack_config_file = hosts.create_openstack_config_file()
     manager._upload_necessary_files(openstack_config_file)
     cfy.snapshots.upload([snapshot_path, '-s', snapshot_name])
     cfy.snapshots.restore([snapshot_name, '--restore-certificates'])

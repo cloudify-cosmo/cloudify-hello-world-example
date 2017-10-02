@@ -21,7 +21,7 @@ import sys
 from path import Path
 import sh
 
-from cosmo_tester.framework.cluster import ImageBasedCloudifyCluster
+from cosmo_tester.framework.test_hosts import TestHosts
 from cosmo_tester.framework.util import sh_bake, get_attributes
 from . import conftest
 
@@ -44,13 +44,13 @@ def create_cluster_object(ssh_key):
     logger.info('Cloudify manager context will be stored in: %s', tmpdir)
     cfy = sh_bake(sh.cfy)
     attributes = get_attributes(logger)
-    cluster = ImageBasedCloudifyCluster(
+    hosts = TestHosts(
             cfy,
             ssh_key,
             tmpdir,
             attributes,
             logger)
-    return cluster
+    return hosts
 
 
 def create_ssh_key_object():
@@ -66,16 +66,16 @@ def bootstrap():
     tmpdir.makedirs()
     ssh_key = create_ssh_key_object()
     ssh_key.create()
-    cluster = create_cluster_object(ssh_key)
+    hosts = create_cluster_object(ssh_key)
     try:
-        cluster.create()
+        hosts.create()
     except Exception as e:
         logger.error('Error on manager creation: %s', e)
         tmpdir.rmtree()
         sys.exit(1)
 
     logger.info('Cloudify manager is up!')
-    logger.info(' - IP address: %s', cluster.managers[0].ip_address)
+    logger.info(' - IP address: %s', hosts.instances[0].ip_address)
 
 
 def destroy():
@@ -83,8 +83,8 @@ def destroy():
         raise IOError('Context folder does not exist [{}] - are you sure '
                       'you have a manager running? :-)'.format(tmpdir))
 
-    cluster = create_cluster_object(create_ssh_key_object())
-    cluster.destroy()
+    hosts = create_cluster_object(create_ssh_key_object())
+    hosts.destroy()
 
     logger.info('Cloudify manager destroyed!')
     tmpdir.rmtree_p()

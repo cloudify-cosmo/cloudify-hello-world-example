@@ -20,7 +20,7 @@ from . import (
     check_deployments,
     check_from_source_plugin,
     check_plugins,
-    cluster,
+    hosts,
     confirm_manager_empty,
     create_helloworld_just_deployment,
     create_snapshot,
@@ -43,11 +43,11 @@ from . import (
 
 
 def test_restore_snapshot_and_agents_upgrade_singletenant(
-        cfy, cluster_singletenant, attributes, logger, tmpdir):
+        cfy, hosts_singletenant, attributes, logger, tmpdir):
     local_snapshot_path = str(tmpdir / 'snapshot.zip')
-    old_manager = cluster_singletenant.managers[0]
-    new_manager = cluster_singletenant.managers[1]
-    hello_vm = cluster_singletenant.managers[2]
+    old_manager = hosts_singletenant.instances[0]
+    new_manager = hosts_singletenant.instances[1]
+    hello_vm = hosts_singletenant.instances[2]
 
     confirm_manager_empty(new_manager)
 
@@ -95,12 +95,14 @@ def test_restore_snapshot_and_agents_upgrade_singletenant(
 @pytest.fixture(
         scope='module',
         params=get_single_tenant_versions_list())
-def cluster_singletenant(request, cfy, ssh_key, module_tmpdir, attributes,
-                         logger, install_dev_tools=True):
-    st_cluster = cluster(request, cfy, ssh_key, module_tmpdir, attributes,
-                         logger, 1, install_dev_tools)
-    yield st_cluster
-    st_cluster.destroy()
+def hosts_singletenant(
+        request, cfy, ssh_key, module_tmpdir, attributes,
+        logger, install_dev_tools=True):
+    st_hosts = hosts(
+            request, cfy, ssh_key, module_tmpdir, attributes,
+            logger, 1, install_dev_tools)
+    yield st_hosts
+    st_hosts.destroy()
 
 
 def check_secrets_converted(manager, logger, tenant='default_tenant'):

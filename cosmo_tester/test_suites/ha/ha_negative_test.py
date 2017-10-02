@@ -15,7 +15,7 @@
 
 import pytest
 from cosmo_tester.framework.examples.hello_world import HelloWorldExample
-from cosmo_tester.framework.cluster import ImageBasedCloudifyCluster
+from cosmo_tester.framework.test_hosts import TestHosts
 from .ha_helper import HighAvailabilityHelper as ha_helper
 from . import skip_community
 
@@ -26,21 +26,21 @@ pytestmark = skip_community
 
 
 @pytest.fixture(scope='function')
-def cluster(
+def hosts(
         request, cfy, ssh_key, module_tmpdir, attributes, logger):
     """Creates a HA cluster from an image in rackspace OpenStack."""
     logger.info('Creating HA cluster of 2 managers')
-    cluster = ImageBasedCloudifyCluster(cfy, ssh_key, module_tmpdir,
-                                        attributes, logger,
-                                        number_of_managers=2)
+    hosts = TestHosts(
+            cfy, ssh_key, module_tmpdir, attributes, logger,
+            number_of_instances=2)
 
     # manager2 - Cloudify latest - don't install plugins
-    cluster.managers[1].upload_plugins = False
+    hosts.instances[1].upload_plugins = False
 
     try:
-        cluster.create()
-        manager1 = cluster.managers[0]
-        manager2 = cluster.managers[1]
+        hosts.create()
+        manager1 = hosts.instances[0]
+        manager2 = hosts.instances[1]
 
         ha_helper.delete_active_profile()
         manager1.use()
@@ -55,25 +55,25 @@ def cluster(
                          cluster_node_name=manager2.ip_address)
         cfy.cluster.nodes.list()
 
-        yield cluster
+        yield hosts
 
     finally:
-        cluster.destroy()
+        hosts.destroy()
 
 
 def test_nonempty_manager_join_cluster_negative(cfy, attributes, ssh_key,
                                                 logger, tmpdir, module_tmpdir):
     logger.info('Creating HA cluster of 2 managers')
-    cluster = ImageBasedCloudifyCluster(cfy, ssh_key, module_tmpdir,
-                                        attributes, logger,
-                                        number_of_managers=2)
+    hosts = TestHosts(
+            cfy, ssh_key, module_tmpdir, attributes, logger,
+            number_of_instances=2)
     # manager2 - Cloudify latest - don't install plugins
-    cluster.managers[1].upload_plugins = False
+    hosts.instances[1].upload_plugins = False
 
     try:
-        cluster.create()
-        manager1 = cluster.managers[0]
-        manager2 = cluster.managers[1]
+        hosts.create()
+        manager1 = hosts.instances[0]
+        manager2 = hosts.instances[1]
 
         ha_helper.delete_active_profile()
         manager1.use()
@@ -103,12 +103,12 @@ def test_nonempty_manager_join_cluster_negative(cfy, attributes, ssh_key,
                              cluster_node_name=manager2.ip_address)
 
     finally:
-        cluster.destroy()
+        hosts.destroy()
 
 
-def test_remove_from_cluster_and_use_negative(cfy, cluster, logger):
-    manager1 = cluster.managers[0]
-    manager2 = cluster.managers[1]
+def test_remove_from_cluster_and_use_negative(cfy, hosts, logger):
+    manager1 = hosts.instances[0]
+    manager2 = hosts.instances[1]
 
     logger.info('Removing the standby manager %s from the HA cluster',
                 manager2.ip_address)
@@ -131,9 +131,9 @@ def test_remove_from_cluster_and_use_negative(cfy, cluster, logger):
         exinfo.value.message
 
 
-def test_remove_from_cluster_and_rejoin_negative(cfy, cluster, logger):
-    manager1 = cluster.managers[0]
-    manager2 = cluster.managers[1]
+def test_remove_from_cluster_and_rejoin_negative(cfy, hosts, logger):
+    manager1 = hosts.instances[0]
+    manager2 = hosts.instances[1]
 
     logger.info('Removing the standby manager %s from the HA cluster',
                 manager2.ip_address)
@@ -156,9 +156,9 @@ def test_remove_from_cluster_and_rejoin_negative(cfy, cluster, logger):
 
 
 def test_manager_already_in_cluster_join_cluster_negative(cfy,
-                                                          cluster, logger):
-    manager1 = cluster.managers[0]
-    manager2 = cluster.managers[1]
+                                                          hosts, logger):
+    manager1 = hosts.instances[0]
+    manager2 = hosts.instances[1]
 
     ha_helper.set_active(manager2, cfy, logger)
     ha_helper.delete_active_profile()
