@@ -131,7 +131,7 @@ class VM(object):
     def use(self, tenant=None):
         return True
 
-    def _upload_plugin(self, plugin_name):
+    def upload_plugin(self, plugin_name):
         return True
 
     def _upload_necessary_files(self, openstack_config_file):
@@ -584,7 +584,7 @@ class TestHosts(object):
 
                 instance._upload_necessary_files(openstack_config_file)
                 if instance.upload_plugins:
-                    instance._upload_plugin('openstack_centos_core')
+                    instance.upload_plugin('openstack_centos_core')
 
             self._logger.info('Test hosts successfully created!')
 
