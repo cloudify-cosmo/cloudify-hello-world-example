@@ -236,8 +236,6 @@ def multi_network_hello_worlds(cfy, managers, attributes, ssh_key, tmpdir,
 
     # Add one more hello world, that will run on the `default` network
     # implicitly
-    # TODO: See why this is necessary. Should be done by the FW
-    manager.upload_plugin('openstack_centos_core')
     hw = HelloWorldExample(cfy, manager, attributes, ssh_key, logger, tmpdir,
                            tenant=DEFAULT_TENANT_NAME,
                            suffix=DEFAULT_TENANT_NAME)
