@@ -21,6 +21,7 @@ from . import (
     check_from_source_plugin,
     check_plugins,
     hosts,
+    check_credentials,
     confirm_manager_empty,
     create_helloworld_just_deployment,
     create_snapshot,
@@ -31,7 +32,9 @@ from . import (
     get_plugins_list,
     get_secrets_list,
     get_single_tenant_versions_list,
+    manager_supports_users_in_snapshot_creation,
     NOINSTALL_DEPLOYMENT_ID,
+    prepare_credentials_tests,
     remove_and_check_deployments,
     restore_snapshot,
     SNAPSHOT_ID,
@@ -60,11 +63,19 @@ def test_restore_snapshot_and_agents_upgrade_singletenant(
     old_plugins = get_plugins_list(old_manager)
     old_deployments = get_deployments_list(old_manager)
 
+    # Credentials tests only apply to 4.2 and later
+    if manager_supports_users_in_snapshot_creation(old_manager):
+        prepare_credentials_tests(cfy, logger, old_manager)
+
     create_snapshot(old_manager, SNAPSHOT_ID, attributes, logger)
     download_snapshot(old_manager, local_snapshot_path, SNAPSHOT_ID, logger)
     upload_snapshot(new_manager, local_snapshot_path, SNAPSHOT_ID, logger)
 
     restore_snapshot(new_manager, SNAPSHOT_ID, cfy, logger)
+
+    # Credentials tests only apply to 4.2 and later
+    if manager_supports_users_in_snapshot_creation(old_manager):
+        check_credentials(cfy, logger, new_manager)
 
     assert_hello_worlds([hello_vm], installed=True, logger=logger)
 

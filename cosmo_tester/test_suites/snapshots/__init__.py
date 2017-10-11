@@ -1,4 +1,4 @@
-########
+#######
 # Copyright (c) 2017 GigaSpaces Technologies Ltd. All rights reserved
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,10 +13,14 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
+import base64
 from contextlib import contextmanager
+import hashlib
+import hmac
 import json
 import os
 
+from passlib.context import CryptContext
 import retrying
 
 from cosmo_tester.framework.test_hosts import (
@@ -25,6 +29,7 @@ from cosmo_tester.framework.test_hosts import (
 )
 from cosmo_tester.framework.util import (
     assert_snapshot_created,
+    create_rest_client,
     is_community,
 )
 # CFY-6912
@@ -32,6 +37,7 @@ from cloudify_cli.commands.executions import (
     _get_deployment_environment_creation_execution,
 )
 from cloudify_cli.constants import CLOUDIFY_TENANT_HEADER
+from cloudify_rest_client.exceptions import UserUnauthorizedError
 
 
 HELLO_WORLD_URL = 'https://github.com/cloudify-cosmo/cloudify-hello-world-example/archive/4.0.zip'  # noqa
@@ -56,6 +62,7 @@ TENANT_DEPLOYMENTS_PATH = (
 DEPLOYMENT_ENVIRONMENT_PATH = (
     '/opt/mgmtworker/work/deployments/{tenant}/{name}'
 )
+CHANGED_ADMIN_PASSWORD = 'changedmin'
 
 # These manager versions only support single tenant snapshot restores in
 # premium
@@ -69,7 +76,7 @@ SINGLE_TENANT_MANAGERS = (
 MULTI_TENANT_MANAGERS = (
     '4.0.1',
     '4.1',
-    'master'
+    'master',
 )
 
 
@@ -93,7 +100,6 @@ def get_multi_tenant_versions_list():
 
 
 def upgrade_agents(cfy, manager, logger):
-    manager.use()
     logger.info('Upgrading agents')
     args = [] if is_community() else ['--all-tenants']
     cfy.agents.install(args)
@@ -305,8 +311,14 @@ def wait_for_execution(manager, execution, logger, tenant=None):
         logger,
         tenant,
     )
-    with set_client_tenant(manager, tenant):
-        execution = manager.client.executions.get(execution['id'])
+    try:
+        with set_client_tenant(manager, tenant):
+            execution = manager.client.executions.get(execution['id'])
+    except UserUnauthorizedError:
+        if manager_supports_users_in_snapshot_creation(manager):
+            # This will happen on a restore with modified users
+            change_rest_client_password(manager, CHANGED_ADMIN_PASSWORD)
+        raise
     logger.info('- execution.status = %s', execution.status)
     if execution.status not in execution.END_STATES:
         raise ExecutionWaiting(execution.status)
@@ -384,7 +396,16 @@ def create_snapshot(manager, snapshot_id, attributes, logger):
         include_metrics=True,
         include_credentials=True,
     )
-    assert_snapshot_created(manager, snapshot_id, attributes)
+    if manager_supports_users_in_snapshot_creation(manager):
+        password = CHANGED_ADMIN_PASSWORD
+    else:
+        password = 'admin'
+    assert_snapshot_created(manager, snapshot_id, password)
+
+
+def manager_supports_users_in_snapshot_creation(manager):
+    return manager.branch_name not in ('3.4.2', '4.0', '4.0.1', '4.1',
+                                       '4.1.1')
 
 
 def download_snapshot(manager, local_path, snapshot_id, logger):
@@ -420,6 +441,129 @@ def restore_snapshot(manager, snapshot_id, cfy, logger):
         # See any errors
         cfy.executions.list(['--include-system-workflows'])
         raise
+
+
+def prepare_credentials_tests(cfy, logger, manager):
+    manager.use()
+
+    change_salt(manager, 'this_is_a_test_salt', cfy, logger)
+
+    logger.info('Creating test user')
+    create_user('testuser', 'testpass', cfy)
+    logger.info('Updating admin password')
+    update_admin_password(CHANGED_ADMIN_PASSWORD, cfy)
+    change_rest_client_password(manager, CHANGED_ADMIN_PASSWORD)
+
+
+def check_credentials(cfy, logger, manager):
+    logger.info('Changing to modified admin credentials')
+    change_profile_credentials('admin', CHANGED_ADMIN_PASSWORD, cfy)
+    change_rest_client_password(manager, CHANGED_ADMIN_PASSWORD)
+    logger.info('Checking test user still works')
+    test_user('testuser', 'testpass', cfy, logger, CHANGED_ADMIN_PASSWORD)
+
+
+def change_rest_client_password(manager, new_password):
+    manager.client = create_rest_client(manager.ip_address,
+                                        password=new_password)
+
+
+def create_user(username, password, cfy):
+    cfy.users.create(['-r', 'sys_admin', '-p', password, username])
+
+
+def change_password(username, password, cfy):
+    cfy.users(['set-password', '-p', password, username])
+
+
+def test_user(username, password, cfy, logger, admin_password='admin'):
+    logger.info('Checking {user} can log in.'.format(user=username))
+    # This command will fail noisily if the credentials don't work
+    cfy.profiles.set(['-u', username, '-p', password])
+
+    # Now revert to the admin user
+    cfy.profiles.set(['-u', 'admin', '-p', admin_password])
+
+
+def change_profile_credentials(username, password, cfy):
+    cfy.profiles.set(['-u', username, '-p', password])
+
+
+def update_admin_password(new_password, cfy):
+    # Update the admin user on the manager then in our profile
+    change_password('admin', new_password, cfy)
+    change_profile_credentials('admin', new_password, cfy)
+
+
+def get_security_conf(manager):
+    with manager.ssh() as fabric_ssh:
+        output = fabric_ssh.sudo('cat /opt/manager/rest-security.conf')
+    # No real error checking here; the old manager shouldn't be able to even
+    # start the rest service if this file isn't json.
+    return json.loads(output)
+
+
+def change_salt(manager, new_salt, cfy, logger):
+    """Change the salt on the manager so that we don't incorrectly succeed
+    while testing non-admin users due to both copies of the master image
+    having the same hash salt value."""
+    logger.info('Preparting to update salt on {manager}'.format(
+        manager=manager.ip_address,
+    ))
+    security_conf = get_security_conf(manager)
+
+    original_salt = security_conf['hash_salt']
+    security_conf['hash_salt'] = new_salt
+
+    logger.info('Applying new salt...')
+    with manager.ssh() as fabric_ssh:
+        fabric_ssh.sudo(
+            "sed -i 's:{original}:{replacement}:' "
+            "/opt/manager/rest-security.conf".format(
+                original=original_salt,
+                replacement=new_salt,
+            )
+        )
+
+        fabric_ssh.sudo('systemctl restart cloudify-restservice')
+
+    logger.info('Fixing admin credentials...')
+    fix_admin_account(manager, new_salt, cfy)
+
+    logger.info('Hash updated.')
+
+
+def fix_admin_account(manager, salt, cfy):
+    new_hash = generate_admin_password_hash('admin', salt)
+    new_hash = new_hash.replace('$', '\\$')
+
+    with manager.ssh() as fabric_ssh:
+        fabric_ssh.run(
+            'sudo -u postgres psql cloudify_db -t -c '
+            '"UPDATE users SET password=\'{new_hash}\' '
+            'WHERE id=0"'.format(
+                new_hash=new_hash,
+            ),
+            # No really, fabric, just leave the command alone.
+            shell_escape=False,
+            shell=False,
+        )
+
+    # This will confirm that the hash change worked... or it'll fail.
+    change_profile_credentials('admin', 'admin', cfy)
+
+
+def generate_admin_password_hash(admin_password, salt):
+    # Flask password hash generation approach for Cloudify 4.x where x<=2
+    pwd_hmac = base64.b64encode(
+        # Encodes put in to keep hmac happy with unicode strings
+        hmac.new(salt.encode('utf-8'), admin_password.encode('utf-8'),
+                 hashlib.sha512).digest()
+    ).decode('ascii')
+
+    # This ctx is nothing to do with a cloudify ctx.
+    pass_ctx = CryptContext(schemes=['pbkdf2_sha256'])
+    return pass_ctx.encrypt(pwd_hmac)
 
 
 def check_plugins(manager, old_plugins, logger, tenant='default_tenant'):

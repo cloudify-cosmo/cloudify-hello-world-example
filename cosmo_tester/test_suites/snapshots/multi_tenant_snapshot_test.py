@@ -17,6 +17,7 @@ import pytest
 
 from . import (
     assert_hello_worlds,
+    check_credentials,
     check_deployments,
     check_from_source_plugin,
     check_plugins,
@@ -30,7 +31,9 @@ from . import (
     get_plugins_list,
     get_multi_tenant_versions_list,
     get_secrets_list,
+    manager_supports_users_in_snapshot_creation,
     NOINSTALL_DEPLOYMENT_ID,
+    prepare_credentials_tests,
     remove_and_check_deployments,
     restore_snapshot,
     set_client_tenant,
@@ -92,11 +95,19 @@ def test_restore_snapshot_and_agents_upgrade_multitenant(
         for tenant in tenants
     }
 
+    # Credentials tests only apply to 4.2 and later
+    if manager_supports_users_in_snapshot_creation(old_manager):
+        prepare_credentials_tests(cfy, logger, old_manager)
+
     create_snapshot(old_manager, SNAPSHOT_ID, attributes, logger)
     download_snapshot(old_manager, local_snapshot_path, SNAPSHOT_ID, logger)
     upload_snapshot(new_manager, local_snapshot_path, SNAPSHOT_ID, logger)
 
     restore_snapshot(new_manager, SNAPSHOT_ID, cfy, logger)
+
+    # Credentials tests only apply to 4.2 and later
+    if manager_supports_users_in_snapshot_creation(old_manager):
+        check_credentials(cfy, logger, new_manager)
 
     # Make sure we still have the hello worlds after the restore
     assert_hello_worlds(hello_vms, installed=True, logger=logger)
