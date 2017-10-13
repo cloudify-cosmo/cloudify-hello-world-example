@@ -18,10 +18,15 @@ import json
 import pytest
 from os.path import join
 from copy import deepcopy
+from StringIO import StringIO
 
 from cloudify_cli.constants import DEFAULT_TENANT_NAME
 
-from cosmo_tester.framework.test_hosts import BootstrapBasedCloudifyManagers
+from cosmo_tester.framework.test_hosts import (
+    BootstrapBasedCloudifyManagers,
+    CURRENT_MANAGER,
+    VM,
+)
 from cosmo_tester.framework.examples.hello_world import HelloWorldExample
 from cosmo_tester.framework.util import prepare_and_get_test_tenant
 
@@ -249,3 +254,119 @@ def multi_network_hello_worlds(cfy, managers, attributes, ssh_key, tmpdir,
     yield hellos
     for hello in hellos:
         hello.cleanup()
+
+
+class _ProxyTestHosts(BootstrapBasedCloudifyManagers):
+    """A BootstrapBasedCloudifyManagers that only bootstraps one manager.
+
+    In the proxy test, we need a bootstrapped manager, and an additional
+    host for the proxy. We want both to be created in the same terraform
+    call so that they're on the same network, but we only want to bootstrap
+    one of the machines - the manager, not the proxy.
+
+    By convention, the first instance is the proxy, and the second instance
+    is the manager.
+    """
+    def _bootstrap_managers(self):
+        original_instances = self.instances
+        self.instances = [self.instances[1]]
+        try:
+            return super(_ProxyTestHosts, self)._bootstrap_managers()
+        finally:
+            self.instances = original_instances
+
+
+@pytest.fixture(scope='function')
+def proxy_hosts(request, cfy, ssh_key, module_tmpdir, attributes, logger):
+    # the convention for this test is that the proxy is instances[0] and
+    # the manager is instances[1]
+    # note that even though we bootstrap, we need to use CURRENT_MANAGER
+    # for the manager and not the VM to setup a manager correctly
+    instances = [VM(), CURRENT_MANAGER()]
+    hosts = _ProxyTestHosts(
+        cfy, ssh_key, module_tmpdir, attributes, logger, instances=instances)
+    hosts.preconfigure_callback = _proxy_preconfigure_callback
+    hosts.create()
+    try:
+        yield hosts.instances
+    finally:
+        hosts.destroy()
+
+
+PROXY_SERVICE_TEMPLATE = """
+[Unit]
+Description=Proxy for port {port}
+Wants=network-online.target
+[Service]
+User=root
+Group=root
+ExecStart=/bin/socat TCP-LISTEN:{port},fork TCP:{ip}:{port}
+Restart=always
+RestartSec=20s
+[Install]
+WantedBy=multi-user.target
+"""
+
+
+def _proxy_preconfigure_callback(_managers):
+    proxy, manager = _managers
+    proxy_ip = proxy.private_ip_address
+    manager_ip = manager.private_ip_address
+    # on the manager, we override the default network ip, so that by default
+    # all agents will go through the proxy
+    manager.bs_inputs = {'manager_networks': {'default': proxy_ip}}
+
+    # setup the proxy - simple socat services that forward all TCP connections
+    # to the manager
+    with proxy.ssh() as fabric:
+        fabric.sudo('yum install socat -y')
+        for port in [5671, 53333]:
+            service = 'proxy_{0}'.format(port)
+            filename = '/usr/lib/systemd/system/{0}.service'.format(service)
+            fabric.put(
+                StringIO(PROXY_SERVICE_TEMPLATE.format(
+                    ip=manager_ip, port=port)),
+                filename, use_sudo=True)
+            fabric.sudo('systemctl enable {0}'.format(service))
+            fabric.sudo('systemctl start {0}'.format(service))
+
+
+@pytest.fixture(scope='function')
+def proxy_helloworld(cfy, proxy_hosts, attributes, ssh_key, tmpdir, logger):
+    # don't use MultiNetworkTestHosts - we're testing with the default
+    # network, so no need to set manager network name
+    hw = HelloWorldExample(
+        cfy, proxy_hosts[1], attributes, ssh_key, logger, tmpdir)
+    hw.blueprint_file = 'openstack-blueprint.yaml'
+    hw.inputs.update({
+        'agent_user': attributes.centos_7_username,
+        'image': attributes.centos_7_image_name,
+    })
+
+    yield hw
+    if hw.cleanup_required:
+        logger.info('Hello world cleanup required..')
+        hw.cleanup()
+
+
+def test_agent_via_proxy(cfy, proxy_hosts, proxy_helloworld, tmpdir, logger):
+    proxy, manager = proxy_hosts
+
+    # to make sure that the agents go through the proxy, and not connect to
+    # the manager directly, we block all communication on the manager's
+    # rabbitmq and internal REST endpoint, except from the proxy (and from
+    # localhost)
+    manager_ip = manager.private_ip_address
+    proxy_ip = proxy.private_ip_address
+    with manager.ssh() as fabric:
+        for port in [5671, 53333]:
+            fabric.sudo(
+                'iptables -I INPUT -p tcp -s 0.0.0.0/0 --dport {0} -j DROP'
+                .format(port))
+            for ip in [proxy_ip, manager_ip, '127.0.0.1']:
+                fabric.sudo(
+                    'iptables -I INPUT -p tcp -s {0} --dport {1} -j ACCEPT'
+                    .format(ip, port))
+
+    manager.use()
+    proxy_helloworld.verify_all()
