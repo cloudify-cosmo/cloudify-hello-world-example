@@ -16,9 +16,7 @@
 
 import logging
 import os
-import shutil
 import sys
-import tempfile
 
 from path import Path
 import pytest
@@ -43,15 +41,12 @@ def logger(request):
 
 
 @pytest.fixture(scope='module')
-def module_tmpdir(request, logger):
+def module_tmpdir(request, tmpdir_factory, logger):
     suffix = request.module.__name__
-    temp_dir = Path(tempfile.mkdtemp(suffix=suffix))
+    temp_dir = Path(tmpdir_factory.mktemp(suffix))
     logger.info('Created temp folder: %s', temp_dir)
 
-    yield temp_dir
-
-    logger.info('Deleting temp folder: %s', temp_dir)
-    shutil.rmtree(temp_dir)
+    return temp_dir
 
 
 class SSHKey(object):
@@ -80,8 +75,7 @@ class SSHKey(object):
 def ssh_key(module_tmpdir, logger):
     key = SSHKey(module_tmpdir, logger)
     key.create()
-    yield key
-    key.delete()
+    return key
 
 
 @pytest.fixture(scope='module')
