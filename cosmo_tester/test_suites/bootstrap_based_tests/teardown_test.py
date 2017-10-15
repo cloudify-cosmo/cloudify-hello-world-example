@@ -67,7 +67,7 @@ def _preconfigure_callback(managers):
         'python-pip', 'libxslt', 'daemonize'
     ]
     pre_bootstrap_state['folders in /opt'] += ['python_NOTICE.txt', 'lib']
-    pre_bootstrap_state['folders in /var/log'] += ['yum.log']
+    pre_bootstrap_state['folders in /var/log'] += ['yum.log', 'cloudify']
     pre_bootstrap_state['init_d service files (/etc/rc.d/init.d/)'] += [
         'logstash.rpmsave', 'jexec'
     ]
