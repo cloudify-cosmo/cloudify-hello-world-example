@@ -30,7 +30,7 @@ cli_urls_override:
   osx_cli_package_url: null
 
 centos_7_username: centos
-centos_7_image_name: CentOS-7-x86_64-GenericCloud-1608
+centos_7_image_name: CentOS-7-x86_64-GenericCloud-1608-yum-update
 centos_7_AMI: ami-7abd0209
 
 centos_6_username: centos
