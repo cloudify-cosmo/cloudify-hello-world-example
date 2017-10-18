@@ -68,13 +68,6 @@ resource "aws_instance" "manager" {
   tags {
     "Name" = "system-test OSX cli-test"
   }
-
-  provisioner "remote-exec" {
-    inline = [
-      "echo hello world",
-      "sudo yum update openssl -y"
-    ]
-  }
 }
 
 # macincoud Dedicated server
@@ -107,6 +100,7 @@ resource "null_resource" "macincloud" {
     inline = [
       "chmod +x /tmp/osx-cli-test.sh",
       "export MACINCLOUD_PASSWORD=${var.osx_password}",
+      "ssh -i /tmp/key.pem centos@${aws_instance.manager.public_ip} 'sudo yum update openssl -y'",
       "/tmp/osx-cli-test.sh ${var.cli_package_url} /tmp/key.pem ${aws_instance.manager.public_ip} ${aws_instance.manager.private_ip} ${var.manager_user}",
       "rm -rf /tmp/key.pem"
     ]
