@@ -263,8 +263,8 @@ class _WindowsCliPackageTester(_CliPackageTester):
         cli_installer_exe_path = '{0}\\{1}'.format(work_dir,
                                                    cli_installer_exe_name)
         bootstrap_inputs_file = '{0}\\inputs.json'.format(work_dir)
-        cfy_exe = 'C:\\cloudify-cli\\embedded\\Scripts\\cfy.exe'
-        manager_blueprint_path = 'C:\\cloudify-cli\\cloudify-manager-blueprints\\simple-manager-blueprint.yaml'  # noqa
+        cfy_exe = 'C:\\Cloudify\\embedded\\Scripts\\cfy.exe'
+        manager_blueprint_path = 'C:\\Cloudify\\cloudify-manager-blueprints\\simple-manager-blueprint.yaml'  # noqa
 
         self.logger.info('Uploading private key to Windows VM..')
         self._run_cmd(session, '''
@@ -287,7 +287,7 @@ $client.DownloadFile($url, $file)""".format(
         ))
         self._run_cmd(session, '''
 cd {0}
-& .\{1} /SILENT /VERYSILENT /SUPPRESSMSGBOXES /DIR="C:\cloudify-cli"'''
+& .\{1} /SILENT /VERYSILENT /SUPPRESSMSGBOXES /DIR="C:\Cloudify"'''
                       .format(work_dir, cli_installer_exe_name))
 
         self.logger.info('Creating bootstrap inputs file..')

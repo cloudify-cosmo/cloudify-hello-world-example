@@ -58,6 +58,7 @@ resource "aws_security_group" "osx-cli-test" {
   }
 }
 
+# MANAGER
 resource "aws_instance" "manager" {
   ami           = "${var.manager_image}"
   instance_type = "${var.manager_flavor}"
@@ -67,8 +68,16 @@ resource "aws_instance" "manager" {
   tags {
     "Name" = "system-test OSX cli-test"
   }
+
+  provisioner "remote-exec" {
+    inline = [
+      "echo hello world",
+      "sudo yum update openssl -y"
+    ]
+  }
 }
 
+# macincoud Dedicated server
 resource "null_resource" "macincloud" {
   connection {
     agent = false

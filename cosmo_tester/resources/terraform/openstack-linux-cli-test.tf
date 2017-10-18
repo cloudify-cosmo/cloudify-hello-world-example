@@ -161,7 +161,8 @@ resource "openstack_compute_instance_v2" "manager_server" {
 
   provisioner "remote-exec" {
     inline = [
-      "echo hello world"
+      "echo hello world",
+      "sudo yum update openssl -y"
     ]
   }
 
