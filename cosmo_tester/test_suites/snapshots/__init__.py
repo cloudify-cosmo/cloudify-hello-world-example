@@ -404,8 +404,11 @@ def create_snapshot(manager, snapshot_id, attributes, logger):
 
 
 def manager_supports_users_in_snapshot_creation(manager):
-    return manager.branch_name not in ('3.4.2', '4.0', '4.0.1', '4.1',
-                                       '4.1.1')
+    return (
+        manager.branch_name not in ('3.4.2', '4.0', '4.0.1', '4.1',
+                                    '4.1.1')
+        and not is_community()
+    )
 
 
 def download_snapshot(manager, local_path, snapshot_id, logger):
