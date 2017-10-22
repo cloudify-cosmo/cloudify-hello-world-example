@@ -98,7 +98,7 @@ resource "null_resource" "macincloud" {
 
   provisioner "remote-exec" {
     inline = [
-      "chmod +x /tmp/osx-cli-test.sh",
+      "chmod +x /tmp/osx-cli-test.sh && chmod 600 /tmp/key.pem",
       "export MACINCLOUD_PASSWORD=${var.osx_password}",
       "ssh -i /tmp/key.pem -o 'StrictHostKeychecking=no' centos@${aws_instance.manager.public_ip} 'sudo yum update openssl -y'",
       "/tmp/osx-cli-test.sh ${var.cli_package_url} /tmp/key.pem ${aws_instance.manager.public_ip} ${aws_instance.manager.private_ip} ${var.manager_user}",
