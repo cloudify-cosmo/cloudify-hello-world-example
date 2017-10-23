@@ -224,7 +224,7 @@ def multi_network_hello_worlds(cfy, managers, attributes, ssh_key, tmpdir,
         )
         hello = MultiNetworkHelloWorld(
             cfy, manager, attributes, ssh_key, logger, tmpdir,
-            tenant=tenant, suffix=tenant)
+            tenant=tenant, suffix=network_name)
         hello.blueprint_file = 'openstack-blueprint.yaml'
         hello.inputs.update({
             'agent_user': attributes.centos_7_username,
@@ -243,7 +243,7 @@ def multi_network_hello_worlds(cfy, managers, attributes, ssh_key, tmpdir,
     # implicitly
     hw = HelloWorldExample(cfy, manager, attributes, ssh_key, logger, tmpdir,
                            tenant=DEFAULT_TENANT_NAME,
-                           suffix=DEFAULT_TENANT_NAME)
+                           suffix='default_network')
     hw.blueprint_file = 'openstack-blueprint.yaml'
     hw.inputs.update({
         'agent_user': attributes.centos_7_username,
