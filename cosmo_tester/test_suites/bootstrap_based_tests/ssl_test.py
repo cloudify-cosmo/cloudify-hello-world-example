@@ -17,6 +17,7 @@ from cosmo_tester.framework.examples.hello_world import HelloWorldExample
 from cosmo_tester.framework.fixtures import bootstrap_based_manager
 from cosmo_tester.framework.util import is_community
 from cloudify_rest_client.client import CloudifyClient
+from manager_rest.constants import DEFAULT_TENANT_ROLE
 from os.path import join
 
 manager = bootstrap_based_manager
@@ -54,7 +55,12 @@ def test_ssl(cfy, manager, module_tmpdir, attributes, ssh_key, logger):
         cfy.users.create('ssl_user', '-p', 'ssl_pass')
         cfy.tenants.create(tenant_name)
 
-        cfy.tenants('add-user', 'ssl_user', '-t', tenant_name)
+        cfy.tenants('add-user',
+                    'ssl_user',
+                    '-t',
+                    tenant_name,
+                    '-r',
+                    DEFAULT_TENANT_ROLE)
 
     hello_world = HelloWorldExample(
         cfy, manager, attributes, ssh_key, logger, module_tmpdir)

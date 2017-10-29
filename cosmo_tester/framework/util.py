@@ -546,7 +546,7 @@ def set_client_tenant(manager, tenant):
 
     try:
         yield
-    except:
+    except Exception:
         raise
     finally:
         if tenant:
