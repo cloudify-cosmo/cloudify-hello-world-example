@@ -17,10 +17,10 @@ from cosmo_tester.framework.examples.hello_world import HelloWorldExample
 from cosmo_tester.framework.fixtures import bootstrap_based_manager
 from cosmo_tester.framework.util import is_community
 from cloudify_rest_client.client import CloudifyClient
-from manager_rest.constants import DEFAULT_TENANT_ROLE
 from os.path import join
 
 manager = bootstrap_based_manager
+DEFAULT_TENANT_ROLE = 'user'
 
 
 def test_ssl(cfy, manager, module_tmpdir, attributes, ssh_key, logger):
