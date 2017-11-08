@@ -426,7 +426,8 @@ def upload_snapshot(manager, local_path, snapshot_id, logger):
                 json.dumps(snapshot, indent=2))
 
 
-def restore_snapshot(manager, snapshot_id, cfy, logger):
+def restore_snapshot(manager, snapshot_id, cfy, logger,
+                     restore_certificates=False):
     # Show the snapshots, to aid troubleshooting on failures
     manager.use()
     cfy.snapshots.list()
@@ -434,6 +435,7 @@ def restore_snapshot(manager, snapshot_id, cfy, logger):
     logger.info('Restoring snapshot on latest manager..')
     restore_execution = manager.client.snapshots.restore(
         snapshot_id,
+        restore_certificates=restore_certificates
     )
     try:
         restore_execution = wait_for_execution(
