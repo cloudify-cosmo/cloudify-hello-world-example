@@ -3,12 +3,12 @@
 set -e
 
 TEMP_DIR="/tmp"
-PYTHON_FILE_SERVER_ROOT=${TEMP_DIR}/python-simple-http-webserver
+port=$(ctx node properties port)
+PYTHON_FILE_SERVER_ROOT=${TEMP_DIR}/cloudify-hello-world.$port
 PID_FILE="server.pid"
 
 ctx logger info "Starting HTTP server from ${PYTHON_FILE_SERVER_ROOT}"
 
-port=$(ctx node properties port)
 
 cd ${PYTHON_FILE_SERVER_ROOT}
 ctx logger info "Starting SimpleHTTPServer"
