@@ -647,6 +647,15 @@ def check_deployments(manager, old_deployments, logger,
     _log('Found correct deployments', logger, tenant)
 
 
+def verify_services_status(manager):
+    status = manager.client.manager.get_status()
+    for service in status['services']:
+        for instance in service['instances']:
+            if instance['state'] != 'running':
+                raise Exception('Service {0} is in status {1}'.
+                                format(instance, instance['state']))
+
+
 @contextmanager
 def set_client_tenant(manager, tenant):
     if tenant:

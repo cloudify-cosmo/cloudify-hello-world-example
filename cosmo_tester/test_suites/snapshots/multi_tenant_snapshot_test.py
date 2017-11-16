@@ -19,6 +19,7 @@ from . import (
     assert_hello_worlds,
     check_credentials,
     check_deployments,
+    verify_services_status,
     check_from_source_plugin,
     check_plugins,
     hosts,
@@ -104,6 +105,8 @@ def test_restore_snapshot_and_agents_upgrade_multitenant(
     upload_snapshot(new_manager, local_snapshot_path, SNAPSHOT_ID, logger)
 
     restore_snapshot(new_manager, SNAPSHOT_ID, cfy, logger)
+
+    verify_services_status(new_manager)
 
     # Credentials tests only apply to 4.2 and later
     if manager_supports_users_in_snapshot_creation(old_manager):
