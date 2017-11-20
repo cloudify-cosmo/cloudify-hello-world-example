@@ -85,3 +85,16 @@ class HelloWorldExample(AbstractExample):
         if server_response.status_code != 200:
             pytest.fail('Unexpected status code: {}'.format(
                     server_response.status_code))
+
+
+def centos_hello_world(cfy, manager, attributes, ssh_key, tmpdir, logger,
+                       tenant='default_tenant', suffix=''):
+    hello = HelloWorldExample(
+        cfy, manager, attributes, ssh_key, logger, tmpdir,
+        tenant=tenant, suffix=suffix)
+    hello.blueprint_file = 'openstack-blueprint.yaml'
+    hello.inputs.update({
+        'agent_user': attributes.centos_7_username,
+        'image': attributes.centos_7_image_name,
+    })
+    return hello

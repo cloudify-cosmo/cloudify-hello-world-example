@@ -96,10 +96,7 @@ def _assert_scale(manager, deployment_id, outputs, expected_instances,
 
 
 def test_nodecellar_example(cfy, manager, nodecellar, logger):
-    nodecellar.upload_blueprint()
-    nodecellar.create_deployment()
-    nodecellar.install()
-    nodecellar.verify_installation()
+    nodecellar.upload_and_verify_install()
 
     # scale out (+1)
     logger.info('Performing scale out +1..')

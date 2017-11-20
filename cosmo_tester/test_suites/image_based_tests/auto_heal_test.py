@@ -46,10 +46,7 @@ def test_nodecellar_auto_healing(cfy, manager, nodecellar, logger):
     _modify_blueprint(nodecellar.blueprint_path)
 
     logger.info('Installing nodecellar..')
-    nodecellar.upload_blueprint()
-    nodecellar.create_deployment()
-    nodecellar.install()
-    nodecellar.verify_installation()
+    nodecellar.upload_and_verify_install()
 
     logger.info('Killing nodejs host..')
     outputs = nodecellar.outputs

@@ -27,7 +27,10 @@ from cosmo_tester.framework.test_hosts import (
     CURRENT_MANAGER,
     VM,
 )
-from cosmo_tester.framework.examples.hello_world import HelloWorldExample
+from cosmo_tester.framework.examples.hello_world import (
+    HelloWorldExample,
+    centos_hello_world
+)
 from cosmo_tester.framework.util import prepare_and_get_test_tenant
 
 from cosmo_tester.test_suites.snapshots import (
@@ -105,10 +108,7 @@ def test_multiple_networks(managers,
     post_bootstrap_hello.manager = new_manager
 
     for hello in multi_network_hello_worlds:
-        hello.upload_blueprint()
-        hello.create_deployment()
-        hello.install()
-        hello.verify_installation()
+        hello.upload_and_verify_install()
 
     create_snapshot(old_manager, snapshot_id, attributes, logger)
     download_snapshot(old_manager, local_snapshot_path, snapshot_id, logger)
@@ -241,14 +241,9 @@ def multi_network_hello_worlds(cfy, managers, attributes, ssh_key, tmpdir,
 
     # Add one more hello world, that will run on the `default` network
     # implicitly
-    hw = HelloWorldExample(cfy, manager, attributes, ssh_key, logger, tmpdir,
-                           tenant=DEFAULT_TENANT_NAME,
-                           suffix='default_network')
-    hw.blueprint_file = 'openstack-blueprint.yaml'
-    hw.inputs.update({
-        'agent_user': attributes.centos_7_username,
-        'image': attributes.centos_7_image_name
-    })
+    hw = centos_hello_world(cfy, manager, attributes, ssh_key, logger, tmpdir,
+                            tenant=DEFAULT_TENANT_NAME,
+                            suffix='default_network')
     hellos.append(hw)
 
     yield hellos
@@ -335,13 +330,8 @@ def _proxy_preconfigure_callback(_managers):
 def proxy_helloworld(cfy, proxy_hosts, attributes, ssh_key, tmpdir, logger):
     # don't use MultiNetworkTestHosts - we're testing with the default
     # network, so no need to set manager network name
-    hw = HelloWorldExample(
+    hw = centos_hello_world(
         cfy, proxy_hosts[1], attributes, ssh_key, logger, tmpdir)
-    hw.blueprint_file = 'openstack-blueprint.yaml'
-    hw.inputs.update({
-        'agent_user': attributes.centos_7_username,
-        'image': attributes.centos_7_image_name,
-    })
 
     yield hw
     if hw.cleanup_required:

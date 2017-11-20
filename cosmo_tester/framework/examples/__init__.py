@@ -93,6 +93,12 @@ class AbstractExample(testtools.TestCase):
         if self.verify_metrics:
             self.assert_deployment_metrics_exist()
 
+    def upload_and_verify_install(self):
+        self.upload_blueprint()
+        self.create_deployment()
+        self.install()
+        self.verify_installation()
+
     def delete_deployment(self):
         self.logger.info('Deleting deployment...')
         with set_client_tenant(self.manager, self.tenant):

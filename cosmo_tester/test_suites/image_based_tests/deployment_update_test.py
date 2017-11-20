@@ -22,7 +22,7 @@ import requests
 from retrying import retry
 
 from cosmo_tester.framework import util
-from cosmo_tester.framework.examples.hello_world import HelloWorldExample
+from cosmo_tester.framework.examples.hello_world import centos_hello_world
 from cosmo_tester.framework.fixtures import image_based_manager
 from cosmo_tester.framework.util import (
     prepare_and_get_test_tenant,
@@ -38,29 +38,18 @@ update_counter = 0
 @pytest.fixture(scope='function')
 def hello_world(cfy, manager, attributes, ssh_key, tmpdir, logger):
     tenant = prepare_and_get_test_tenant('dep_update', manager, cfy)
-    hw = HelloWorldExample(
+    hw = centos_hello_world(
             cfy, manager, attributes, ssh_key, logger, tmpdir,
             tenant=tenant, suffix='update')
-    hw.blueprint_file = 'openstack-blueprint.yaml'
     yield hw
     hw.cleanup()
 
 
 def test_hello_world_deployment_update(
-        cfy, manager, hello_world, attributes, tmpdir, logger):
-
-    hello_world.inputs.update({
-        'agent_user': attributes.centos_7_username,
-        'image': attributes.centos_7_image_name,
-    })
-
+        cfy, manager, hello_world, tmpdir, logger):
     logger.info('Deploying hello world example..')
 
-    hello_world.upload_blueprint()
-    hello_world.create_deployment()
-    hello_world.install()
-    hello_world.verify_installation()
-
+    hello_world.upload_and_verify_install()
     http_endpoint = hello_world.outputs['http_endpoint']
     modified_port = '9090'
 

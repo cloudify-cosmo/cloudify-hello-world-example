@@ -14,7 +14,7 @@
 #    * limitations under the License.
 
 import pytest
-from cosmo_tester.framework.examples.hello_world import HelloWorldExample
+from cosmo_tester.framework.examples.hello_world import centos_hello_world
 from cosmo_tester.framework.test_hosts import TestHosts
 from .ha_helper import HighAvailabilityHelper as ha_helper
 from . import skip_community
@@ -85,13 +85,8 @@ def test_nonempty_manager_join_cluster_negative(cfy, attributes, ssh_key,
 
         ha_helper.delete_active_profile()
         manager2.use()
-        hello_world = HelloWorldExample(
-            cfy, manager2, attributes, ssh_key, logger, tmpdir)
-        hello_world.blueprint_file = 'openstack-blueprint.yaml'
-        hello_world.inputs.update({
-            'agent_user': attributes.centos_7_username,
-            'image': attributes.centos_7_image_name,
-        })
+        hello_world = centos_hello_world(cfy, manager2, attributes, ssh_key,
+                                         logger, tmpdir)
 
         hello_world.upload_blueprint()
 

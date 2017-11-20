@@ -16,7 +16,7 @@
 import pytest
 import time
 
-from cosmo_tester.framework.examples.hello_world import HelloWorldExample
+from cosmo_tester.framework.examples.hello_world import centos_hello_world
 from cosmo_tester.framework.test_hosts import TestHosts
 from cosmo_tester.framework.util import prepare_and_get_test_tenant
 from .ha_helper import HighAvailabilityHelper as ha_helper
@@ -77,15 +77,10 @@ def ha_hello_worlds(cfy, hosts, attributes, ssh_key, tmpdir, logger):
             manager,
             cfy,
         )
-        hw = HelloWorldExample(
+        hw = centos_hello_world(
             cfy, manager, attributes, ssh_key, logger, tmpdir,
             tenant=tenant, suffix=str(i),
         )
-        hw.blueprint_file = 'openstack-blueprint.yaml'
-        hw.inputs.update({
-            'agent_user': attributes.centos_7_username,
-            'image': attributes.centos_7_image_name,
-        })
         hws.append(hw)
 
     yield hws
