@@ -36,6 +36,6 @@ def get_hello_worlds(cfy, manager, attributes, ssh_key, tmpdir, logger):
     hellos = []
     for tenant in tenants:
         hello = centos_hello_world(cfy, manager, attributes, ssh_key,
-                                   tmpdir, logger, tenant, suffix=tenant)
+                                   logger, tmpdir, tenant, suffix=tenant)
         hellos.append(hello)
     return hellos
