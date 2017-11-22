@@ -3,7 +3,8 @@
 set -e
 
 TEMP_DIR="/tmp"
-PYTHON_FILE_SERVER_ROOT=${TEMP_DIR}/python-simple-http-webserver
+port=$(ctx node properties port)
+PYTHON_FILE_SERVER_ROOT=${TEMP_DIR}/cloudify-hello-world.$port
 if [ -d ${PYTHON_FILE_SERVER_ROOT} ]; then
 	echo "Removing file server root folder ${PYTHON_FILE_SERVER_ROOT}"
 	rm -rf ${PYTHON_FILE_SERVER_ROOT}
