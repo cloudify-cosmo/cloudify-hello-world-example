@@ -123,6 +123,7 @@ def test_set_active(cfy, hosts, logger):
     manager1 = hosts.instances[0]
     ha_helper.delete_active_profile()
     manager1.use()
+    ha_helper.wait_nodes_online(hosts.instances, logger)
     ha_helper.verify_nodes_status(manager1, cfy, logger)
 
     for manager in hosts.instances[1:]:
