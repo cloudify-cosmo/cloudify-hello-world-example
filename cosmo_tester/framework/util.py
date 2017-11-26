@@ -346,8 +346,8 @@ def get_cli_package_url(platform):
     return url
 
 
-def get_manager_resources_package_url():
-    return _get_package_url('manager-single-tar.yaml').strip(os.linesep)
+def get_manager_install_rpm_url():
+    return yaml.load(_get_package_url('manager-install-rpm.yaml'))
 
 
 def _get_contents_from_github(repo, path, auth=None):

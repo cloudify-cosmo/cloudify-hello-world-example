@@ -18,6 +18,7 @@ from abc import ABCMeta, abstractproperty
 import json
 import os
 import uuid
+import yaml
 from contextlib import contextmanager
 from urllib import urlretrieve
 
@@ -29,7 +30,6 @@ from fabric import context_managers as fabric_context_managers
 from influxdb import InfluxDBClient
 
 from cosmo_tester.framework import util
-from cosmo_tester.framework import git_helper
 
 from cloudify_cli.constants import DEFAULT_TENANT_NAME
 
@@ -37,7 +37,6 @@ from cloudify_cli.constants import DEFAULT_TENANT_NAME
 REMOTE_PRIVATE_KEY_PATH = '/etc/cloudify/key.pem'
 REMOTE_OPENSTACK_CONFIG_PATH = '/etc/cloudify/openstack_config.json'
 
-MANAGER_BLUEPRINTS_REPO_URL = 'https://github.com/cloudify-cosmo/cloudify-manager-blueprints.git'  # noqa
 RSYNC_SCRIPT_URL = 'https://raw.githubusercontent.com/cloudify-cosmo/cloudify-dev/master/scripts/rsync.sh'  # NOQA
 
 MANAGER_API_VERSIONS = {
@@ -175,7 +174,7 @@ class _CloudifyManager(VM):
         self._openstack = util.create_openstack_client()
         self.influxdb_client = InfluxDBClient(public_ip_address, 8086,
                                               'root', 'root', 'cloudify')
-        self.bs_inputs = {}
+        self.additional_install_config = {}
 
     def _upload_necessary_files(self, openstack_config_file):
         self._logger.info('Uploading necessary files to %s', self)
@@ -636,19 +635,17 @@ class TestHosts(object):
 
 class BootstrapBasedCloudifyManagers(TestHosts):
     """
-    Bootstraps a Cloudify manager using simple manager blueprint.
+    Bootstraps a Cloudify manager using manager install RPM.
     """
 
     def __init__(self, *args, **kwargs):
         super(BootstrapBasedCloudifyManagers, self).__init__(*args, **kwargs)
         for manager in self.instances:
             manager.image_name = self._attributes.centos_7_image_name
-        self._manager_resources_package = \
-            util.get_manager_resources_package_url()
-        self._manager_blueprints_path = None
+        self._manager_install_rpm = util.get_manager_install_rpm_url()
 
     def _get_server_flavor(self):
-        return self._attributes.large_flavor_name
+        return self._attributes.medium_flavor_name
 
     def _get_latest_manager_image_name(self):
         return self._attributes.centos_7_image_name
@@ -656,38 +653,44 @@ class BootstrapBasedCloudifyManagers(TestHosts):
     def _bootstrap_managers(self):
         super(BootstrapBasedCloudifyManagers, self)._bootstrap_managers()
 
-        self._clone_manager_blueprints()
         for manager in self.instances:
-            inputs_file = self._create_inputs_file(manager)
-            self._bootstrap_manager(inputs_file)
+            config_file = self._create_config_file(manager)
+            self._bootstrap_manager(manager, config_file)
 
-    def _clone_manager_blueprints(self):
-        self._manager_blueprints_path = git_helper.clone(
-                MANAGER_BLUEPRINTS_REPO_URL,
-                str(self._tmpdir))
-
-    def _create_inputs_file(self, manager):
-        inputs_file = self._tmpdir / 'inputs_{0}.json'.format(manager.index)
-        bootstrap_inputs = {
-            'public_ip': manager.ip_address,
-            'private_ip': manager.private_ip_address,
-            'ssh_user': self._attributes.centos_7_username,
-            'ssh_key_filename': self._ssh_key.private_key_path,
-            'admin_username': self._attributes.cloudify_username,
-            'admin_password': self._attributes.cloudify_password,
-            'manager_resources_package': self._manager_resources_package,
+    def _create_config_file(self, manager):
+        config_file = self._tmpdir / 'config_{0}.yaml'.format(manager.index)
+        install_config = {
+            'manager':
+                {
+                    'public_ip': manager.ip_address,
+                    'private_ip': manager.private_ip_address,
+                    'security': {
+                        'admin_username': self._attributes.cloudify_username,
+                        'admin_password': self._attributes.cloudify_password,
+                    }
+                }
         }
 
         # Add any additional bootstrap inputs passed from the test
-        bootstrap_inputs.update(manager.bs_inputs)
-        bootstrap_inputs_str = json.dumps(bootstrap_inputs, indent=2)
+        install_config.update(manager.additional_install_config)
+        install_config_str = yaml.dump(install_config)
 
-        self._logger.info(
-                'Bootstrap inputs:%s%s', os.linesep, bootstrap_inputs_str)
-        inputs_file.write_text(bootstrap_inputs_str)
-        return inputs_file
+        self._logger.info('Install config:\n{0}'.format(install_config_str))
+        config_file.write_text(install_config_str)
+        return config_file
 
-    def _bootstrap_manager(self, inputs_file):
-        manager_blueprint_path = \
-            self._manager_blueprints_path / 'simple-manager-blueprint.yaml'
-        self._cfy.bootstrap([manager_blueprint_path, '-i', inputs_file])
+    def _bootstrap_manager(self, manager, inputs_file):
+        install_rpm_file = 'cloudify-manager-install.rpm'
+        with manager.ssh() as fabric_ssh:
+            fabric_ssh.run(
+                'curl -sS {0} -o {1}'.format(
+                    self._manager_install_rpm,
+                    install_rpm_file
+                )
+            )
+            fabric_ssh.sudo('yum install -y {0}'.format(install_rpm_file))
+            fabric_ssh.put(
+                inputs_file,
+                '/opt/cloudify-manager-install/config.yaml'
+            )
+            fabric_ssh.run('cfy_manager install')

@@ -76,7 +76,9 @@ def _preconfigure_callback(_managers):
         all_networks = deepcopy(mgr.networks)
         all_networks.pop(NETWORK_2)
 
-        mgr.bs_inputs = {'manager_networks': all_networks}
+        mgr.additional_install_config = {
+            'agent': {'networks': all_networks}
+        }
 
         # Configure NICs in order for networking to work properly
         mgr.enable_nics()
@@ -309,7 +311,9 @@ def _proxy_preconfigure_callback(_managers):
     manager_ip = manager.private_ip_address
     # on the manager, we override the default network ip, so that by default
     # all agents will go through the proxy
-    manager.bs_inputs = {'manager_networks': {'default': proxy_ip}}
+    manager.additional_install_config = {
+        'agent': {'networks': {'default': proxy_ip}}
+    }
 
     # setup the proxy - simple socat services that forward all TCP connections
     # to the manager

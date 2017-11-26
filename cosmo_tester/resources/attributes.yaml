@@ -30,14 +30,14 @@ cli_urls_override:
   osx_cli_package_url: null
 
 centos_7_username: centos
-centos_7_image_name: CentOS-7-x86_64-GenericCloud-1608
+centos_7_image_name: CentOS-7-x86_64-GenericCloud-1608-yum-update
 centos_7_AMI: ami-7abd0209
 
 centos_6_username: centos
 centos_6_image_name: centos_6.6
 
 rhel_7_username: cloud-user
-rhel_7_image_name: rhel-guest-image-7.3-35.x86_64.qcow2
+rhel_7_image_name: RHEL 7.4 (official)
 
 rhel_6_username: cloud-user
 rhel_6_image_name: rhel-guest-image-6.9-120.x86_64.qcow2
