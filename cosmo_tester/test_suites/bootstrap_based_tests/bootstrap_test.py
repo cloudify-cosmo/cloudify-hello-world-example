@@ -15,8 +15,7 @@
 
 from cosmo_tester.framework.fixtures import bootstrap_based_manager
 
-from . import hello_worlds  # noqa (pytest fixture imported)
-
+from cosmo_tester.framework.examples.hello_world import hello_worlds # noqa # (pytest fixture imported)
 
 manager = bootstrap_based_manager
 

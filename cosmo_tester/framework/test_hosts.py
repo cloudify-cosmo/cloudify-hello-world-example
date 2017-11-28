@@ -133,7 +133,7 @@ class VM(object):
     def upload_plugin(self, plugin_name):
         return True
 
-    def _upload_necessary_files(self, openstack_config_file):
+    def upload_necessary_files(self):
         return True
 
     image_name = ATTRIBUTES['centos_7_image_name']
@@ -176,8 +176,9 @@ class _CloudifyManager(VM):
                                               'root', 'root', 'cloudify')
         self.additional_install_config = {}
 
-    def _upload_necessary_files(self, openstack_config_file):
+    def upload_necessary_files(self):
         self._logger.info('Uploading necessary files to %s', self)
+        openstack_config_file = self._create_openstack_config_file()
         with self.ssh() as fabric_ssh:
             openstack_json_path = REMOTE_OPENSTACK_CONFIG_PATH
             fabric_ssh.sudo('mkdir -p "{}"'.format(
@@ -334,6 +335,64 @@ class _CloudifyManager(VM):
         self._logger.info('Running command:\n{0}'.format(cmd))
         os.system(cmd)
 
+    def teardown(self):
+        with self.ssh() as fabric_ssh:
+            fabric_ssh.run('cfy_manager remove --force')
+            fabric_ssh.sudo('yum remove -y cloudify-manager-install')
+
+    def _create_config_file(self):
+        config_file = self._tmpdir / 'config_{0}.yaml'.format(self.index)
+        install_config = {
+            'manager':
+                {
+                    'public_ip': self.ip_address,
+                    'private_ip': self.private_ip_address,
+                    'security': {
+                        'admin_username': self._attributes.cloudify_username,
+                        'admin_password': self._attributes.cloudify_password,
+                    }
+                }
+        }
+
+        # Add any additional bootstrap inputs passed from the test
+        install_config.update(self.additional_install_config)
+        install_config_str = yaml.dump(install_config)
+
+        self._logger.info(
+            'Install config:\n{0}'.format(install_config_str))
+        config_file.write_text(install_config_str)
+        return config_file
+
+    def bootstrap(self):
+        manager_install_rpm = util.get_manager_install_rpm_url()
+        install_config = self._create_config_file()
+        install_rpm_file = 'cloudify-manager-install.rpm'
+        with self.ssh() as fabric_ssh:
+            fabric_ssh.run(
+                'curl -sS {0} -o {1}'.format(
+                    manager_install_rpm,
+                    install_rpm_file
+                )
+            )
+            fabric_ssh.sudo('yum install -y {0}'.format(install_rpm_file))
+            fabric_ssh.put(
+                install_config,
+                '/opt/cloudify-manager-install/config.yaml'
+            )
+            fabric_ssh.run('cfy_manager install')
+        self.use()
+
+    def _create_openstack_config_file(self):
+        openstack_config_file = self._tmpdir / 'openstack_config.json'
+        openstack_config_file.write_text(json.dumps({
+            'username': os.environ['OS_USERNAME'],
+            'password': os.environ['OS_PASSWORD'],
+            'tenant_name': os.environ.get('OS_TENANT_NAME',
+                                          os.environ['OS_PROJECT_NAME']),
+            'auth_url': os.environ['OS_AUTH_URL']
+        }, indent=2))
+        return openstack_config_file
+
 
 def _get_latest_manager_image_name():
     """
@@ -365,8 +424,9 @@ class Cloudify3_4Manager(_CloudifyManager):
     branch_name = '3.4.2'
     tenant_name = restore_tenant_name = 'restore_tenant'
 
-    def _upload_necessary_files(self, openstack_config_file):
+    def upload_necessary_files(self):
         self._logger.info('Uploading necessary files to %s', self)
+        openstack_config_file = self._create_openstack_config_file()
         with self.ssh() as fabric_ssh:
             openstack_json_path = '/root/openstack_config.json'
             fabric_ssh.put(openstack_config_file,
@@ -385,8 +445,9 @@ class Cloudify3_4Manager(_CloudifyManager):
 class Cloudify4_0Manager(_CloudifyManager):
     branch_name = '4.0'
 
-    def _upload_necessary_files(self, openstack_config_file):
+    def upload_necessary_files(self):
         self._logger.info('Uploading necessary files to %s', self)
+        openstack_config_file = self._create_openstack_config_file()
         with self.ssh() as fabric_ssh:
             openstack_json_path = '/root/openstack_config.json'
             fabric_ssh.put(openstack_config_file,
@@ -518,17 +579,6 @@ class TestHosts(object):
     def _bootstrap_managers(self):
         pass
 
-    def create_openstack_config_file(self):
-        openstack_config_file = self._tmpdir / 'openstack_config.json'
-        openstack_config_file.write_text(json.dumps({
-            'username': os.environ['OS_USERNAME'],
-            'password': os.environ['OS_PASSWORD'],
-            'tenant_name': os.environ.get('OS_TENANT_NAME',
-                                          os.environ['OS_PROJECT_NAME']),
-            'auth_url': os.environ['OS_AUTH_URL']
-        }, indent=2))
-        return openstack_config_file
-
     def _get_server_flavor(self):
         return self._attributes.manager_server_flavor_name
 
@@ -539,8 +589,6 @@ class TestHosts(object):
         to provisioned VMs are uploaded to the server."""
         self._logger.info('Creating image based cloudify instances: '
                           '[number_of_instances=%d]', len(self.instances))
-
-        openstack_config_file = self.create_openstack_config_file()
 
         terraform_template_file = self._tmpdir / 'openstack-vm.tf'
 
@@ -581,7 +629,7 @@ class TestHosts(object):
             for instance in self.instances:
                 instance.verify_services_are_running()
 
-                instance._upload_necessary_files(openstack_config_file)
+                instance.upload_necessary_files()
                 if instance.upload_plugins:
                     instance.upload_plugin('openstack_centos_core')
 
@@ -647,50 +695,8 @@ class BootstrapBasedCloudifyManagers(TestHosts):
     def _get_server_flavor(self):
         return self._attributes.medium_flavor_name
 
-    def _get_latest_manager_image_name(self):
-        return self._attributes.centos_7_image_name
-
     def _bootstrap_managers(self):
         super(BootstrapBasedCloudifyManagers, self)._bootstrap_managers()
 
         for manager in self.instances:
-            config_file = self._create_config_file(manager)
-            self._bootstrap_manager(manager, config_file)
-
-    def _create_config_file(self, manager):
-        config_file = self._tmpdir / 'config_{0}.yaml'.format(manager.index)
-        install_config = {
-            'manager':
-                {
-                    'public_ip': manager.ip_address,
-                    'private_ip': manager.private_ip_address,
-                    'security': {
-                        'admin_username': self._attributes.cloudify_username,
-                        'admin_password': self._attributes.cloudify_password,
-                    }
-                }
-        }
-
-        # Add any additional bootstrap inputs passed from the test
-        install_config.update(manager.additional_install_config)
-        install_config_str = yaml.dump(install_config)
-
-        self._logger.info('Install config:\n{0}'.format(install_config_str))
-        config_file.write_text(install_config_str)
-        return config_file
-
-    def _bootstrap_manager(self, manager, inputs_file):
-        install_rpm_file = 'cloudify-manager-install.rpm'
-        with manager.ssh() as fabric_ssh:
-            fabric_ssh.run(
-                'curl -sS {0} -o {1}'.format(
-                    self._manager_install_rpm,
-                    install_rpm_file
-                )
-            )
-            fabric_ssh.sudo('yum install -y {0}'.format(install_rpm_file))
-            fabric_ssh.put(
-                inputs_file,
-                '/opt/cloudify-manager-install/config.yaml'
-            )
-            fabric_ssh.run('cfy_manager install')
+            manager.bootstrap()

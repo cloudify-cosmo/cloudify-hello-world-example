@@ -13,37 +13,23 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
-import pytest
-
 from time import sleep
 from os.path import join
 
 from cosmo_tester.framework import util
-from cosmo_tester.framework.test_hosts import BootstrapBasedCloudifyManagers
+from cosmo_tester.framework.fixtures import image_based_manager
 
-from . import get_hello_worlds
+from cosmo_tester.framework.examples.hello_world import get_hello_worlds
 
-
-@pytest.fixture(scope='module')
-def hosts(request, cfy, ssh_key, module_tmpdir, attributes, logger):
-    """Bootstraps a cloudify manager on a VM in rackspace OpenStack."""
-    # need to keep the hosts to use its inputs in the second bootstrap
-    hosts = BootstrapBasedCloudifyManagers(
-        cfy, ssh_key, module_tmpdir, attributes, logger)
-    try:
-        hosts.create()
-        yield hosts
-    finally:
-        hosts.destroy()
+manager = image_based_manager
 
 
 def test_inplace_upgrade(cfy,
-                         hosts,
+                         manager,
                          attributes,
                          ssh_key,
                          module_tmpdir,
                          logger):
-    manager = hosts.instances[0]
     snapshot_name = 'inplace_upgrade_snapshot'
     snapshot_path = join(str(module_tmpdir), snapshot_name) + '.zip'
 
@@ -57,11 +43,9 @@ def test_inplace_upgrade(cfy,
     cfy.snapshots.create([snapshot_name])
     util.wait_for_all_executions(manager)
     cfy.snapshots.download([snapshot_name, '-o', snapshot_path])
-    cfy.teardown(['-f', '--ignore-deployments'])
-    config_file = hosts._create_config_file(manager)
-    hosts._bootstrap_manager(manager, config_file)
-    openstack_config_file = hosts.create_openstack_config_file()
-    manager._upload_necessary_files(openstack_config_file)
+    manager.teardown()
+    manager.bootstrap()
+    manager.upload_necessary_files()
     cfy.snapshots.upload([snapshot_path, '-s', snapshot_name])
     cfy.snapshots.restore([snapshot_name, '--restore-certificates'])
     util.wait_for_all_executions(manager)

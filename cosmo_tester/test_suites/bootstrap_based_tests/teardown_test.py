@@ -16,18 +16,16 @@
 import pytest
 
 from cosmo_tester.framework.test_hosts import BootstrapBasedCloudifyManagers
-
-from . import hello_worlds  # noqa # (pytest fixture imported)
-
+from cosmo_tester.framework.examples.hello_world import hello_worlds # noqa # (pytest fixture imported)
 
 pre_bootstrap_state = None
 
 
-def test_teardown(cfy, manager, hello_worlds):  # noqa # (pytest fixture, not redefinition of hello_worlds)
+def test_teardown(manager, hello_worlds):  # noqa # (pytest fixture, not redefinition of hello_worlds)
     for hello in hello_worlds:
         hello.verify_all()
 
-    cfy.teardown('-f')
+    manager.teardown()
     current_state = _get_system_state(manager)
     diffs = {}
 
@@ -66,8 +64,16 @@ def _preconfigure_callback(managers):
     pre_bootstrap_state['yum packages'] += [
         'python-pip', 'libxslt', 'daemonize'
     ]
-    pre_bootstrap_state['folders in /opt'] += ['python_NOTICE.txt', 'lib']
-    pre_bootstrap_state['folders in /var/log'] += ['yum.log', 'cloudify']
+    pre_bootstrap_state['folders in /opt'] += [
+        'python_NOTICE.txt',
+        'lib',
+        'cloudify-manager-install'
+    ]
+    pre_bootstrap_state['folders in /var/log'] += [
+        'yum.log',
+        'cloudify',
+        'logstash'
+    ]
     pre_bootstrap_state['init_d service files (/etc/rc.d/init.d/)'] += [
         'logstash.rpmsave', 'jexec'
     ]
