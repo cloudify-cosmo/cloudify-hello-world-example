@@ -23,7 +23,7 @@ set -e
 
 cfy profiles use ${PRIVATE_IP} -u admin -p admin -t default_tenant
 
-cfy blueprints upload cloudify-cosmo/cloudify-hello-world -b bp -n singlehost-blueprint.yaml
+cfy blueprints upload cloudify-cosmo/cloudify-hello-world-example -b bp -n singlehost-blueprint.yaml
 cfy deployments create -b bp dep -i server_ip=${PRIVATE_IP} -i agent_user=${MANAGER_USER} -i agent_private_key_path=${AGENT_KEY_PATH}
 cfy executions start install -d dep
 
