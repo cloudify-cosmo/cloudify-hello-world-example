@@ -187,7 +187,9 @@ def _add_new_network(manager, tmpdir, logger):
 
         logger.info('Recreating internal certs')
         fabric_ssh.sudo(
-            '{cfy_manager} create-internal-certs --metadata {metadata} {ip}'
+            '{cfy_manager} create-internal-certs '
+            '--metadata {metadata} '
+            '--manager-ip {ip}'
             .format(
                 cfy_manager='/usr/bin/cfy_manager',
                 metadata=remote_metadata_path,
