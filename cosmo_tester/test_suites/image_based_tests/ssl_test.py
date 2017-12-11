@@ -14,18 +14,22 @@
 #    * limitations under the License.
 
 from cosmo_tester.framework.examples.hello_world import centos_hello_world
-from cosmo_tester.framework.fixtures import bootstrap_based_manager
+from cosmo_tester.framework.fixtures import image_based_manager
 from cosmo_tester.framework.util import is_community
 from cloudify_rest_client.client import CloudifyClient
 from os.path import join
 
-manager = bootstrap_based_manager
+manager = image_based_manager
 DEFAULT_TENANT_ROLE = 'user'
+REMOTE_EXTERNAL_CERT_PATH = '/etc/cloudify/ssl/cloudify_external_cert.pem'
 
 
 def test_ssl(cfy, manager, module_tmpdir, attributes, ssh_key, logger):
     cert_path = join(module_tmpdir, '.cloudify', 'profiles',
                      manager.ip_address, 'public_rest_cert.crt')
+    _generate_external_cert(manager, logger)
+    _download_external_cert(manager, logger, local_cert_path=cert_path)
+
     cfy.profiles.set('-c', cert_path)
 
     assert 'SSL disabled' in cfy.ssl.status()
@@ -78,3 +82,24 @@ def test_ssl(cfy, manager, module_tmpdir, attributes, ssh_key, logger):
     manager.client = _manager_client
     hello_world.uninstall()
     hello_world.delete_deployment()
+
+
+def _generate_external_cert(_manager, logger):
+    with _manager.ssh() as fabric_ssh:
+        # This is necessary when using an image-based manager
+        logger.info('Generating new external cert...')
+        fabric_ssh.sudo(
+            'cfy_manager create-external-certs '
+            '--private-ip {0} --public-ip {1}'.format(
+                _manager.private_ip_address,
+                _manager.ip_address
+            )
+        )
+
+
+def _download_external_cert(_manager, logger, local_cert_path):
+    with _manager.ssh() as fabric_ssh:
+        logger.info('Downloading external cert from the manager...')
+        fabric_ssh.get(
+            REMOTE_EXTERNAL_CERT_PATH, local_cert_path, use_sudo=True
+        )

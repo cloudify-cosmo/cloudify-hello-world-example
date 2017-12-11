@@ -33,117 +33,100 @@ from cosmo_tester.framework.util import (
     get_resource_path,
     sh_bake,
 )
+from cosmo_tester.framework.test_hosts import get_latest_manager_image_name
 
 WINRM_PORT = 5985
 
 
 @pytest.fixture(scope='function')
-def cli_package_tester(ssh_key, attributes, tmpdir, logger):
+def package_tester(request, ssh_key, attributes, tmpdir, logger):
+    _package_tester_mapping = {
+        'linux': _CliPackageTester,
+        'osx': _OSXCliPackageTester,
+        'windows': _WindowsCliPackageTester
+    }
+    platform = request.param
+    tester_class = _package_tester_mapping[platform]
+
     logger.info('Using temp dir: %s', tmpdir)
     tmpdir = Path(tmpdir)
 
-    tf_inputs = get_terraform_inputs(attributes, ssh_key)
-    tester = _CliPackageTester(tmpdir, tf_inputs, ssh_key, logger)
+    tester = tester_class(tmpdir, attributes, ssh_key, logger)
 
     yield tester
 
     tester.perform_cleanup()
 
 
-@pytest.fixture(scope='function')
-def windows_cli_package_tester(ssh_key, attributes, tmpdir, logger):
-    logger.info('Using temp dir: %s', tmpdir)
-    tmpdir = Path(tmpdir)
-
-    tf_inputs = get_terraform_inputs(attributes, ssh_key)
-    tester = _WindowsCliPackageTester(tmpdir, tf_inputs, ssh_key, logger)
-
-    yield tester
-
-    tester.perform_cleanup()
-
-
-@pytest.fixture(scope='function')
-def osx_cli_package_tester(ssh_key, attributes, tmpdir, logger):
-    logger.info('Using temp dir: %s', tmpdir)
-    tmpdir = Path(tmpdir)
-
-    tf_inputs = get_terraform_inputs(attributes, ssh_key)
-    tester = _OSXCliPackageTester(tmpdir, tf_inputs, ssh_key, logger)
-
-    yield tester
-
-    tester.perform_cleanup()
-
-
-def test_cli_on_centos_7(cli_package_tester, attributes):
-    cli_package_tester.inputs.update({
+@pytest.mark.parametrize('package_tester', ['linux'], indirect=True)
+def test_cli_on_centos_7(package_tester, attributes):
+    inputs = {
         'cli_image': attributes.centos_7_image_name,
         'cli_user': attributes.centos_7_username,
-        'manager_image': attributes.centos_7_image_name,
         'manager_user': attributes.centos_7_username,
         'cli_package_url': get_cli_package_url('rhel_centos_cli_package_url')
-    })
-    cli_package_tester.run_test()
+    }
+    package_tester.run_test(inputs)
 
 
-def test_cli_on_centos_6(cli_package_tester, attributes):
-    cli_package_tester.inputs.update({
+@pytest.mark.parametrize('package_tester', ['linux'], indirect=True)
+def test_cli_on_centos_6(package_tester, attributes):
+    inputs = {
         'cli_image': attributes.centos_6_image_name,
         'cli_user': attributes.centos_6_username,
-        'manager_image': attributes.centos_7_image_name,
         'manager_user': attributes.centos_7_username,
         'cli_package_url': get_cli_package_url('rhel_centos_cli_package_url')
-    })
-    cli_package_tester.run_test()
+    }
+    package_tester.run_test(inputs)
 
 
-def test_cli_on_ubuntu_14_04(cli_package_tester, attributes):
-    cli_package_tester.inputs.update({
+@pytest.mark.parametrize('package_tester', ['linux'], indirect=True)
+def test_cli_on_ubuntu_14_04(package_tester, attributes):
+    inputs = {
         'cli_image': attributes.ubuntu_14_04_image_name,
         'cli_user': attributes.ubuntu_14_04_username,
-        'manager_image': attributes.centos_7_image_name,
         'manager_user': attributes.centos_7_username,
         'cli_package_url': get_cli_package_url('debian_cli_package_url')
-    })
-    cli_package_tester.run_test()
+    }
+    package_tester.run_test(inputs)
 
 
-def test_cli_on_windows_2012(windows_cli_package_tester, attributes):
-    windows_cli_package_tester.inputs.update({
+@pytest.mark.parametrize('package_tester', ['windows'], indirect=True)
+def test_cli_on_windows_2012(package_tester, attributes):
+    inputs = {
         'cli_image': attributes.windows_2012_image_name,
         'cli_user': attributes.windows_2012_username,
-        'manager_image': attributes.centos_7_image_name,
         'manager_user': attributes.centos_7_username,
         'cli_flavor': attributes.medium_flavor_name,
-    })
-    windows_cli_package_tester.run_test()
+    }
+    package_tester.run_test(inputs)
 
 
-def test_cli_on_rhel_7(cli_package_tester, attributes):
-    cli_package_tester.inputs.update({
+@pytest.mark.parametrize('package_tester', ['linux'], indirect=True)
+def test_cli_on_rhel_7(package_tester, attributes):
+    inputs = {
         'cli_image': attributes.rhel_7_image_name,
         'cli_user': attributes.rhel_7_username,
-        'manager_image': attributes.centos_7_image_name,
         'manager_user': attributes.centos_7_username,
         'cli_package_url': get_cli_package_url('rhel_centos_cli_package_url')
-    })
-    cli_package_tester.run_test()
+    }
+    package_tester.run_test(inputs)
 
 
-def test_cli_on_rhel_6(cli_package_tester, attributes):
-    cli_package_tester.inputs.update({
+@pytest.mark.parametrize('package_tester', ['linux'], indirect=True)
+def test_cli_on_rhel_6(package_tester, attributes):
+    inputs = {
         'cli_image': attributes.rhel_6_image_name,
         'cli_user': attributes.rhel_6_username,
-        'manager_image': attributes.centos_7_image_name,
         'manager_user': attributes.centos_7_username,
         'cli_package_url': get_cli_package_url('rhel_centos_cli_package_url')
-    })
-    cli_package_tester.run_test()
+    }
+    package_tester.run_test(inputs)
 
 
-def test_cli_on_osx(osx_cli_package_tester, attributes):
-    osx_cli_package_tester.inputs.update({
+@pytest.mark.parametrize('package_tester', ['osx'], indirect=True)
+def test_cli_on_osx(package_tester, attributes):
+    inputs = {
         'manager_image': attributes.centos_7_AMI,
         'manager_flavor': attributes.large_AWS_type,
         'manager_user': attributes.centos_7_username,
@@ -152,18 +135,19 @@ def test_cli_on_osx(osx_cli_package_tester, attributes):
         'osx_password': os.environ["MACINCLOUD_PASSWORD"],
         'osx_ssh_key': os.environ["MACINCLOUD_SSH_KEY"],
         'cli_package_url': get_cli_package_url('osx_cli_package_url'),
-    })
-    osx_cli_package_tester.run_test()
+    }
+    package_tester.run_test(inputs)
 
 
 class _CliPackageTester(object):
 
-    def __init__(self, tmpdir, inputs, ssh_key, logger):
+    def __init__(self, tmpdir, attributes, ssh_key, logger):
         self.terraform = sh_bake(sh.terraform)
         self.tmpdir = tmpdir
-        self.inputs = inputs
+        self.attributes = attributes
         self.ssh_key = ssh_key
         self.logger = logger
+        self.inputs = self._get_default_inputs()
         self.inputs_file = self.tmpdir / 'inputs.json'
         os.mkdir(self.tmpdir / 'scripts')
 
@@ -175,14 +159,26 @@ class _CliPackageTester(object):
                 'terraform/scripts/linux-cli-test.sh'),
                 self.tmpdir / 'scripts/linux-cli-test.sh')
 
-    def run_test(self):
+    def run_test(self, inputs):
         self._copy_terraform_files()
-        self.write_inputs_file()
+        self.write_inputs_file(inputs)
         self.logger.info('Testing CLI package..')
         with self.tmpdir:
             self.terraform.apply(['-var-file', self.inputs_file])
 
-    def write_inputs_file(self):
+    def _get_default_inputs(self):
+        return {
+            'resource_suffix': str(uuid.uuid4()),
+            'public_key_path': self.ssh_key.public_key_path,
+            'private_key_path': self.ssh_key.private_key_path,
+            'remote_key_path': '/etc/cloudify/key.pem',
+            'cli_flavor': self.attributes.small_flavor_name,
+            'manager_flavor': self.attributes.medium_flavor_name,
+            'manager_image': get_latest_manager_image_name()
+        }
+
+    def write_inputs_file(self, inputs):
+        self.inputs.update(inputs)
         self.inputs_file.write_text(json.dumps(self.inputs, indent=2))
 
     def perform_cleanup(self):
@@ -235,8 +231,8 @@ class _WindowsCliPackageTester(_CliPackageTester):
         self.logger.info('- status_code: %d', r.status_code)
         assert r.status_code == 0
 
-    def run_test(self):
-        super(_WindowsCliPackageTester, self).run_test()
+    def run_test(self, inputs):
+        super(_WindowsCliPackageTester, self).run_test(inputs)
         # At this stage, there are two VMs (Windows & Linux).
         # Retrieve password from OpenStack
         with self.tmpdir:
@@ -316,17 +312,3 @@ class _OSXCliPackageTester(_CliPackageTester):
         shutil.copy(get_resource_path(
             'terraform/scripts/osx-cli-test.sh'),
             self.tmpdir / 'scripts/osx-cli-test.sh')
-
-    def run_test(self):
-        super(_OSXCliPackageTester, self).run_test()
-
-
-def get_terraform_inputs(attributes, ssh_key):
-    tf_inputs = {
-        'resource_suffix': str(uuid.uuid4()),
-        'public_key_path': ssh_key.public_key_path,
-        'private_key_path': ssh_key.private_key_path,
-        'cli_flavor': attributes.small_flavor_name,
-        'manager_flavor': attributes.large_flavor_name,
-    }
-    return tf_inputs

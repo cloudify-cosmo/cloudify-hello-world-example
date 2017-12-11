@@ -114,13 +114,14 @@ def test_multiple_networks(managers,
 
     create_snapshot(old_manager, snapshot_id, attributes, logger)
     download_snapshot(old_manager, local_snapshot_path, snapshot_id, logger)
+
+    new_manager.use()
+
     upload_snapshot(new_manager, local_snapshot_path, snapshot_id, logger)
     restore_snapshot(new_manager, snapshot_id, cfy, logger)
-
     upgrade_agents(cfy, new_manager, logger)
     delete_manager(old_manager, logger)
 
-    new_manager.use()
     for hello in multi_network_hello_worlds:
         hello.manager = new_manager
         hello.uninstall()
@@ -140,6 +141,10 @@ def _add_new_network(manager, tmpdir, logger):
 
     old_networks = deepcopy(manager.networks)
     new_networks = deepcopy(manager.networks)
+
+    # The `default` network is added during manager installation
+    for networks in (old_networks, new_networks):
+        networks['default'] = private_ip
 
     # `network_2` shouldn't be on the manager right now
     old_networks.pop(NETWORK_2)
@@ -170,9 +175,7 @@ def _add_new_network(manager, tmpdir, logger):
 
         ip_setter_path = '/opt/cloudify/manager-ip-setter/'
         restservice_python = '/opt/manager/env/bin/python'
-        mgmtworker_python = '/opt/mgmtworker/env/bin/python'
         update_ctx_script = join(ip_setter_path, 'update-provider-context.py')
-        certs_script = join(ip_setter_path, 'create-internal-ssl-certs.py')
 
         logger.info('Updating the provider context...')
         fabric_ssh.sudo('{python} {script} --networks {networks} {ip}'.format(
@@ -183,12 +186,14 @@ def _add_new_network(manager, tmpdir, logger):
         ))
 
         logger.info('Recreating internal certs')
-        fabric_ssh.sudo('{python} {script} --metadata {metadata} {ip}'.format(
-            python=mgmtworker_python,
-            script=certs_script,
-            metadata=remote_metadata_path,
-            ip=private_ip
-        ))
+        fabric_ssh.sudo(
+            '{cfy_manager} create-internal-certs --metadata {metadata} {ip}'
+            .format(
+                cfy_manager='/usr/bin/cfy_manager',
+                metadata=remote_metadata_path,
+                ip=private_ip
+            )
+        )
 
         logger.info('Restarting services...')
         fabric_ssh.sudo('systemctl restart cloudify-rabbitmq')

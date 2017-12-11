@@ -1,9 +1,0 @@
-set -eax
-
-cd {{ work_dir }}
-source {{ venv_name }}/bin/activate
-cd {{ venv_name }}
-
-cfy executions start uninstall -d {{ app_name }}
-cfy deployments delete {{ app_name }}
-cfy blueprints delete {{ app_name }}

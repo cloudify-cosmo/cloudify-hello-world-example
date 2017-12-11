@@ -1,9 +1,0 @@
-set -eax
-
-cd {{ work_dir }}
-virtualenv {{ venv_name }}
-source {{ venv_name }}/bin/activate
-cd {{ venv_name }}
-
-pip install cloudify==3.2.1 >/dev/null
-cfy init

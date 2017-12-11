@@ -394,7 +394,7 @@ class _CloudifyManager(VM):
         return openstack_config_file
 
 
-def _get_latest_manager_image_name():
+def get_latest_manager_image_name():
     """
     Returns the manager image name based on installed CLI version.
     For CLI version "4.0.0-m15"
@@ -475,7 +475,7 @@ class CloudifyMasterManager(_CloudifyManager):
     branch_name = 'master'
     image_name_attribute = 'cloudify_manager_image_name_prefix'
 
-    image_name = _get_latest_manager_image_name()
+    image_name = get_latest_manager_image_name()
 
     # The MTU is set to 1450 because we're using a static BOOTPROTO here (as
     # opposed to DHCP), which sets a lower default by default

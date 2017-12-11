@@ -1,11 +1,7 @@
 #!/bin/bash
 
-MANAGER_BLUEPRINTS_PATH="/opt/cfy/cloudify-manager-blueprints"
-MANAGER_BLUEPRINT_PATH="${MANAGER_BLUEPRINTS_PATH}/simple-manager-blueprint.yaml"
-INPUTS_FILE_PATH="/tmp/bootstrap_inputs.yaml"
-
 CLI_PACKAGE_URL=$1
-PRIVATE_KEY_PATH=$2
+AGENT_KEY_PATH=$2
 PUBLIC_IP=$3
 PRIVATE_IP=$4
 MANAGER_USER=$5
@@ -22,22 +18,21 @@ else
     sudo dpkg -i cloudify-cli.deb
 fi
 
+# This ensures that if one of the commands fails, the whole execution fails
 set -e
 
-echo "Creating inputs file.."
-echo "public_ip: ${PUBLIC_IP}
-private_ip: ${PRIVATE_IP}
-ssh_user: ${MANAGER_USER}
-ssh_key_filename: ${PRIVATE_KEY_PATH}
-admin_username: admin
-admin_password: admin" > ${INPUTS_FILE_PATH}
-cat ${INPUTS_FILE_PATH}
+cfy profiles use ${PRIVATE_IP} -u admin -p admin -t default_tenant
 
-echo "Setting permissions for private key file: ${PRIVATE_KEY_PATH}"
-chmod 400 ${PRIVATE_KEY_PATH}
+cfy blueprints upload cloudify-cosmo/cloudify-hello-world -b bp -n singlehost-blueprint.yaml
+cfy deployments create -b bp dep -i server_ip=${PRIVATE_IP} -i agent_user=${MANAGER_USER} -i agent_private_key_path=${AGENT_KEY_PATH}
+cfy executions start install -d dep
 
-echo "Bootstrapping cloudify manager.."
-cfy bootstrap ${MANAGER_BLUEPRINT_PATH} -i ${INPUTS_FILE_PATH} -v --keep-up-on-failure
-cfy status
+echo "Validating hello world is working..."
+# Because of set -e, this will fail if the string isn't found in the output
+curl http://${PRIVATE_IP}:8080 2>&1 | grep "Hello, World"
 
-echo "Bootstrap completed successfully!"
+cfy executions start uninstall -d dep
+cfy deployments delete dep
+cfy blueprints delete bp
+
+echo "Test completed successfully!"
