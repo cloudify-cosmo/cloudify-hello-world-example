@@ -199,13 +199,17 @@ class _WindowsCliPackageTester(_CliPackageTester):
     with the extra resources needed for performing bootstrap (including
     the retrieved password).
     """
+
+    def __init__(self, tmpdir, attributes, ssh_key, logger):
+        super(_WindowsCliPackageTester, self).__init__(tmpdir, attributes,
+                                                       ssh_key, logger)
+        self._session = None
+        self._outputs = None
+
     def _copy_terraform_files(self):
         shutil.copy(get_resource_path(
                 'terraform/openstack-windows-cli-test.tf'),
                 self.tmpdir / 'openstack-windows-cli-test.tf')
-        shutil.copy(get_resource_path(
-                'terraform/scripts/windows-cli-test.ps1'),
-                self.tmpdir / 'scripts/windows-cli-test.ps1')
         shutil.copy(get_resource_path(
                 'terraform/scripts/windows-userdata.ps1'),
                     self.tmpdir / 'scripts/windows-userdata.ps1')
@@ -220,87 +224,117 @@ class _WindowsCliPackageTester(_CliPackageTester):
         assert password is not None and len(password) > 0
         return password
 
-    def _run_cmd(self, session, cmd, powershell=True):
+    def _run_cmd(self, cmd, powershell=False):
         self.logger.info('Running command: %s', cmd)
         if powershell:
-            r = session.run_ps(cmd)
+            r = self._session.run_ps(cmd)
         else:
-            r = session.run_cmd(cmd)
+            r = self._session.run_cmd(cmd)
         self.logger.info('- stdout: %s', r.std_out)
         self.logger.info('- stderr: %s', r.std_err)
         self.logger.info('- status_code: %d', r.status_code)
         assert r.status_code == 0
 
-    def run_test(self, inputs):
-        super(_WindowsCliPackageTester, self).run_test(inputs)
-        # At this stage, there are two VMs (Windows & Linux).
-        # Retrieve password from OpenStack
+    def _calculate_outputs(self):
         with self.tmpdir:
-            outputs = AttributesDict(
+            self._outputs = AttributesDict(
                     {k: v['value'] for k, v in json.loads(
                             self.terraform.output(
                                     ['-json']).stdout).items()})
-        self.logger.info('CLI server id is: %s', outputs.cli_server_id)
-        password = self.get_password(outputs.cli_server_id)
+
+    def _set_winrm_session(self):
+        # Retrieve password from OpenStack
+        password = self.get_password(self._outputs.cli_server_id)
         self.logger.info('VM password: %s', password)
         self.inputs['password'] = password
 
-        url = 'http://{0}:{1}/wsman'.format(outputs.cli_public_ip_address,
-                                            WINRM_PORT)
+        url = 'http://{0}:{1}/wsman'.format(
+            self._outputs.cli_public_ip_address,
+            WINRM_PORT)
         user = self.inputs['cli_user']
-        session = winrm.Session(url, auth=(user, password))
+        self._session = winrm.Session(url, auth=(user, password))
+
+    def run_test(self, inputs):
+        super(_WindowsCliPackageTester, self).run_test(inputs)
+        # At this stage, there are two VMs (Windows & Linux).
+
+        self._calculate_outputs()
+        self.logger.info('CLI server id is: %s', self._outputs.cli_server_id)
+
+        self._set_winrm_session()
 
         with open(self.ssh_key.private_key_path, 'r') as f:
             private_key = f.read()
 
-        work_dir = 'C:\\Users\\{0}'.format(user)
+        work_dir = 'C:\\Users\\{0}'.format(self.inputs['cli_user'])
         remote_private_key_path = '{0}\\ssh_key.pem'.format(work_dir)
         cli_installer_exe_name = 'cloudify-cli.exe'
         cli_installer_exe_path = '{0}\\{1}'.format(work_dir,
                                                    cli_installer_exe_name)
-        bootstrap_inputs_file = '{0}\\inputs.json'.format(work_dir)
         cfy_exe = 'C:\\Cloudify\\embedded\\Scripts\\cfy.exe'
-        manager_blueprint_path = 'C:\\Cloudify\\cloudify-manager-blueprints\\simple-manager-blueprint.yaml'  # noqa
 
         self.logger.info('Uploading private key to Windows VM..')
-        self._run_cmd(session, '''
+        self._run_cmd('''
 Set-Content "{0}" "{1}"
-'''.format(remote_private_key_path, private_key))
+'''.format(remote_private_key_path, private_key), powershell=True)
 
         self.logger.info('Downloading CLI package..')
         cli_package_url = get_cli_package_url('windows_cli_package_url')
-        self._run_cmd(session, """
+        self._run_cmd("""
 $client = New-Object System.Net.WebClient
 $url = "{0}"
 $file = "{1}"
 $client.DownloadFile($url, $file)""".format(
                 cli_package_url,
-                cli_installer_exe_path))
+                cli_installer_exe_path), powershell=True)
 
         self.logger.info('Installing CLI...')
         self.logger.info('Using CLI package: {url}'.format(
             url=cli_package_url,
         ))
-        self._run_cmd(session, '''
+        self._run_cmd('''
 cd {0}
 & .\{1} /SILENT /VERYSILENT /SUPPRESSMSGBOXES /DIR="C:\Cloudify"'''
-                      .format(work_dir, cli_installer_exe_name))
+                      .format(work_dir, cli_installer_exe_name),
+                      powershell=True)
 
-        self.logger.info('Creating bootstrap inputs file..')
-        bootstrap_inputs = json.dumps({
-            'public_ip': outputs.manager_public_ip_address,
-            'private_ip': outputs.manager_private_ip_address,
-            'ssh_user': self.inputs['manager_user'],
-            'ssh_key_filename': remote_private_key_path,
-        })
-        self._run_cmd(session, '''
-Set-Content "{0}" '{1}'
-'''.format(bootstrap_inputs_file, bootstrap_inputs))
+        self.logger.info('Testing cloudify manager...')
+        self._run_cmd(
+            '{cfy} profiles use {ip} -u admin -p admin -t default_tenant'
+            ''.format(cfy=cfy_exe, ip=self._outputs.manager_private_ip_address)
+        )
+        self._run_cmd(
+            '{cfy} blueprints upload {hello_world} -b bp '
+            '-n singlehost-blueprint.yaml'.format(
+                cfy=cfy_exe,
+                hello_world='cloudify-cosmo/cloudify-hello-world-example'
+            )
+        )
+        self._run_cmd(
+            '{cfy} deployments create -b bp dep '
+            '-i server_ip={ip} '
+            '-i agent_user={agent_user} '
+            '-i agent_private_key_path={key_path}'.format(
+                cfy=cfy_exe,
+                ip=self._outputs.manager_private_ip_address,
+                agent_user=self.inputs['manager_user'],
+                key_path=self.inputs['remote_key_path']
+            )
+        )
+        self._run_cmd('{cfy} executions start install -d dep'.format(
+            cfy=cfy_exe
+        ))
 
-        self.logger.info('Bootstrapping manager..')
-        bootstrap_cmd = '{0} bootstrap {1} -i "{2}" -v --keep-up-on-failure'\
-            .format(cfy_exe, manager_blueprint_path, bootstrap_inputs_file)
-        self._run_cmd(session, bootstrap_cmd, powershell=False)
+        self._run_cmd('''
+$url=Invoke-WebRequest -URI http://{ip}:8080 -UseBasicParsing
+$url.ToString() | select-string "Hello, World"
+'''.format(ip=self._outputs.manager_private_ip_address), powershell=True)
+
+        self._run_cmd('{cfy} executions start uninstall -d dep'.format(
+            cfy=cfy_exe
+        ))
+        self._run_cmd('{cfy} deployments delete dep'.format(cfy=cfy_exe))
+        self._run_cmd('{cfy} blueprints delete bp'.format(cfy=cfy_exe))
 
 
 class _OSXCliPackageTester(_CliPackageTester):
