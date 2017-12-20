@@ -64,7 +64,9 @@ class NodeCellarExample(AbstractExample):
         mongo_node_name = 'mongod'
         with set_client_tenant(self.manager, self.tenant):
             instance_id = self.manager.client.node_instances.list(
-                    self.deployment_id, mongo_node_name)[0].id
+                    deployment_id=self.deployment_id,
+                    node_id=mongo_node_name
+            )[0].id
 
         try:
             # select metrics from the mongo collector explicitly to verify
