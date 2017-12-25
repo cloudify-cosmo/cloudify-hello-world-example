@@ -395,6 +395,8 @@ def create_snapshot(manager, snapshot_id, attributes, logger):
         snapshot_id=snapshot_id,
         include_metrics=True,
         include_credentials=True,
+        include_logs=True,
+        include_events=True
     )
     if manager_supports_users_in_snapshot_creation(manager):
         password = CHANGED_ADMIN_PASSWORD
