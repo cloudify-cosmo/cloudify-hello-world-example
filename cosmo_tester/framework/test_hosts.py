@@ -345,8 +345,8 @@ class _CloudifyManager(VM):
         install_config = {
             'manager':
                 {
-                    'public_ip': self.ip_address,
-                    'private_ip': self.private_ip_address,
+                    'public_ip': str(self.ip_address),
+                    'private_ip': str(self.private_ip_address),
                     'security': {
                         'admin_username': self._attributes.cloudify_username,
                         'admin_password': self._attributes.cloudify_password,
