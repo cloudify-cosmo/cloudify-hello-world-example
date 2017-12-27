@@ -19,18 +19,10 @@ import json
 import logging
 import os
 import re
-import shutil
-import socket
 import sys
-import tempfile
-import time
-import urllib
 import subprocess
-
-import jinja2
 import requests
 import retrying
-import sh
 import yaml
 
 from openstack import connection as openstack_connection
@@ -58,19 +50,6 @@ def get_attributes(logger=logging, resources_dir=None):
 
 def get_cli_version():
     return cli_env.get_version_data()['version']
-
-
-def download_file(url, destination=''):
-
-    if not destination:
-        fd, destination = tempfile.mkstemp(suffix=url.split('/')[-1])
-        os.remove(destination)
-        os.close(fd)
-
-    final_url = urllib.urlopen(url).geturl()
-    f = urllib.URLopener()
-    f.retrieve(final_url, destination)
-    return destination
 
 
 def get_openstack_server_password(server_id, private_key_path=None):
@@ -123,58 +102,12 @@ def create_openstack_client():
     return conn
 
 
-def process_variables(suites_yaml, unprocessed_dict):
-    template_variables = suites_yaml.get('variables', {})
-    result = {}
-    for key, unprocessed_value in unprocessed_dict.items():
-        if not isinstance(unprocessed_value, basestring):
-            value = unprocessed_value
-        else:
-            value = jinja2.Template(unprocessed_value).render(
-                **template_variables)
-        result[key] = value
-    return result
-
-
-def generate_unique_configurations(
-        workdir,
-        original_inputs_path,
-        original_manager_blueprint_path,
-        manager_blueprint_dir_name='manager-blueprint'):
-    inputs_path = path(os.path.join(workdir, 'inputs.yaml'))
-    shutil.copy(original_inputs_path, inputs_path)
-    manager_blueprint_base = os.path.basename(
-        original_manager_blueprint_path)
-    source_manager_blueprint_dir = os.path.dirname(
-        original_manager_blueprint_path)
-    target_manager_blueprint_dir = os.path.join(
-        workdir, manager_blueprint_dir_name)
-
-    def ignore(src, names):
-        return names if os.path.basename(src) == '.git' else set()
-    shutil.copytree(source_manager_blueprint_dir,
-                    target_manager_blueprint_dir,
-                    ignore=ignore)
-    manager_blueprint_path = path(
-        os.path.join(target_manager_blueprint_dir,
-                     manager_blueprint_base))
-    return inputs_path, manager_blueprint_path
-
-
 def sh_bake(command):
     """Make the command also print its stderr and stdout to our stdout/err."""
     # we need to pass the received lines back to the process._stdout/._stderr
     # so that they're not only printed out, but also saved as .stderr/.sdtout
     # on the return value or on the exception.
     return command.bake(_out=pass_stdout, _err=pass_stderr)
-
-
-def get_cfy():
-    return sh.cfy.bake(
-        _err_to_out=True,
-        _out=lambda l: sys.stdout.write(l),
-        _tee=True
-    )
 
 
 def pass_stdout(line, input_queue, process):
@@ -189,92 +122,13 @@ def pass_stderr(line, input_queue, process):
     sys.stderr.write(output)
 
 
-def get_blueprint_path(blueprint_name, blueprints_dir=None):
-    resources_dir = os.path.dirname(resources.__file__)
-    blueprints_dir = blueprints_dir or os.path.join(resources_dir,
-                                                    'blueprints')
-    return os.path.join(blueprints_dir, blueprint_name)
-
-
 def get_resource_path(resource, resources_dir=None):
     resources_dir = resources_dir or os.path.dirname(resources.__file__)
     return os.path.join(resources_dir, resource)
 
 
-def get_cloudify_config(name):
-    reference_dir = resources.__file__
-    for _ in range(3):
-        reference_dir = os.path.dirname(reference_dir)
-    config_path = os.path.join(reference_dir,
-                               'suites',
-                               'configurations',
-                               name)
-    return yaml.load(path(config_path).text())
-
-
 def get_yaml_as_dict(yaml_path):
     return yaml.load(path(yaml_path).text())
-
-
-def fix_keypath(env, keypath):
-    p = list(os.path.split(keypath))
-    base, ext = os.path.splitext(p[-1])
-    base = '{}{}'.format(env.resources_prefix, base)
-    p[-1] = base + ext
-    return os.path.join(*p)
-
-
-def get_actual_keypath(env, keypath, raise_on_missing=True):
-    keypath = path(os.path.expanduser(keypath)).abspath()
-    if not keypath.exists():
-        if raise_on_missing:
-            raise RuntimeError("key file {0} does not exist".format(keypath))
-        else:
-            return None
-    return keypath
-
-
-def render_template_to_file(template_path, file_path=None, **values):
-    rendered = render_template(template_path=template_path, **values)
-    return content_to_file(rendered, file_path)
-
-
-def render_template(template_path, **values):
-    with open(template_path) as f:
-        template = f.read()
-    rendered = jinja2.Template(template).render(**values)
-    return rendered
-
-
-def content_to_file(content, file_path=None):
-    if not file_path:
-        file_path = tempfile.NamedTemporaryFile(mode='w', delete=False).name
-    with open(file_path, 'w') as f:
-        f.write(content)
-        f.write(os.linesep)
-    return file_path
-
-
-def wait_for_open_port(ip, port, timeout):
-    timeout = time.time() + timeout
-    is_open = False
-    while not is_open:
-        if time.time() > timeout:
-            break
-        time.sleep(1)
-        is_open = check_port(ip, port)
-    return is_open
-
-
-def check_port(ip, port):
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    result = sock.connect_ex((ip, port))
-    try:
-        sock.shutdown(socket.SHUT_RDWR)
-        sock.close()
-    except socket.error:
-        pass
-    return result == 0
 
 
 def create_rest_client(

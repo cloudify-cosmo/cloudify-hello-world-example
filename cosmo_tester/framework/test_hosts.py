@@ -614,7 +614,7 @@ class TestHosts(object):
                 self._terraform.apply(['-var-file',
                                        self._terraform_inputs_file])
                 outputs = util.AttributesDict(
-                        {k: v['value'] for k, v in json.loads(
+                        {k: v['value'] for k, v in yaml.safe_load(
                                 self._terraform.output(
                                         ['-json']).stdout).items()})
             self._attributes.update(outputs)
