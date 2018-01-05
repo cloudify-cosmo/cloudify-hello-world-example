@@ -231,10 +231,10 @@ class _CloudifyManager(VM):
         except Exception:
             try:
                 self.use()
-                self._cfy.plugins.upload([
-                    plugin['wgn_url'],
-                    '-t', tenant_name,
-                    '--yaml-path', plugin['plugin_yaml_url']])
+                command = [plugin['wgn_url'], '-t', tenant_name]
+                if yaml_snippet:
+                    command += ['--yaml-path', plugin['plugin_yaml_url']]
+                self._cfy.plugins.upload(command)
             except Exception:
                 # This is needed for 3.4 managers. local cfy isn't
                 # compatible and cfy isn't installed in the image
