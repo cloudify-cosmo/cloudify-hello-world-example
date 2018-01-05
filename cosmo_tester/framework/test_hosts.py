@@ -199,8 +199,8 @@ class _CloudifyManager(VM):
 
     def upload_plugin(self, plugin_name, tenant_name=DEFAULT_TENANT_NAME):
         all_plugins = util.get_plugin_wagon_urls()
-        plugin = [p for p in all_plugins if p['name'] == plugin_name]
-        if len(plugin) != 1:
+        plugins = [p for p in all_plugins if p['name'] == plugin_name]
+        if len(plugins) != 1:
             self._logger.error(
                 '%s plugin wagon not found in:%s%s',
                 plugin_name,
@@ -208,16 +208,17 @@ class _CloudifyManager(VM):
                 json.dumps(all_plugins, indent=2))
             raise RuntimeError(
                 '{} plugin not found in wagons list'.format(plugin_name))
+        plugin = plugins[0]
         self._logger.info('Uploading %s plugin [%s] to %s..',
                           plugin_name,
-                          plugin[0]['wgn_url'],
+                          plugin['wgn_url'],
                           self)
 
         # versions newer than 4.2 support passing yaml files
         yaml_snippet = ''
         if LooseVersion(self.branch_name) > LooseVersion('4.2'):
             yaml_snippet = '--yaml-path {0}'.format(
-                plugin[0]['plugin_yaml_url'])
+                plugin['plugin_yaml_url'])
         try:
             with self.ssh() as fabric_ssh:
                 # This will only work for images as cfy is pre-installed there.
@@ -225,16 +226,19 @@ class _CloudifyManager(VM):
                 # from some reason this method is usually less error prone.
                 fabric_ssh.run(
                     'cfy plugins upload {0} -t {1} {2}'.format(
-                        plugin[0], tenant_name, yaml_snippet
+                        plugin['wgn_url'], tenant_name, yaml_snippet
                     ))
         except Exception:
             try:
                 self.use()
-                self._cfy.plugins.upload([plugin[0], '-t', tenant_name])
+                self._cfy.plugins.upload([
+                    plugin['wgn_url'],
+                    '-t', tenant_name,
+                    '--yaml-path', plugin['plugin_yaml_url']])
             except Exception:
                 # This is needed for 3.4 managers. local cfy isn't
                 # compatible and cfy isn't installed in the image
-                self.client.plugins.upload(plugin[0])
+                self.client.plugins.upload(plugin['wgn_url'])
 
     @property
     def remote_private_key_path(self):
