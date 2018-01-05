@@ -382,7 +382,7 @@ class _CloudifyManager(VM):
             fabric_ssh.sudo('yum install -y {0}'.format(install_rpm_file))
             fabric_ssh.put(
                 install_config,
-                '/opt/cloudify/config.yaml'
+                '/etc/cloudify/config.yaml'
             )
             fabric_ssh.run('cfy_manager install')
         self.use()
