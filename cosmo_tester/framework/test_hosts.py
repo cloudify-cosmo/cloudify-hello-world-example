@@ -19,8 +19,9 @@ import json
 import os
 import uuid
 import yaml
-from contextlib import contextmanager
 from urllib import urlretrieve
+from contextlib import contextmanager
+from distutils.version import LooseVersion
 
 import jinja2
 import retrying
@@ -197,39 +198,43 @@ class _CloudifyManager(VM):
             ))
 
     def upload_plugin(self, plugin_name, tenant_name=DEFAULT_TENANT_NAME):
-        plugins_list = util.get_plugin_wagon_urls()
-        plugin_wagon = [
-            x['wgn_url'] for x in plugins_list
-            if x['name'] == plugin_name]
-        if len(plugin_wagon) != 1:
+        all_plugins = util.get_plugin_wagon_urls()
+        plugin = [p for p in all_plugins if p['name'] == plugin_name]
+        if len(plugin) != 1:
             self._logger.error(
-                    '%s plugin wagon not found in:%s%s',
-                    plugin_name,
-                    os.linesep,
-                    json.dumps(plugins_list, indent=2))
+                '%s plugin wagon not found in:%s%s',
+                plugin_name,
+                os.linesep,
+                json.dumps(all_plugins, indent=2))
             raise RuntimeError(
-                    '{} plugin not found in wagons list'.format(plugin_name))
+                '{} plugin not found in wagons list'.format(plugin_name))
         self._logger.info('Uploading %s plugin [%s] to %s..',
                           plugin_name,
-                          plugin_wagon[0],
+                          plugin[0]['wgn_url'],
                           self)
 
+        # versions newer than 4.2 support passing yaml files
+        yaml_snippet = ''
+        if LooseVersion(self.branch_name) > LooseVersion('4.2'):
+            yaml_snippet = '--yaml-path {0}'.format(
+                plugin[0]['plugin_yaml_url'])
         try:
             with self.ssh() as fabric_ssh:
                 # This will only work for images as cfy is pre-installed there.
+
                 # from some reason this method is usually less error prone.
                 fabric_ssh.run(
-                    'cfy plugins upload {0} -t {1}'.format(
-                        plugin_wagon[0], tenant_name
+                    'cfy plugins upload {0} -t {1} {2}'.format(
+                        plugin[0], tenant_name, yaml_snippet
                     ))
         except Exception:
             try:
                 self.use()
-                self._cfy.plugins.upload([plugin_wagon[0], '-t', tenant_name])
+                self._cfy.plugins.upload([plugin[0], '-t', tenant_name])
             except Exception:
                 # This is needed for 3.4 managers. local cfy isn't
                 # compatible and cfy isn't installed in the image
-                self.client.plugins.upload(plugin_wagon[0])
+                self.client.plugins.upload(plugin[0])
 
     @property
     def remote_private_key_path(self):
