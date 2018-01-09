@@ -344,7 +344,7 @@ def check_from_source_plugin(manager, plugin, deployment_id, logger,
             deployment=deployment_id,
             tenant=tenant,
         )
-        fabric_ssh.run('test -d {path}'.format(path=path))
+        fabric_ssh.sudo('test -d {path}'.format(path=path))
         logger.info('Plugin installed from source successfully.')
 
 
@@ -606,7 +606,7 @@ def check_plugins(manager, old_plugins, logger, tenant='default_tenant'):
                 name=plugin_name,
                 path=path,
             ))
-            fabric_ssh.run('test -d {path}'.format(path=path))
+            fabric_ssh.sudo('test -d {path}'.format(path=path))
             logger.info('Plugin is correctly installed.')
 
     _log('Plugins as expected', logger, tenant)
@@ -632,7 +632,7 @@ def check_deployments(manager, old_deployments, logger,
             )
             # To aid troubleshooting when the following line fails
             _log('Listing deployments path', logger, tenant)
-            fabric_ssh.run('ls -la {path}'.format(
+            fabric_ssh.sudo('ls -la {path}'.format(
                 path=TENANT_DEPLOYMENTS_PATH.format(
                     tenant=tenant,
                 ),
@@ -644,7 +644,7 @@ def check_deployments(manager, old_deployments, logger,
                 logger,
                 tenant,
             )
-            fabric_ssh.run('test -d {path}'.format(path=path))
+            fabric_ssh.sudo('test -d {path}'.format(path=path))
             logger.info('Deployment environment was recreated.')
     _log('Found correct deployments', logger, tenant)
 
