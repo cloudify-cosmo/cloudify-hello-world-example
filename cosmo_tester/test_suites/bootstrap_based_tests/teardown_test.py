@@ -25,6 +25,14 @@ def test_teardown(manager, hello_worlds):  # noqa # (pytest fixture, not redefin
     for hello in hello_worlds:
         hello.verify_all()
 
+    bootstrapped_state = _get_system_state(manager)
+    expected_diffs = {}
+
+    for key in 'os users', 'os groups':
+        # Fetch the new users and groups created during the bootstrap
+        expected_diffs[key] = (
+                set(bootstrapped_state[key]) - set(pre_bootstrap_state[key]))
+
     manager.teardown()
     current_state = _get_system_state(manager)
     diffs = {}
@@ -37,8 +45,7 @@ def test_teardown(manager, hello_worlds):  # noqa # (pytest fixture, not redefin
         if diff:
             diffs[key] = diff
 
-    assert not diffs, 'The following entities were not removed: ' \
-                      '{0}'.format(diffs)
+    assert diffs == expected_diffs
 
 
 @pytest.fixture(scope='module')
@@ -104,5 +111,5 @@ def _get_system_state(mgr):
         'folders in /var/log': var_log_dirs,
         'yum packages': packages,
         'os users': users,
-        'os groups': groups
+        'os groups': groups,
     }
