@@ -20,6 +20,10 @@ inputs:
     description: Openstack image name or id to use for the new server
   flavor:
     description: Openstack flavor name or id to use for the new server
+  diamond_reporting_interval:
+    description: interval in seconds for reporting metrics by diamond agent
+    type: integer
+    default: 10
 
 node_templates:
   virtual_ip:
@@ -54,7 +58,7 @@ node_templates:
             implementation: diamond.diamond_agent.tasks.install
             inputs:
               diamond_config:
-                interval: 1
+                interval: { get_input: diamond_reporting_interval }
           start: diamond.diamond_agent.tasks.start
           stop: diamond.diamond_agent.tasks.stop
           uninstall: diamond.diamond_agent.tasks.uninstall
