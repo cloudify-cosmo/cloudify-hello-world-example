@@ -3,7 +3,7 @@ tosca_definitions_version: cloudify_dsl_1_3
 imports:
   - http://www.getcloudify.org/spec/cloudify/4.2/types.yaml
   - http://www.getcloudify.org/spec/utilities-plugin/1.4.4/plugin.yaml
-  - http://www.getcloudify.org/spec/openstack-plugin/2.5.2/plugin.yaml
+  - http://www.getcloudify.org/spec/openstack-plugin/2.6.0/plugin.yaml
 
 inputs:
 
@@ -29,12 +29,12 @@ inputs:
   image:
     description: >
       An Openstack Image ID. Tested with a Ubuntu 14.04 image.
-    default: { get_secret: ubuntu_trusty_image }
+    type: string
 
   flavor:
     description: >
       An Openstack Flavor ID.
-    default: { get_secret: small_image_flavor }
+    default: '2'
 
   manager_network:
     default: external

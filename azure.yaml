@@ -111,7 +111,6 @@ node_templates:
     - type: cloudify.azure.relationships.connected_to_nic
       target: host_nic
 
-
   host_nic:
     type: cloudify.azure.nodes.network.NetworkInterfaceCard
     properties:

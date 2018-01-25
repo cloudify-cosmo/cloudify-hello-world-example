@@ -22,15 +22,6 @@ inputs:
       The AWS instance_type. Tested with m3.medium, although that is unnecessarily large.
     default: t2.medium
 
-  ec2_region_name:
-    default: { get_secret: ec2_region_name }
-
-  ec2_region_endpoint:
-    default: { get_secret: ec2_region_endpoint }
-
-  availability_zone:
-    default: { get_secret: availability_zone }
-
   agent_user:
     description: >
       The username of the agent running on the instance created from the image.
@@ -51,16 +42,16 @@ inputs:
 
 dsl_definitions:
 
-    aws_config: &aws_config
-      aws_access_key_id: { get_secret: aws_access_key_id }
-      aws_secret_access_key: { get_secret: aws_secret_access_key }
-      ec2_region_name: { get_input: ec2_region_name }
-      ec2_region_endpoint: { get_input: ec2_region_endpoint }
+  aws_config: &aws_config
+    aws_access_key_id: { get_secret: aws_access_key_id }
+    aws_secret_access_key: { get_secret: aws_secret_access_key }
+    ec2_region_name: { get_attribute: [ aws, deployment, outputs, ec2_region_name ] }
+    ec2_region_endpoint: { get_attribute: [ aws, deployment, outputs, ec2_region_endpoint ] }
 
-    client_config: &client_config
-      aws_access_key_id: { get_secret: aws_access_key_id }
-      aws_secret_access_key: { get_secret: aws_secret_access_key }
-      region_name: { get_input: ec2_region_name }
+  client_config: &client_config
+    aws_access_key_id: { get_secret: aws_access_key_id }
+    aws_secret_access_key: { get_secret: aws_secret_access_key }
+    region_name: { get_attribute: [ aws, deployment, outputs, ec2_region_name ] }
 
 node_templates:
 
@@ -100,9 +91,11 @@ node_templates:
                 '/dev/sda1':
                   delete_on_termination: true
               image_id: { get_input: ami }
-              placement: { get_input: availability_zone }
+              placement: { get_attribute: [ aws, deployment, outputs, availability_zone ] }
               user_data: { get_attribute: [ cloudify_host_cloud_config, cloud_config ] }
     relationships:
+    - type: cloudify.relationships.depends_on
+      target: cloudify_host_cloud_config
     - type: cloudify.aws.relationships.instance_connected_to_eni
       target: nic
     - type: cloudify.relationships.depends_on
@@ -171,8 +164,8 @@ node_templates:
         kwargs:
           IpPermissions:
           - IpProtocol: tcp
-            FromPort: 80
-            ToPort: 80
+            FromPort: { get_input: webserver_port }
+            ToPort: { get_input: webserver_port }
             IpRanges:
             - CidrIp: 0.0.0.0/0
     relationships:
@@ -252,6 +245,9 @@ node_templates:
           outputs:
             vpc_id: vpc_id
             public_subnet_id: public_subnet_id
+            ec2_region_name: ec2_region_name
+            ec2_region_endpoint: ec2_region_endpoint
+            availability_zone: availability_zone
           external_resource: external
         reexecute: false
 
