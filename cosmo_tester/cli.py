@@ -40,7 +40,7 @@ logger.addHandler(ch)
 tmpdir = Path(os.getcwd()) / '.cfy-systests'
 
 
-def create_cluster_object(ssh_key):
+def create_cluster_object(ssh_key, clean=False):
     logger.info('Cloudify manager context will be stored in: %s', tmpdir)
     cfy = sh_bake(sh.cfy)
     attributes = get_attributes(logger)
@@ -49,7 +49,8 @@ def create_cluster_object(ssh_key):
             ssh_key,
             tmpdir,
             attributes,
-            logger)
+            logger,
+            upload_plugins=not clean)
     return hosts
 
 
@@ -58,7 +59,7 @@ def create_ssh_key_object():
     return ssh_key
 
 
-def bootstrap():
+def bootstrap(clean=False):
     if tmpdir.exists():
         raise IOError('Context folder exist [{}] - either remove it, or '
                       'destroy the manager first'.format(tmpdir))
@@ -66,7 +67,7 @@ def bootstrap():
     tmpdir.makedirs()
     ssh_key = create_ssh_key_object()
     ssh_key.create()
-    hosts = create_cluster_object(ssh_key)
+    hosts = create_cluster_object(ssh_key, clean)
     try:
         hosts.create()
     except Exception as e:
@@ -94,10 +95,20 @@ def create_parser():
     parser = argparse.ArgumentParser(
             description='== Cloudify system tests utility! ==')
     sub_parsers = parser.add_subparsers()
+
     bootstrap_parser = sub_parsers.add_parser(
             'bootstrap',
             help='Bootstrap an image based cloudify manager.')
     bootstrap_parser.set_defaults(which='bootstrap')
+    bootstrap_parser.add_argument(
+        '--clean',
+        dest='clean',
+        action='store_const',
+        const=True,
+        default=False,
+        help='Bootstrap a clean manager, with no plugins in it'
+    )
+
     destroy_parser = sub_parsers.add_parser(
             'destroy',
             help='Destroy cloudify manager.')
@@ -106,6 +117,6 @@ def create_parser():
 
 
 def main():
-    args = create_parser().parse_args()
-    method = getattr(sys.modules[__name__], args.which)
-    method()
+    kwargs = vars(create_parser().parse_args())
+    method = getattr(sys.modules[__name__], kwargs.pop('which'))
+    method(**kwargs)

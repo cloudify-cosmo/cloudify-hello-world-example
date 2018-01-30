@@ -558,7 +558,8 @@ class TestHosts(object):
                  number_of_instances=1,
                  instances=None,
                  tf_template=None,
-                 template_inputs=None
+                 template_inputs=None,
+                 upload_plugins=True
                  ):
         """
         instances: supply a list of VM instances.
@@ -581,7 +582,7 @@ class TestHosts(object):
             self.instances = instances
         else:
             self.instances = [
-                CURRENT_MANAGER()
+                CURRENT_MANAGER(upload_plugins=upload_plugins)
                 for _ in range(number_of_instances)]
         self._template_inputs = template_inputs or {'servers': self.instances}
 
