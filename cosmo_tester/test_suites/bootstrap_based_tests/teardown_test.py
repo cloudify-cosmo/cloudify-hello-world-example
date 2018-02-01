@@ -32,6 +32,7 @@ def test_teardown(manager, hello_worlds):  # noqa # (pytest fixture, not redefin
         # Fetch the new users and groups created during the bootstrap
         expected_diffs[key] = (
                 set(bootstrapped_state[key]) - set(pre_bootstrap_state[key]))
+    expected_diffs['folders in /etc'] = {'cloudify'}
 
     manager.teardown()
     current_state = _get_system_state(manager)
