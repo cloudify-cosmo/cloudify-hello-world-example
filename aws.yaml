@@ -3,7 +3,7 @@ tosca_definitions_version: cloudify_dsl_1_3
 imports:
   - http://www.getcloudify.org/spec/cloudify/4.2/types.yaml
   - http://www.getcloudify.org/spec/utilities-plugin/1.4.5/plugin.yaml
-  - http://www.getcloudify.org/spec/awssdk-plugin/1.2.0.1/plugin.yaml
+  - http://www.getcloudify.org/spec/awssdk-plugin/1.2.0.3/plugin.yaml
   - https://github.com/cloudify-cosmo/cloudify-aws-plugin/releases/download/1.5.1.2/plugin.yaml
 
 inputs:
@@ -39,6 +39,9 @@ inputs:
 
   manager_network:
     default: external
+
+  network_deployment_name:
+    default: aws-example-network
 
 dsl_definitions:
 
@@ -98,6 +101,8 @@ node_templates:
       target: cloudify_host_cloud_config
     - type: cloudify.aws.relationships.instance_connected_to_eni
       target: nic
+    - type: cloudify.relationships.depends_on
+      target: ip
     - type: cloudify.relationships.depends_on
       target: ubuntu_trusty_ami
     - type: cloudify.relationships.contained_in
@@ -236,12 +241,12 @@ node_templates:
     properties:
       resource_config:
         blueprint:
-          id: aws-example-network
+          id: { get_input: network_deployment_name }
           blueprint_archive: https://github.com/cloudify-examples/aws-example-network/archive/master.zip
           main_file_name: simple-blueprint.yaml
           external_resource: external
         deployment:
-          id: aws-example-network
+          id: { get_input: network_deployment_name }
           outputs:
             vpc_id: vpc_id
             public_subnet_id: public_subnet_id
@@ -260,7 +265,7 @@ node_templates:
             shell: /bin/bash
             sudo: ['ALL=(ALL) NOPASSWD:ALL']
             ssh-authorized-keys:
-              - { get_input: agent_key_public }
+            - { get_input: agent_key_public }
 
 outputs:
 

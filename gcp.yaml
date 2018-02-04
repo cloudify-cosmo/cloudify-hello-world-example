@@ -37,6 +37,9 @@ inputs:
   manager_network:
     default: external
 
+  network_deployment_name:
+    default: gcp-example-network
+
 dsl_definitions:
 
   client_config: &gcp_config
@@ -140,12 +143,12 @@ node_templates:
     properties:
       resource_config:
         blueprint:
-          id: gcp-example-network
+          id: { get_input: network_deployment_name }
           blueprint_archive: https://github.com/cloudify-examples/gcp-example-network/archive/master.zip
           main_file_name: simple-blueprint.yaml
           external_resource: external
         deployment:
-          id: gcp-example-network
+          id: { get_input: network_deployment_name }
           outputs:
             network: network
             public_subnet: public_subnet

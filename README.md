@@ -1,4 +1,4 @@
-[![CircleCI](https://circleci.com/gh/cloudify-examples/cloudify-hello-world-example.svg?style=svg)](https://circleci.com/gh/cloudify-examples/cloudify-hello-world-example)
+[![CircleCI](https://circleci.com/gh/cloudify-examples/hello-world-blueprint.svg?style=svg)](https://circleci.com/gh/cloudify-examples/hello-world-blueprint)
 
 # Cloudify Hello World Example
 
@@ -20,9 +20,9 @@ Upload the required plugins:
   * [Azure Plugin](https://github.com/cloudify-incubator/cloudify-azure-plugin/releases).
   * [Utilities Plugin](https://github.com/cloudify-incubator/cloudify-utilities-plugin/releases).
 
-_Check the blueprint for the exact version of the plugin._
+_Check the blueprint for the latest version of the plugin._
 
-Install the relevant example network blueprint for the IaaS you wish to deploy on:
+Install the relevant example network blueprint for the IaaS that you wish to deploy on:
 
   * [Openstack Example Network](https://github.com/cloudify-examples/openstack-example-network)
   * [AWS Example Network](https://github.com/cloudify-examples/aws-example-network)
@@ -33,7 +33,7 @@ Install the relevant example network blueprint for the IaaS you wish to deploy o
 
 On your Cloudify Manager, navigate to `Local Blueprints` select `Upload`.
 
-[Right-click and copy URL](https://github.com/cloudify-examples/cloudify-hello-world-example/archive/master.zip). Paste where it says `Enter blueprint url`. Provide a blueprint name, such as `hello-world` in the field labeled `blueprint name`.
+[Right-click and copy URL](https://github.com/cloudify-examples/hello-world-blueprint/archive/master.zip). Paste the URL where it says `Enter blueprint url`. Provide a blueprint name, such as `hello-world` in the field labeled `blueprint name`.
 
 Select the blueprint for the relevant IaaS you wish to deploy on, for example `openstack.yaml` from `Blueprint filename` menu. Click `Upload`.
 

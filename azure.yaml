@@ -53,6 +53,9 @@ inputs:
   manager_network:
     default: external
 
+  network_deployment_name:
+    default: azure-example-network
+
 dsl_definitions:
 
   azure_config: &azure_config
@@ -251,12 +254,12 @@ node_templates:
     properties:
       resource_config:
         blueprint:
-          id: azure-example-network
+          id: { get_input: network_deployment_name }
           blueprint_archive: https://github.com/cloudify-examples/azure-example-network/archive/master.zip
           main_file_name: simple-blueprint.yaml
           external_resource: external
         deployment:
-          id: azure-example-network
+          id: { get_input: network_deployment_name }
           outputs:
             resource_group: resource_group
             virtual_network: virtual_network
