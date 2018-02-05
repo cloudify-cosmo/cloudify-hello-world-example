@@ -53,7 +53,7 @@ def test_inplace_upgrade(cfy,
 
     # we need to give the agents enough time to reconnect to the manager;
     # celery retries with a backoff of up to 32 seconds
-    sleep(35)
+    sleep(50)
 
     for hello_world in hellos:
         cfy.agents.install(['-t', hello_world.tenant])
