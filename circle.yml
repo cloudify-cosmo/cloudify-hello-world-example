@@ -13,6 +13,8 @@ checkout:
 
 dependencies:
   override:
+    - pip install -U pip
+    - pip install -U setuptools
     - pip install https://github.com/cloudify-cosmo/cloudify-rest-client/archive/master.zip
     - pip install https://github.com/cloudify-cosmo/cloudify-dsl-parser/archive/master.zip
     - pip install https://github.com/cloudify-cosmo/cloudify-plugins-common/archive/master.zip
