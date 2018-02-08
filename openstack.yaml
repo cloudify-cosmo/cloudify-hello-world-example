@@ -80,7 +80,6 @@ node_templates:
         key_name: ''
         image: { get_input: image }
         flavor: { get_input: flavor }
-      management_network_name: ''
     interfaces:
       cloudify.interfaces.lifecycle:
         create:
