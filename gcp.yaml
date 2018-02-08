@@ -1,0 +1,171 @@
+tosca_definitions_version: cloudify_dsl_1_3
+
+imports:
+  - http://www.getcloudify.org/spec/cloudify/4.2/types.yaml
+  - http://www.getcloudify.org/spec/utilities-plugin/1.4.5/plugin.yaml
+  - http://www.getcloudify.org/spec/gcp-plugin/1.4.0/plugin.yaml
+
+inputs:
+
+  webserver_port:
+    description: The HTTP web server port
+    default: 8080
+
+  image:
+    description: >
+      A GCE Image ID. Tested with a Ubuntu 14.04 image.
+    default: https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/ubuntu-1404-trusty-v20170517
+
+  instance_type:
+    description: >
+      A GCE instance sytpe.
+    default: n1-standard-2
+
+  agent_user:
+    description: The user name of the agent on the instance created from the image.
+    default: ubuntu
+
+  agent_key_public:
+    default: { get_secret: agent_key_public }
+
+  agent_key_private:
+    default: { get_secret: agent_key_private }
+
+  resource_prefix:
+    default: cfy-hw
+
+  manager_network:
+    default: external
+
+  network_deployment_name:
+    default: gcp-example-network
+
+dsl_definitions:
+
+  client_config: &gcp_config
+    auth:
+      type: service_account
+      auth_uri: https://accounts.google.com/o/oauth2/auth
+      token_uri: https://accounts.google.com/o/oauth2/token
+      auth_provider_x509_cert_url: https://www.googleapis.com/oauth2/v1/certs
+      client_x509_cert_url: { get_secret: gcp_client_x509_cert_url }
+      client_email: { get_secret: gcp_client_email }
+      client_id: { get_secret: gcp_client_id }
+      project_id: { get_secret: gcp_project_id }
+      private_key_id: { get_secret: gcp_private_key_id }
+      private_key: { get_secret: gcp_private_key }
+    project: { get_secret: gcp_project_id }
+    zone: { get_secret: gcp_zone }
+
+node_templates:
+
+  http_web_server:
+    type: cloudify.nodes.WebServer
+    properties:
+      port: { get_input: webserver_port }
+    relationships:
+    - type: cloudify.relationships.contained_in
+      target: host
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        configure: scripts/configure.sh
+        start: scripts/start.sh
+        stop: scripts/stop.sh
+
+  host:
+    type: cloudify.gcp.nodes.Instance
+    properties:
+      gcp_config: *gcp_config
+      agent_config:
+        network: { get_input: manager_network }
+        install_method: init_script
+        user: { get_input: agent_user }
+        port: 22
+        key: { get_input: agent_key_private }
+      image_id: { get_input: image }
+      instance_type: { get_input: instance_type }
+      zone: { get_secret: gcp_zone }
+      external_ip: true
+      block_project_ssh_keys: true
+    relationships:
+    - type: cloudify.relationships.depends_on
+      target: public_subnet
+    - type: cloudify.relationships.contained_in
+      target: gcp
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create: &instance_ssh_key_prep
+          implementation: scripts/gcp/instance_ssh_key.py
+          executor: central_deployment_agent
+          inputs:
+            user: { get_input: agent_user }
+            ssh_keys:
+            - { get_secret: agent_key_public }
+
+  fw:
+    type: cloudify.gcp.nodes.FirewallRule
+    properties:
+      gcp_config: *gcp_config
+      allowed:
+        tcp:
+        - { get_input: webserver_port }
+      sources:
+      - 0.0.0.0/0
+    relationships:
+    - type: cloudify.relationships.connected_to
+      target: network
+    - type: cloudify.relationships.contained_in
+      target: gcp
+
+  public_subnet:
+    type: cloudify.gcp.nodes.SubNetwork
+    properties:
+      use_external_resource: true
+      name: { get_attribute: [ gcp, deployment, outputs, public_subnet ] }
+      region: { get_attribute: [ gcp, deployment, outputs, region ] }
+      gcp_config: *gcp_config
+    relationships:
+    - type: cloudify.gcp.relationships.contained_in_network
+      target: network
+
+  network:
+    type: cloudify.gcp.nodes.Network
+    properties:
+      use_external_resource: true
+      name: { get_attribute: [ gcp, deployment, outputs, network ] }
+      gcp_config: *gcp_config
+    relationships:
+    - type: cloudify.relationships.contained_in
+      target: gcp
+
+  gcp:
+    type: cloudify.nodes.DeploymentProxy
+    properties:
+      resource_config:
+        blueprint:
+          id: { get_input: network_deployment_name }
+          blueprint_archive: https://github.com/cloudify-examples/gcp-example-network/archive/master.zip
+          main_file_name: simple-blueprint.yaml
+          external_resource: external
+        deployment:
+          id: { get_input: network_deployment_name }
+          outputs:
+            network: network
+            public_subnet: public_subnet
+            region: region
+            zone: zone
+          external_resource: external
+        reexecute: false
+
+outputs:
+
+  endpoint:
+    description: Web application endpoint
+    value:
+      concat:
+      - 'http://'
+      - { get_attribute: [ host, networkInterfaces, 0, accessConfigs, 0, natIP ] }
+      - ':'
+      - { get_input: webserver_port }
+      - '/'
+
