@@ -67,8 +67,6 @@ def test_nonempty_manager_join_cluster_negative(cfy, attributes, ssh_key,
     hosts = TestHosts(
             cfy, ssh_key, module_tmpdir, attributes, logger,
             number_of_instances=2)
-    # manager2 - Cloudify latest - don't install plugins
-    hosts.instances[1].upload_plugins = False
 
     try:
         hosts.create()
