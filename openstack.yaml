@@ -30,6 +30,7 @@ inputs:
     description: >
       An Openstack Image ID. Tested with a Ubuntu 14.04 image.
     type: string
+    default: { get_secret: ubuntu_trusty_image }
 
   flavor:
     description: >
