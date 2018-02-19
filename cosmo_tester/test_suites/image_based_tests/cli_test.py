@@ -108,7 +108,9 @@ def test_cli_on_rhel_7(package_tester, attributes):
         'cli_image': attributes.rhel_7_image_name,
         'cli_user': attributes.rhel_7_username,
         'manager_user': attributes.centos_7_username,
-        'cli_package_url': get_cli_package_url('rhel_centos_cli_package_url')
+        'cli_package_url': get_cli_package_url('rhel_centos_cli_package_url'),
+        'cli_flavor': attributes.medium_flavor_name,
+
     }
     package_tester.run_test(inputs)
 

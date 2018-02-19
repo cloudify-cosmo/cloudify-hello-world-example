@@ -58,6 +58,11 @@ def hello_world(request, cfy, manager, attributes, ssh_key, tmpdir, logger):
         hw.inputs.update({
             'agent_user': attributes['{os}_username'.format(os=request.param)],
         })
+    if request.param == 'rhel_7':
+        hw.inputs.update({
+            'flavor': attributes['medium_flavor_name'],
+        })
+
     hw.inputs.update({
         'image': attributes['{os}_image_name'.format(os=request.param)],
     })
