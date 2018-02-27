@@ -1,10 +1,9 @@
 tosca_definitions_version: cloudify_dsl_1_3
 
 imports:
-  - http://www.getcloudify.org/spec/cloudify/4.2/types.yaml
-  - http://www.getcloudify.org/spec/utilities-plugin/1.4.5/plugin.yaml
-  - http://www.getcloudify.org/spec/awssdk-plugin/1.2.0.3/plugin.yaml
-  - https://github.com/cloudify-cosmo/cloudify-aws-plugin/releases/download/1.5.1.2/plugin.yaml
+  - http://www.getcloudify.org/spec/cloudify/4.3/types.yaml
+  - plugin:cloudify-awssdk-plugin
+  - plugin:cloudify-utilities-plugin
 
 inputs:
 
@@ -27,21 +26,14 @@ inputs:
       The username of the agent running on the instance created from the image.
     default: ubuntu
 
-  agent_key_private:
-    description: >
-      The content of the agent's private key.
-    default: { get_secret: agent_key_private }
-
-  agent_key_public:
-    description: >
-      The content of the agent's public key.
-    default: { get_secret: agent_key_public }
-
   manager_network:
     default: external
 
-  network_deployment_name:
+  network_blueprint_name:
     default: aws-example-network
+
+  network_deployment_name:
+    default: { get_input: network_blueprint_name }
 
 dsl_definitions:
 
@@ -72,34 +64,27 @@ node_templates:
         stop: scripts/stop.sh
 
   host:
-    type: cloudify.aws.nodes.Instance
+    type: cloudify.nodes.aws.ec2.Instances
     properties:
-      name: Cloudify Hello World Example
-      aws_config: *aws_config
-      image_id: { get_input: ami }
-      instance_type: { get_input: instance_type }
+      use_public_ip: true
       agent_config:
         network: { get_input: manager_network }
         install_method: init_script
         user: { get_input: agent_user }
         port: 22
-        key: { get_input: agent_key_private }
-    interfaces:
-      cloudify.interfaces.lifecycle:
-        create:
-          implementation: aws.cloudify_aws.ec2.instance.create
-          inputs:
-            args:
-              block_device_map:
-                '/dev/sda1':
-                  delete_on_termination: true
-              image_id: { get_input: ami }
-              placement: { get_attribute: [ aws, deployment, outputs, availability_zone ] }
-              user_data: { get_attribute: [ cloudify_host_cloud_config, cloud_config ] }
+      resource_config:
+        ImageId: { get_input: ami }
+        InstanceType: { get_input: instance_type }
+        kwargs:
+          BlockDeviceMappings:
+          - DeviceName: '/dev/sda1'
+            Ebs:
+              DeleteOnTermination: True
+          Placement:
+            AvailabilityZone: { get_attribute: [ aws, deployment, outputs, availability_zone ] }
+      client_config: *client_config
     relationships:
     - type: cloudify.relationships.depends_on
-      target: cloudify_host_cloud_config
-    - type: cloudify.aws.relationships.instance_connected_to_eni
       target: nic
     - type: cloudify.relationships.depends_on
       target: ip
@@ -153,6 +138,8 @@ node_templates:
       target: public_subnet
     - type: cloudify.relationships.depends_on
       target: security_group
+    - type: cloudify.relationships.depends_on
+      target: security_group_rules
     - type: cloudify.relationships.contained_in
       target: aws
     interfaces:
@@ -255,17 +242,6 @@ node_templates:
             availability_zone: availability_zone
           external_resource: external
         reexecute: false
-
-  cloudify_host_cloud_config:
-    type: cloudify.nodes.CloudInit.CloudConfig
-    properties:
-      resource_config:
-        users:
-          - name: { get_input: agent_user }
-            shell: /bin/bash
-            sudo: ['ALL=(ALL) NOPASSWD:ALL']
-            ssh-authorized-keys:
-            - { get_input: agent_key_public }
 
 outputs:
 
