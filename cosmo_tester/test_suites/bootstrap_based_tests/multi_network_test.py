@@ -205,6 +205,7 @@ def _add_new_network(manager, tmpdir, logger):
         logger.info('Restarting services...')
         fabric_ssh.sudo('systemctl restart cloudify-rabbitmq')
         fabric_ssh.sudo('systemctl restart nginx')
+        fabric_ssh.sudo('systemctl restart cloudify-mgmtworker')
 
 
 class MultiNetworkHelloWorld(HelloWorldExample):
