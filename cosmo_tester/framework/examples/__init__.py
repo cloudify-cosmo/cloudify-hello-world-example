@@ -174,20 +174,23 @@ class AbstractExample(testtools.TestCase):
                      '-t', self.tenant])
 
     def assert_deployment_metrics_exist(self):
-        self.logger.info('Verifying deployment metrics..')
-        influxdb = self.manager.influxdb_client
-        try:
-            # select monitoring events for deployment from
-            # the past 5 seconds. a NameError will be thrown only if NO
-            # deployment events exist in the DB regardless of time-span
-            # in query.
-            influxdb.query('select * from /^{0}\./i '
-                           'where time > now() - 5s'
-                           .format(self.deployment_id))
-        except NameError as e:
-            pytest.fail('Monitoring events list for deployment with ID {0} '
-                        'were not found on influxDB. error is: {1}'
-                        .format(self.deployment_id, e))
+        self.logger.info('Verifying deployment metrics...')
+        # This query finds all the time series that begin with the
+        # deployment ID (which should be all the series created by diamond)
+        # and have values in the last 5 seconds
+        with self.manager.ssh() as fabric:
+            result = fabric.run(
+                'curl -G "{url}" --data-urlencode '
+                '"q=select * from /^{dep}\./i '
+                'where time > now() - 5s"'.format(
+                    url=self.manager.influxdb_url,
+                    dep=self.deployment_id
+                ), quiet=True
+            )
+            if result == '[]':
+                pytest.fail(
+                    'Monitoring events list for deployment with ID `{0}` '
+                    'were not found on influxDB'.format(self.deployment_id))
 
     def assert_deployment_events_exist(self):
         self.logger.info('Verifying deployment events..')

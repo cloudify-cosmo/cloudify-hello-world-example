@@ -57,9 +57,6 @@ class NodeCellarExample(AbstractExample):
         self.assert_mongodb_collector_data()
 
     def assert_mongodb_collector_data(self):
-
-        influxdb = self.manager.influxdb_client
-
         # retrieve some instance id of the mongodb node
         mongo_node_name = 'mongod'
         with set_client_tenant(self.manager, self.tenant):
@@ -68,18 +65,24 @@ class NodeCellarExample(AbstractExample):
                     node_id=mongo_node_name
             )[0].id
 
-        try:
+        with self.manager.ssh() as fabric:
             # select metrics from the mongo collector explicitly to verify
             # it is working properly
-            query = 'select sum(value) from /{0}\.{1}\.{' \
-                    '2}\.mongo_connections_totalCreated/' \
-                .format(self.deployment_id, mongo_node_name,
-                        instance_id)
-            influxdb.query(query)
-        except Exception as e:
-            pytest.fail('monitoring events for {0} node instance '
-                        'with id {1} were not found on influxDB. error is: {2}'
-                        .format(mongo_node_name, instance_id, e))
+            result = fabric.run(
+                'curl -G "{url}" --data-urlencode '
+                '"q=select sum(value) from '
+                '/{dep}\.{mongo_node}\.{instance_id}\.'
+                'mongo_connections_totalCreated/"'.format(
+                    url=self.manager.influxdb_url,
+                    dep=self.deployment_id,
+                    mongo_node=mongo_node_name,
+                    instance_id=instance_id
+                ), quiet=True
+            )
+            if result == '[]':
+                pytest.fail('Monitoring events for {0} node instance '
+                            'with id {1} were not found on influxDB'
+                            .format(mongo_node_name, instance_id))
 
     def assert_nodecellar_working(self, endpoint):
         nodecellar_base_url = 'http://{0}:{1}'.format(endpoint['ip_address'],

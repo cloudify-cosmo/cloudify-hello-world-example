@@ -28,7 +28,6 @@ import retrying
 import sh
 from fabric import api as fabric_api
 from fabric import context_managers as fabric_context_managers
-from influxdb import InfluxDBClient
 
 from cosmo_tester.framework import util
 
@@ -173,8 +172,7 @@ class _CloudifyManager(VM):
         self._tmpdir = os.path.join(tmpdir, str(uuid.uuid4()))
         os.makedirs(self._tmpdir)
         self._openstack = util.create_openstack_client()
-        self.influxdb_client = InfluxDBClient(public_ip_address, 8086,
-                                              'root', 'root', 'cloudify')
+        self.influxdb_url = 'http://localhost:8086/db/cloudify/series?u=root&p=root'  # NOQA
         self.additional_install_config = {}
 
     def upload_necessary_files(self):
