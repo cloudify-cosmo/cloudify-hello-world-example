@@ -36,7 +36,7 @@ EXPECTED_FILE_CONTENT = 'CONTENT'
 
 
 def test_3_2_agent(cfy, manager, attributes):
-    _test_agent('3_2', cfy, manager, attributes)
+    _test_agent('a3_2', cfy, manager, attributes)
 
 
 def test_ssh_agent(cfy, manager, attributes):
@@ -206,7 +206,7 @@ def test_windows_userdata_agent(cfy,
 
 def _test_agent(agent_type, cfy, manager, attributes):
     agent_blueprints = {
-        '3_2': 'agent/3-2-agent-blueprint/3-2-agent-mispelled-blprint.yaml',
+        'a3_2': 'agent/3-2-agent-blueprint/3-2-agent-mispelled-blprint.yaml',
         'ssh': 'agent/ssh-agent-blueprint/ssh-agent-blueprint.yaml',
     }
 
