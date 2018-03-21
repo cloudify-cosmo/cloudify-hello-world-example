@@ -1,0 +1,45 @@
+imports:
+#  - plugin:cloudify-aws-plugin?version=1.4.10
+  - http://www.getcloudify.org/spec/aws-plugin/1.4.10/plugin.yaml
+
+inputs:
+  image_id:
+    description: AWS EC2 image id to use for the server
+  instance_type:
+    description: AWS EC2 instance type to use for the server
+    default: m3.medium
+
+node_types:
+  cloudify.nodes.Server:
+    derived_from: cloudify.aws.nodes.Instance
+    properties:
+      image_id:
+        default: { get_input: image_id }
+      instance_type:
+        default: { get_input: instance_type }
+
+node_templates:
+  ip:
+    type: cloudify.aws.nodes.ElasticIP
+
+  security_group:
+    type: cloudify.aws.nodes.SecurityGroup
+    properties:
+      description: Security group for Hello World VM
+      rules:
+        - ip_protocol: {{ tcp }} #tcp
+          cidr_ip: 0.0.0.0/0
+          from_port: { get_input: webserver_port }
+          to_port: { get_input: webserver_port }
+
+relationships:
+  server_connected_to_ip:
+    derived_from: cloudify.aws.relationships.instance_connected_to_elastic_ip
+  server_connected_to_security_group:
+    derived_from: cloudify.aws.relationships.instance_connected_to_security_group
+
+outputs:
+  http_endpoint:
+    description: Web server's external endpoint
+    value: { concat: ['http://', { get_attribute: [ip, aws_resource_id] },
+                      ':', { get_input: webserver_port }] }

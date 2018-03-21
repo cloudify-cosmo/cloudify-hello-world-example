@@ -1,0 +1,78 @@
+# Openstack implementation
+
+imports:
+#  - plugin:cloudify-openstack-plugin?version=2.0.1
+  - http://www.getcloudify.org/spec/openstack-plugin/2.0.1/plugin.yaml
+
+inputs:
+  image:
+    description: Openstack image name or id to use for the new server
+  flavor:
+    description: Openstack flavor name or id to use for the new server
+  floating_network_id:
+    description: The id of the network to use for allocating a floating ip
+  network_name:
+    description: Openstack network name the new server will be connected to
+  key_pair_name:
+    description: Openstack key pair name of the key to associate with the new server
+
+node_types:
+  cloudify.nodes.Server:
+    derived_from: cloudify.openstack.nodes.Server
+    properties:
+      image:
+        default: { get_input: image }
+      flavor:
+        default: { get_input: flavor }
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create:
+          inputs:
+            args:
+              default:
+                security_groups: [{ get_attribute: [ security_group, external_name ]}]
+
+node_templates:
+  ip:
+    type: cloudify.openstack.nodes.FloatingIP
+    properties:
+      floatingip:
+        floating_network_id: { get_input: floating_network_id }
+
+  security_group:
+    type: cloudify.openstack.nodes.SecurityGroup
+    properties:
+      rules:
+        - port: { get_input: webserver_port }
+          remote_ip_prefix: 0.0.0.0/0
+        - port: 22
+          remote_ip_prefix: 0.0.0.0/0
+
+  keypair:
+    type: cloudify.openstack.nodes.KeyPair
+    properties:
+      use_external_resource: true
+      resource_id: { get_input: key_pair_name }
+      private_key_path: { get_input: agent_private_key_path }
+
+  network:
+    type: cloudify.openstack.nodes.Network
+    properties:
+      resource_id: { get_input: network_name }
+      use_external_resource: true
+
+relationships:
+  server_connected_to_ip:
+    derived_from: cloudify.openstack.server_connected_to_floating_ip
+  server_connected_to_security_group:
+    derived_from: cloudify.openstack.server_connected_to_security_group
+  server_connected_to_keypair:
+    derived_from: cloudify.openstack.server_connected_to_keypair
+  server_connected_to_network:
+    derived_from: cloudify.relationships.connected_to
+
+outputs:
+  http_endpoint:
+    description: Web server external endpoint
+    value: { concat: ['http://', { get_attribute: [ip, floating_ip_address] },
+                      ':', { get_input: webserver_port }] }
