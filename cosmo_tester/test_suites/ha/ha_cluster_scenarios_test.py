@@ -15,6 +15,7 @@
 
 import pytest
 import time
+import fabric.network
 
 from cosmo_tester.framework.examples.hello_world import centos_hello_world
 from cosmo_tester.framework.test_hosts import TestHosts
@@ -213,6 +214,30 @@ def test_remove_manager_from_cluster(cfy, hosts, ha_hello_worlds, logger):
 
     ha_helper.verify_nodes_status(expected_master, cfy, logger)
     _test_hellos(ha_hello_worlds)
+
+
+def test_fail_and_recover(cfy, hosts, logger):
+
+    def _iptables(manager, block_nodes, flag='-A'):
+        with manager.ssh() as _fabric:
+            for other_host in block_nodes:
+                _fabric.sudo('iptables {0} INPUT -s {1} -j DROP'
+                             .format(flag, other_host.private_ip_address))
+                _fabric.sudo('iptables {0} OUTPUT -d {1} -j DROP'
+                             .format(flag, other_host.private_ip_address))
+        fabric.network.disconnect_all()
+
+    original_master = hosts.instances[0]
+
+    logger.info('Simulating network failure that isolates the master')
+    _iptables(original_master, hosts.instances[1:])
+
+    ha_helper.wait_leader_election(hosts.instances[1:], logger)
+
+    logger.info('End of simulated network failure')
+    _iptables(original_master, hosts.instances[1:], flag='-D')
+
+    ha_helper.wait_nodes_online(hosts.instances, logger)
 
 
 def test_uninstall_dep(cfy, hosts, ha_hello_worlds,
