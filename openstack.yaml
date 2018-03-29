@@ -1,9 +1,9 @@
 tosca_definitions_version: cloudify_dsl_1_3
 
 imports:
-  - http://www.getcloudify.org/spec/cloudify/4.2/types.yaml
-  - http://www.getcloudify.org/spec/utilities-plugin/1.4.5/plugin.yaml
-  - http://www.getcloudify.org/spec/openstack-plugin/2.6.0/plugin.yaml
+  - http://www.getcloudify.org/spec/cloudify/4.3/types.yaml
+  - plugin:cloudify-openstack-plugin
+  - plugin:cloudify-utilities-plugin
 
 inputs:
 
@@ -78,6 +78,8 @@ node_templates:
         port: 22
         key: { get_input: agent_key_private }
       server:
+        meta:
+          blueprint_version: v1
         key_name: ''
         image: { get_input: image }
         flavor: { get_input: flavor }
@@ -87,6 +89,8 @@ node_templates:
           implementation: openstack.nova_plugin.server.create
           inputs:
             args:
+              meta:
+                blueprint_version: v1
               image: { get_input: image }
               flavor: { get_input: flavor }
               userdata: { get_attribute: [ cloudify_host_cloud_config, cloud_config ] }
