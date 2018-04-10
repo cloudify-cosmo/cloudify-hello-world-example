@@ -14,41 +14,47 @@
 #    * limitations under the License.
 
 import json
+import uuid
 import shutil
 
-from path import Path
 import pytest
 import requests
+
+from path import Path
 from retrying import retry
 
 from cosmo_tester.framework import util
-from cosmo_tester.framework.examples.hello_world import centos_hello_world
 from cosmo_tester.framework.fixtures import image_based_manager
-from cosmo_tester.framework.util import (
-    prepare_and_get_test_tenant,
-    set_client_tenant,
-)
-
-manager = image_based_manager
+from cosmo_tester.framework.examples.hello_world import centos_hello_world
+from cosmo_tester.framework.util import (prepare_and_get_test_tenant,
+                                         set_client_tenant)
 
 
 update_counter = 0
+manager = image_based_manager
 
 
 @pytest.fixture(scope='function')
 def hello_world(cfy, manager, attributes, ssh_key, tmpdir, logger):
     tenant = prepare_and_get_test_tenant('dep_update', manager, cfy)
-    hw = centos_hello_world(
-            cfy, manager, attributes, ssh_key, logger, tmpdir,
-            tenant=tenant, suffix='update')
+    hw = centos_hello_world(cfy,
+                            manager,
+                            attributes,
+                            ssh_key,
+                            logger,
+                            tmpdir,
+                            tenant=tenant,
+                            suffix='update')
     yield hw
     hw.cleanup()
 
 
-def test_hello_world_deployment_update(
-        cfy, manager, hello_world, tmpdir, logger):
+def test_hello_world_deployment_update(cfy,
+                                       manager,
+                                       hello_world,
+                                       tmpdir,
+                                       logger):
     logger.info('Deploying hello world example..')
-
     hello_world.upload_and_verify_install()
     http_endpoint = hello_world.outputs['http_endpoint']
     modified_port = '9090'
@@ -64,7 +70,6 @@ def test_hello_world_deployment_update(
 
     modified_blueprint_path = blueprint_base_path / 'modified_blueprint.yaml'
     hello_world.blueprint_path.copy(modified_blueprint_path)
-
     _modify_blueprint(modified_blueprint_path)
 
     logger.info('Updating hello world deployment..')
@@ -93,15 +98,17 @@ def test_hello_world_deployment_update(
                        hello_world.blueprint_path,
                        tmpdir,
                        inputs={'webserver_port': modified_port})
-
     logger.info('Verifying hello world updated deployment..')
     hello_world.verify_installation()
 
 
 def _wait_for_deployment_update_to_finish(func):
-    def _update_and_wait_to_finish(
-            cfy, manager, deployment_id, tenant, *args, **kwargs):
-
+    def _update_and_wait_to_finish(cfy,
+                                   manager,
+                                   deployment_id,
+                                   tenant,
+                                   *args,
+                                   **kwargs):
         func(cfy, manager, deployment_id, tenant, *args, **kwargs)
 
         @retry(stop_max_attempt_number=10,
@@ -116,10 +123,8 @@ def _wait_for_deployment_update_to_finish(func):
                         workflow_id='update',
                         _include=['status']
                 )
-
             if len(dep_updates_list) != update_counter:
                 return False
-
             for deployment_update in dep_updates_list:
                 if deployment_update.state not in ['failed', 'successful']:
                     return False
@@ -128,11 +133,8 @@ def _wait_for_deployment_update_to_finish(func):
                                                'failed',
                                                'cancelled']:
                     return False
-
             return True
-
         repetitive_check()
-
     return _update_and_wait_to_finish
 
 
@@ -152,12 +154,11 @@ def _update_deployment(cfy,
         kwargs = {}
     global update_counter
     update_counter += 1
-    cfy.deployments.update(
-            deployment_id,
-            blueprint_path=blueprint_path,
-            tenant_name=tenant,
-            **kwargs
-    )
+    cfy.deployments.update(deployment_id,
+                           blueprint_id='b-{0}'.format(uuid.uuid4()),
+                           blueprint_path=blueprint_path,
+                           tenant_name=tenant,
+                           **kwargs)
 
 
 def _modify_blueprint(blueprint_path):
@@ -168,16 +169,13 @@ def _modify_blueprint(blueprint_path):
         patcher.delete_property('node_templates.http_web_server')
         # Remove the output
         patcher.delete_property('outputs', 'http_endpoint')
-
         # Remove vm to security_group relationships
         blueprint = util.get_yaml_as_dict(blueprint_path)
         vm_relationships = blueprint['node_templates']['vm'][
             'relationships']
         vm_relationships = [r for r in vm_relationships if r['target'] !=
                             'security_group']
-        patcher.set_value('node_templates.vm.relationships',
-                          vm_relationships)
-
+        patcher.set_value('node_templates.vm.relationships', vm_relationships)
         # Remove vm interfaces - this is needed because it contains
         # a get_attribute with a reference to the deleted security group node.
         patcher.delete_property('node_templates.vm.interfaces')
