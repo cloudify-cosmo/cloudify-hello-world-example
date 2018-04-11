@@ -78,7 +78,7 @@ def hello_world(request, cfy, manager, attributes, ssh_key, tmpdir, logger):
 @pytest.fixture(
     scope='function',
     params=[
-        '1.2',
+        '1_2',
     ],
 )
 def hello_world_backwards_compat(request, cfy, manager, attributes, ssh_key,
@@ -86,10 +86,13 @@ def hello_world_backwards_compat(request, cfy, manager, attributes, ssh_key,
     tenant_param = 'dsl_{ver}'.format(ver=request.param)
     tenant = prepare_and_get_test_tenant(tenant_param, manager, cfy)
 
+    # Using 1_2 instead of 1.2 because diamond deliminates using dots (.),
+    # so having a dot in the deployment name (passed as the suffix to the
+    # HelloWorldExample constructor) messes things up
     dsl_git_checkout_mappings = {
         # dsl versions 1.0 and 1.1 cannot be tested with this because they do
         # not have usable singlehost blueprints in the hello world repo
-        '1.2': '3.3.1',
+        '1_2': '3.3.1',
         # 1.3 is current, and is on git checkout 4.1, but this is tested by
         # the OS tests above
     }
@@ -102,11 +105,10 @@ def hello_world_backwards_compat(request, cfy, manager, attributes, ssh_key,
     hw.blueprint_file = 'singlehost-blueprint.yaml'
 
     hw.clone_example()
-    version_check_ending = request.param.replace('.', '_')
     with open(hw.blueprint_path) as blueprint_handle:
         blueprint = yaml.load(blueprint_handle)
     blueprint_dsl_version = blueprint['tosca_definitions_version']
-    assert blueprint_dsl_version.endswith(version_check_ending)
+    assert blueprint_dsl_version.endswith(request.param)
 
     yield hw
 
