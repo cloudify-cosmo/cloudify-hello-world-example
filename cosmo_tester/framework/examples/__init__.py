@@ -165,13 +165,15 @@ class AbstractExample(testtools.TestCase):
                                                destination,
                                                branch=self.branch)
 
-    def cleanup(self):
+    def cleanup(self, allow_custom_params=False):
         if self._cleanup_required:
             self.logger.info('Performing hello world cleanup..')
-            self.cfy.executions.start.uninstall(
-                    ['-d', self.deployment_id, '-p',
-                     'ignore_failure=true', '-f',
-                     '-t', self.tenant])
+            params = ['-d', self.deployment_id, '-p',
+                      'ignore_failure=true', '-f',
+                      '-t', self.tenant]
+            if allow_custom_params:
+                params.append('--allow-custom-parameters')
+            self.cfy.executions.start.uninstall(params)
 
     def assert_deployment_metrics_exist(self):
         self.logger.info('Verifying deployment metrics...')

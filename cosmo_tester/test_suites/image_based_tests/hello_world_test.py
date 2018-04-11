@@ -23,7 +23,7 @@ from cosmo_tester.framework.util import prepare_and_get_test_tenant
 manager = image_based_manager
 
 
-def test_hello_world(hello_world, attributes, logger):
+def test_hello_world(hello_world):
     hello_world.verify_all()
 
 
@@ -53,6 +53,8 @@ def hello_world(request, cfy, manager, attributes, ssh_key, tmpdir, logger):
         hw.inputs.update({
             'flavor': attributes['medium_flavor_name'],
         })
+        # The windows hello world blueprint doesn't have monitoring set up
+        hw.verify_metrics = False
     else:
         hw.blueprint_file = 'openstack-blueprint.yaml'
         hw.inputs.update({
@@ -107,4 +109,6 @@ def hello_world_backwards_compat(request, cfy, manager, attributes, ssh_key,
     assert blueprint_dsl_version.endswith(version_check_ending)
 
     yield hw
-    hw.cleanup()
+
+    # For older CLIs we need to explicitly pass this param
+    hw.cleanup(allow_custom_params=True)
