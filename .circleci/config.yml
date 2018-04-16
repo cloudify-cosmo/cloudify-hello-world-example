@@ -1,0 +1,43 @@
+version: 2
+
+checkout:
+  post:
+    - >
+      if [ -n "$CI_PULL_REQUEST" ]; then
+        PR_ID=${CI_PULL_REQUEST##*/}
+        git fetch origin +refs/pull/$PR_ID/merge:
+        git checkout -qf FETCH_HEAD
+      fi
+
+jobs:
+  test_validation:
+    machine:
+      enabled: true
+      python:
+        version: pypy-2.2.1
+
+    steps:
+      - checkout
+      - run: wget http://cloudify-release-eu.s3.amazonaws.com/cloudify/18.4.17/release/cloudify-manager-docker-image-18.4.17.tar
+      - run: docker load -i cloudify-manager-docker-image-18.4.17.tar
+      - run: rm cloudify-manager-docker-image-18.4.17.tar
+      - run: docker run --name cfy_manager -d --restart unless-stopped -v /sys/fs/cgroup:/sys/fs/cgroup:ro --tmpfs /run --tmpfs /run/lock --security-opt seccomp:unconfined --cap-add SYS_ADMIN --network host docker-cfy-manager:latest
+      - run: pip install cloudify
+      - run: cfy profiles use localhost -u admin -p admin -t default_tenant
+      - run: cfy plugins upload https://github.com/cloudify-cosmo/cloudify-diamond-plugin/releases/download/1.3.8/cloudify_diamond_plugin-1.3.8-py27-none-linux_x86_64-centos-Core.wgn -y http://www.getcloudify.org/spec/diamond-plugin/1.3.8/plugin.yaml
+      - run: cfy plugins upload http://repository.cloudifysource.org/cloudify/wagons/cloudify-fabric-plugin/1.5.1/cloudify_fabric_plugin-1.5.1-py27-none-linux_x86_64-centos-Core.wgn -y http://www.getcloudify.org/spec/fabric-plugin/1.5.1/plugin.yaml
+      - run: cfy plugins upload https://github.com/cloudify-cosmo/cloudify-openstack-plugin/releases/download/2.7.4/cloudify_openstack_plugin-2.7.4-py27-none-linux_x86_64-centos-Core.wgn -y http://www.getcloudify.org/spec/openstack-plugin/2.7.4/plugin.yaml
+      - run: cfy plugins upload https://github.com/cloudify-cosmo/cloudify-gcp-plugin/releases/download/1.4.0/cloudify_gcp_plugin-1.4.0-py27-none-linux_x86_64-centos-Core.wgn -y http://www.getcloudify.org/spec/gcp-plugin/1.4.0/plugin.yaml
+      - run: cfy plugins upload https://github.com/cloudify-incubator/cloudify-awssdk-plugin/releases/download/2.1.1/cloudify_awssdk_plugin-2.1.1-py27-none-linux_x86_64-centos-Core.wgn -y http://www.getcloudify.org/spec/awssdk-plugin/2.1.1/plugin.yaml
+      - run: cfy plugins upload https://github.com/cloudify-incubator/cloudify-azure-plugin/releases/download/1.5.1.1/cloudify_azure_plugin-1.5.1.1-py27-none-linux_x86_64-centos-Core.wgn -y http://www.getcloudify.org/spec/azure-plugin/1.5.1.1/plugin.yaml
+      - run: cfy plugins upload https://github.com/cloudify-incubator/cloudify-utilities-plugin/releases/download/1.5.2/cloudify_utilities_plugin-1.5.2-py27-none-linux_x86_64-centos-Core.wgn -y http://www.getcloudify.org/spec/utilities-plugin/1.5.2/plugin.yaml
+      - run: cfy blueprints upload azure.yaml -b azure > /dev/null 2>&1
+      - run: cfy blueprints upload aws.yaml -b aws > /dev/null 2>&1
+      - run: cfy blueprints upload openstack.yaml -b openstack > /dev/null 2>&1
+      - run: cfy blueprints upload gcp.yaml -b gcp > /dev/null 2>&1
+
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - test_validation
