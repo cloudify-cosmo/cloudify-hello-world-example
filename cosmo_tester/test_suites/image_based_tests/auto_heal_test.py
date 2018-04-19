@@ -28,6 +28,26 @@ manager = image_based_manager
 openstack = util.create_openstack_client()
 
 
+def assert_deployment_metrics_exist(nodecellar):
+    nodecellar.logger.info('Verifying deployment metrics...')
+    # This query finds all the time series that begin with the
+    # deployment ID (which should be all the series created by diamond)
+    # and have values in the last 5 seconds
+    with nodecellar.manager.ssh() as fabric:
+        result = fabric.run(
+            'curl -G "{url}" --data-urlencode '
+            '"q=select * from /^{dep}\./i '
+            'where time > now() - 5s"'.format(
+                url='http://localhost:8086/db/cloudify/series?u=root&p=root',
+                dep=nodecellar.deployment_id
+            ), quiet=True
+        )
+        if result == '[]':
+            pytest.fail(
+                'Monitoring events list for deployment with ID `{0}` '
+                'were not found on influxDB'.format(nodecellar.deployment_id))
+
+
 @pytest.fixture(scope='function')
 def nodecellar(cfy, manager, attributes, ssh_key, tmpdir, logger):
     tenant = util.prepare_and_get_test_tenant('nc_autoheal', manager, cfy)
@@ -47,6 +67,7 @@ def test_nodecellar_auto_healing(cfy, manager, nodecellar, logger):
 
     logger.info('Installing nodecellar..')
     nodecellar.upload_and_verify_install()
+    assert_deployment_metrics_exist(nodecellar)
 
     logger.info('Killing nodejs host..')
     outputs = nodecellar.outputs
@@ -70,6 +91,7 @@ def test_nodecellar_auto_healing(cfy, manager, nodecellar, logger):
 
     logger.info('Verifying nodecellar is working after auto healing..')
     nodecellar.verify_installation()
+    assert_deployment_metrics_exist(nodecellar)
     nodecellar.uninstall()
     nodecellar.delete_deployment()
 

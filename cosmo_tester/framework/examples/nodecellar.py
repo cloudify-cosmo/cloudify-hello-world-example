@@ -15,12 +15,9 @@
 
 import json
 
-import pytest
 import requests
 
 from . import AbstractExample
-
-from cosmo_tester.framework.util import set_client_tenant
 
 
 class NodeCellarExample(AbstractExample):
@@ -54,35 +51,6 @@ class NodeCellarExample(AbstractExample):
     def verify_installation(self):
         super(NodeCellarExample, self).verify_installation()
         self.assert_nodecellar_working(self.outputs['endpoint'])
-        self.assert_mongodb_collector_data()
-
-    def assert_mongodb_collector_data(self):
-        # retrieve some instance id of the mongodb node
-        mongo_node_name = 'mongod'
-        with set_client_tenant(self.manager, self.tenant):
-            instance_id = self.manager.client.node_instances.list(
-                    deployment_id=self.deployment_id,
-                    node_id=mongo_node_name
-            )[0].id
-
-        with self.manager.ssh() as fabric:
-            # select metrics from the mongo collector explicitly to verify
-            # it is working properly
-            result = fabric.run(
-                'curl -G "{url}" --data-urlencode '
-                '"q=select sum(value) from '
-                '/{dep}\.{mongo_node}\.{instance_id}\.'
-                'mongo_connections_totalCreated/"'.format(
-                    url=self.manager.influxdb_url,
-                    dep=self.deployment_id,
-                    mongo_node=mongo_node_name,
-                    instance_id=instance_id
-                ), quiet=True
-            )
-            if result == '[]':
-                pytest.fail('Monitoring events for {0} node instance '
-                            'with id {1} were not found on influxDB'
-                            .format(mongo_node_name, instance_id))
 
     def assert_nodecellar_working(self, endpoint):
         nodecellar_base_url = 'http://{0}:{1}'.format(endpoint['ip_address'],

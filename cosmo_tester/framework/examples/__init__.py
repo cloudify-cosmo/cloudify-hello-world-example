@@ -17,7 +17,6 @@ import json
 import os
 from abc import ABCMeta
 
-import pytest
 import testtools
 
 from cosmo_tester.framework import git_helper
@@ -45,7 +44,6 @@ class AbstractExample(testtools.TestCase):
         self._cloned_to = None
         self.blueprint_id = 'hello-{suffix}'.format(suffix=suffix)
         self.deployment_id = self.blueprint_id
-        self.verify_metrics = True
         self.skip_plugins_validation = False
         self.tenant = tenant
         self.suffix = suffix
@@ -90,8 +88,6 @@ class AbstractExample(testtools.TestCase):
 
     def verify_installation(self):
         self.assert_deployment_events_exist()
-        if self.verify_metrics:
-            self.assert_deployment_metrics_exist()
 
     def upload_and_verify_install(self):
         self.upload_blueprint()
@@ -174,25 +170,6 @@ class AbstractExample(testtools.TestCase):
             if allow_custom_params:
                 params.append('--allow-custom-parameters')
             self.cfy.executions.start.uninstall(params)
-
-    def assert_deployment_metrics_exist(self):
-        self.logger.info('Verifying deployment metrics...')
-        # This query finds all the time series that begin with the
-        # deployment ID (which should be all the series created by diamond)
-        # and have values in the last 5 seconds
-        with self.manager.ssh() as fabric:
-            result = fabric.run(
-                'curl -G "{url}" --data-urlencode '
-                '"q=select * from /^{dep}\./i '
-                'where time > now() - 5s"'.format(
-                    url=self.manager.influxdb_url,
-                    dep=self.deployment_id
-                ), quiet=True
-            )
-            if result == '[]':
-                pytest.fail(
-                    'Monitoring events list for deployment with ID `{0}` '
-                    'were not found on influxDB'.format(self.deployment_id))
 
     def assert_deployment_events_exist(self):
         self.logger.info('Verifying deployment events..')

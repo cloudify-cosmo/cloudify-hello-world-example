@@ -51,10 +51,8 @@ def hello_world(request, cfy, manager, attributes, ssh_key, tmpdir, logger):
     if 'windows' in request.param:
         hw.blueprint_file = 'openstack-windows-blueprint.yaml'
         hw.inputs.update({
-            'flavor': attributes['medium_flavor_name'],
+            'flavor': attributes['large_flavor_name'],
         })
-        # The windows hello world blueprint doesn't have monitoring set up
-        hw.verify_metrics = False
     else:
         hw.blueprint_file = 'openstack-blueprint.yaml'
         hw.inputs.update({
