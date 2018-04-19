@@ -172,7 +172,6 @@ class _CloudifyManager(VM):
         self._tmpdir = os.path.join(tmpdir, str(uuid.uuid4()))
         os.makedirs(self._tmpdir)
         self._openstack = util.create_openstack_client()
-        self.influxdb_url = 'http://localhost:8086/db/cloudify/series?u=root&p=root'  # NOQA
         self.additional_install_config = {}
 
     def upload_necessary_files(self):
