@@ -370,7 +370,10 @@ class _CloudifyManager(VM):
         return config_file
 
     def bootstrap(self):
-        manager_install_rpm = util.get_manager_install_rpm_url()
+        manager_install_rpm = \
+            ATTRIBUTES.cloudify_manager_install_rpm_url.strip() or \
+            util.get_manager_install_rpm_url()
+
         install_config = self._create_config_file()
         install_rpm_file = 'cloudify-manager-install.rpm'
         with self.ssh() as fabric_ssh:
@@ -697,7 +700,6 @@ class BootstrapBasedCloudifyManagers(TestHosts):
         super(BootstrapBasedCloudifyManagers, self).__init__(*args, **kwargs)
         for manager in self.instances:
             manager.image_name = self._attributes.centos_7_image_name
-        self._manager_install_rpm = util.get_manager_install_rpm_url()
 
     def _get_server_flavor(self):
         return self._attributes.medium_flavor_name

@@ -44,6 +44,13 @@ class NodeCellarExample(AbstractExample):
                     'agent_private_key_path':
                         self.manager.remote_private_key_path
                 }
+            elif self._blueprint_file == 'simple-blueprint-with-secrets.yaml':
+                self._inputs = {
+                    'host_ip': 'host_ip',
+                    'agent_user': 'agent_user',
+                    'agent_private_key_path':
+                        'agent_private_key_path'
+                }
             else:
                 self._inputs = {}
         return self._inputs
