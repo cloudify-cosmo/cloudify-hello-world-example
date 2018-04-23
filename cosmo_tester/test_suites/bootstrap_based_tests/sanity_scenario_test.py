@@ -147,11 +147,13 @@ def _create_and_add_user_to_tenant(cfy, manager, logger):
 
 
 def _set_sanity_user(cfy, manager, logger):
+    manager.use()
     logger.info('Using manager `{0}`'.format(manager.ip_address))
     cfy.profiles.set('-u', USER_NAME, '-p', USER_PASS, '-t', TENANT_NAME)
 
 
 def _set_admin_user(cfy, manager, logger):
+    manager.use()
     logger.info('Using manager `{0}`'.format(manager.ip_address))
     cfy.profiles.set('-u', 'admin', '-p', 'admin', '-t', 'default_tenant')
 
