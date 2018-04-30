@@ -17,7 +17,7 @@ import time
 import pytest
 
 from cosmo_tester.framework.examples.nodecellar import NodeCellarExample
-from cosmo_tester.framework.test_hosts import TestHosts
+from cosmo_tester.framework.test_hosts import BootstrapBasedCloudifyManagers
 from cosmo_tester.framework.util import prepare_and_get_test_tenant
 
 from cosmo_tester.test_suites.snapshots import (
@@ -41,7 +41,7 @@ TENANT_NAME = "tenant"
 def managers(cfy, ssh_key, module_tmpdir, attributes, logger):
     """Bootstraps 3 Cloudify managers on a VM in Rackspace OpenStack."""
 
-    hosts = TestHosts(
+    hosts = BootstrapBasedCloudifyManagers(
         cfy, ssh_key, module_tmpdir, attributes, logger,
         number_of_instances=3)
 
