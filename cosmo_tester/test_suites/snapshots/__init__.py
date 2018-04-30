@@ -76,6 +76,7 @@ SINGLE_TENANT_MANAGERS = (
 MULTI_TENANT_MANAGERS = (
     '4.0.1',
     '4.1',
+    '4.3.1',
     'master',
 )
 
@@ -408,7 +409,7 @@ def create_snapshot(manager, snapshot_id, attributes, logger):
 def manager_supports_users_in_snapshot_creation(manager):
     return (
         manager.branch_name not in ('3.4.2', '4.0', '4.0.1', '4.1',
-                                    '4.1.1')
+                                    '4.1.1', '4.3.1')
         and not is_community()
     )
 
