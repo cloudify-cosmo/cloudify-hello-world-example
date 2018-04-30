@@ -407,9 +407,11 @@ def create_snapshot(manager, snapshot_id, attributes, logger):
 
 
 def manager_supports_users_in_snapshot_creation(manager):
+    # You probably don't want to change this, unless somebody broke snapshots
+    # for users in a recent manager version and we decided to release anyway
     return (
         manager.branch_name not in ('3.4.2', '4.0', '4.0.1', '4.1',
-                                    '4.1.1', '4.3.1')
+                                    '4.1.1')
         and not is_community()
     )
 
