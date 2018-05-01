@@ -394,7 +394,7 @@ def create_snapshot(manager, snapshot_id, attributes, logger):
     logger.info('Creating snapshot on old manager..')
     manager.client.snapshots.create(
         snapshot_id=snapshot_id,
-        include_metrics=True,
+        include_metrics=False,
         include_credentials=True,
         include_logs=True,
         include_events=True
