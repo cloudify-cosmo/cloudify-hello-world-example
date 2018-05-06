@@ -325,7 +325,7 @@ def _proxy_preconfigure_callback(_managers):
     # on the manager, we override the default network ip, so that by default
     # all agents will go through the proxy
     manager.additional_install_config = {
-        'agent': {'networks': {'default': proxy_ip}}
+        'agent': {'networks': {'default': str(proxy_ip)}}
     }
 
     # setup the proxy - simple socat services that forward all TCP connections
