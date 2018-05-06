@@ -672,7 +672,10 @@ class TestHosts(object):
             public_ip_address = outputs['public_ip_address_{}'.format(i)]
             private_ip_address = outputs['private_ip_address_{}'.format(i)]
             # Some templates don't expose networks as outputs
-            networks = outputs.get('networks_{}'.format(i), [])
+            networks = outputs.get('networks_{}'.format(i), {})
+            # Convert unicode to strings, in order to avoid ruamel issues
+            # when loading this dict into the config.yaml
+            networks = {str(k): str(v) for k, v in networks.items()}
             if hasattr(instance, 'api_version'):
                 rest_client = util.create_rest_client(
                         public_ip_address,
