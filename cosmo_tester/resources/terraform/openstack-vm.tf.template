@@ -106,7 +106,7 @@ resource "openstack_compute_instance_v2" "server{{ loop.index0 }}" {
     ]
     connection {
       type = "ssh"
-      user = "centos"
+      user = "{{ server.username }}"
       private_key = "${file("${var.private_key_path}")}"
       timeout = "10m"
       agent = "false"

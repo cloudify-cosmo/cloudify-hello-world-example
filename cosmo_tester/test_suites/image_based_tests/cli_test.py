@@ -63,7 +63,7 @@ def test_cli_on_centos_7(package_tester, attributes):
     inputs = {
         'cli_image': attributes.centos_7_image_name,
         'cli_user': attributes.centos_7_username,
-        'manager_user': attributes.centos_7_username,
+        'manager_user': attributes.default_linux_username,
         'cli_package_url': get_cli_package_url('rhel_centos_cli_package_url')
     }
     package_tester.run_test(inputs)
@@ -74,7 +74,7 @@ def test_cli_on_centos_6(package_tester, attributes):
     inputs = {
         'cli_image': attributes.centos_6_image_name,
         'cli_user': attributes.centos_6_username,
-        'manager_user': attributes.centos_7_username,
+        'manager_user': attributes.default_linux_username,
         'cli_package_url': get_cli_package_url('rhel_centos_cli_package_url')
     }
     package_tester.run_test(inputs)
@@ -85,7 +85,7 @@ def test_cli_on_ubuntu_14_04(package_tester, attributes):
     inputs = {
         'cli_image': attributes.ubuntu_14_04_image_name,
         'cli_user': attributes.ubuntu_14_04_username,
-        'manager_user': attributes.centos_7_username,
+        'manager_user': attributes.default_linux_username,
         'cli_package_url': get_cli_package_url('debian_cli_package_url')
     }
     package_tester.run_test(inputs)
@@ -96,7 +96,7 @@ def test_cli_on_windows_2012(package_tester, attributes):
     inputs = {
         'cli_image': attributes.windows_2012_image_name,
         'cli_user': attributes.windows_2012_username,
-        'manager_user': attributes.centos_7_username,
+        'manager_user': attributes.default_linux_username,
         'cli_flavor': attributes.medium_flavor_name,
     }
     package_tester.run_test(inputs)
@@ -107,7 +107,7 @@ def test_cli_on_rhel_7(package_tester, attributes):
     inputs = {
         'cli_image': attributes.rhel_7_image_name,
         'cli_user': attributes.rhel_7_username,
-        'manager_user': attributes.centos_7_username,
+        'manager_user': attributes.default_linux_username,
         'cli_package_url': get_cli_package_url('rhel_centos_cli_package_url'),
         'cli_flavor': attributes.medium_flavor_name,
 
@@ -120,7 +120,7 @@ def test_cli_on_rhel_6(package_tester, attributes):
     inputs = {
         'cli_image': attributes.rhel_6_image_name,
         'cli_user': attributes.rhel_6_username,
-        'manager_user': attributes.centos_7_username,
+        'manager_user': attributes.default_linux_username,
         'cli_package_url': get_cli_package_url('rhel_centos_cli_package_url')
     }
     package_tester.run_test(inputs)
@@ -131,7 +131,7 @@ def test_cli_on_osx(package_tester, attributes):
     inputs = {
         'manager_image': attributes.centos_7_AMI,
         'manager_flavor': attributes.large_AWS_type,
-        'manager_user': attributes.centos_7_username,
+        'manager_user': attributes.default_linux_username,
         'osx_public_ip': os.environ["MACINCLOUD_HOST"],
         'osx_user': os.environ["MACINCLOUD_USERNAME"],
         'osx_password': os.environ["MACINCLOUD_PASSWORD"],

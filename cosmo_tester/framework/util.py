@@ -413,6 +413,8 @@ def prepare_and_get_test_tenant(test_param, manager, cfy):
         identifier passed in as 'test_param'), and returns the name of the
         tenant that should be used for this test.
     """
+    default_openstack_plugin = get_attributes()['default_openstack_plugin']
+
     if is_community():
         tenant = 'default_tenant'
         # It is expected that the plugin is already uploaded for the
@@ -420,7 +422,7 @@ def prepare_and_get_test_tenant(test_param, manager, cfy):
     else:
         tenant = test_param
         cfy.tenants.create(tenant)
-        manager.upload_plugin('openstack_centos_core',
+        manager.upload_plugin(default_openstack_plugin,
                               tenant_name=tenant)
     return tenant
 

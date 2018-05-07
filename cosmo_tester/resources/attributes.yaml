@@ -34,6 +34,11 @@ cli_urls_override:
   debian_cli_package_url: null
   osx_cli_package_url: null
 
+default_manager_distro: rhel
+default_linux_username: cloud-user
+default_linux_image_name: rhel-server-7.4-x86_64-kvm-cert
+default_openstack_plugin: openstack_redhat_maipo
+
 centos_7_username: centos
 centos_7_image_name: CentOS-7-x86_64-GenericCloud  
 centos_7_AMI: ami-7abd0209

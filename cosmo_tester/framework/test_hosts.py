@@ -89,7 +89,7 @@ class VM(object):
     def ssh(self, **kwargs):
         with fabric_context_managers.settings(
                 host_string=self.ip_address,
-                user=self._attributes.centos_7_username,
+                user=self._attributes.default_linux_username,
                 key_filename=self._ssh_key.private_key_path,
                 abort_exception=Exception,
                 **kwargs):
@@ -137,7 +137,8 @@ class VM(object):
     def upload_necessary_files(self):
         return True
 
-    image_name = ATTRIBUTES['centos_7_image_name']
+    image_name = ATTRIBUTES['default_linux_image_name']
+    username = ATTRIBUTES['default_linux_username']
     branch_name = 'master'
 
 
@@ -325,7 +326,7 @@ class _CloudifyManager(VM):
         self._logger.info('#' * 80)
         self._logger.info(
             '\nssh -o StrictHostKeyChecking=no {user}@{ip} -i {key}'.format(
-                user=self._attributes.centos_7_username,
+                user=self._attributes.default_linux_username,
                 ip=self.ip_address,
                 key=self._ssh_key.private_key_path)
         )
@@ -336,7 +337,7 @@ class _CloudifyManager(VM):
         cmd = ' '.join([
             self.rsync_path,
             self.ip_address,
-            self._attributes.centos_7_username,
+            self._attributes.default_linux_username,
             self._ssh_key.private_key_path
         ])
         self._logger.info('Running command:\n{0}'.format(cmd))
@@ -422,9 +423,10 @@ def get_latest_manager_image_name():
             version_num = version_num[:-2]
 
         version = version_num + version_milestone
-        image_name = '{prefix}-{suffix}'.format(
+        image_name = '{prefix}-{suffix}-{distro}'.format(
             prefix=ATTRIBUTES.cloudify_manager_image_name_prefix,
             suffix=version,
+            distro=ATTRIBUTES.default_manager_distro
         )
 
     return image_name
@@ -647,7 +649,8 @@ class TestHosts(object):
 
                 instance.upload_necessary_files()
                 if instance.upload_plugins:
-                    instance.upload_plugin('openstack_centos_core')
+                    instance.upload_plugin(
+                        self._attributes.default_openstack_plugin)
 
             self._logger.info('Test hosts successfully created!')
 
@@ -708,7 +711,7 @@ class BootstrapBasedCloudifyManagers(TestHosts):
     def __init__(self, *args, **kwargs):
         super(BootstrapBasedCloudifyManagers, self).__init__(*args, **kwargs)
         for manager in self.instances:
-            manager.image_name = self._attributes.centos_7_image_name
+            manager.image_name = self._attributes.default_linux_image_name
 
     def _get_server_flavor(self):
         return self._attributes.medium_flavor_name

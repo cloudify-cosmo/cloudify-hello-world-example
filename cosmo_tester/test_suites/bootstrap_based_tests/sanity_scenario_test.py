@@ -84,12 +84,12 @@ def test_sanity_scenario(managers,
     cfy.status()
 
     # Create user and add the new user to the tenant
-    _create_and_add_user_to_tenant(cfy, manager1, logger)
+    _create_and_add_user_to_tenant(cfy, logger)
 
     _set_sanity_user(cfy, manager1, logger)
 
     # Creating secrets
-    _create_secrets(cfy, logger, manager1)
+    _create_secrets(cfy, logger, attributes, manager1)
 
     nodecellar.upload_and_verify_install()
 
@@ -126,9 +126,9 @@ def test_sanity_scenario(managers,
     # nodecellar.uninstall()                         # bug in agents upgrade
 
 
-def _create_secrets(cfy, logger, manager1):
+def _create_secrets(cfy, logger, attributes, manager1):
     logger.info('Creating secret agent_user as blueprint input')
-    cfy.secrets.create('agent_user', '-s', 'centos')
+    cfy.secrets.create('agent_user', '-s', attributes.default_linux_username)
 
     logger.info('Creating secret agent_private_key_path as blueprint input')
     cfy.secrets.create('agent_private_key_path', '-s',
@@ -138,7 +138,7 @@ def _create_secrets(cfy, logger, manager1):
     cfy.secrets.create('host_ip', '-s', manager1.ip_address)
 
 
-def _create_and_add_user_to_tenant(cfy, manager, logger):
+def _create_and_add_user_to_tenant(cfy, logger):
     logger.info('Creating new user')
     cfy.users.create(USER_NAME, '-p', USER_PASS)
 
