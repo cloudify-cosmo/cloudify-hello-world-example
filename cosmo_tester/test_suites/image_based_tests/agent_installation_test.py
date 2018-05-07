@@ -224,7 +224,7 @@ def _test_agent(agent_type, cfy, manager, attributes):
         manager.client.deployments.create(
             deployment_id, blueprint_id, inputs={
                 'ip_address': manager.ip_address,
-                'user': attributes.centos_7_username,
+                'user': attributes.default_linux_username,
                 'private_key_path': manager.remote_private_key_path
             }, skip_plugins_validation=True)
     try:
