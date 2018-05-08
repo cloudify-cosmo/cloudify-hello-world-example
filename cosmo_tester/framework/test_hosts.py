@@ -422,12 +422,15 @@ def get_latest_manager_image_name():
         if version_num.endswith('.0') and version_num.count('.') > 1:
             version_num = version_num[:-2]
 
+        distro = ATTRIBUTES.default_manager_distro
         version = version_num + version_milestone
-        image_name = '{prefix}-{suffix}-{distro}'.format(
+        image_name = '{prefix}-{suffix}'.format(
             prefix=ATTRIBUTES.cloudify_manager_image_name_prefix,
-            suffix=version,
-            distro=ATTRIBUTES.default_manager_distro
+            suffix=version
         )
+
+        if distro != 'centos':
+            image_name = image_name + '-{distro}'.format(distro=distro)
 
     return image_name
 
