@@ -36,7 +36,7 @@ cli_urls_override:
 
 default_manager_distro: rhel
 default_linux_username: cloud-user
-default_linux_image_name: rhel-server-7.4-x86_64-kvm-cert
+default_linux_image_name: rhel-server-7.5
 default_openstack_plugin: openstack_redhat_maipo
 
 centos_7_username: centos
@@ -47,7 +47,7 @@ centos_6_username: centos
 centos_6_image_name: centos_6.6
 
 rhel_7_username: cloud-user
-rhel_7_image_name: rhel-server-7.4-x86_64-kvm-cert
+rhel_7_image_name: rhel-server-7.5
 
 rhel_6_username: cloud-user
 rhel_6_image_name: rhel-guest-image-6.9-120.x86_64.qcow2
