@@ -755,6 +755,9 @@ def hosts(
             fabric_ssh.sudo('yum -y -q install gcc')
             fabric_ssh.sudo('yum -y -q install python-devel')
 
+    with instances[0].ssh() as fabric_ssh:
+        fabric_ssh.sudo('systemctl restart cloudify-restservice')
+
     return hosts
 
 
