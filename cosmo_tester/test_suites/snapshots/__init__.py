@@ -758,6 +758,8 @@ def hosts(
     with instances[0].ssh() as fabric_ssh:
         fabric_ssh.sudo('systemctl restart cloudify-restservice')
 
+    instances[0].verify_services_are_running()
+
     return hosts
 
 
