@@ -57,7 +57,8 @@ def managers(cfy, ssh_key, module_tmpdir, attributes, logger):
         template_inputs={
             'num_of_networks': 3,
             'num_of_managers': 2,
-            'image_name': attributes.default_linux_image_name
+            'image_name': attributes.default_linux_image_name,
+            'username': attributes.default_linux_username
         })
     hosts.preconfigure_callback = _preconfigure_callback
 

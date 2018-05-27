@@ -16,9 +16,11 @@ import time
 
 from cloudify import ctx
 from cloudify.decorators import operation
+from cloudify.amqp_client import get_client
 from cloudify.exceptions import NonRecoverableError
-from cloudify.celery.app import get_celery_app
-from cloudify_agent.api.utils import get_agent_registered
+
+from cloudify_agent.api.utils import is_agent_alive
+
 from openstack_plugin_common import with_nova_client
 from nova_plugin.server import get_server_by_context, SERVER_STATUS_ACTIVE
 
@@ -50,11 +52,15 @@ def reboot(nova_client, **_):
     agent_name = ctx.instance.runtime_properties['cloudify_agent']['name']
     i = 0
     agent_alive = False
-    app = get_celery_app(tenant=ctx.tenant, target=agent_name)
+    amqp_client = get_client(
+        amqp_vhost=ctx.tenant['rabbitmq_vhost'],
+        amqp_user=ctx.tenant['rabbitmq_username'],
+        amqp_pass=ctx.tenant['rabbitmq_password']
+    )
     while i < AGENT_ATTEMPTS and not agent_alive:
         ctx.logger.info('Waiting for agent, attempt {0}'.format(i + 1))
         time.sleep(INTERVAL)
-        agent_alive = get_agent_registered(agent_name, app)
+        agent_alive = is_agent_alive(agent_name, amqp_client)
         i += 1
     if agent_alive:
         ctx.logger.info('Agent started')
