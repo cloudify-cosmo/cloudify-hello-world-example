@@ -430,7 +430,8 @@ def prepare_and_get_test_tenant(test_param, manager, cfy):
 @retrying.retry(stop_max_attempt_number=180, wait_fixed=1000)
 def wait_for_all_executions(manager, include_system_workflows=True):
     executions = manager.client.executions.list(
-        include_system_workflows=include_system_workflows
+        include_system_workflows=include_system_workflows,
+        _all_tenants=True
     )
     for execution in executions:
         if execution['status'] != 'terminated':
