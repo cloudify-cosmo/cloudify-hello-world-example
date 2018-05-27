@@ -2,7 +2,7 @@ tosca_definitions_version: cloudify_dsl_1_3
 
 imports:
   - http://www.getcloudify.org/spec/cloudify/4.4.dev1/types.yaml
-  - http://www.getcloudify.org/spec/fabric-plugin/1.5.1/plugin.yaml
+  - http://www.getcloudify.org/spec/fabric-plugin/1.5.2/plugin.yaml
   - http://www.getcloudify.org/spec/openstack-plugin/2.0.1/plugin.yaml
   - https://raw.githubusercontent.com/cloudify-cosmo/cloudify-host-pool-service/1.1/host-pool-service.yaml
 
