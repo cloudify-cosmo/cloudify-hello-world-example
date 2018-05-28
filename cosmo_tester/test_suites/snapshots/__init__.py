@@ -681,6 +681,7 @@ def upload_test_plugin(manager, logger, tenant=None):
     _log('Uploading test plugin', logger, tenant)
     with set_client_tenant(manager, tenant):
         manager.client.plugins.upload(TEST_PLUGIN_URL)
+        manager.wait_for_all_executions()
 
 
 def get_plugins_list(manager, tenant=None):

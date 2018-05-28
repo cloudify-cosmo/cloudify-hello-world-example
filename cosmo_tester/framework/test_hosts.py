@@ -239,7 +239,7 @@ class _CloudifyManager(VM):
                 # compatible and cfy isn't installed in the image
                 self.client.plugins.upload(plugin['wgn_url'])
 
-        util.wait_for_all_executions(self)
+        self.wait_for_all_executions()
 
     @property
     def remote_private_key_path(self):
@@ -405,6 +405,28 @@ class _CloudifyManager(VM):
             'auth_url': os.environ['OS_AUTH_URL']
         }, indent=2))
         return openstack_config_file
+
+    @retrying.retry(stop_max_attempt_number=180, wait_fixed=1000)
+    def wait_for_all_executions(self, include_system_workflows=True):
+        executions = self.client.executions.list(
+            include_system_workflows=include_system_workflows,
+            _all_tenants=True
+        )
+        for execution in executions:
+            if execution['status'] != 'terminated':
+                raise StandardError(
+                    'Timed out: An execution did not terminate'
+                )
+
+    @retrying.retry(stop_max_attempt_number=60, wait_fixed=1000)
+    def wait_for_manager(self):
+        status = self.client.manager.get_status()
+        for service in status['services']:
+            for instance in service['instances']:
+                if instance['state'] != 'running':
+                    raise StandardError(
+                        'Timed out: Reboot did not complete successfully'
+                    )
 
 
 def get_latest_manager_image_name():

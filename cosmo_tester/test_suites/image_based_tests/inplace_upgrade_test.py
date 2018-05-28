@@ -16,7 +16,6 @@
 from time import sleep
 from os.path import join
 
-from cosmo_tester.framework import util
 from cosmo_tester.framework.fixtures import image_based_manager
 
 from cosmo_tester.framework.examples.hello_world import get_hello_worlds
@@ -41,15 +40,15 @@ def test_inplace_upgrade(cfy,
     for hello_world in hellos:
         hello_world.upload_and_verify_install()
     cfy.snapshots.create([snapshot_name])
-    util.wait_for_all_executions(manager)
+    manager.wait_for_all_executions()
     cfy.snapshots.download([snapshot_name, '-o', snapshot_path])
     manager.teardown()
     manager.bootstrap()
     manager.upload_necessary_files()
     cfy.snapshots.upload([snapshot_path, '-s', snapshot_name])
     cfy.snapshots.restore([snapshot_name, '--restore-certificates'])
-    util.wait_for_all_executions(manager)
-    util.wait_for_manager(manager)
+    manager.wait_for_all_executions()
+    manager.wait_for_manager()
 
     # we need to give the agents enough time to reconnect to the manager;
     # celery retries with a backoff of up to 32 seconds

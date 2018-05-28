@@ -425,27 +425,3 @@ def prepare_and_get_test_tenant(test_param, manager, cfy):
         manager.upload_plugin(default_openstack_plugin,
                               tenant_name=tenant)
     return tenant
-
-
-@retrying.retry(stop_max_attempt_number=180, wait_fixed=1000)
-def wait_for_all_executions(manager, include_system_workflows=True):
-    executions = manager.client.executions.list(
-        include_system_workflows=include_system_workflows,
-        _all_tenants=True
-    )
-    for execution in executions:
-        if execution['status'] != 'terminated':
-            raise StandardError(
-                'Timed out: An execution did not terminate'
-            )
-
-
-@retrying.retry(stop_max_attempt_number=60, wait_fixed=1000)
-def wait_for_manager(manager):
-    status = manager.client.manager.get_status()
-    for service in status['services']:
-        for instance in service['instances']:
-            if instance['state'] != 'running':
-                raise StandardError(
-                    'Timed out: Reboot did not complete successfully'
-                )
