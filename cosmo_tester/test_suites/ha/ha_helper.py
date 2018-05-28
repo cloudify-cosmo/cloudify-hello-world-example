@@ -57,7 +57,7 @@ class HighAvailabilityHelper(object):
                                                     managers, logger)
 
     @staticmethod
-    def _wait_cluster_status(predicate, managers, logger, timeout=120,
+    def _wait_cluster_status(predicate, managers, logger, timeout=150,
                              poll_interval=1):
         """Wait until the cluster is in a state decided by predicate
 
