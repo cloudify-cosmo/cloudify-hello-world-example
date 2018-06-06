@@ -13,31 +13,14 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
-import pytest
+# import pytest
 
 from cosmo_tester.framework.fixtures import image_based_manager
-from cosmo_tester.framework.test_hosts import TestHosts
 
 import subprocess
 import os
 
 manager = image_based_manager
-
-
-@pytest.fixture(scope='function')
-def hosts(request, cfy, ssh_key, module_tmpdir, attributes, logger):
-    logger.info('Creating Cloudify Manager')
-    hosts = TestHosts(
-        cfy, ssh_key, module_tmpdir, attributes, logger,
-        number_of_instances=1)
-
-    hosts.instances[0].upload_plugins = False
-    try:
-        hosts.create()
-        yield hosts
-
-    finally:
-        hosts.destroy()
 
 
 def test_ui(cfy, manager, module_tmpdir, attributes, ssh_key, logger):
