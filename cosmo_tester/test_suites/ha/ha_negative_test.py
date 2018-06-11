@@ -54,7 +54,7 @@ def hosts(
                          cluster_host_ip=manager2.private_ip_address,
                          cluster_node_name=manager2.ip_address)
         cfy.cluster.nodes.list()
-        ha_helper.wait_nodes_online(hosts.instances)
+        ha_helper.wait_nodes_online(hosts.instances, logger)
         yield hosts
 
     finally:
