@@ -1,0 +1,156 @@
+########
+# Copyright (c) 2017 GigaSpaces Technologies Ltd. All rights reserved
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#        http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+#    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#    * See the License for the specific language governing permissions and
+#    * limitations under the License.
+
+import os
+import threading
+import time
+from datetime import datetime
+import csv
+
+from cosmo_tester.framework.fixtures import image_based_manager
+
+manager = image_based_manager
+
+BLUEPRINT_NAME = 'scale'
+BLUEPRINT_FILE_NAME = 'blueprint.yaml'
+TENANT = 'default_tenant'
+BLUEPRINT_PATH = os.path.abspath(
+    os.path.join(
+        os.path.dirname(
+            __file__), '..', '..', 'resources/blueprints/scale/load-bp.zip'))
+CONCURRENT_DEPLOYMENTS = 20
+
+
+def test_concurrent_workflows(cfy, manager, attributes, logger):
+    num_of_deployments = int(os.environ.get('NUM_OF_DEPLOYMENTS'))
+    concurrent_workflows = int(os.environ.get('CONCURRENT_WORKFLOWS'))
+    url = os.environ.get('URL')
+    cycle_num = os.environ.get('CYCLE_NUM')
+    cycle_sleep = os.environ.get('CYCLE_SLEEP')
+
+    exec_params = '{{url: "{url}", cycle_num: {cycle_num},' \
+                  ' cycle_sleep: {cycle_sleep}}}'.format(
+                    url=url,
+                    cycle_num=cycle_num,
+                    cycle_sleep=cycle_sleep)
+
+    logger.info('Test parameters:')
+    logger.info('******************')
+    logger.info('Total number of deployments: {0}'.
+                format(num_of_deployments))
+    logger.info('Number of concurrent workflows: {0}'.
+                format(concurrent_workflows))
+    logger.info('Number of cycles in each deployment: {0}'.
+                format(cycle_num))
+    logger.info('Sleep milisec in each deployment: {0}'.
+                format(cycle_sleep))
+    logger.info('******************')
+    logger.info('Preparing test environment...')
+
+    deployments = _prepare_test_env(cfy, num_of_deployments)
+
+    stat_thread = threading.Thread(target=statistics, args=(manager,))
+    stat_thread.daemon = True
+    stat_thread.start()
+
+    workflow_count = 0
+    for i in range(len(deployments)):
+        threads = []
+        if workflow_count < len(deployments):
+            for j in range(concurrent_workflows):
+                t = threading.Thread(target=execution,
+                                     args=(cfy,
+                                           deployments[workflow_count],
+                                           exec_params))
+                threads.append(t)
+                workflow_count += 1
+            for t in threads:
+                t.start()
+            for t in threads:
+                t.join()
+
+
+def statistics(manager):
+    """thread worker function"""
+    cpu_command = "grep 'cpu ' /proc/stat | awk " \
+                  "'{usage=($2+$4)*100/($2+$4+$5)} END {print usage }'"
+    memory_used_command = "free | grep Mem | awk '{print $3/$2 * 100.0}'"
+    load_averages_command = "cat /proc/loadavg | awk '{print $1}'"
+
+    with open('/tmp/manager_stats.csv', 'w') as csvfile:
+        fieldnames = ['time', 'cpu_%', 'load_averages', 'used_memory_%']
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+
+        writer.writeheader()
+        while True:
+            current_time = datetime.now().strftime('%H:%M:%S')
+            with manager.ssh() as fabric:
+                cpu = load_averages = memory_used_perc = None
+                try:
+                    cpu = fabric.run(cpu_command)
+                    load_averages = fabric.run(load_averages_command)
+                    memory_used_perc = fabric.run(memory_used_command)
+                except EOFError:
+                    pass
+
+            writer.writerow({'time': current_time,
+                             'cpu_%': cpu,
+                             'load_averages': load_averages,
+                             'used_memory_%': memory_used_perc, })
+            time.sleep(1)
+    return
+
+
+def deployment(cfy, deployment_id):
+    """thread worker function"""
+    cfy.deployments.create('-b', BLUEPRINT_NAME,
+                           deployment_id, '-t', TENANT)
+    return
+
+
+def execution(cfy, deployment_id, exec_params):
+    """thread worker function"""
+    cfy.executions.start('lbp_wf',
+                         '-d', deployment_id,
+                         '-t',
+                         'default_tenant',
+                         '-p',
+                         exec_params)
+    return
+
+
+def _prepare_test_env(cfy, num_of_deployments):
+    cfy.blueprints.upload(
+        '-b', BLUEPRINT_NAME,
+        '-n', BLUEPRINT_FILE_NAME,
+        BLUEPRINT_PATH, '-t', TENANT)
+
+    dep_count = 0
+    deployments = []
+    for i in range(num_of_deployments / CONCURRENT_DEPLOYMENTS):
+        threads = []
+        for j in range(CONCURRENT_DEPLOYMENTS):
+            dep_count += 1
+            deployment_id = BLUEPRINT_NAME + '_deployment_' + str(dep_count)
+            t = threading.Thread(target=deployment, args=(cfy, deployment_id,))
+            threads.append(t)
+            deployments.append(deployment_id)
+        for t in threads:
+            t.start()
+            time.sleep(0.1)
+        for t in threads:
+            t.join()
+
+    return deployments
