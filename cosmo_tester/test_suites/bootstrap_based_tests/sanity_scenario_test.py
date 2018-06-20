@@ -18,6 +18,7 @@ import pytest
 
 from cosmo_tester.framework.examples.nodecellar import NodeCellarExample
 from cosmo_tester.framework.test_hosts import BootstrapBasedCloudifyManagers
+# from cosmo_tester.framework.test_hosts import TestHosts
 from cosmo_tester.framework.util import prepare_and_get_test_tenant
 
 from cosmo_tester.test_suites.snapshots import (
@@ -25,12 +26,11 @@ from cosmo_tester.test_suites.snapshots import (
     download_snapshot,
     upload_snapshot,
     restore_snapshot,
-    # upgrade_agents,    # bug in agents upgrade
     verify_services_status
 )
 
-# from cosmo_tester.test_suites.ha.ha_helper \    # agents upgrade bug CY-278
-#     import HighAvailabilityHelper as ha_helper
+from cosmo_tester.test_suites.ha.ha_helper \
+    import HighAvailabilityHelper as ha_helper
 
 USER_NAME = "sanity_user"
 USER_PASS = "user123"
@@ -48,11 +48,25 @@ def managers(cfy, ssh_key, module_tmpdir, attributes, logger):
     for manager in hosts.instances[1:]:
         manager.upload_plugins = False
 
+    # Uncomment in order to set skip_sanity and shorten tests runtime
+    hosts.preconfigure_callback = _preconfigure_callback
+
     try:
         hosts.create()
         yield hosts.instances
     finally:
         hosts.destroy()
+
+
+def _preconfigure_callback(_managers):
+    # Calling the param `_managers` to avoid confusion with fixture
+
+    # The preconfigure callback populates the networks config prior to the BS
+    for mgr in _managers:
+
+        mgr.additional_install_config = {
+            'sanity': {'skip_sanity': 'true'}
+        }
 
 
 @pytest.fixture(scope='function')
@@ -64,6 +78,7 @@ def nodecellar(request, cfy, managers, attributes, ssh_key, tmpdir, logger):
         cfy, manager, attributes, ssh_key, logger, tmpdir,
         tenant=tenant, suffix='simple')
     nc.blueprint_file = 'simple-blueprint-with-secrets.yaml'
+    # nc.blueprint_file = 'openstack-blueprint.yaml' # alternative bp for test
     yield nc
 
 
@@ -73,6 +88,7 @@ def test_sanity_scenario(managers,
                          tmpdir,
                          attributes,
                          nodecellar):
+
     manager1 = managers[0]
     manager2 = managers[1]
     manager3 = managers[2]
@@ -83,7 +99,15 @@ def test_sanity_scenario(managers,
     logger.info('Cfy status')
     cfy.status()
 
-    # Create user and add the new user to the tenant
+    # Start HA cluster, add manager2 to it
+    _start_cluster(cfy, manager1, logger)
+
+    _set_admin_user(cfy, manager2, logger)
+
+    _join_cluster(cfy, manager1, manager2, logger)
+
+    time.sleep(30)
+
     _create_and_add_user_to_tenant(cfy, logger)
 
     _set_sanity_user(cfy, manager1, logger)
@@ -95,35 +119,42 @@ def test_sanity_scenario(managers,
 
     _set_admin_user(cfy, manager1, logger)
 
-    _start_cluster(cfy, manager1, logger)
-
-    _set_admin_user(cfy, manager2, logger)
-
-    _join_cluster(cfy, manager1, manager2, logger)
-
+    # Simulate failover (manager2 will be the new cluster master)
     logger.info('Setting replica manager')
-    # ha_helper.set_active(manager2, cfy, logger)   # bug in agents upgrade
+    _set_admin_user(cfy, manager2, logger)
+    ha_helper.set_active(manager2, cfy, logger)
+    # time.sleep(30)
 
+    # Create and download snapshots from the new cluster master (manager2)
     snapshot_id = 'SNAPSHOT_ID'
     local_snapshot_path = str(tmpdir / 'snap.zip')
     logger.info('Creating snapshot')
-    create_snapshot(manager1, snapshot_id, attributes, logger)
-    download_snapshot(manager1, local_snapshot_path, snapshot_id, logger)
+    create_snapshot(manager2, snapshot_id, attributes, logger)
+    download_snapshot(manager2, local_snapshot_path, snapshot_id, logger)
 
     _set_admin_user(cfy, manager3, logger)
 
+    # Upload and restore snapshot to manager3
     logger.info('Uploading and restoring snapshot')
     upload_snapshot(manager3, local_snapshot_path, snapshot_id, logger)
     restore_snapshot(manager3, snapshot_id, cfy, logger)
+    time.sleep(7)
     verify_services_status(manager3)
+
     # wait for agents reconnection
     time.sleep(30)
 
-    # upgrade_agents(cfy, manager3, logger)          # bug in agents upgrade
+    # Upgrade agents
+    logger.info('Upgrading agents')
+    _copy_ssl_cert_from_manager_to_tmpdir(manager2, tmpdir)
+    args = ['--manager-ip', manager2.private_ip_address,
+            '--manager_certificate', str(tmpdir + 'new_manager_cert.txt'),
+            '--all-tenants']
+    cfy.agents.install(args)
 
     _set_sanity_user(cfy, manager3, logger)
-
-    # nodecellar.uninstall()                         # bug in agents upgrade
+    # Verify `agents install` worked as expected
+    nodecellar.uninstall()
 
 
 def _create_secrets(cfy, logger, attributes, manager1):
@@ -172,3 +203,10 @@ def _join_cluster(cfy, manager1, manager2, logger):
                      cluster_host_ip=manager2.private_ip_address,
                      cluster_node_name=manager2.ip_address)
     cfy.cluster.nodes.list()
+
+
+def _copy_ssl_cert_from_manager_to_tmpdir(manager, tmpdir):
+    with manager.ssh() as fabric_ssh:
+        fabric_ssh.get(
+            '/etc/cloudify/ssl/cloudify_internal_ca_cert.pem',
+            str(tmpdir + 'new_manager_cert.txt'), use_sudo=True)
