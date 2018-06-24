@@ -107,8 +107,9 @@ def statistics(manager, client):
         while True:
             executions_num = cpu = load_averages = memory_used_perc = None
             try:
-                executions_num = client.executions.list().\
-                    metadata.pagination.total
+                executions_num = len([execution for execution in
+                                      client.executions.list().items
+                                      if execution.status == 'started'])
             except ConnectionError:
                 pass
 
