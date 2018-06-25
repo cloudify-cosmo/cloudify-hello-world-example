@@ -33,26 +33,37 @@ BLUEPRINT_PATH = os.path.abspath(
     os.path.join(
         os.path.dirname(
             __file__), '..', '..', 'resources/blueprints/scale/load-bp.zip'))
-CONCURRENT_DEPLOYMENTS = 20
+
+concurrent_create_deployments = int(os.environ.get
+                                    ('CONCURRENT_CREATE_DEPLOYMENTS'))
+num_of_deployments = int(os.environ.get('NUM_OF_DEPLOYMENTS'))
+concurrent_workflows = int(os.environ.get('CONCURRENT_WORKFLOWS'))
+url = os.environ.get('URL')
+cycle_num = os.environ.get('CYCLE_NUM')
+cycle_sleep = os.environ.get('CYCLE_SLEEP')
+manager_server_flavor_name = os.environ.get('MANAGER_SERVER_FLAVOR_NAME')
+
+STAT_FILE_PATH = '/tmp/scale/{0}_manager_stats_{1}.csv'.format(
+    manager_server_flavor_name,
+    datetime.now().strftime("%Y%m%d-%H%M%S"))
 
 
 def test_concurrent_workflows(cfy, manager, attributes, logger):
-    num_of_deployments = int(os.environ.get('NUM_OF_DEPLOYMENTS'))
-    concurrent_workflows = int(os.environ.get('CONCURRENT_WORKFLOWS'))
-    url = os.environ.get('URL')
-    cycle_num = os.environ.get('CYCLE_NUM')
-    cycle_sleep = os.environ.get('CYCLE_SLEEP')
-
     exec_params = '{{url: "{url}", cycle_num: {cycle_num},' \
                   ' cycle_sleep: {cycle_sleep}}}'.format(
                     url=url,
                     cycle_num=cycle_num,
                     cycle_sleep=cycle_sleep)
 
+    if not os.path.exists(os.path.dirname(STAT_FILE_PATH)):
+        os.makedirs(os.path.dirname(STAT_FILE_PATH))
+
     logger.info('Test parameters:')
     logger.info('******************')
     logger.info('Total number of deployments: {0}'.
                 format(num_of_deployments))
+    logger.info('Create concurrent deployments number: {0}'.
+                format(concurrent_create_deployments))
     logger.info('Number of concurrent workflows: {0}'.
                 format(concurrent_workflows))
     logger.info('Number of cycles in each deployment: {0}'.
@@ -62,7 +73,7 @@ def test_concurrent_workflows(cfy, manager, attributes, logger):
     logger.info('******************')
     logger.info('Preparing test environment...')
 
-    deployments = _prepare_test_env(cfy, num_of_deployments)
+    deployments = _prepare_test_env(manager, cfy)
     client = CloudifyClient(username='admin',
                             password='admin',
                             host=manager.ip_address,
@@ -95,7 +106,7 @@ def statistics(manager, client):
     memory_used_command = "free | grep Mem | awk '{print $3/$2 * 100.0}'"
     load_averages_command = "cat /proc/loadavg | awk '{print $1}'"
 
-    with open('/tmp/manager_stats.csv', 'w') as csvfile:
+    with open(STAT_FILE_PATH, 'w') as csvfile:
         fieldnames = ['time',
                       'executions_num',
                       'cpu_%',
@@ -149,7 +160,7 @@ def execution(cfy, deployment_id, exec_params):
     return
 
 
-def _prepare_test_env(cfy, num_of_deployments):
+def _prepare_test_env(manager, cfy):
     cfy.blueprints.upload(
         '-b', BLUEPRINT_NAME,
         '-n', BLUEPRINT_FILE_NAME,
@@ -157,9 +168,9 @@ def _prepare_test_env(cfy, num_of_deployments):
 
     dep_count = 0
     deployments = []
-    for i in range(num_of_deployments / CONCURRENT_DEPLOYMENTS):
+    for i in range(num_of_deployments / concurrent_create_deployments):
         threads = []
-        for j in range(CONCURRENT_DEPLOYMENTS):
+        for j in range(concurrent_create_deployments):
             dep_count += 1
             deployment_id = BLUEPRINT_NAME + '_deployment_' + str(dep_count)
             t = Thread(target=deployment, args=(cfy, deployment_id,))
@@ -167,8 +178,7 @@ def _prepare_test_env(cfy, num_of_deployments):
             deployments.append(deployment_id)
         for t in threads:
             t.start()
-            time.sleep(0.1)
-        for t in threads:
-            t.join()
+
+        manager.wait_for_all_executions()
 
     return deployments
