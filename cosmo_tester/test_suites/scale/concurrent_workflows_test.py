@@ -48,12 +48,10 @@ STAT_FILE_PATH = '/tmp/scale/{0}_manager_stats_{1}.csv'.format(
     datetime.now().strftime("%Y%m%d-%H%M%S"))
 
 
-def test_concurrent_workflows(cfy, manager, attributes, logger):
-    exec_params = '{{url: "{url}", cycle_num: {cycle_num},' \
-                  ' cycle_sleep: {cycle_sleep}}}'.format(
-                    url=url,
-                    cycle_num=cycle_num,
-                    cycle_sleep=cycle_sleep)
+def test_concurrent_workflows(cfy, manager, logger):
+    exec_params = {'url': url,
+                   'cycle_num': cycle_num,
+                   'cycle_sleep': cycle_sleep}
 
     if not os.path.exists(os.path.dirname(STAT_FILE_PATH)):
         os.makedirs(os.path.dirname(STAT_FILE_PATH))
@@ -73,15 +71,21 @@ def test_concurrent_workflows(cfy, manager, attributes, logger):
     logger.info('******************')
     logger.info('Preparing test environment...')
 
-    deployments = _prepare_test_env(manager, cfy)
     client = CloudifyClient(username='admin',
                             password='admin',
                             host=manager.ip_address,
                             tenant='default_tenant')
 
+    deployments = _prepare_test_env(cfy, manager, client, logger)
+
+    logger.info('Preparing test environment is completed.')
+
     stat_thread = Thread(target=statistics, args=(manager, client,))
     stat_thread.daemon = True
     stat_thread.start()
+
+    logger.info('Running concurrent executions '
+                'and monitoring manager resources...')
 
     workflow_count = 0
     for i in range(len(deployments)):
@@ -89,7 +93,7 @@ def test_concurrent_workflows(cfy, manager, attributes, logger):
         if workflow_count < len(deployments):
             for j in range(concurrent_workflows):
                 t = Thread(target=execution,
-                           args=(cfy, deployments[workflow_count],
+                           args=(client, deployments[workflow_count],
                                  exec_params,))
                 threads.append(t)
                 workflow_count += 1
@@ -142,25 +146,22 @@ def statistics(manager, client):
     return
 
 
-def deployment(cfy, deployment_id):
+def deployment(client, deployment_id, logger):
     """thread worker function"""
-    cfy.deployments.create('-b', BLUEPRINT_NAME,
-                           deployment_id, '-t', TENANT)
+    client.deployments.create(BLUEPRINT_NAME,
+                              deployment_id)
+    logger.info('Deployment {0} is created.'.format(deployment_id))
     return
 
 
-def execution(cfy, deployment_id, exec_params):
+def execution(client, deployment_id, exec_params):
     """thread worker function"""
-    cfy.executions.start('lbp_wf',
-                         '-d', deployment_id,
-                         '-t',
-                         'default_tenant',
-                         '-p',
-                         exec_params)
+    client.executions.start(deployment_id, 'lbp_wf',
+                            parameters=exec_params)
     return
 
 
-def _prepare_test_env(manager, cfy):
+def _prepare_test_env(cfy, manager, client, logger):
     cfy.blueprints.upload(
         '-b', BLUEPRINT_NAME,
         '-n', BLUEPRINT_FILE_NAME,
@@ -173,7 +174,7 @@ def _prepare_test_env(manager, cfy):
         for j in range(concurrent_create_deployments):
             dep_count += 1
             deployment_id = BLUEPRINT_NAME + '_deployment_' + str(dep_count)
-            t = Thread(target=deployment, args=(cfy, deployment_id,))
+            t = Thread(target=deployment, args=(client, deployment_id, logger))
             threads.append(t)
             deployments.append(deployment_id)
         for t in threads:
