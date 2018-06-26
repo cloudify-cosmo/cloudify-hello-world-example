@@ -130,7 +130,8 @@ def statistics(manager, client):
             executions_num = cpu = load_averages = memory_used_perc = None
             try:
                 executions_num = len([execution for execution in
-                                      client.executions.list().items
+                                      client.executions.list(
+                                        _get_all_results=True).items
                                       if execution.status == 'started'])
             except ConnectionError:
                 pass
