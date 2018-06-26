@@ -23,6 +23,7 @@ from cosmo_tester.framework.fixtures import image_based_manager
 from cloudify_rest_client.client import CloudifyClient
 from requests import ConnectionError
 from paramiko import SSHException
+from random import randint
 
 manager = image_based_manager
 
@@ -46,6 +47,8 @@ manager_server_flavor_name = os.environ.get('MANAGER_SERVER_FLAVOR_NAME')
 STAT_FILE_PATH = '/tmp/scale/{0}_manager_stats_{1}.csv'.format(
     manager_server_flavor_name,
     datetime.now().strftime("%Y%m%d-%H%M%S"))
+
+WORKFLOWS = ['geturl_wf', 'gentar_wf', 'factorial_wf']
 
 
 def test_concurrent_workflows(cfy, manager, logger):
@@ -92,12 +95,15 @@ def test_concurrent_workflows(cfy, manager, logger):
         threads = []
         if workflow_count < len(deployments):
             for j in range(concurrent_workflows):
+                workflow = _get_workflow()
                 t = Thread(target=execution,
                            args=(client,
                                  deployments[workflow_count],
+                                 workflow,
                                  exec_params,))
                 threads.append(t)
                 workflow_count += 1
+                logger.info('Running {0} workflow'.format(workflow))
             for t in threads:
                 t.start()
             for t in threads:
@@ -155,9 +161,9 @@ def deployment(client, deployment_id, logger):
     return
 
 
-def execution(client, deployment_id, exec_params):
+def execution(client, deployment_id, workflow, exec_params):
     """thread worker function"""
-    client.executions.start(deployment_id, 'lbp_wf',
+    client.executions.start(deployment_id, workflow,
                             parameters=exec_params)
     return
 
@@ -185,3 +191,7 @@ def _prepare_test_env(cfy, manager, client, logger):
         manager.wait_for_all_executions()
 
     return deployments
+
+
+def _get_workflow():
+    return WORKFLOWS[randint(0, 2)]
