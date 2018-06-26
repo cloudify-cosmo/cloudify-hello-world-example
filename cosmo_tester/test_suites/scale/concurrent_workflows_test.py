@@ -39,8 +39,8 @@ concurrent_create_deployments = int(os.environ.get
 num_of_deployments = int(os.environ.get('NUM_OF_DEPLOYMENTS'))
 concurrent_workflows = int(os.environ.get('CONCURRENT_WORKFLOWS'))
 url = os.environ.get('URL')
-cycle_num = os.environ.get('CYCLE_NUM')
-cycle_sleep = os.environ.get('CYCLE_SLEEP')
+cycle_num = int(os.environ.get('CYCLE_NUM'))
+cycle_sleep = int(os.environ.get('CYCLE_SLEEP'))
 manager_server_flavor_name = os.environ.get('MANAGER_SERVER_FLAVOR_NAME')
 
 STAT_FILE_PATH = '/tmp/scale/{0}_manager_stats_{1}.csv'.format(
@@ -93,7 +93,8 @@ def test_concurrent_workflows(cfy, manager, logger):
         if workflow_count < len(deployments):
             for j in range(concurrent_workflows):
                 t = Thread(target=execution,
-                           args=(client, deployments[workflow_count],
+                           args=(client,
+                                 deployments[workflow_count],
                                  exec_params,))
                 threads.append(t)
                 workflow_count += 1
@@ -165,7 +166,8 @@ def _prepare_test_env(cfy, manager, client, logger):
     cfy.blueprints.upload(
         '-b', BLUEPRINT_NAME,
         '-n', BLUEPRINT_FILE_NAME,
-        BLUEPRINT_PATH, '-t', TENANT)
+        BLUEPRINT_PATH,
+        '-t', TENANT)
 
     dep_count = 0
     deployments = []
