@@ -78,7 +78,8 @@ def test_hello_world_deployment_update(cfy,
                        hello_world.deployment_id,
                        hello_world.tenant,
                        modified_blueprint_path,
-                       tmpdir)
+                       tmpdir,
+                       skip_reinstall=True)
 
     # Verify hello world is not responding
     logger.info('Verifying hello world is down..')
@@ -145,6 +146,7 @@ def _update_deployment(cfy,
                        tenant,
                        blueprint_path,
                        tmpdir,
+                       skip_reinstall=False,
                        inputs=None):
     if inputs:
         inputs_file = Path(tmpdir) / 'deployment_update_inputs.json'
@@ -158,6 +160,7 @@ def _update_deployment(cfy,
                            blueprint_id='b-{0}'.format(uuid.uuid4()),
                            blueprint_path=blueprint_path,
                            tenant_name=tenant,
+                           skip_reinstall=skip_reinstall,
                            **kwargs)
 
 
