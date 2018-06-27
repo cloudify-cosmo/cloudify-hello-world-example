@@ -82,6 +82,7 @@ def test_concurrent_workflows(cfy, manager, logger):
     deployments = _prepare_test_env(cfy, manager, client, logger)
 
     logger.info('Preparing test environment is completed.')
+    time.sleep(5)
 
     stat_thread = Thread(target=statistics, args=(manager, client,))
     stat_thread.daemon = True
@@ -112,8 +113,6 @@ def test_concurrent_workflows(cfy, manager, logger):
 
 def statistics(manager, client):
     """thread worker function"""
-    stat_cpu_command = "grep 'cpu ' /proc/stat | awk " \
-                       "'{usage=($2+$4)*100/($2+$4+$5)} END {print usage }'"
     top_cpu_command = "top -b -n1 | grep 'Cpu(s)' | awk '{print $2 + $4}'"
     memory_used_command = "free | grep Mem | awk '{print $3/$2 * 100.0}'"
     load_averages_command = "cat /proc/loadavg | awk '{print $1}'"
@@ -121,7 +120,6 @@ def statistics(manager, client):
     with open(STAT_FILE_PATH, 'w') as csvfile:
         fieldnames = ['time',
                       'executions_num',
-                      'stat_cpu_%',
                       'top_cpu_%',
                       'load_averages',
                       'used_memory_%']
@@ -129,7 +127,7 @@ def statistics(manager, client):
 
         writer.writeheader()
         while True:
-            executions_num = stat_cpu = top_cpu = \
+            executions_num = top_cpu = \
                 load_averages = memory_used_perc = None
             try:
                 executions_num = len([execution for execution in
@@ -142,7 +140,6 @@ def statistics(manager, client):
             current_time = datetime.now().strftime('%H:%M:%S')
             with manager.ssh() as fabric:
                 try:
-                    stat_cpu = fabric.run(stat_cpu_command)
                     top_cpu = fabric.run(top_cpu_command)
                     load_averages = fabric.run(load_averages_command)
                     memory_used_perc = fabric.run(memory_used_command)
@@ -151,7 +148,6 @@ def statistics(manager, client):
 
             writer.writerow({'time': current_time,
                              'executions_num': executions_num,
-                             'stat_cpu_%': stat_cpu,
                              'top_cpu_%': top_cpu,
                              'load_averages': load_averages,
                              'used_memory_%': memory_used_perc, })
