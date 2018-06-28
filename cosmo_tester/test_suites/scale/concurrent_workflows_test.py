@@ -52,6 +52,7 @@ WORKFLOWS = ['geturl_wf', 'gentar_wf', 'factorial_wf']
 
 
 def test_concurrent_workflows(cfy, manager, logger):
+    _set_max_workers_num(manager)
     exec_params = {'url': url,
                    'cycle_num': cycle_num,
                    'cycle_sleep': cycle_sleep}
@@ -94,7 +95,7 @@ def test_concurrent_workflows(cfy, manager, logger):
     workflow_count = 0
     for i in range(len(deployments)):
         threads = []
-        if workflow_count < len(deployments):
+        if workflow_count + concurrent_workflows < len(deployments):
             for j in range(concurrent_workflows):
                 workflow = _get_workflow()
                 t = Thread(target=execution,
@@ -197,3 +198,9 @@ def _prepare_test_env(cfy, manager, client, logger):
 
 def _get_workflow():
     return WORKFLOWS[randint(0, 2)]
+
+
+def _set_max_workers_num(manager):
+    with manager.ssh() as fabric:
+        fabric.run('sudo sed -i -e ''s/MAX_WORKERS="100"/'
+                   'MAX_WORKERS="1000"/'' /etc/sysconfig/cloudify-mgmtworker')

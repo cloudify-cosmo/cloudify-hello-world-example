@@ -410,7 +410,8 @@ class _CloudifyManager(VM):
     def wait_for_all_executions(self, include_system_workflows=True):
         executions = self.client.executions.list(
             include_system_workflows=include_system_workflows,
-            _all_tenants=True
+            _all_tenants=True,
+            _get_all_results=True
         )
         for execution in executions:
             if execution['status'] != 'terminated':
