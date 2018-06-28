@@ -204,3 +204,4 @@ def _set_max_workers_num(manager):
     with manager.ssh() as fabric:
         fabric.run('sudo sed -i -e ''s/MAX_WORKERS="100"/'
                    'MAX_WORKERS="1000"/'' /etc/sysconfig/cloudify-mgmtworker')
+        fabric.run('sudo systemctl restart cloudify-mgmtworker')
