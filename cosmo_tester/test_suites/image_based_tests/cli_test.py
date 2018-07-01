@@ -16,6 +16,7 @@
 
 import json
 import os
+import time
 
 import sh
 import shutil
@@ -336,6 +337,9 @@ $url.ToString() | select-string "Hello, World"
             cfy=cfy_exe
         ))
         self._run_cmd('{cfy} deployments delete dep'.format(cfy=cfy_exe))
+        # Depoyment is deleted from DB AFTER delete_dep_env workflow ended
+        #  successfully, this might take a second or two
+        time.sleep(4)
         self._run_cmd('{cfy} blueprints delete bp'.format(cfy=cfy_exe))
 
 

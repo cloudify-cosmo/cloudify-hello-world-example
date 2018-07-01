@@ -28,6 +28,8 @@ curl http://${PRIVATE_IP}:8080 2>&1 | grep "Hello, World"
 
 cfy executions start uninstall -d dep
 cfy deployments delete dep
+# Depoyment is deleted from DB AFTER delete_dep_env workflow ended successfully, this might take a second or two
+sleep 4
 cfy blueprints delete bp
 
 echo "Test completed successfully!"
