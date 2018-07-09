@@ -18,6 +18,7 @@ from cosmo_tester.framework.fixtures import image_based_manager
 from cosmo_tester.framework.util import is_community
 from cloudify_rest_client.client import CloudifyClient
 from os.path import join
+import time
 
 manager = image_based_manager
 DEFAULT_TENANT_ROLE = 'user'
@@ -39,6 +40,7 @@ def test_ssl(cfy, manager, module_tmpdir, attributes, ssh_key, logger):
 
     cfy.ssl.enable()
     cfy.profiles.set('--ssl', 'on', '--skip-credentials-validation')
+    time.sleep(5)
     assert 'SSL enabled' in cfy.ssl.status()
 
     current_profile = cfy.profiles.show()
@@ -73,6 +75,7 @@ def test_ssl(cfy, manager, module_tmpdir, attributes, ssh_key, logger):
 
     cfy.ssl.disable()
     cfy.profiles.set('--ssl', 'off', '--skip-credentials-validation')
+    time.sleep(5)
     assert 'SSL disabled' in cfy.ssl.status()
 
     current_profile = cfy.profiles.show()
