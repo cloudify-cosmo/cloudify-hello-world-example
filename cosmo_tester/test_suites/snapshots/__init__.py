@@ -32,11 +32,8 @@ from cosmo_tester.framework.util import (
     create_rest_client,
     is_community,
 )
-# CFY-6912
-from cloudify_cli.commands.executions import (
-    _get_deployment_environment_creation_execution,
-)
-from cloudify_cli.constants import CLOUDIFY_TENANT_HEADER
+from cloudify_cli.utils import get_deployment_environment_execution
+from cloudify_cli.constants import CLOUDIFY_TENANT_HEADER, CREATE_DEPLOYMENT
 from cloudify_rest_client.exceptions import UserUnauthorizedError
 
 
@@ -217,8 +214,8 @@ def deploy_helloworld(manager, inputs, blueprint_id,
             inputs,
         )
 
-        creation_execution = _get_deployment_environment_creation_execution(
-            manager.client, deployment_id)
+        creation_execution = get_deployment_environment_execution(
+            manager.client, deployment_id, CREATE_DEPLOYMENT)
     logger.info('Waiting for execution environment')
     wait_for_execution(
         manager,
