@@ -22,16 +22,20 @@ from path import path
 
 from cosmo_tester.framework.util import sh_bake
 
+MASTER_BRANCH = 'master'
 
 logger = logging.getLogger('git_helper')
 logger.setLevel(logging.INFO)
 git = sh_bake(sh.git)
 
 
+def check_branch_or_tag_exists(branch):
+    return \
+        git('show-ref', '--verify', '--', "refs/remotes/origin/" + branch) or\
+        git('show-ref', '--verify', '--', 'refs/tags/' + branch)
+
+
 def clone(url, basedir, branch=None):
-
-    branch = branch or os.environ.get('BRANCH_NAME_CORE', 'master')
-
     repo_name = url.split('.git')[0].split('/')[-1]
 
     target = path(os.path.join(basedir, 'git', repo_name, branch))
