@@ -111,6 +111,8 @@ def test_concurrent_workflows(cfy, manager, logger):
             for t in threads:
                 t.join()
 
+    manager.wait_for_all_executions()
+
 
 def statistics(manager, client):
     """thread worker function"""
