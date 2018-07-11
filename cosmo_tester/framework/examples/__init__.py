@@ -162,15 +162,9 @@ class AbstractExample(testtools.TestCase):
                 'BRANCH_NAME_CORE',
                 git_helper.MASTER_BRANCH)
 
-            if not git_helper.check_branch_or_tag_exists(self.branch):
-                self.logger.info("{0} branch/tag does not exists in examples "
-                                 "repos, so defaults to there master"
-                                 "branch".format(self.branch))
-                self.branch = git_helper.MASTER_BRANCH
-
             self._cloned_to = git_helper.clone(self.REPOSITORY_URL,
                                                destination,
-                                               branch=self.branch)
+                                               self.branch)
 
     def cleanup(self, allow_custom_params=False):
         if self._cleanup_required:

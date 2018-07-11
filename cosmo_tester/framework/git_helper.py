@@ -29,12 +29,6 @@ logger.setLevel(logging.INFO)
 git = sh_bake(sh.git)
 
 
-def check_branch_or_tag_exists(branch):
-    return \
-        git('show-ref', '--verify', '--', "refs/remotes/origin/" + branch) or\
-        git('show-ref', '--verify', '--', 'refs/tags/' + branch)
-
-
 def clone(url, basedir, branch=None):
     repo_name = url.split('.git')[0].split('/')[-1]
 
@@ -44,8 +38,14 @@ def clone(url, basedir, branch=None):
         logger.info("Cloning {0} to {1}".format(url, target))
         git.clone(url, str(target)).wait()
         with target:
-            logger.info("Checking out to {0} branch".format(branch))
-            git.checkout(branch).wait()
+            try:
+                logger.info("Trying to check out to {0} branch".format(branch))
+                git.checkout(branch).wait()
+            except Exception:
+                logger.info("{0} branch/tag was not found in {1} "
+                            "repo, so defaults to master"
+                            "branch".format(branch, url))
+                git.checkout(MASTER_BRANCH)
     return target.abspath()
 
 
