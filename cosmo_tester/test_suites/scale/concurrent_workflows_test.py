@@ -111,7 +111,23 @@ def test_concurrent_workflows(cfy, manager, logger):
             for t in threads:
                 t.join()
 
-    time.sleep(300)
+    time.sleep(cycle_num * cycle_sleep)
+
+    logger.info('Terminated workflows: {0}'.
+                format(len([e for e in
+                            client.executions.list(
+                                _get_all_results=True,
+                                status='terminated')])))
+    logger.info('Failed workflows: {0}'.
+                format(len([e for e in
+                            client.executions.list(
+                                _get_all_results=True,
+                                status='failed')])))
+    logger.info('Pending workflows: {0}'.
+                format(len([e for e in
+                            client.executions.list(
+                                _get_all_results=True,
+                                status='pending')])))
 
 
 def statistics(manager, client):
@@ -133,10 +149,7 @@ def statistics(manager, client):
             executions_num = top_cpu = \
                 load_averages = memory_used_perc = None
             try:
-                executions_num = len([execution for execution in
-                                      client.executions.list(
-                                        _get_all_results=True).items
-                                      if execution.status == 'started'])
+                executions_num = _get_running_executions_num(client)
             except ConnectionError:
                 pass
 
@@ -208,3 +221,10 @@ def _set_max_workers_num(manager):
                    's/MAX_WORKERS="100"/MAX_WORKERS="1000"/\' '
                    '/etc/sysconfig/cloudify-mgmtworker')
         fabric.run('sudo systemctl restart cloudify-mgmtworker')
+
+
+def _get_running_executions_num(client):
+    return len([execution for execution in
+                client.executions.list(
+                    _get_all_results=True,
+                    status='started')])
