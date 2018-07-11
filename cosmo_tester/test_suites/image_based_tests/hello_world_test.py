@@ -16,7 +16,10 @@
 import pytest
 import yaml
 
-from cosmo_tester.framework.examples.hello_world import HelloWorldExample
+from cosmo_tester.framework.examples.hello_world import (  # noqa
+    HelloWorldExample,
+    hello_worlds
+)
 from cosmo_tester.framework.fixtures import image_based_manager
 from cosmo_tester.framework.util import prepare_and_get_test_tenant
 
@@ -29,6 +32,13 @@ def test_hello_world(hello_world):
 
 def test_hello_world_backwards(hello_world_backwards_compat):
     hello_world_backwards_compat.verify_all()
+
+
+def test_hello_world_using_cfy_install_command(hello_worlds):  # noqa
+    # Run the test twice: community and premium
+    for hw in hello_worlds:
+        hw.run_cfy_install_command()
+        hw.run_cfy_uninstall_command()
 
 
 @pytest.fixture(

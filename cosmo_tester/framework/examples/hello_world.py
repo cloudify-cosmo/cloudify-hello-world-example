@@ -91,6 +91,39 @@ class HelloWorldExample(AbstractExample):
             pytest.fail('Unexpected status code: {}'.format(
                     server_response.status_code))
 
+    def run_cfy_install_command(self):
+        self.clone_example()
+        blueprint_file = self._cloned_to / self.blueprint_file
+        inputs = self._create_inputs_file()
+        self.logger.info(
+            'Running command:'
+            ' cfy install -b {0} -n {1} -d {2} -i {3} -t {4} {5}'.format(
+                self.blueprint_id,
+                self.blueprint_file,
+                self.deployment_id,
+                inputs,
+                self.tenant,
+                blueprint_file
+            ))
+
+        self.cfy.install(['-b', self.blueprint_id,
+                          '-n', self.blueprint_file,
+                          '-d', self.deployment_id,
+                          '-i', inputs,
+                          '-t', self.tenant,
+                          blueprint_file])
+
+    def run_cfy_uninstall_command(self):
+        self.cfy.uninstall(['-t', self.tenant,
+                            self.deployment_id])
+
+    def _create_inputs_file(self):
+        path = self._cloned_to / 'inputs'
+        with open(path, 'w+') as f:
+            for key in self.inputs:
+                f.write('{0}: {1}\n'.format(key, self.inputs[key]))
+        return path
+
 
 def centos_hello_world(cfy, manager, attributes, ssh_key, logger, tmpdir,
                        tenant='default_tenant', suffix=''):
