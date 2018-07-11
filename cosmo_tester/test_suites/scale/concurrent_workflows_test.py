@@ -21,6 +21,7 @@ import csv
 
 from cosmo_tester.framework.fixtures import image_based_manager
 from cloudify_rest_client.client import CloudifyClient
+from cloudify_rest_client.exceptions import CloudifyClientError
 from requests import ConnectionError
 from paramiko import SSHException
 from random import randint
@@ -152,6 +153,15 @@ def statistics(manager, client):
                 executions_num = _get_running_executions_num(client)
             except ConnectionError:
                 pass
+            except CloudifyClientError:
+                with manager.ssh() as fabric:
+                    try:
+                        fabric.run(
+                            'sudo systemctl status nginx')
+                        fabric.run(
+                            'sudo systemctl status cloudify-restservice')
+                    except SSHException:
+                        pass
 
             current_time = datetime.now().strftime('%H:%M:%S')
             with manager.ssh() as fabric:
