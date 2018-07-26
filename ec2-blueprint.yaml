@@ -7,75 +7,148 @@ description: >
 
 imports:
   - http://www.getcloudify.org/spec/cloudify/4.5.dev1/types.yaml
-  - http://www.getcloudify.org/spec/diamond-plugin/1.3.14/plugin.yaml
-  - plugin:cloudify-aws-plugin?version=1.4.10
+  - plugin:cloudify-diamond-plugin
+  - plugin:cloudify-awssdk-plugin
 
 inputs:
+
   webserver_port:
     description: The HTTP web server port
     default: 8080
+
   agent_user:
     description: User name used when SSH-ing into the started machine
-    default: ec2-user
-  image_id:
-    description: AWS EC2 image id to use for the server
-  instance_type:
-    description: AWS EC2 instance type to use for the server
-    default: m3.medium
+    default: ubuntu
+
+  key_name:
+    type: string
+
+  vpc_id:
+    type: string
+
+  subnet_id:
+    type: string
+
+dsl_definitions:
+
+  client_config: &client_config
+    aws_access_key_id: { get_secret: aws_access_key_id }
+    aws_secret_access_key: { get_secret: aws_secret_access_key }
+    region_name: { get_secret: ec2_region_name }
 
 node_templates:
-  elastic_ip:
-    type: cloudify.aws.nodes.ElasticIP
+
+  ami:
+    type: cloudify.nodes.aws.ec2.Image
+    properties:
+      resource_config:
+        kwargs:
+          Filters:
+          - Name: name
+            Values:
+            - 'ubuntu/images/hvm-ssd/ubuntu-trusty-14.04-amd64-server-20170727'
+          - Name: owner-id
+            Values:
+            - '099720109477'
+      client_config: *client_config
 
   security_group:
-    type: cloudify.aws.nodes.SecurityGroup
+    type: cloudify.nodes.aws.ec2.SecurityGroup
     properties:
-      description: Security group for Hello World VM
-      rules:
-        - ip_protocol: tcp
-          cidr_ip: 0.0.0.0/0
-          from_port: { get_property: [ http_web_server, port ] }
-          to_port: { get_property: [ http_web_server, port ] }
-  vm:
-    type: cloudify.aws.nodes.Instance
+      client_config: *client_config
+      resource_config:
+        kwargs:
+          GroupName: CloudifyHelloWorldBlueprint
+          Description: Created by cloudify-hello-world-example.
+          VpcId: { get_input: vpc_id }
+
+  security_group_rules:
+    type: cloudify.nodes.aws.ec2.SecurityGroupRuleIngress
     properties:
-      agent_config:
-        user: { get_input: agent_user }
-      image_id: { get_input: image_id }
-      instance_type: { get_input: instance_type }
+      client_config: *client_config
+      resource_config:
+        kwargs:
+          IpPermissions:
+          - IpProtocol: tcp
+            FromPort: 22
+            ToPort: 22
+            IpRanges:
+            - CidrIp: 0.0.0.0/0
+          - IpProtocol: tcp
+            FromPort: { get_property: [ http_web_server, port ] }
+            ToPort: { get_property: [ http_web_server, port ] }
+            IpRanges:
+            - CidrIp: 0.0.0.0/0
     relationships:
-      - type: cloudify.aws.relationships.instance_connected_to_elastic_ip
-        target: elastic_ip
-      - type: cloudify.aws.relationships.instance_connected_to_security_group
-        target: security_group
+    - type: cloudify.relationships.contained_in
+      target: security_group
+
+  nic:
+    type: cloudify.nodes.aws.ec2.Interface
+    properties:
+      client_config: *client_config
+      resource_config:
+        kwargs:
+          Description: Created by cloudify-hello-world-example.
+          SubnetId: { get_input: subnet_id }
+          Groups:
+          - { get_attribute: [ security_group, aws_resource_id ] }
+    relationships:
+    - type: cloudify.relationships.depends_on
+      target: security_group
+
+  ip:
+    type: cloudify.nodes.aws.ec2.ElasticIP
+    properties:
+      resource_config:
+        kwargs:
+          Domain: 'vpc'
+      client_config: *client_config
+    relationships:
+    - type: cloudify.relationships.depends_on
+      target: nic
+
+  vm:
+    type: cloudify.nodes.aws.ec2.Instances
+    properties:
+      client_config: *client_config
+      agent_config:
+        install_method: remote
+        user: { get_input: agent_user }
+        key: { get_secret: agent_key_private }
+      resource_config:
+        kwargs:
+          ImageId: { get_attribute: [ ami, aws_resource_id ] }
+          InstanceType: t2.micro
+          KeyName: { get_input: key_name }
+    relationships:
+    - type: cloudify.relationships.depends_on
+      target: ami
+    - type: cloudify.relationships.depends_on
+      target: nic
     interfaces:
-      ###########################################################
-      # We are infact telling cloudify to install a diamond
-      # monitoring agent on the server.
-      #
-      # (see https://github.com/BrightcoveOS/Diamond)
-      ###########################################################
       cloudify.interfaces.monitoring_agent:
-          install:
-            implementation: diamond.diamond_agent.tasks.install
-            inputs:
-              diamond_config:
-                interval: 1
-          start: diamond.diamond_agent.tasks.start
-          stop: diamond.diamond_agent.tasks.stop
-          uninstall: diamond.diamond_agent.tasks.uninstall
+        install:
+          implementation: diamond.diamond_agent.tasks.install
+          inputs:
+            diamond_config:
+              interval: 1
+        start: diamond.diamond_agent.tasks.start
+        stop: diamond.diamond_agent.tasks.stop
+        uninstall: diamond.diamond_agent.tasks.uninstall
       cloudify.interfaces.monitoring:
-          start:
-            implementation: diamond.diamond_agent.tasks.add_collectors
-            inputs:
-              collectors_config:
-                  CPUCollector: {}
-                  MemoryCollector: {}
-                  LoadAverageCollector: {}
-                  DiskUsageCollector:
-                    config:
-                      devices: x?vd[a-z]+[0-9]*$
-                  NetworkCollector: {}
+        start:
+          implementation: diamond.diamond_agent.tasks.add_collectors
+          inputs:
+            collectors_config:
+                CPUCollector: {}
+                MemoryCollector: {}
+                LoadAverageCollector: {}
+                DiskUsageCollector:
+                  config:
+                    devices: x?vd[a-z]+[0-9]*$
+                NetworkCollector: {}
+
   http_web_server:
     type: cloudify.nodes.WebServer
     properties:
@@ -92,5 +165,5 @@ node_templates:
 outputs:
   http_endpoint:
     description: Web server's external endpoint
-    value: { concat: ['http://', { get_attribute: [elastic_ip, aws_resource_id] },
+    value: { concat: ['http://', { get_attribute: [ ip, aws_resource_id ] },
                       ':', { get_property: [http_web_server, port] }] }
