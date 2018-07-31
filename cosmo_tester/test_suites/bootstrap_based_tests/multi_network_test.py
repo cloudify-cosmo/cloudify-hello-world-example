@@ -15,9 +15,7 @@
 
 import time
 import yaml
-import json
 import pytest
-from os.path import join
 from copy import deepcopy
 from StringIO import StringIO
 
@@ -79,7 +77,8 @@ def _preconfigure_callback(_managers):
         all_networks.pop(NETWORK_2)
 
         mgr.additional_install_config = {
-            'agent': {'networks': all_networks}
+            'agent': {'networks': all_networks},
+            'sanity': {'skip_sanity': 'true'}
         }
 
         # Configure NICs in order for networking to work properly
@@ -92,6 +91,7 @@ def test_multiple_networks(managers,
                            logger,
                            tmpdir,
                            attributes):
+
     logger.info('Testing managers with multiple networks')
 
     # We should have at least 3 hello world objects. We will verify the first
@@ -133,76 +133,25 @@ def test_multiple_networks(managers,
         hello.uninstall()
         hello.delete_deployment()
 
-    _add_new_network(new_manager, tmpdir, logger)
+    _add_new_network(new_manager, logger)
     post_bootstrap_hello.verify_all()
 
 
-def _add_new_network(manager, tmpdir, logger):
+def _add_new_network(manager, logger):
     logger.info('Adding network `{0}` to the new manager'.format(NETWORK_2))
 
-    local_metadata_path = str(tmpdir / 'certificate_metadata')
-    local_old_metadata_path = str(tmpdir / 'old_certificate_metadata')
-    remote_metadata_path = '/etc/cloudify/ssl/certificate_metadata'
-    private_ip = manager.private_ip_address
-
     old_networks = deepcopy(manager.networks)
-    new_networks = deepcopy(manager.networks)
-
-    # The `default` network is added during manager installation
-    for networks in (old_networks, new_networks):
-        networks['default'] = private_ip
-
-    # `network_2` shouldn't be on the manager right now
-    old_networks.pop(NETWORK_2)
-
-    # This should add back `network_2` that we removed earlier, in the
-    # preconfigure callback
-    cert_metadata = {
-        'networks': new_networks,
-        'internal_rest_host': private_ip
-    }
-    with open(local_metadata_path, 'w') as f:
-        json.dump(cert_metadata, f)
+    network2_ip = old_networks.pop(NETWORK_2)
+    networks = dict()
+    networks['networks'] = {NETWORK_2: network2_ip}
 
     with manager.ssh() as fabric_ssh:
-        logger.info('Validating old `certificate_metadata`...')
-        fabric_ssh.get(
-            remote_metadata_path, local_old_metadata_path, use_sudo=True
-        )
-        with open(local_old_metadata_path, 'r') as f:
-            old_metadata = yaml.load(f)
-
-        assert old_metadata['networks'] == old_networks
-
-        logger.info('Putting the new `certificate_metadata`...')
-        fabric_ssh.put(
-            local_metadata_path, remote_metadata_path, use_sudo=True
-        )
-
-        ip_setter_path = '/opt/cloudify/manager-ip-setter/'
-        restservice_python = '/opt/manager/env/bin/python'
-        update_ctx_script = join(ip_setter_path, 'update-provider-context.py')
-
-        logger.info('Updating the provider context...')
-        fabric_ssh.sudo('{python} {script} --networks {networks} {ip}'.format(
-            python=restservice_python,
-            script=update_ctx_script,
-            networks=remote_metadata_path,
-            ip=private_ip
-        ))
-
-        logger.info('Recreating internal certs')
         fabric_ssh.sudo(
-            '{cfy_manager} create-internal-certs '
-            '--metadata {metadata} '
-            '--manager-ip {ip}'
-            .format(
+            '{cfy_manager} add-networks --networks "{networks}" '.format(
                 cfy_manager='/usr/bin/cfy_manager',
-                metadata=remote_metadata_path,
-                ip=private_ip
+                networks=networks
             )
         )
-
         logger.info('Restarting services...')
         fabric_ssh.sudo('systemctl restart cloudify-rabbitmq')
         fabric_ssh.sudo('systemctl restart nginx')
