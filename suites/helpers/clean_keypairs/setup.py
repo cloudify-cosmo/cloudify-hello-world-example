@@ -18,8 +18,8 @@ from setuptools import setup
 setup(
     name='clean_keypairs',
     version='1.0',
-    author='Gigaspaces',
-    author_email='cosmo-admin@gigaspaces.com',
+    author='Cloudify',
+    author_email='cosmo-admin@cloudify.co',
     license='LICENSE',
     zip_safe=False,
     install_requires=[
