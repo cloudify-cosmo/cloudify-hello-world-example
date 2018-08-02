@@ -18,8 +18,8 @@ from setuptools import setup
 setup(
     name='cloudify-system-tests',
     version='4.5.dev1',
-    author='Gigaspaces',
-    author_email='cosmo-admin@gigaspaces.com',
+    author='Cloudify',
+    author_email='cosmo-admin@cloudify.co',
     packages=['cosmo_tester'],
     license='LICENSE',
     description='Cosmo system tests framework',
