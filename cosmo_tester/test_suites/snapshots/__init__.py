@@ -650,6 +650,10 @@ def check_deployments(manager, old_deployments, logger,
     _log('Found correct deployments', logger, tenant)
 
 
+@retrying.retry(
+    stop_max_attempt_number=5,
+    wait_fixed=1000
+)
 def verify_services_status(manager):
     status = manager.client.manager.get_status()
     for service in status['services']:
@@ -725,8 +729,8 @@ def hosts(
     ]
 
     hosts = TestHosts(
-            cfy, ssh_key, module_tmpdir,
-            attributes, logger, instances=instances)
+        cfy, ssh_key, module_tmpdir,
+        attributes, logger, instances=instances)
     hosts.create()
 
     if request.param == '4.0.1':
