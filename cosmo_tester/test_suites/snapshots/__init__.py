@@ -651,8 +651,8 @@ def check_deployments(manager, old_deployments, logger,
 
 
 @retrying.retry(
-    stop_max_attempt_number=5,
-    wait_fixed=1000
+    stop_max_attempt_number=10,
+    wait_fixed=1500
 )
 def verify_services_status(manager):
     status = manager.client.manager.get_status()
