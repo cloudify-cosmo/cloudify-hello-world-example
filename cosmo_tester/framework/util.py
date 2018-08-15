@@ -341,7 +341,7 @@ class YamlPatcher(object):
         raise RuntimeError('illegal path: {0}'.format(prop_path))
 
 
-@retrying.retry(stop_max_attempt_number=10, wait_fixed=5000)
+@retrying.retry(stop_max_attempt_number=20, wait_fixed=5000)
 def assert_snapshot_created(manager, snapshot_id, attributes):
     snapshots = manager.client.snapshots.list()
 
