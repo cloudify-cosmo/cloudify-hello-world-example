@@ -1,8 +1,7 @@
 sh==1.11
 path.py==8.1.2
 PyYAML==3.10
-nose
 xmltodict
 requests>=2.7.0,<3.0.0
-jinja2==2.7.2
+jinja2==2.10
 fasteners==0.13.0

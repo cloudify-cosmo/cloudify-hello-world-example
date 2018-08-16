@@ -33,7 +33,7 @@ setup(
         'path.py==8.1.2',
         'nose',
         'retrying==1.3.3',
-        'Jinja2==2.7.2',
+        'Jinja2==2.10',
         'pywinrm==0.0.3',
         'fasteners==0.13.0',
         # Wagon version has been left out since it better reflects the user
