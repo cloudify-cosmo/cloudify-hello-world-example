@@ -34,7 +34,7 @@ OpenStack openrc file example (my-openrc.sh):
 ```bash
 #!/bin/bash
 
-export OS_AUTH_URL=https://rackspace-api.gigaspaces.com:5000/v2.0
+export OS_AUTH_URL=https://rackspace-api.cloudify.co:5000/v2.0
 export OS_TENANT_NAME="idan-tenant"
 export OS_PROJECT_NAME="idan-tenant"
 export OS_USERNAME="idan"
@@ -52,7 +52,7 @@ source my-openrc.sh
 
 Run:
 ```python
-pytest -s hello_world_test.py::test_hello_world_on_centos_7
+pytest -s hello_world_test.py::test_hello_world
 ```
 
 Please note it is important to run tests with the `-s` flag as the framework uses `Fabric` which is known to have problems with pytest's output capturing (https://github.com/pytest-dev/pytest/issues/1585).
