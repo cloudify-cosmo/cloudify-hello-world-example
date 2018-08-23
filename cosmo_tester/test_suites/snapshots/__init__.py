@@ -654,7 +654,8 @@ def check_deployments(manager, old_deployments, logger,
     stop_max_attempt_number=10,
     wait_fixed=1500
 )
-def verify_services_status(manager):
+def verify_services_status(manager, logger):
+    logger.info('Verifying services status...')
     status = manager.client.manager.get_status()
     for service in status['services']:
         for instance in service['instances']:

@@ -106,7 +106,7 @@ def test_restore_snapshot_and_agents_upgrade_multitenant(
 
     restore_snapshot(new_manager, SNAPSHOT_ID, cfy, logger)
 
-    verify_services_status(new_manager)
+    verify_services_status(new_manager, logger)
 
     # Credentials tests only apply to 4.2 and later
     if manager_supports_users_in_snapshot_creation(old_manager):
