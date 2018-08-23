@@ -660,6 +660,11 @@ def verify_services_status(manager, logger):
     for service in status['services']:
         for instance in service['instances']:
             if instance['state'] != 'running':
+                with manager.ssh() as fabric:
+                    logs = fabric.sudo('journalctl -u {0} -n 20 --no-pager'
+                                       .format(instance['Id']))
+                logger.info('Journald logs of the failing service:')
+                logger.info(logs)
                 raise Exception('Service {0} is in status {1}'.
                                 format(instance, instance['state']))
 
