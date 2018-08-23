@@ -41,7 +41,7 @@ from cosmo_tester.test_suites.snapshots import (
     delete_manager
 )
 
-NETWORK_2 = 'network_2'
+NETWORK_2 = "network_2"
 
 
 @pytest.fixture(scope='module')
@@ -142,14 +142,12 @@ def _add_new_network(manager, logger):
 
     old_networks = deepcopy(manager.networks)
     network2_ip = old_networks.pop(NETWORK_2)
-    networks = dict()
-    networks['networks'] = {NETWORK_2: network2_ip}
-
+    networks_json = '{{"{0}":"{1}"}}'.format(NETWORK_2, network2_ip)
     with manager.ssh() as fabric_ssh:
         fabric_ssh.sudo(
-            '{cfy_manager} add-networks --networks "{networks}" '.format(
-                cfy_manager='/usr/bin/cfy_manager',
-                networks=networks
+            "{cfy_manager} add-networks --networks '{networks}' ".format(
+                cfy_manager="/usr/bin/cfy_manager",
+                networks=networks_json
             )
         )
         logger.info('Restarting services...')
