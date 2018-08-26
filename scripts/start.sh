@@ -38,7 +38,7 @@ STARTED=false
 for i in $(seq 1 15)
 do
 	if server_is_up; then
-		ctx logger info "Server is up."
+		ctx logger info "Server is up at http://$ip:${port}."
 		STARTED=true
     	break
 	else
