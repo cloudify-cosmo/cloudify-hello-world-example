@@ -24,6 +24,8 @@ import subprocess
 import requests
 import retrying
 import yaml
+import errno
+from os import makedirs
 
 from openstack import connection as openstack_connection
 from path import path, Path
@@ -425,3 +427,13 @@ def prepare_and_get_test_tenant(test_param, manager, cfy):
         manager.upload_plugin(default_openstack_plugin,
                               tenant_name=tenant)
     return tenant
+
+
+def mkdirs(folder_path):
+    try:
+        makedirs(folder_path)
+    except OSError as exc:
+        if exc.errno == errno.EEXIST and os.path.isdir(folder_path):
+            pass
+        else:
+            raise

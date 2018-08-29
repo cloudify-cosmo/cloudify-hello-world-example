@@ -52,12 +52,21 @@ source my-openrc.sh
 
 Run:
 ```python
-pytest -s hello_world_test.py::test_hello_world
+pytest -s cosmo_tester/test_suites/image_based_tests/hello_world_test.py::test_hello_world
 ```
 
-Please note it is important to run tests with the `-s` flag as the framework uses `Fabric` which is known to have problems with pytest's output capturing (https://github.com/pytest-dev/pytest/issues/1585).
+**Please note it is important to run tests with the `-s` flag as the framework uses `Fabric` which is known to have problems with pytest's output capturing (https://github.com/pytest-dev/pytest/issues/1585).**
 
+### Saving the Cloudify Manager's logs
+In order to save the logs of tests, specify the path via an environment variable as follows:
 
+`export CFY_LOGS_PATH_LOCAL=<YOUR-PATH-HERE>`
+
+For example you may use:
+```bash
+export CFY_LOGS_PATH_LOCAL=~/cfy_logs/
+```
+which will save the logs to `~/cfy/_logs/` of only the failed tests.
 ## Writing tests
 
 ## Test based on Cloudify manager started using an image

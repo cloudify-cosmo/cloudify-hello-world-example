@@ -138,6 +138,10 @@ class VM(object):
     def upload_necessary_files(self):
         return True
 
+    @property
+    def ssh_key(self):
+        return self._ssh_key
+
     image_name = ATTRIBUTES['default_linux_image_name']
     username = ATTRIBUTES['default_linux_username']
     branch_name = 'master'
@@ -635,9 +639,9 @@ class TestHosts(object):
         return self._attributes.manager_server_flavor_name
 
     def create(self):
-        """Creates the OpenStack infrastructure for a Cloudify manager.
+        """Creates the infrastructure for a Cloudify manager.
 
-        The openstack credentials file and private key file for SSHing
+        The credentials file and private key file for SSHing
         to provisioned VMs are uploaded to the server."""
         self._logger.info('Creating image based cloudify instances: '
                           '[number_of_instances=%d]', len(self.instances))
@@ -698,11 +702,14 @@ class TestHosts(object):
             raise
 
     def destroy(self):
-        """Destroys the OpenStack infrastructure."""
-        self._logger.info('Destroying test hosts..')
-        with self._tmpdir:
-            self._terraform.destroy(
-                    ['-var-file', self._terraform_inputs_file, '-force'])
+        """Destroys the infrastructure. """
+        try:
+            self._save_manager_logs()
+        finally:
+            self._logger.info('Destroying test hosts..')
+            with self._tmpdir:
+                self._terraform.destroy(
+                        ['-var-file', self._terraform_inputs_file, '-force'])
 
     def _update_instances_list(self, outputs):
         for i, instance in enumerate(self.instances):
@@ -735,6 +742,34 @@ class TestHosts(object):
                     self._logger,
                     self._tmpdir
                     )
+
+    def _save_manager_logs(self):
+        self._logger.debug('_save_manager_logs started')
+        logs_dir = os.environ.get('CFY_LOGS_PATH_LOCAL')
+        test_path = self._tmpdir.name
+        if not logs_dir:
+            self._logger.debug('CFY_LOGS_PATH_LOCAL has not been set, not '
+                               'saving the logs.')
+            return
+
+        self._logger.info(
+            'Saving manager logs for test:  {0}'.format(test_path))
+        logs_dir = os.path.join(os.path.expanduser(logs_dir), test_path)
+        util.mkdirs(logs_dir)
+        for instance in self.instances:
+            self._logger.info('Downloading logs for Cloudify Manager with '
+                              'ID: {}...'.format(instance.server_id))
+            instance.use()
+            logs_filename = '{}_logs.tar.gz'.format(instance.server_id)
+            target = os.path.join(logs_dir, logs_filename)
+            self._cfy.profiles.set(
+                ssh_key=instance.ssh_key.private_key_path,
+                ssh_user=instance.username,
+                skip_credentials_validation=True)
+            self._cfy.logs.download(output_path=target)
+            self._cfy.logs.purge(force=True)
+
+        self._logger.debug('_save_manager_logs completed')
 
 
 class BootstrapBasedCloudifyManagers(TestHosts):

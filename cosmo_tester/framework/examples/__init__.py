@@ -188,3 +188,7 @@ class AbstractExample(testtools.TestCase):
         self.assertGreater(len(events), 0,
                            'There are no events for deployment: {0}'.format(
                                    self.deployment_id))
+
+    @property
+    def ssh_key(self):
+        return self._ssh_key
