@@ -19,6 +19,7 @@ import json
 import os
 import uuid
 import yaml
+from retrying import retry
 from urllib import urlretrieve
 from contextlib import contextmanager
 from distutils.version import LooseVersion
@@ -705,6 +706,9 @@ class TestHosts(object):
         """Destroys the infrastructure. """
         try:
             self._save_manager_logs()
+        except Exception as e:
+            self._logger.info(
+                "Unable to save logs due to exception: {}".format(str(e)))
         finally:
             self._logger.info('Destroying test hosts..')
             with self._tmpdir:
@@ -753,23 +757,27 @@ class TestHosts(object):
             return
 
         self._logger.info(
-            'Saving manager logs for test:  {0}'.format(test_path))
+            'Attempting to save manager logs for test:  {0}'.format(test_path))
         logs_dir = os.path.join(os.path.expanduser(logs_dir), test_path)
         util.mkdirs(logs_dir)
         for instance in self.instances:
-            self._logger.info('Downloading logs for Cloudify Manager with '
-                              'ID: {}...'.format(instance.server_id))
-            instance.use()
-            logs_filename = '{}_logs.tar.gz'.format(instance.server_id)
-            target = os.path.join(logs_dir, logs_filename)
-            self._cfy.profiles.set(
-                ssh_key=instance.ssh_key.private_key_path,
-                ssh_user=instance.username,
-                skip_credentials_validation=True)
-            self._cfy.logs.download(output_path=target)
-            self._cfy.logs.purge(force=True)
+            self._save_logs_for_instance(instance, logs_dir)
 
         self._logger.debug('_save_manager_logs completed')
+
+    @retry(stop_max_attempt_number=3, wait_fixed=5000)
+    def _save_logs_for_instance(self, instance, logs_dir):
+        self._logger.info('Attempting to download logs for Cloudify Manager '
+                          'with ID: {}...'.format(instance.server_id))
+        instance.use()
+        logs_filename = '{}_logs.tar.gz'.format(instance.server_id)
+        target = os.path.join(logs_dir, logs_filename)
+        self._cfy.profiles.set(
+            ssh_key=instance.ssh_key.private_key_path,
+            ssh_user=instance.username,
+            skip_credentials_validation=True)
+        self._cfy.logs.download(output_path=target)
+        self._cfy.logs.purge(force=True)
 
 
 class BootstrapBasedCloudifyManagers(TestHosts):
