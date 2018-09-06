@@ -13,11 +13,11 @@ This document will guide you how to run the examples step by step.
 ### Prepering the environment
 Download the example
 ```shell
-curl -L https://github.com/cloudify-cosmo/cloudify-hello-world-example/archive/master.zip -o cloudify-hello-world-example.zip
+curl -sL https://github.com/cloudify-cosmo/cloudify-hello-world-example/archive/4.4.tar.gz -o cloudify-hello-world-example.tar.gz
 ```
 Extract the example
 ```shell
-unzip cloudify-hello-world-example.zip && cd cloudify-hello-world-example-master
+tar -xvf cloudify-hello-world-example.tar.gz && cd cloudify-hello-world-example-4.4
 ```
 Install Cloudify plugins
 ```shell
