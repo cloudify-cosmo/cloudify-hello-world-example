@@ -39,6 +39,7 @@ from . import (
     restore_snapshot,
     set_client_tenant,
     SNAPSHOT_ID,
+    update_credentials,
     upgrade_agents,
     upload_and_install_helloworld,
     upload_snapshot,
@@ -105,6 +106,9 @@ def test_restore_snapshot_and_agents_upgrade_multitenant(
     upload_snapshot(new_manager, local_snapshot_path, SNAPSHOT_ID, logger)
 
     restore_snapshot(new_manager, SNAPSHOT_ID, cfy, logger)
+
+    if manager_supports_users_in_snapshot_creation(old_manager):
+        update_credentials(cfy, logger, new_manager)
 
     verify_services_status(new_manager, logger)
 
