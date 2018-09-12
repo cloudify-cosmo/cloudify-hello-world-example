@@ -73,7 +73,7 @@ node_templates:
       gcp_config: *gcp_config
       allowed:
         tcp:
-          - 80
+          - !!int 80
       sources:
         - 0.0.0.0/0
     relationships:
