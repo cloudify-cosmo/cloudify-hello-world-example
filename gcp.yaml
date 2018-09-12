@@ -62,7 +62,7 @@ node_templates:
         install_method: none
       image_id: { get_input: image }
       instance_type: { get_input: instance_type }
-      zone: { get_secret: gcp_zone }
+      zone: { get_input: zone }
       external_ip: true
       startup_script:
         type: string
