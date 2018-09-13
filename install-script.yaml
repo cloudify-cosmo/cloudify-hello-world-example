@@ -28,6 +28,7 @@ inputs:
             display: table-cell;
             vertical-align: middle;
             background-color: black;
+            text-align: center;
           }
           h1 {
             color:white;
