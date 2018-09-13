@@ -39,7 +39,7 @@ inputs:
       </body>
       </html>
       EOF
-      curl -o /var/www/example.com/public_html/image.png https://raw.githubusercontent.com/cloudify-cosmo/cloudify-hello-world-example/edb09f8c943448cdd34fe28403a392030c10394e/images/cloudify-logo.png
+      curl -o /var/www/example.com/public_html/image.png https://cloudify.co/wp-content/uploads/2018/01/cloudify_logo-wh-trans.png
       cat <<EOF > /etc/apache2/sites-available/example.com.conf
       <VirtualHost *:80>
             ServerAdmin webmaster@example.com
