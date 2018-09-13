@@ -44,6 +44,7 @@ def test_inplace_upgrade(cfy,
     cfy.snapshots.download([snapshot_name, '-o', snapshot_path])
     manager.teardown()
     manager.bootstrap()
+    manager.use()
     manager.upload_necessary_files()
     cfy.snapshots.upload([snapshot_path, '-s', snapshot_name])
     cfy.snapshots.restore([snapshot_name, '--restore-certificates'])

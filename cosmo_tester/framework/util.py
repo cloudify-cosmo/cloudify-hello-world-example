@@ -356,7 +356,7 @@ def assert_snapshot_created(manager, snapshot_id, attributes):
         'Snapshot {snapshot} does not appear to exist. Snapshots found were: '
         '{snapshots}'.format(
             snapshot=snapshot_id,
-            snpashots=', '.join(existing_snapshots.keys()),
+            snapshots=', '.join(existing_snapshots.keys()),
         )
     )
 

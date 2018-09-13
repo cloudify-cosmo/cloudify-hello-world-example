@@ -389,7 +389,8 @@ def assert_hello_worlds(hello_vms, installed, logger):
 
 
 def create_snapshot(manager, snapshot_id, attributes, logger):
-    logger.info('Creating snapshot on old manager..')
+    logger.info('Creating snapshot on manager {image_name}'
+                .format(image_name=manager.image_name))
     manager.client.snapshots.create(
         snapshot_id=snapshot_id,
         include_metrics=False,
@@ -430,7 +431,7 @@ def upload_snapshot(manager, local_path, snapshot_id, logger):
 
 
 def restore_snapshot(manager, snapshot_id, cfy, logger,
-                     restore_certificates=False):
+                     restore_certificates=False, force=False):
     # Show the snapshots, to aid troubleshooting on failures
     manager.use()
     cfy.snapshots.list()
@@ -438,7 +439,8 @@ def restore_snapshot(manager, snapshot_id, cfy, logger,
     logger.info('Restoring snapshot on latest manager..')
     restore_execution = manager.client.snapshots.restore(
         snapshot_id,
-        restore_certificates=restore_certificates
+        restore_certificates=restore_certificates,
+        force=force
     )
     try:
         restore_execution = wait_for_execution(

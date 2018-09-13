@@ -1,5 +1,5 @@
 ########
-# Copyright (c) 2017 GigaSpaces Technologies Ltd. All rights reserved
+# Copyright (c) 2018 Cloudify Platform Ltd. All rights reserved
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
 #    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
-
+import textwrap
 from abc import ABCMeta, abstractproperty
 
 import json
@@ -34,7 +34,6 @@ from cosmo_tester.framework import util
 
 from cloudify_cli.constants import DEFAULT_TENANT_NAME
 
-
 REMOTE_PRIVATE_KEY_PATH = '/etc/cloudify/key.pem'
 REMOTE_OPENSTACK_CONFIG_PATH = '/etc/cloudify/openstack_config.json'
 
@@ -50,12 +49,10 @@ MANAGER_API_VERSIONS = {
     '3.4.2': 'v2',
 }
 
-
 ATTRIBUTES = util.get_attributes()
 
 
 class VM(object):
-
     __metaclass__ = ABCMeta
 
     def __init__(self, upload_plugins=False):
@@ -74,7 +71,7 @@ class VM(object):
             attributes,
             logger,
             tmpdir,
-            ):
+    ):
         self.index = index
         self.ip_address = public_ip_address
         self.private_ip_address = private_ip_address
@@ -99,10 +96,10 @@ class VM(object):
 
     def __str__(self):
         return 'Cloudify Test VM ({image}) [{index}:{ip}]'.format(
-                image=self.image_name,
-                index=self.index,
-                ip=self.ip_address,
-                )
+            image=self.image_name,
+            index=self.index,
+            ip=self.ip_address,
+        )
 
     @property
     def server_id(self):
@@ -165,7 +162,7 @@ class _CloudifyManager(VM):
             attributes,
             logger,
             tmpdir
-            ):
+    ):
         self.index = index
         self.ip_address = public_ip_address
         self.private_ip_address = private_ip_address
@@ -265,7 +262,7 @@ class _CloudifyManager(VM):
             '-u', self._attributes.cloudify_username,
             '-p', self._attributes.cloudify_password,
             '-t', tenant or self._attributes.cloudify_tenant,
-            ], **kwargs)
+        ], **kwargs)
 
     @property
     def server_id(self):
@@ -273,7 +270,7 @@ class _CloudifyManager(VM):
         key = 'server_id_{}'.format(self.index)
         return self._attributes[key]
 
-    @retrying.retry(stop_max_attempt_number=6*10, wait_fixed=10000)
+    @retrying.retry(stop_max_attempt_number=6 * 10, wait_fixed=10000)
     def verify_services_are_running(self):
         with self.ssh() as fabric_ssh:
             # the manager-ip-setter script creates the `touched` file when it
@@ -293,12 +290,12 @@ class _CloudifyManager(VM):
         for service in status['services']:
             for instance in service['instances']:
                 if (
-                    instance['Id'] == 'cloudify-stage.service'
-                    and not util.is_community()
+                        instance['Id'] == 'cloudify-stage.service'
+                        and not util.is_community()
                 ):
                     assert instance['SubState'] == 'running', \
                         'service {0} is in {1} state'.format(
-                                service['display_name'], instance['SubState'])
+                            service['display_name'], instance['SubState'])
 
     @abstractproperty
     def branch_name(Self):
@@ -307,7 +304,7 @@ class _CloudifyManager(VM):
     @property
     def image_name(self):
         return ATTRIBUTES['cloudify_manager_{}_image_name'.format(
-                self.branch_name.replace('.', '_'))]
+            self.branch_name.replace('.', '_'))]
 
     @property
     def api_version(self):
@@ -399,7 +396,6 @@ class _CloudifyManager(VM):
                 '/etc/cloudify/config.yaml'
             )
             fabric_ssh.run('cfy_manager install')
-        self.use()
 
     def _create_openstack_config_file(self):
         openstack_config_file = self._tmpdir / 'openstack_config.json'
@@ -434,6 +430,88 @@ class _CloudifyManager(VM):
                     raise StandardError(
                         'Timed out: Reboot did not complete successfully'
                     )
+
+
+class _CloudifyDatabaseOnly(_CloudifyManager):
+    """
+    This class represents an instance of a Cloudify Database without a manager
+
+    Most of the inherited functions here are to avoid any incorrect usage of
+    the class since most of these functions rely on the manager existing on the
+    machine.
+    """
+
+    def __init__(self):
+        super(_CloudifyDatabaseOnly, self).__init__(upload_plugins=False)
+
+    def __str__(self):
+        return 'Cloudify Manager - database only VM ({image}) [{index}:{ip}]' \
+            .format(image=self.image_name,
+                    index=self.index,
+                    ip=self.ip_address, )
+
+    @property
+    def branch_name(self):
+        pass
+
+    def create(
+            self,
+            index,
+            public_ip_address,
+            private_ip_address,
+            networks,
+            rest_client,
+            ssh_key,
+            cfy,
+            attributes,
+            logger,
+            tmpdir
+    ):
+        self.index = index
+        self.ip_address = public_ip_address
+        self.private_ip_address = private_ip_address
+        self.client = rest_client
+        self.deleted = False
+        self._ssh_key = ssh_key
+        self._cfy = cfy
+        self._attributes = attributes
+        self._logger = logger
+        self._tmpdir = os.path.join(tmpdir, str(uuid.uuid4()))
+        os.makedirs(self._tmpdir)
+        self.additional_install_config = {}
+
+    @retrying.retry(stop_max_attempt_number=6 * 10, wait_fixed=10000)
+    def verify_services_are_running(self):
+        with self.ssh() as fabric_ssh:
+            # validate PostgreSQL server is running
+            try:
+                fabric_ssh.sudo('su -c "psql -l" postgres')
+                return True
+            except Exception as e:
+                self._logger.warn(
+                    'PostgreSQL is not in an active state, Error: {0}.'
+                    ' Retrying...'.format(e.message))
+
+    def api_version(self):
+        pass
+
+    def wait_for_manager(self):
+        pass
+
+    def stop_for_user_input(self):
+        pass
+
+    def remote_private_key_path(self):
+        pass
+
+    def use(self, tenant=None, profile_name=None):
+        pass
+
+    def upload_necessary_files(self):
+        pass
+
+    def upload_plugin(self, plugin_name, tenant_name=DEFAULT_TENANT_NAME):
+        pass
 
 
 def get_latest_manager_image_name():
@@ -533,19 +611,20 @@ class CloudifyMasterManager(_CloudifyManager):
 
     # The MTU is set to 1450 because we're using a static BOOTPROTO here (as
     # opposed to DHCP), which sets a lower default by default
-    NETWORK_CONFIG_TEMPLATE = """DEVICE="eth{0}"
-BOOTPROTO="static"
-ONBOOT="yes"
-TYPE="Ethernet"
-USERCTL="yes"
-PEERDNS="yes"
-IPV6INIT="no"
-PERSISTENT_DHCLIENT="1"
-IPADDR="{1}"
-NETMASK="255.255.255.128"
-DEFROUTE="no"
-MTU=1450
-"""
+    NETWORK_CONFIG_TEMPLATE = textwrap.dedent("""
+        DEVICE="eth{0}"
+        BOOTPROTO="static"
+        ONBOOT="yes"
+        TYPE="Ethernet"
+        USERCTL="yes"
+        PEERDNS="yes"
+        IPV6INIT="no"
+        PERSISTENT_DHCLIENT="1"
+        IPADDR="{1}"
+        NETMASK="255.255.255.128"
+        DEFROUTE="no"
+        MTU=1450
+    """)
 
     def enable_nics(self):
         """
@@ -578,6 +657,20 @@ MTU=1450
                 fabric_ssh.sudo('ifup eth{0}'.format(i))
 
 
+class CloudifyDistributed_Manager(_CloudifyManager):
+    branch_name = 'master'
+    image_name_attribute = 'cloudify_manager_image_name_prefix'
+
+    image_name = get_latest_manager_image_name()
+
+
+class CloudifyDistributed_Database(_CloudifyDatabaseOnly):
+    branch_name = 'master'
+    image_name_attribute = 'cloudify_manager_image_name_prefix'
+
+    image_name = get_latest_manager_image_name()
+
+
 IMAGES = {
     '3.4.2': Cloudify3_4Manager,
     '4.0': Cloudify4_0Manager,
@@ -586,14 +679,17 @@ IMAGES = {
     '4.2': Cloudify4_2Manager,
     '4.3.1': Cloudify4_3_1Manager,
     'master': CloudifyMasterManager,
+    'master_distributed_manager': CloudifyDistributed_Manager,
+    'master_distributed_database': CloudifyDistributed_Database,
     'centos': VM,
 }
 
 CURRENT_MANAGER = IMAGES['master']
+CURRENT_DISTRIBUTED_MANAGER = IMAGES['master_distributed_manager']
+CURRENT_DISTRIBUTED_DATABASE = IMAGES['master_distributed_database']
 
 
 class TestHosts(object):
-
     __metaclass__ = ABCMeta
 
     def __init__(self,
@@ -671,9 +767,9 @@ class TestHosts(object):
                 self._terraform.apply(['-var-file',
                                        self._terraform_inputs_file])
                 outputs = util.AttributesDict(
-                        {k: v['value'] for k, v in yaml.safe_load(
-                                self._terraform.output(
-                                        ['-json']).stdout).items()})
+                    {k: v['value'] for k, v in yaml.safe_load(
+                        self._terraform.output(
+                            ['-json']).stdout).items()})
             self._attributes.update(outputs)
 
             self._update_instances_list(outputs)
@@ -695,7 +791,7 @@ class TestHosts(object):
 
         except Exception as e:
             self._logger.error(
-                    'Error creating image based hosts: %s', e)
+                'Error creating image based hosts: %s', e)
             try:
                 self.destroy()
             except sh.ErrorReturnCode as ex:
@@ -726,26 +822,26 @@ class TestHosts(object):
             networks = {str(k): str(v) for k, v in networks.items()}
             if hasattr(instance, 'api_version'):
                 rest_client = util.create_rest_client(
-                        public_ip_address,
-                        username=self._attributes.cloudify_username,
-                        password=self._attributes.cloudify_password,
-                        tenant=self._attributes.cloudify_tenant,
-                        api_version=instance.api_version,
-                        )
+                    public_ip_address,
+                    username=self._attributes.cloudify_username,
+                    password=self._attributes.cloudify_password,
+                    tenant=self._attributes.cloudify_tenant,
+                    api_version=instance.api_version,
+                )
             else:
                 rest_client = None
             instance.create(
-                    i,
-                    public_ip_address,
-                    private_ip_address,
-                    networks,
-                    rest_client,
-                    self._ssh_key,
-                    self._cfy,
-                    self._attributes,
-                    self._logger,
-                    self._tmpdir
-                    )
+                i,
+                public_ip_address,
+                private_ip_address,
+                networks,
+                rest_client,
+                self._ssh_key,
+                self._cfy,
+                self._attributes,
+                self._logger,
+                self._tmpdir
+            )
 
     def _save_manager_logs(self):
         self._logger.debug('_save_manager_logs started')
@@ -798,3 +894,39 @@ class BootstrapBasedCloudifyManagers(TestHosts):
 
         for manager in self.instances:
             manager.bootstrap()
+            manager.use()
+
+
+class DistributedInstallationCloudifyManager(TestHosts):
+    """
+    Bootstraps a Cloudify Manager with an external PostgreSQL Database
+    """
+
+    def __init__(self, *args, **kwargs):
+        instances = [
+            CURRENT_DISTRIBUTED_DATABASE(),
+            CURRENT_DISTRIBUTED_MANAGER(upload_plugins=True)
+        ]
+        super(DistributedInstallationCloudifyManager, self).__init__(
+            instances=instances,
+            *args,
+            **kwargs)
+        for manager in self.instances:
+            manager.image_name = self._attributes.default_linux_image_name
+
+    @property
+    def database(self):
+        return self.instances[0]
+
+    @property
+    def manager(self):
+        return self.instances[1]
+
+    def _get_server_flavor(self):
+        return self._attributes.medium_flavor_name
+
+    def _bootstrap_managers(self):
+        super(DistributedInstallationCloudifyManager, self).\
+            _bootstrap_managers()
+        self.database.bootstrap()
+        self.manager.bootstrap()
