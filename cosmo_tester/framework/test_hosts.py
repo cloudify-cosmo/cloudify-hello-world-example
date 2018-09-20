@@ -856,8 +856,14 @@ class TestHosts(object):
             'Attempting to save manager logs for test:  {0}'.format(test_path))
         logs_dir = os.path.join(os.path.expanduser(logs_dir), test_path)
         util.mkdirs(logs_dir)
-        for instance in self.instances:
-            self._save_logs_for_instance(instance, logs_dir)
+        for i, instance in enumerate(self.instances):
+            instance_deleted = getattr(instance, "deleted", None)
+            if instance_deleted:
+                self._logger.info('Cannot save logs for server with index '
+                                  '{}, since server has been deleted or not '
+                                  'initialized.'.format(i))
+            else:
+                self._save_logs_for_instance(instance, logs_dir)
 
         self._logger.debug('_save_manager_logs completed')
 
