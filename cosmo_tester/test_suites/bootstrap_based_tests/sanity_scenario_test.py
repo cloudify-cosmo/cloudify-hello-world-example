@@ -29,8 +29,7 @@ from cosmo_tester.test_suites.snapshots import (
     verify_services_status
 )
 
-from cosmo_tester.test_suites.ha.ha_helper \
-    import HighAvailabilityHelper as ha_helper
+from cosmo_tester.test_suites.ha import ha_helper
 
 USER_NAME = "sanity_user"
 USER_PASS = "user123"

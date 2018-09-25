@@ -20,7 +20,7 @@ from copy import deepcopy
 from StringIO import StringIO
 
 from cloudify_cli.constants import DEFAULT_TENANT_NAME
-
+from cosmo_tester.framework.util import is_community
 from cosmo_tester.framework.test_hosts import (
     BootstrapBasedCloudifyManagers,
     CURRENT_MANAGER,
@@ -31,7 +31,7 @@ from cosmo_tester.framework.examples.hello_world import (
     centos_hello_world
 )
 from cosmo_tester.framework.util import prepare_and_get_test_tenant
-
+from cosmo_tester.test_suites.ha import ha_helper
 from cosmo_tester.test_suites.snapshots import (
     create_snapshot,
     download_snapshot,
@@ -59,6 +59,34 @@ def managers(cfy, ssh_key, module_tmpdir, attributes, logger):
             'username': attributes.default_linux_username
         })
     hosts.preconfigure_callback = _preconfigure_callback
+
+    try:
+        hosts.create()
+        yield hosts.instances
+    finally:
+        hosts.destroy()
+
+
+@pytest.fixture(scope='function')
+def cluster_managers(cfy, ssh_key, module_tmpdir, attributes, logger):
+    """Bootstraps a cluster of 2 cloudify managers."""
+    # this is only used for one test, so it's a function-scoped fixture
+    # separate from the `managers` fixture. Also, replica managers don't
+    # have plugins uploaded
+
+    hosts = BootstrapBasedCloudifyManagers(
+        cfy, ssh_key, module_tmpdir, attributes, logger,
+        number_of_instances=2,
+        tf_template='openstack-multi-network-test.tf.template',
+        template_inputs={
+            'num_of_networks': 3,
+            'num_of_managers': 2,
+            'image_name': attributes.default_linux_image_name,
+            'username': attributes.default_linux_username
+        })
+    hosts.preconfigure_callback = _preconfigure_callback
+    for manager in hosts.instances[1:]:
+        manager.upload_plugins = False
 
     try:
         hosts.create()
@@ -137,7 +165,35 @@ def test_multiple_networks(managers,
     post_bootstrap_hello.verify_all()
 
 
-def _add_new_network(manager, logger):
+@pytest.mark.skipif(is_community(), reason='Cloudify Community version does '
+                                           'not support clustering')
+def test_multiple_networks_cluster(cluster_managers,
+                                   cfy,
+                                   multi_network_cluster_hello_worlds,
+                                   logger,
+                                   tmpdir,
+                                   attributes):
+    logger.info('Testing cluster with multiple networks')
+    ha_helper.setup_cluster(cluster_managers, cfy, logger)
+    manager1, manager2 = cluster_managers
+
+    ha_helper.verify_nodes_status(manager1, cfy, logger)
+    # not restarting on the replica
+    _add_new_network(manager2, logger, restart=False)
+    _add_new_network(manager1, logger)
+    manager2.use()
+    ha_helper.wait_nodes_online(cluster_managers, logger)
+    ha_helper.set_active(manager1, cfy, logger)
+    for hello in multi_network_cluster_hello_worlds:
+        hello.upload_blueprint()
+        hello.create_deployment()
+        hello.install()
+    ha_helper.set_active(manager2, cfy, logger)
+    for hello in multi_network_cluster_hello_worlds:
+        hello.uninstall()
+
+
+def _add_new_network(manager, logger, restart=True):
     logger.info('Adding network `{0}` to the new manager'.format(NETWORK_2))
 
     old_networks = deepcopy(manager.networks)
@@ -150,10 +206,11 @@ def _add_new_network(manager, logger):
                 networks=networks_json
             )
         )
-        logger.info('Restarting services...')
-        fabric_ssh.sudo('systemctl restart cloudify-rabbitmq')
-        fabric_ssh.sudo('systemctl restart nginx')
-        fabric_ssh.sudo('systemctl restart cloudify-mgmtworker')
+        if restart:
+            logger.info('Restarting services...')
+            fabric_ssh.sudo('systemctl restart cloudify-rabbitmq')
+            fabric_ssh.sudo('systemctl restart nginx')
+            fabric_ssh.sudo('systemctl restart cloudify-mgmtworker')
 
 
 class MultiNetworkHelloWorld(HelloWorldExample):
@@ -172,8 +229,7 @@ class MultiNetworkHelloWorld(HelloWorldExample):
             yaml.dump(blueprint_dict, f)
 
 
-@pytest.fixture(scope='function')
-def multi_network_hello_worlds(cfy, managers, attributes, ssh_key, tmpdir,
+def _make_network_hello_worlds(cfy, managers, attributes, ssh_key, tmpdir,
                                logger):
     # The first manager is the initial one
     manager = managers[0]
@@ -212,6 +268,26 @@ def multi_network_hello_worlds(cfy, managers, attributes, ssh_key, tmpdir,
     yield hellos
     for hello in hellos:
         hello.cleanup()
+
+
+@pytest.fixture(scope='function')
+def multi_network_hello_worlds(cfy, managers, attributes, ssh_key, tmpdir,
+                               logger):
+    # unfortunately, pytest wants the fixtures to be generators syntactically
+    # so we can't just do `return _make_network..()` when factoring out
+    # common functionality, we need to do this silly thing.
+    # In python 2.x, we don't have `yield from` either.
+    for _x in _make_network_hello_worlds(cfy, managers, attributes, ssh_key,
+                                         tmpdir, logger):
+        yield _x
+
+
+@pytest.fixture(scope='function')
+def multi_network_cluster_hello_worlds(cfy, cluster_managers, attributes,
+                                       ssh_key, tmpdir, logger):
+    for _x in _make_network_hello_worlds(cfy, cluster_managers, attributes,
+                                         ssh_key, tmpdir, logger):
+        yield _x
 
 
 class _ProxyTestHosts(BootstrapBasedCloudifyManagers):

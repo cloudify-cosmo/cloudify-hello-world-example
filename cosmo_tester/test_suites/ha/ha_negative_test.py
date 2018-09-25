@@ -17,9 +17,8 @@ import time
 import pytest
 from cosmo_tester.framework.examples.hello_world import centos_hello_world
 from cosmo_tester.framework.test_hosts import TestHosts
-from .ha_helper import HighAvailabilityHelper as ha_helper
 from . import skip_community
-
+from . import ha_helper
 
 # Skip all tests in this module if we're running community tests,
 # using the pytestmark magic variable name
@@ -32,30 +31,15 @@ def hosts(
     """Creates a HA cluster from an image in rackspace OpenStack."""
     logger.info('Creating HA cluster of 2 managers')
     hosts = TestHosts(
-            cfy, ssh_key, module_tmpdir, attributes, logger,
-            number_of_instances=2)
+        cfy, ssh_key, module_tmpdir, attributes, logger,
+        number_of_instances=2)
 
     # manager2 - Cloudify latest - don't install plugins
     hosts.instances[1].upload_plugins = False
 
     try:
         hosts.create()
-        manager1 = hosts.instances[0]
-        manager2 = hosts.instances[1]
-
-        ha_helper.delete_active_profile()
-        manager1.use()
-        cfy.cluster.start(timeout=600,
-                          cluster_host_ip=manager1.private_ip_address,
-                          cluster_node_name=manager1.ip_address)
-
-        manager2.use()
-        cfy.cluster.join(manager1.ip_address,
-                         timeout=600,
-                         cluster_host_ip=manager2.private_ip_address,
-                         cluster_node_name=manager2.ip_address)
-        cfy.cluster.nodes.list()
-        ha_helper.wait_nodes_online(hosts.instances, logger)
+        ha_helper.setup_cluster(hosts.instances, cfy, logger)
         yield hosts
 
     finally:
@@ -66,8 +50,8 @@ def test_nonempty_manager_join_cluster_negative(cfy, attributes, ssh_key,
                                                 logger, tmpdir, module_tmpdir):
     logger.info('Creating HA cluster of 2 managers')
     hosts = TestHosts(
-            cfy, ssh_key, module_tmpdir, attributes, logger,
-            number_of_instances=2)
+        cfy, ssh_key, module_tmpdir, attributes, logger,
+        number_of_instances=2)
 
     try:
         hosts.create()

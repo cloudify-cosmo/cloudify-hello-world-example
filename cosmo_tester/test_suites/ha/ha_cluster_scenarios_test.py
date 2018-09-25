@@ -20,8 +20,11 @@ import fabric.network
 from cosmo_tester.framework.examples.hello_world import centos_hello_world
 from cosmo_tester.framework.test_hosts import TestHosts
 from cosmo_tester.framework.util import prepare_and_get_test_tenant
-from .ha_helper import HighAvailabilityHelper as ha_helper
 from . import skip_community
+from . import ha_helper
+from cosmo_tester.test_suites.bootstrap_based_tests.multi_network_test import (
+    _preconfigure_callback
+)
 
 
 # Skip all tests in this module if we're running community tests,
@@ -35,31 +38,35 @@ def hosts(
     """Creates a HA cluster from an image in rackspace OpenStack."""
     logger.info('Creating HA cluster of %s managers', request.param)
     hosts = TestHosts(
-            cfy, ssh_key, module_tmpdir, attributes, logger,
-            number_of_instances=request.param)
+        cfy, ssh_key, module_tmpdir, attributes, logger,
+        number_of_instances=request.param)
+
+    for manager in hosts.instances[1:]:
+        manager.upload_plugins = False
+
+    try:
+        ha_helper.setup_cluster(hosts.instances, cfy, logger)
+        hosts.create()
+    finally:
+        hosts.destroy()
+
+
+@pytest.fixture(scope='function')
+def multinetwork_hosts(cfy, ssh_key, module_tmpdir, attributes, logger):
+    """Creates a HA cluster from an image in rackspace OpenStack."""
+    logger.info('Creating HA cluster of 2 managers')
+
+    hosts = TestHosts(
+        cfy, ssh_key, module_tmpdir, attributes, logger,
+        number_of_instances=2)
+    hosts.preconfigure_callback = _preconfigure_callback
 
     for manager in hosts.instances[1:]:
         manager.upload_plugins = False
 
     try:
         hosts.create()
-        manager1 = hosts.instances[0]
-        ha_helper.delete_active_profile()
-        manager1.use()
-
-        cfy.cluster.start(timeout=600,
-                          cluster_host_ip=manager1.private_ip_address,
-                          cluster_node_name=manager1.ip_address)
-
-        for manager in hosts.instances[1:]:
-            manager.use()
-            cfy.cluster.join(manager1.ip_address,
-                             timeout=600,
-                             cluster_host_ip=manager.private_ip_address,
-                             cluster_node_name=manager.ip_address)
-
-        cfy.cluster.nodes.list()
-        ha_helper.wait_nodes_online(hosts.instances, logger)
+        ha_helper.setup_cluster(hosts, cfy, logger)
         yield hosts
 
     finally:
