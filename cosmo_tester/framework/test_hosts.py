@@ -485,7 +485,8 @@ class _CloudifyDatabaseOnly(_CloudifyManager):
         with self.ssh() as fabric_ssh:
             # validate PostgreSQL server is running
             try:
-                fabric_ssh.sudo('su -c "psql -l" postgres')
+                fabric_ssh.sudo('su -c "psql -l" postgres &> /dev/null')
+                self._logger.info('PostgreSQL active')
                 return True
             except Exception as e:
                 self._logger.warn(
