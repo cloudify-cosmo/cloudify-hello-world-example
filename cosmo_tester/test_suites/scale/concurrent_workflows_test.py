@@ -36,23 +36,29 @@ BLUEPRINT_PATH = os.path.abspath(
         os.path.dirname(
             __file__), '..', '..', 'resources/blueprints/scale/load-bp.zip'))
 
-concurrent_create_deployments = int(os.environ.get
-                                    ('CONCURRENT_CREATE_DEPLOYMENTS'))
-num_of_deployments = int(os.environ.get('NUM_OF_DEPLOYMENTS'))
-concurrent_workflows = int(os.environ.get('CONCURRENT_WORKFLOWS'))
-url = os.environ.get('URL')
-cycle_num = int(os.environ.get('CYCLE_NUM'))
-cycle_sleep = int(os.environ.get('CYCLE_SLEEP'))
-manager_server_flavor_name = os.environ.get('MANAGER_SERVER_FLAVOR_NAME')
-
-STAT_FILE_PATH = '/tmp/scale/{0}_manager_stats_{1}.csv'.format(
-    manager_server_flavor_name,
-    datetime.now().strftime("%Y%m%d-%H%M%S"))
+try:
+    concurrent_create_deployments = int(
+        os.environ['CONCURRENT_CREATE_DEPLOYMENTS'])
+    num_of_deployments = int(os.environ['NUM_OF_DEPLOYMENTS'])
+    concurrent_workflows = int(os.environ['CONCURRENT_WORKFLOWS'])
+    url = os.environ['URL']
+    cycle_num = int(os.environ['CYCLE_NUM'])
+    cycle_sleep = int(os.environ['CYCLE_SLEEP'])
+    manager_server_flavor_name = os.environ['MANAGER_SERVER_FLAVOR_NAME']
+except (KeyError, ValueError):
+    envvars_provided = False
+else:
+    envvars_provided = True
+    STAT_FILE_PATH = '/tmp/scale/{0}_manager_stats_{1}.csv'.format(
+        manager_server_flavor_name,
+        datetime.now().strftime("%Y%m%d-%H%M%S"))
 
 WORKFLOWS = ['geturl_wf', 'gentar_wf', 'factorial_wf']
 
 
 def test_concurrent_workflows(cfy, manager, logger):
+    if not envvars_provided:
+        raise RuntimeError('Not all required envvars have been provided')
     _set_max_workers_num(manager)
     exec_params = {'url': url,
                    'cycle_num': cycle_num,
