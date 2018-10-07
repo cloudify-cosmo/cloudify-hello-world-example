@@ -96,9 +96,7 @@ def test_distributed_installation_scenario(database_and_manager,
                                            nodecellar):
     manager = database_and_manager.manager
 
-    _create_and_add_user_to_tenant(cfy, logger)
-
-    _set_test_user(cfy, manager, logger)
+    _set_admin_user(cfy, manager, logger)
 
     # Creating secrets
     _create_secrets(cfy, logger, attributes, manager)
@@ -107,8 +105,6 @@ def test_distributed_installation_scenario(database_and_manager,
 
     snapshot_id = 'SNAPSHOT_ID'
     create_snapshot(manager, snapshot_id, attributes, logger)
-
-    _set_admin_user(cfy, manager, logger)
 
     # Restore snapshot
     logger.info('Restoring snapshot')
@@ -142,11 +138,13 @@ def _set_admin_user(cfy, manager, logger):
 
 def _create_secrets(cfy, logger, attributes, manager):
     logger.info('Creating secret agent_user as blueprint input')
-    cfy.secrets.create('agent_user', '-s', attributes.default_linux_username)
+    cfy.secrets.create('agent_user', '-s', attributes.default_linux_username,
+                       visibility='global')
 
     logger.info('Creating secret agent_private_key_path as blueprint input')
     cfy.secrets.create('agent_private_key_path', '-s',
-                       manager.remote_private_key_path)
+                       manager.remote_private_key_path, visibility='global')
 
     logger.info('Creating secret host_ip as blueprint input')
-    cfy.secrets.create('host_ip', '-s', manager.ip_address)
+    cfy.secrets.create('host_ip', '-s', manager.ip_address,
+                       visibility='global')
