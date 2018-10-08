@@ -872,14 +872,18 @@ class TestHosts(object):
     def _save_logs_for_instance(self, instance, logs_dir):
         self._logger.info('Attempting to download logs for Cloudify Manager '
                           'with ID: {}...'.format(instance.server_id))
+        self._logger.info('Switching profiles...')
         instance.use()
         logs_filename = '{}_logs.tar.gz'.format(instance.server_id)
         target = os.path.join(logs_dir, logs_filename)
+        self._logger.info('Force updating the profile...')
         self._cfy.profiles.set(
             ssh_key=instance.ssh_key.private_key_path,
             ssh_user=instance.username,
             skip_credentials_validation=True)
+        self._logger.info('Starting to download the logs...')
         self._cfy.logs.download(output_path=target)
+        self._logger.info('Purging the logs...')
         self._cfy.logs.purge(force=True)
 
 
