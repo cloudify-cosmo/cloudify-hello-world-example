@@ -21,33 +21,10 @@ import requests
 import retrying
 
 from cosmo_tester.framework.examples.nodecellar import NodeCellarExample
-from cosmo_tester.framework.fixtures import bootstrap_based_manager
+from cosmo_tester.framework.fixtures import image_based_manager
 from cosmo_tester.framework import util
 
-manager = bootstrap_based_manager
-manager.additional_install_config = {
-    'riemann': {
-        'skip_installation': False,
-        'sources': {
-            'daemonize_source_url': 'daemonize-1.7.3-7.el7.x86_64.rpm',
-            'riemann_source_url': 'riemann-0.2.6-1.noarch.rpm',
-            'cloudify_riemann_url': 'cloudify-riemann-*.rpm',
-        },
-    },
-    'amqpinflux': {
-        'skip_installation': False,
-        'sources': {
-            'amqpinflux_source_url': 'cloudify-amqp-influx-*.x86_64.rpm',
-        },
-    },
-    'influxdb': {
-        'skip_installation': False,
-        'endpoint_ip': '',
-        'sources': {
-            'influxdb_source_url': 'influxdb-0.8.8-1.x86_64.rpm',
-        },
-    },
-}
+manager = image_based_manager
 openstack = util.create_openstack_client()
 
 
