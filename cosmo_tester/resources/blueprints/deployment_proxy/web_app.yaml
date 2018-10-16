@@ -1,0 +1,39 @@
+tosca_definitions_version: cloudify_dsl_1_3
+
+imports:
+  - http://www.getcloudify.org/spec/cloudify/4.5/types.yaml
+
+node_templates:
+  vm:
+    type: cloudify.nodes.Compute
+    properties:
+      ip: { get_capability: [ os_infra, host_private_ip ] }
+      agent_config:
+        install_method: provided
+        user: { get_capability: [ os_infra, agent_user ] }
+        extra:
+          proxy:
+            deployment: os_infra
+            tenant: default_tenant
+            node_instance: { get_capability: [ os_infra, host_instance_id ]}
+
+
+  http_web_server:
+    type: cloudify.nodes.WebServer
+    properties:
+      port: { get_capability: [ os_infra, webserver_port ] }
+    relationships:
+    - type: cloudify.relationships.contained_in
+      target: vm
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        configure: scripts/configure.sh
+        start: scripts/start.sh
+        stop: scripts/stop.sh
+
+
+outputs:
+  http_endpoint:
+    description: Web server external endpoint
+    value: { concat: ['http://', { get_capability: [ os_infra, host_public_ip ] },
+                      ':', { get_property: [http_web_server, port] }] }

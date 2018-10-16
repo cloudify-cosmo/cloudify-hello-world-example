@@ -1,0 +1,105 @@
+tosca_definitions_version: cloudify_dsl_1_3
+
+imports:
+  - http://www.getcloudify.org/spec/cloudify/4.5/types.yaml
+  - plugin:cloudify-openstack-plugin?version=2.0.1
+
+
+inputs:
+  webserver_port:
+    description: The HTTP web server port
+    default: 8080
+  agent_user:
+    description: User name used when SSH-ing into the started machine
+  image:
+    description: Openstack image name or id to use for the new server
+  flavor:
+    description: Openstack flavor name or id to use for the new server
+  network_name:
+    description: Openstack network name the new server will be connected to
+  floating_network_id:
+    description: The id of the network to use for allocating a floating ip
+  key_pair_name:
+    description: Openstack key pair name of the key to associate with the new server
+  private_key_path:
+    description: |
+      Path to the private key which will be used for connecting to the server
+      on the manager or machine running CLI if running in local mode.
+
+
+node_types:
+  cloudify.nodes.ProxyType:
+    derived_from: cloudify.nodes.Root
+    properties:
+      webserver_port:
+        default: { get_input: webserver_port }
+      agent_user:
+        default: { get_input: agent_user }
+      private_key_path:
+        default: { get_input: private_key_path }
+
+node_templates:
+  virtual_ip:
+    type: cloudify.openstack.nodes.FloatingIP
+    properties:
+      floatingip:
+        floating_network_id: { get_input: floating_network_id }
+
+  security_group:
+    type: cloudify.openstack.nodes.SecurityGroup
+    properties:
+      rules:
+        - port: { get_input: webserver_port }
+          remote_ip_prefix: 0.0.0.0/0
+        - port: 22
+          remote_ip_prefix: 0.0.0.0/0
+
+  keypair:
+    type: cloudify.openstack.nodes.KeyPair
+    properties:
+      use_external_resource: true
+      resource_id: { get_input: key_pair_name }
+      private_key_path: { get_input: private_key_path }
+
+  vm:
+    type: cloudify.openstack.nodes.Server
+    properties:
+      agent_config:
+        user: { get_input: agent_user }
+        key: { get_input: private_key_path }
+      image: { get_input: image }
+      flavor: { get_input: flavor }
+      management_network_name: { get_input: network_name }
+    relationships:
+      - type: cloudify.openstack.server_connected_to_keypair
+        target: keypair
+      - type: cloudify.openstack.server_connected_to_floating_ip
+        target: virtual_ip
+      - type: cloudify.openstack.server_connected_to_security_group
+        target: security_group
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create:
+          inputs:
+            args:
+              security_groups: [{ get_attribute: [ security_group, external_name ]}]
+
+  proxy_node:
+    type: cloudify.nodes.ProxyType
+
+capabilities:
+  host_private_ip:
+    description: The private IP of the VM
+    value: { get_attribute: [ vm, ip ] }
+  host_public_ip:
+    description: The public IP of the VM
+    value: { get_attribute: [ virtual_ip, floating_ip_address ]}
+  webserver_port:
+    description: port
+    value: { get_attribute: [ proxy_node, webserver_port ] }
+  host_instance_id:
+    description: The instance ID of the VM node
+    value: { get_attribute: [ vm, node_instance_id ] }
+  agent_user:
+    description: agent user
+    value: { get_attribute: [ proxy_node, agent_user ] }
