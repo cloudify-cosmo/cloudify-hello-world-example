@@ -140,6 +140,58 @@ class VM(object):
     def ssh_key(self):
         return self._ssh_key
 
+    def get_remote_file(self, remote_path, local_path, use_sudo=True):
+        """ Dump the contents of the remote file into the local path """
+
+        with self.ssh() as fabric_ssh:
+            fabric_ssh.get(
+                remote_path,
+                local_path,
+                use_sudo=use_sudo
+            )
+
+    def put_remote_file(self, remote_path, local_path, use_sudo=True):
+        """ Dump the contents of the local file into the remote path """
+
+        with self.ssh() as fabric_ssh:
+            fabric_ssh.put(
+                local_path,
+                remote_path,
+                use_sudo=use_sudo
+            )
+
+    def get_remote_file_content(self, remote_path, use_sudo=True):
+        tmp_local_path = os.path.join(self._tmpdir, str(uuid.uuid4()))
+
+        try:
+            self.get_remote_file(remote_path, tmp_local_path, use_sudo)
+            with open(tmp_local_path, 'r') as f:
+                content = f.read()
+        finally:
+            if os.path.exists(tmp_local_path):
+                os.unlink(tmp_local_path)
+        return content
+
+    def put_remote_file_content(self, remote_path, content, use_sudo=True):
+        tmp_local_path = os.path.join(self._tmpdir, str(uuid.uuid4()))
+
+        try:
+            with open(tmp_local_path, 'w') as f:
+                f.write(content)
+
+            self.put_remote_file(remote_path, tmp_local_path, use_sudo)
+
+        finally:
+            if os.path.exists(tmp_local_path):
+                os.unlink(tmp_local_path)
+
+    def run_command(self, command, use_sudo=False):
+        with self.ssh() as fabric_ssh:
+            if use_sudo:
+                return fabric_ssh.sudo(command)
+            else:
+                return fabric_ssh.run(command)
+
     image_name = ATTRIBUTES['default_linux_image_name']
     username = ATTRIBUTES['default_linux_username']
     branch_name = 'master'
