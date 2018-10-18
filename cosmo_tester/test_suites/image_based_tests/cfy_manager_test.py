@@ -15,6 +15,7 @@
 
 import json
 
+from cosmo_tester.framework.util import is_community
 from cosmo_tester.framework.fixtures import image_based_manager
 
 
@@ -24,7 +25,7 @@ REMOTE_CERT_PATH = '/etc/cloudify/ssl/cloudify_internal_ca_cert.pem'
 REMOTE_CONF_PATH = '/opt/manager/rest-security.conf'
 REMOTE_HOOKS_PATH = '/opt/mgmtworker/config/hooks.conf'
 AUTH_MQ_USER_CMD = 'sudo rabbitmqctl -n cloudify-manager@localhost ' \
-                   'authenticate_user {user} {password}'
+                   'authenticate_user "{user}" "{password}"'
 
 NEW_TENANT = 'new_tenant'
 NEW_KEY = 'new_key'
@@ -51,8 +52,6 @@ with open('%s', 'w') as f:
 
 
 def test_cfy_manager_configure(manager, logger, tmpdir):
-    manager.sync_local_code_to_manager()
-
     logger.info('Putting code to get decrypted passwords on manager...')
     manager.put_remote_file_content(
         remote_path=GET_MQ_PASSWORDS_CODE_PATH,
@@ -62,10 +61,14 @@ def test_cfy_manager_configure(manager, logger, tmpdir):
     logger.info('Getting current CA cert from the manager...')
     old_cert = manager.get_remote_file_content(REMOTE_CERT_PATH)
 
-    logger.info('Creating new tenant and validating RMQ user was created...')
-    manager.client.tenants.create(NEW_TENANT)
     mq_passwords = _get_mq_passwords(manager)
-    assert 'rabbitmq_user_{0}'.format(NEW_TENANT) in mq_passwords
+
+    # Creating new tenants is a premium-only feature
+    if not is_community():
+        logger.info('Creating new tenant and '
+                    'validating RMQ user was created...')
+        manager.client.tenants.create(NEW_TENANT)
+        assert 'rabbitmq_user_{0}'.format(NEW_TENANT) in mq_passwords
 
     logger.info('Editing security config file on the manager...')
     _edit_security_config(manager)
