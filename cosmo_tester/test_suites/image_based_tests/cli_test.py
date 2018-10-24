@@ -297,7 +297,7 @@ $client.DownloadFile($url, $file)""".format(
         ))
         self._run_cmd('''
 cd {0}
-& .\{1} /SILENT /VERYSILENT /SUPPRESSMSGBOXES /DIR="C:\Cloudify"'''
+& .\\{1} /SILENT /VERYSILENT /SUPPRESSMSGBOXES /DIR="C:\\Cloudify"'''
                       .format(work_dir, cli_installer_exe_name),
                       powershell=True)
 

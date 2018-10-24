@@ -36,7 +36,7 @@ def assert_deployment_metrics_exist(nodecellar):
     with nodecellar.manager.ssh() as fabric:
         result = fabric.run(
             'curl -G "{url}" --data-urlencode '
-            '"q=select * from /^{dep}\./i '
+            '"q=select * from /^{dep}\\./i '
             'where time > now() - 5s"'.format(
                 url='http://localhost:8086/db/cloudify/series?u=root&p=root',
                 dep=nodecellar.deployment_id
