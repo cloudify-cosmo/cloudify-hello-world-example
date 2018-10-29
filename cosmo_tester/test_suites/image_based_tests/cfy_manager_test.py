@@ -15,6 +15,8 @@
 
 import json
 
+from cloudify_cli.constants import DEFAULT_TENANT_NAME
+
 from cosmo_tester.framework.util import is_community
 from cosmo_tester.framework.fixtures import image_based_manager
 
@@ -61,14 +63,19 @@ def test_cfy_manager_configure(manager, logger, tmpdir):
     logger.info('Getting current CA cert from the manager...')
     old_cert = manager.get_remote_file_content(REMOTE_CERT_PATH)
 
-    mq_passwords = _get_mq_passwords(manager)
+    tenants_to_check = [DEFAULT_TENANT_NAME]
 
     # Creating new tenants is a premium-only feature
     if not is_community():
         logger.info('Creating new tenant and '
                     'validating RMQ user was created...')
         manager.client.tenants.create(NEW_TENANT)
-        assert 'rabbitmq_user_{0}'.format(NEW_TENANT) in mq_passwords
+        tenants_to_check.append(NEW_TENANT)
+
+    mq_passwords = _get_mq_passwords(manager)
+
+    for tenant in tenants_to_check:
+        assert 'rabbitmq_user_{0}'.format(tenant) in mq_passwords
 
     logger.info('Editing security config file on the manager...')
     _edit_security_config(manager)
