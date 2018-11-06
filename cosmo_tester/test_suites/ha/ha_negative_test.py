@@ -32,7 +32,7 @@ def hosts(
     logger.info('Creating HA cluster of 2 managers')
     hosts = TestHosts(
         cfy, ssh_key, module_tmpdir, attributes, logger,
-        number_of_instances=2)
+        number_of_instances=2, request=request)
 
     # manager2 - Cloudify latest - don't install plugins
     hosts.instances[1].upload_plugins = False

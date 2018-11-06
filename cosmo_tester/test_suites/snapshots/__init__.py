@@ -745,7 +745,7 @@ def hosts(
 
     hosts = TestHosts(
         cfy, ssh_key, module_tmpdir,
-        attributes, logger, instances=instances)
+        attributes, logger, instances=instances, request=request)
     hosts.create()
 
     if request.param == '4.0.1':

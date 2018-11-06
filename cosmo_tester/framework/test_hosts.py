@@ -755,8 +755,8 @@ class TestHosts(object):
                  instances=None,
                  tf_template=None,
                  template_inputs=None,
-                 upload_plugins=True
-                 ):
+                 upload_plugins=True,
+                 request=None):
         """
         instances: supply a list of VM instances.
         This allows pre-configuration to happen before starting the hosts, or
@@ -781,6 +781,7 @@ class TestHosts(object):
                 CURRENT_MANAGER(upload_plugins=upload_plugins)
                 for _ in range(number_of_instances)]
         self._template_inputs = template_inputs or {'servers': self.instances}
+        self._request = request
 
     def _bootstrap_managers(self):
         pass
@@ -916,17 +917,30 @@ class TestHosts(object):
                                   '{}, since server has been deleted or not '
                                   'initialized.'.format(i))
             else:
-                self._save_logs_for_instance(instance, logs_dir)
+                self._save_logs_for_instance(instance, logs_dir, i)
 
         self._logger.debug('_save_manager_logs completed')
 
     @retry(stop_max_attempt_number=3, wait_fixed=5000)
-    def _save_logs_for_instance(self, instance, logs_dir):
+    def _save_logs_for_instance(self, instance, logs_dir, instance_index):
+        def _generate_prefix():
+            """
+            :return: log tar file prefix in the following format:
+                <instance_class_name>__[<pytest_params_if_exist>__] +
+                    + <index_number_in_instances_list>__<terraform_id>__
+            """
+            prefix = '{}__'.format(instance.__class__.__name__)
+            if self._request:
+                prefix += '{}__'.format(self._request.param)
+            prefix += 'index_{}__'.format(instance_index)
+            return prefix
+
         self._logger.info('Attempting to download logs for Cloudify Manager '
                           'with ID: {}...'.format(instance.server_id))
         self._logger.info('Switching profiles...')
         instance.use()
-        logs_filename = '{}_logs.tar.gz'.format(instance.server_id)
+        logs_filename = '{}__{}_logs.tar.gz'.format(_generate_prefix(),
+                                                    instance.server_id)
         target = os.path.join(logs_dir, logs_filename)
         self._logger.info('Force updating the profile...')
         self._cfy.profiles.set(

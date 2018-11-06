@@ -9,7 +9,7 @@ def image_based_manager(
         request, cfy, ssh_key, module_tmpdir, attributes, logger):
     """Creates a cloudify manager from an image in rackspace OpenStack."""
     hosts = TestHosts(
-            cfy, ssh_key, module_tmpdir, attributes, logger)
+            cfy, ssh_key, module_tmpdir, attributes, logger, request=request)
     try:
         hosts.create()
         hosts.instances[0].use()
