@@ -39,7 +39,8 @@ MQ_PASSWORDS_PATH = '/tmp/passwords'
 GET_MQ_PASSWORDS_CODE = '''
 import json
 
-from manager_rest.cryptography_utils import decrypt
+from cloudify.cryptography_utils import decrypt
+
 from manager_rest.storage import models
 from manager_rest.flask_utils import setup_flask_app
 
