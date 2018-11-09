@@ -128,7 +128,9 @@ def _edit_security_config(manager):
 
 def _get_mq_passwords(manager):
     manager.run_command(
-        '/opt/manager/env/bin/python {0}'.format(GET_MQ_PASSWORDS_CODE_PATH)
+        'sudo /opt/manager/env/bin/python {script}'.format(
+            script=GET_MQ_PASSWORDS_CODE_PATH,
+        )
     )
     mq_passwords = manager.get_remote_file_content(MQ_PASSWORDS_PATH)
     return json.loads(mq_passwords)
