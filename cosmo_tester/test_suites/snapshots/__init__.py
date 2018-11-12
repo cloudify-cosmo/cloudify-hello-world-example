@@ -626,7 +626,7 @@ def check_plugins(manager, old_plugins, logger, tenant='default_tenant'):
 def check_deployments(manager, old_deployments, logger,
                       tenant='default_tenant'):
     deployments = get_deployments_list(manager, tenant)
-    assert deployments == old_deployments
+    assert sorted(deployments) == sorted(old_deployments)
 
     _log('Checking deployments', logger, tenant)
     # Now make sure the envs were recreated
