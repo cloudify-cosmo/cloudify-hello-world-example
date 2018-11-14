@@ -19,7 +19,10 @@ import fabric.network
 
 from cosmo_tester.framework.examples.hello_world import centos_hello_world
 from cosmo_tester.framework.test_hosts import TestHosts
-from cosmo_tester.framework.util import prepare_and_get_test_tenant
+from cosmo_tester.framework.util import (
+    prepare_and_get_test_tenant,
+    set_client_tenant
+)
 from . import skip_community
 from . import ha_helper
 
@@ -29,7 +32,7 @@ from . import ha_helper
 pytestmark = skip_community
 
 
-@pytest.fixture(scope='function', params=[2, 3])
+@pytest.fixture(scope='function', params=[2])
 def hosts(
         request, cfy, ssh_key, module_tmpdir, attributes, logger):
     """Creates a HA cluster from an image in rackspace OpenStack."""
@@ -237,6 +240,40 @@ def test_uninstall_dep(cfy, hosts, ha_hello_worlds,
     manager2.use()
     for hello_world in ha_hello_worlds:
         hello_world.uninstall()
+
+
+def test_heal_after_failover(cfy, hosts, ha_hello_worlds, logger):
+    manager1 = hosts.instances[0]
+    manager1.use()
+    ha_helper.verify_nodes_status(manager1, cfy, logger)
+    _test_hellos(ha_hello_worlds, install=True)
+
+    manager2 = hosts.instances[-1]
+    ha_helper.set_active(manager2, cfy, logger)
+    manager2.use()
+
+    # The tricky part we're validating here is that the agent install script
+    # will use the new master's IP, instead of the old one
+    for hello_world in ha_hello_worlds:
+        _heal_hello_world(cfy, manager2, hello_world)
+
+
+def _get_host_instance_id(manager, hello_world):
+    with set_client_tenant(manager, hello_world.tenant):
+        # We should only have a single instance of the `vm` node
+        instance = manager.client.node_instances.list(
+            deployment_id=hello_world.deployment_id,
+            node_id='vm'
+        )[0]
+    return instance.id
+
+
+def _heal_hello_world(cfy, manager, hello_world):
+    instance_id = _get_host_instance_id(manager, hello_world)
+    cfy.executions.start('heal',
+                         '-d', hello_world.deployment_id,
+                         '-t', hello_world.tenant,
+                         '-p', 'node_instance_id={0}'.format(instance_id))
 
 
 def _test_hellos(hello_worlds, install=False):
