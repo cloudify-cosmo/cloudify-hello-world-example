@@ -41,6 +41,7 @@ RSYNC_SCRIPT_URL = 'https://raw.githubusercontent.com/cloudify-cosmo/cloudify-de
 
 MANAGER_API_VERSIONS = {
     'master': 'v3',
+    '4.5': 'v3',
     '4.3.1': 'v3',
     '4.2': 'v3',
     '4.1': 'v3',
@@ -656,6 +657,10 @@ class Cloudify4_3_1Manager(_CloudifyManager):
     branch_name = '4.3.1'
 
 
+class Cloudify4_5Manager(_CloudifyManager):
+    branch_name = '4.5'
+
+
 class CloudifyMasterManager(_CloudifyManager):
     branch_name = 'master'
     image_name_attribute = 'cloudify_manager_image_name_prefix'
@@ -731,6 +736,7 @@ IMAGES = {
     '4.1': Cloudify4_1Manager,
     '4.2': Cloudify4_2Manager,
     '4.3.1': Cloudify4_3_1Manager,
+    '4.5': Cloudify4_5Manager,
     'master': CloudifyMasterManager,
     'master_distributed_manager': CloudifyDistributed_Manager,
     'master_distributed_database': CloudifyDistributed_Database,
