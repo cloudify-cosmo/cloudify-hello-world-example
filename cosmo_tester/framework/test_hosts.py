@@ -40,8 +40,8 @@ REMOTE_OPENSTACK_CONFIG_PATH = '/etc/cloudify/openstack_config.json'
 RSYNC_SCRIPT_URL = 'https://raw.githubusercontent.com/cloudify-cosmo/cloudify-dev/master/scripts/rsync.sh'  # NOQA
 
 MANAGER_API_VERSIONS = {
-    'master': 'v3',
-    '4.5': 'v3',
+    'master': 'v3.1',
+    '4.5': 'v3.1',
     '4.3.1': 'v3',
     '4.2': 'v3',
     '4.1': 'v3',
