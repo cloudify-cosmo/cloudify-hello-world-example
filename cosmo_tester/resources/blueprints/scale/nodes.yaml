@@ -1,0 +1,10 @@
+tosca_definitions_version: cloudify_dsl_1_3
+
+imports:
+  - https://raw.githubusercontent.com/cloudify-cosmo/cloudify-manager/master/resources/rest-service/cloudify/types/types.yaml
+
+node_templates:
+  fakevm:
+    type: cloudify.nodes.Root
+    instances:
+      deploy: 50
