@@ -461,7 +461,7 @@ class _CloudifyManager(VM):
         }, indent=2))
         return openstack_config_file
 
-    @retrying.retry(stop_max_attempt_number=180, wait_fixed=1000)
+    @retrying.retry(stop_max_attempt_number=200, wait_fixed=1000)
     def wait_for_all_executions(self, include_system_workflows=True):
         executions = self.client.executions.list(
             include_system_workflows=include_system_workflows,
