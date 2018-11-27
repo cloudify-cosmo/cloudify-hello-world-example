@@ -132,8 +132,10 @@ class AbstractExample(testtools.TestCase):
                 json.dumps(self.inputs, indent=2))
         with set_client_tenant(self.manager, self.tenant):
             self.manager.client.deployments.create(
-                    self.deployment_id, self.blueprint_id, inputs=self.inputs,
-                    skip_plugins_validation=self.skip_plugins_validation)
+                deployment_id=self.deployment_id,
+                blueprint_id=self.blueprint_id,
+                inputs=self.inputs,
+                skip_plugins_validation=self.skip_plugins_validation)
         self.cfy.deployments.list(tenant_name=self.tenant)
 
     def install(self):

@@ -19,6 +19,7 @@ import hashlib
 import hmac
 import json
 import os
+from time import sleep
 
 from passlib.context import CryptContext
 import retrying
@@ -433,7 +434,9 @@ def upload_snapshot(manager, local_path, snapshot_id, logger):
 
 
 def restore_snapshot(manager, snapshot_id, cfy, logger,
-                     restore_certificates=False, force=False):
+                     restore_certificates=False, force=False,
+                     wait_for_post_restore_commands=True,
+                     wait_timeout=20):
     # Show the snapshots, to aid troubleshooting on failures
     manager.use()
     cfy.snapshots.list()
@@ -445,7 +448,7 @@ def restore_snapshot(manager, snapshot_id, cfy, logger,
         force=force
     )
     try:
-        restore_execution = wait_for_execution(
+        wait_for_execution(
             manager,
             restore_execution,
             logger)
@@ -453,6 +456,10 @@ def restore_snapshot(manager, snapshot_id, cfy, logger,
         # See any errors
         cfy.executions.list(['--include-system-workflows'])
         raise
+
+    # wait a while to allow the restore-snapshot post-workflow commands to run
+    if wait_for_post_restore_commands:
+        sleep(wait_timeout)
 
 
 def prepare_credentials_tests(cfy, logger, manager):

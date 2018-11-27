@@ -105,7 +105,8 @@ def test_restore_snapshot_and_agents_upgrade_multitenant(
     download_snapshot(old_manager, local_snapshot_path, SNAPSHOT_ID, logger)
     upload_snapshot(new_manager, local_snapshot_path, SNAPSHOT_ID, logger)
 
-    restore_snapshot(new_manager, SNAPSHOT_ID, cfy, logger)
+    restore_snapshot(new_manager, SNAPSHOT_ID, cfy, logger,
+                     wait_for_post_restore_commands=False)
 
     if manager_supports_users_in_snapshot_creation(old_manager):
         update_credentials(cfy, logger, new_manager)

@@ -25,6 +25,7 @@ import requests
 import retrying
 import yaml
 import errno
+import platform
 from os import makedirs
 
 from openstack import connection as openstack_connection
@@ -36,6 +37,13 @@ from cloudify_cli.constants import CLOUDIFY_TENANT_HEADER
 
 import cosmo_tester
 from cosmo_tester import resources
+
+
+OS_USERNAME_ENV = 'OS_USERNAME'
+OS_PASSWORD_ENV = 'OS_PASSWORD'
+OS_TENANT_NAME_ENV = 'OS_TENANT_NAME'
+OS_PROJECT_NAME_ENV = 'OS_PROJECT_NAME'
+OS_AUTH_URL_ENV = 'OS_AUTH_URL'
 
 
 class AttributesDict(dict):
@@ -95,12 +103,22 @@ def _decrypt_password(password, private_key_path):
     return out
 
 
+def get_openstack_config():
+    return {
+        'username': os.environ[OS_USERNAME_ENV],
+        'password': os.environ[OS_PASSWORD_ENV],
+        'tenant_name': os.environ.get(OS_TENANT_NAME_ENV,
+                                      os.environ[OS_PROJECT_NAME_ENV]),
+        'auth_url': os.environ[OS_AUTH_URL_ENV]
+    }
+
+
 def create_openstack_client():
     conn = openstack_connection.Connection(
-            auth_url=os.environ['OS_AUTH_URL'],
-            project_name=os.environ['OS_PROJECT_NAME'],
-            username=os.environ['OS_USERNAME'],
-            password=os.environ['OS_PASSWORD'])
+            auth_url=os.environ[OS_AUTH_URL_ENV],
+            project_name=os.environ[OS_PROJECT_NAME_ENV],
+            username=os.environ[OS_USERNAME_ENV],
+            password=os.environ[OS_PASSWORD_ENV])
     return conn
 
 
@@ -437,3 +455,7 @@ def mkdirs(folder_path):
             pass
         else:
             raise
+
+
+def is_redhat():
+    return 'redhat' in platform.platform()

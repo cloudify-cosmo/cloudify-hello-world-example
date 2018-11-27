@@ -137,11 +137,8 @@ def test_sanity_scenario(managers,
     logger.info('Uploading and restoring snapshot')
     upload_snapshot(manager3, local_snapshot_path, snapshot_id, logger)
     restore_snapshot(manager3, snapshot_id, cfy, logger)
-    time.sleep(7)
-    verify_services_status(manager3, logger)
 
-    # wait for agents reconnection
-    time.sleep(30)
+    verify_services_status(manager3, logger)
 
     # Upgrade agents
     logger.info('Upgrading agents')

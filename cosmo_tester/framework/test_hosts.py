@@ -452,13 +452,8 @@ class _CloudifyManager(VM):
 
     def _create_openstack_config_file(self):
         openstack_config_file = self._tmpdir / 'openstack_config.json'
-        openstack_config_file.write_text(json.dumps({
-            'username': os.environ['OS_USERNAME'],
-            'password': os.environ['OS_PASSWORD'],
-            'tenant_name': os.environ.get('OS_TENANT_NAME',
-                                          os.environ['OS_PROJECT_NAME']),
-            'auth_url': os.environ['OS_AUTH_URL']
-        }, indent=2))
+        openstack_config_file.write_text(json.dumps(
+            util.get_openstack_config(), indent=2))
         return openstack_config_file
 
     @retrying.retry(stop_max_attempt_number=200, wait_fixed=1000)

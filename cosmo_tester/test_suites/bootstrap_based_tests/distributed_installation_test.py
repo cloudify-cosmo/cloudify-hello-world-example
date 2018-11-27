@@ -13,8 +13,6 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
-import time
-
 import pytest
 
 from cosmo_tester.framework.examples.nodecellar import NodeCellarExample
@@ -109,9 +107,6 @@ def test_distributed_installation_scenario(database_and_manager,
     # Restore snapshot
     logger.info('Restoring snapshot')
     restore_snapshot(manager, snapshot_id, cfy, logger, force=True)
-
-    # wait a while to allow the restore-snapshot post-workflow commands to run
-    time.sleep(30)
 
     nodecellar.uninstall()
 

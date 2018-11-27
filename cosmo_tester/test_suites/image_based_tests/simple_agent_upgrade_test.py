@@ -13,8 +13,6 @@
 #    * See the License for the specific language governing permissions and
 #    * limitations under the License.
 
-from time import sleep
-
 import pytest
 from sh import ErrorReturnCode
 
@@ -74,9 +72,6 @@ def test_old_agent_stopped_after_agent_upgrade(
 
     cfy.snapshots.upload([local_snapshot_path, '-s', snapshot_id])
     restore_snapshot(new_manager, snapshot_id, cfy, logger)
-
-    # Wait for the tasks that run after the restore execution to finish
-    sleep(20)
 
     # Before upgrading the agents, the old agent should still be up
     old_manager.use()
