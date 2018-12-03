@@ -34,7 +34,7 @@ setup(
         'nose',
         'retrying==1.3.3',
         'Jinja2==2.10',
-        'pywinrm==0.0.3',
+        'pywinrm==0.3.0',
         'fasteners==0.13.0',
         # Wagon version has been left out since it better reflects the user
         # use-case
