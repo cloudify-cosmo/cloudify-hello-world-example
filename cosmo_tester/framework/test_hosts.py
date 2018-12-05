@@ -992,6 +992,20 @@ class DistributedInstallationCloudifyManager(TestHosts):
         for manager in self.instances:
             manager.image_name = self._attributes.default_linux_image_name
 
+        # CA certificates
+        self.ca_cert_path = str(os.path.join(self._tmpdir, 'root.crt'))
+        self.ca_key_path = str(os.path.join(self._tmpdir, 'root.key'))
+
+        # PostgreSQL Server certificates
+        self.server_cert_path = str(os.path.join(self._tmpdir, 'server.crt'))
+        self.server_key_path = str(os.path.join(self._tmpdir, 'server.key'))
+
+        # PostgreSQL Client certificates
+        self.postgresql_cert_path = str(os.path.join(self._tmpdir,
+                                                     'postgresql.crt'))
+        self.postgresql_key_path = str(os.path.join(self._tmpdir,
+                                                    'postgresql.key'))
+
     @property
     def database(self):
         return self.instances[0]
@@ -1000,11 +1014,89 @@ class DistributedInstallationCloudifyManager(TestHosts):
     def manager(self):
         return self.instances[1]
 
+    def _create_ssl_certificates_on_instances(self):
+        # Generating ROOT CA certificate
+        util.generate_ca_cert(self.ca_cert_path, self.ca_key_path)
+
+        # Generating server certificates
+        util._generate_ssl_certificate([self.database.private_ip_address],
+                                       self.database.private_ip_address,
+                                       self.server_cert_path,
+                                       self.server_key_path,
+                                       self.ca_cert_path,
+                                       self.ca_key_path)
+
+        # Required instead of implementing a deep-copy function with huge
+        # overhead
+        self.database.additional_install_config['postgresql_server'].update({
+                'ssl_enabled': 'true'
+        })
+        self.database.additional_install_config.update({
+            'ssl_inputs': {
+                'postgresql_server_cert_path': '/tmp/server.crt',
+                'postgresql_server_key_path': '/tmp/server.key',
+                'ca_cert_path': '/tmp/root.crt',
+                'ca_key_path': '/tmp/root.key'
+            }
+        })
+
+        # Generating client certificates for every client instance
+        certificates_files_to_copy = []
+        for instance in self.instances[1:]:
+            cert_path, key_path = util._generate_ssl_certificate(
+                [instance.private_ip_address],
+                instance.private_ip_address,
+                self.postgresql_cert_path + str(instance.index),
+                self.postgresql_key_path + str(instance.index),
+                self.ca_cert_path,
+                self.ca_key_path)
+            certificates_files_to_copy.append(
+                (
+                    cert_path,
+                    '/tmp/postgresql{0}.crt'.format(instance.index)
+                )
+            )
+            certificates_files_to_copy.append(
+                (
+                    key_path,
+                    '/tmp/postgresql{0}.key'.format(instance.index)
+                )
+            )
+            # Required instead of implementing a deep-copy function with huge
+            # overhead
+            instance.additional_install_config['postgresql_client'].update({
+                'ssl_enabled': 'true'
+            })
+            instance.additional_install_config.update({
+                'ssl_inputs': {
+                    'postgresql_client_cert_path':
+                        '/tmp/postgresql{0}.crt'.format(instance.index),
+                    'postgresql_client_key_path':
+                        '/tmp/postgresql{0}.key'.format(instance.index),
+                    'ca_cert_path': '/tmp/root.crt',
+                    'ca_key_path': '/tmp/root.key'
+                }
+            })
+
+        # Copying the CA certificate and key, server certificate and key
+        # and all the clients certificates and keys to all the servers
+        # Each certificate will be used with its relevant instance
+        certificates_files_to_copy += [
+            (self.ca_cert_path, '/tmp/root.crt'),
+            (self.ca_key_path, '/tmp/root.key'),
+            (self.server_cert_path, '/tmp/server.crt'),
+            (self.server_key_path, '/tmp/server.key')
+        ]
+        for instance in self.instances:
+            for src, dst in certificates_files_to_copy:
+                instance.put_remote_file(dst, src)
+
     def _get_server_flavor(self):
         return self._attributes.medium_flavor_name
 
     def _bootstrap_managers(self):
         super(DistributedInstallationCloudifyManager, self).\
             _bootstrap_managers()
+        self._create_ssl_certificates_on_instances()
         self.database.bootstrap()
         self.manager.bootstrap()

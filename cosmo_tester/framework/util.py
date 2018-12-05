@@ -26,7 +26,11 @@ import retrying
 import yaml
 import errno
 import platform
+import shlex
+import glob
+import socket
 from os import makedirs
+from tempfile import mkstemp
 
 from openstack import connection as openstack_connection
 from path import path, Path
@@ -34,6 +38,8 @@ from path import path, Path
 from cloudify_cli import env as cli_env
 from cloudify_rest_client import CloudifyClient
 from cloudify_cli.constants import CLOUDIFY_TENANT_HEADER
+
+from .exceptions import ProcessExecutionError
 
 import cosmo_tester
 from cosmo_tester import resources
@@ -459,3 +465,220 @@ def mkdirs(folder_path):
 
 def is_redhat():
     return 'redhat' in platform.platform()
+
+
+def run(command, retries=0, stdin=b'', ignore_failures=False,
+        globx=False, shell=False, env=None, stdout=None, logger=logging):
+    def subprocess_preexec():
+        cfy_umask = 0022
+        os.umask(cfy_umask)
+    if isinstance(command, str) and not shell:
+        command = shlex.split(command)
+    stderr = subprocess.PIPE
+    stdout = stdout or subprocess.PIPE
+    if globx:
+        glob_command = []
+        for arg in command:
+            glob_command.append(glob.glob(arg))
+        command = glob_command
+    logger.debug('Running: {0}'.format(command))
+    proc = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=stdout,
+                            stderr=stderr, shell=shell, env=env,
+                            preexec_fn=subprocess_preexec)
+    proc.aggr_stdout, proc.aggr_stderr = proc.communicate(input=stdin)
+    if proc.returncode != 0:
+        command_str = ' '.join(command)
+        if retries:
+            logger.warn('Failed running command: {0}. Retrying. '
+                        '({1} left)'.format(command_str, retries))
+            proc = run(command, retries - 1)
+        elif not ignore_failures:
+            msg = 'Failed running command: {0} ({1}).'.format(
+                command_str, proc.aggr_stderr)
+            raise ProcessExecutionError(msg, proc.returncode)
+    return proc
+
+
+def sudo(command, *args, **kwargs):
+    if isinstance(command, str):
+        command = shlex.split(command)
+    if 'env' in kwargs:
+        command = ['sudo', '-E'] + command
+    else:
+        command.insert(0, 'sudo')
+    return run(command=command, *args, **kwargs)
+
+
+def remove(path_to_remove, ignore_failure=False, logger=logging):
+    logger.debug('Removing {0}...'.format(path_to_remove))
+    # sudo(['rm', '-rf', path_to_remove], ignore_failures=ignore_failure)
+
+
+def write_to_tempfile(contents, json_dump=False):
+    fd, file_path = mkstemp()
+    os.close(fd)
+    if json_dump:
+        contents = json.dumps(contents)
+
+    with open(file_path, 'w') as f:
+        f.write(contents)
+
+    return file_path
+
+
+CSR_CONFIG_TEMPLATE = """
+[req]
+distinguished_name = req_distinguished_name
+req_extensions = server_req_extensions
+[ server_req_extensions ]
+subjectAltName={metadata}
+[ req_distinguished_name ]
+commonName = _common_name # ignored, _default is used instead
+commonName_default = {cn}
+"""
+
+
+@contextmanager
+def _csr_config(cn, metadata=None, logger=logging):
+    """Prepare a config file for creating a ssl CSR.
+
+    :param cn: the subject commonName
+    :param metadata: string to use as the subjectAltName, should be formatted
+                     like "IP:1.2.3.4,DNS:www.com"
+    """
+    logger.debug('Creating csr-config file with:\nCN:{0}\nMetaData:{1}'.format(
+        cn, metadata
+    ))
+    csr_config = CSR_CONFIG_TEMPLATE.format(cn=cn, metadata=metadata)
+    temp_config_path = write_to_tempfile(csr_config)
+
+    try:
+        yield temp_config_path
+    finally:
+        remove(temp_config_path)
+
+
+def _format_ips(ips):
+    altnames = set(ips)
+
+    # Ensure we trust localhost
+    altnames.add('127.0.0.1')
+    altnames.add('localhost')
+
+    subject_altdns = [
+        'DNS:{name}'.format(name=name)
+        for name in altnames
+    ]
+    subject_altips = []
+    for name in altnames:
+        ip_address = False
+        try:
+            socket.inet_pton(socket.AF_INET, name)
+            ip_address = True
+        except socket.error:
+            # Not IPv4
+            pass
+        try:
+            socket.inet_pton(socket.AF_INET6, name)
+            ip_address = True
+        except socket.error:
+            # Not IPv6
+            pass
+        if ip_address:
+            subject_altips.append('IP:{name}'.format(name=name))
+
+    cert_metadata = ','.join([
+        ','.join(subject_altdns),
+        ','.join(subject_altips),
+    ])
+    return cert_metadata
+
+
+def _generate_ssl_certificate(ips,
+                              cn,
+                              cert_path,
+                              key_path,
+                              sign_cert=None,
+                              sign_key=None,
+                              sign_key_password=None,
+                              logger=logging):
+    """Generate a public SSL certificate and a private SSL key
+
+    :param ips: the ips (or names) to be used for subjectAltNames
+    :type ips: List[str]
+    :param cn: the subject commonName for the new certificate
+    :type cn: str
+    :param cert_path: path to save the new certificate to
+    :type cert_path: str
+    :param key_path: path to save the key for the new certificate to
+    :type key_path: str
+    :param sign_cert: path to the signing cert (self-signed by default)
+    :type sign_cert: str
+    :param sign_key: path to the signing cert's key (self-signed by default)
+    :type sign_key: str
+    :return: The path to the cert and key files on the manager
+    """
+    # Remove duplicates from ips
+    subject_altnames = _format_ips(ips)
+    logger.debug(
+        'Generating SSL certificate {0} and key {1} with subjectAltNames: {2}'
+        .format(cert_path, key_path, subject_altnames)
+    )
+
+    csr_path = '{0}.csr'.format(cert_path)
+
+    with _csr_config(cn, subject_altnames) as conf_path:
+        run([
+            'openssl', 'req',
+            '-newkey', 'rsa:2048',
+            '-nodes',
+            '-batch',
+            '-sha256',
+            '-config', conf_path,
+            '-out', csr_path,
+            '-keyout', key_path,
+        ])
+        x509_command = [
+            'openssl', 'x509',
+            '-days', '3650',
+            '-sha256',
+            '-req', '-in', csr_path,
+            '-out', cert_path,
+            '-extensions', 'server_req_extensions',
+            '-extfile', conf_path
+        ]
+
+        if sign_cert and sign_key:
+            x509_command += [
+                '-CA', sign_cert,
+                '-CAkey', sign_key,
+                '-CAcreateserial'
+            ]
+            if sign_key_password:
+                x509_command += [
+                    '-passin', 'pass:{0}'.format(sign_key_password)
+                ]
+        else:
+            x509_command += [
+                '-signkey', key_path
+            ]
+        run(x509_command)
+        remove(csr_path)
+
+    logger.debug('Generated SSL certificate: {0} and key: {1}'.format(
+        cert_path, key_path
+    ))
+    return cert_path, key_path
+
+
+def generate_ca_cert(ca_cert_path, ca_key_path):
+    run([
+        'openssl', 'req',
+        '-x509',
+        '-nodes',
+        '-newkey', 'rsa:2048',
+        '-days', '3650',
+        '-batch',
+        '-out', ca_cert_path,
+        '-keyout', ca_key_path
+    ])

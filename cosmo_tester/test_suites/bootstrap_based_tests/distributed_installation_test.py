@@ -37,24 +37,28 @@ def database_and_manager(cfy, ssh_key, module_tmpdir, attributes, logger):
     # The preconfigure callback populates the files structure prior to the BS
     def _preconfigure_callback_manager_and_database(database_and_manager):
         # Updating the database VM first
-        database_and_manager[0].additional_install_config = {
+        database_and_manager[0].additional_install_config.update({
             'sanity': {'skip_sanity': 'true'},
-            'postgresql_server': {'enable_remote_connections': 'true'},
+            'postgresql_server': {
+                'enable_remote_connections': 'true',
+                'postgres_password': 'postgres'
+            },
             'services_to_install': [
                 'database_service'
             ]
-        }
-        database_and_manager[1].additional_install_config = {
+        })
+        database_and_manager[1].additional_install_config.update({
             'sanity': {'skip_sanity': 'true'},
             'postgresql_client': {
-                'host': str(database_and_manager[0].private_ip_address)
+                'host': str(database_and_manager[0].private_ip_address),
+                'postgres_password': 'postgres'
             },
             'services_to_install': [
                 'queue_service',
                 'composer_service',
                 'manager_service'
             ]
-        }
+        })
 
     hosts = DistributedInstallationCloudifyManager(cfy=cfy,
                                                    ssh_key=ssh_key,
