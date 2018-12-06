@@ -136,7 +136,7 @@ def test_sanity_scenario(managers,
     # Upload and restore snapshot to manager3
     logger.info('Uploading and restoring snapshot')
     upload_snapshot(manager3, local_snapshot_path, snapshot_id, logger)
-    restore_snapshot(manager3, snapshot_id, cfy, logger)
+    restore_snapshot(manager3, snapshot_id, cfy, logger, change_password=False)
 
     verify_services_status(manager3, logger)
 

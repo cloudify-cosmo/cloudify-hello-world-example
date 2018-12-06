@@ -305,7 +305,8 @@ def retry_if_not_failed(exception):
     wait_fixed=10000,
     retry_on_exception=retry_if_not_failed,
 )
-def wait_for_execution(manager, execution, logger, tenant=None):
+def wait_for_execution(manager, execution, logger, tenant=None,
+                       change_password=True):
     _log(
         'Getting workflow execution [id={execution}]'.format(
             execution=execution['id'],
@@ -317,7 +318,8 @@ def wait_for_execution(manager, execution, logger, tenant=None):
         with set_client_tenant(manager, tenant):
             execution = manager.client.executions.get(execution['id'])
     except UserUnauthorizedError:
-        if manager_supports_users_in_snapshot_creation(manager):
+        if (manager_supports_users_in_snapshot_creation(manager) and
+                change_password):
             # This will happen on a restore with modified users
             change_rest_client_password(manager, CHANGED_ADMIN_PASSWORD)
         raise
@@ -436,7 +438,7 @@ def upload_snapshot(manager, local_path, snapshot_id, logger):
 def restore_snapshot(manager, snapshot_id, cfy, logger,
                      restore_certificates=False, force=False,
                      wait_for_post_restore_commands=True,
-                     wait_timeout=20):
+                     wait_timeout=20, change_password=True):
     # Show the snapshots, to aid troubleshooting on failures
     manager.use()
     cfy.snapshots.list()
@@ -451,7 +453,8 @@ def restore_snapshot(manager, snapshot_id, cfy, logger,
         wait_for_execution(
             manager,
             restore_execution,
-            logger)
+            logger,
+            change_password)
     except ExecutionFailed:
         # See any errors
         cfy.executions.list(['--include-system-workflows'])

@@ -147,7 +147,8 @@ def test_multiple_networks(managers,
     new_manager.use()
 
     upload_snapshot(new_manager, local_snapshot_path, snapshot_id, logger)
-    restore_snapshot(new_manager, snapshot_id, cfy, logger)
+    restore_snapshot(new_manager, snapshot_id, cfy, logger,
+                     change_password=False)
 
     upgrade_agents(cfy, new_manager, logger)
     delete_manager(old_manager, logger)
