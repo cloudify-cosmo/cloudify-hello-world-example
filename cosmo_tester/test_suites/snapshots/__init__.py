@@ -454,7 +454,7 @@ def restore_snapshot(manager, snapshot_id, cfy, logger,
             manager,
             restore_execution,
             logger,
-            change_password)
+            change_password=change_password)
     except ExecutionFailed:
         # See any errors
         cfy.executions.list(['--include-system-workflows'])

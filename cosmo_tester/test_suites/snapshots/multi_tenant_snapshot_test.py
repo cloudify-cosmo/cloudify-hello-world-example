@@ -98,7 +98,9 @@ def test_restore_snapshot_and_agents_upgrade_multitenant(
     }
 
     # Credentials tests only apply to 4.2 and later
-    if manager_supports_users_in_snapshot_creation(old_manager):
+    should_change_pswd = manager_supports_users_in_snapshot_creation(
+        old_manager)
+    if should_change_pswd:
         prepare_credentials_tests(cfy, logger, old_manager)
 
     create_snapshot(old_manager, SNAPSHOT_ID, attributes, logger)
@@ -106,7 +108,8 @@ def test_restore_snapshot_and_agents_upgrade_multitenant(
     upload_snapshot(new_manager, local_snapshot_path, SNAPSHOT_ID, logger)
 
     restore_snapshot(new_manager, SNAPSHOT_ID, cfy, logger,
-                     wait_for_post_restore_commands=False)
+                     wait_for_post_restore_commands=False,
+                     change_password=should_change_pswd)
 
     if manager_supports_users_in_snapshot_creation(old_manager):
         update_credentials(cfy, logger, new_manager)
