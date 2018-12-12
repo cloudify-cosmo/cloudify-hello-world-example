@@ -181,21 +181,25 @@ def test_failover(cfy, hosts, ha_hello_worlds, logger):
     _test_hellos(ha_hello_worlds)
 
 
-def test_remove_manager_from_cluster(cfy, hosts, ha_hello_worlds, logger):
+def test_remove_manager_from_cluster(cfy, hosts, ha_hello_worlds, logger,
+                                     delete_profile=True):
     ha_helper.set_active(hosts.instances[1], cfy, logger)
-    ha_helper.delete_active_profile()
+    if delete_profile:
+        ha_helper.delete_active_profile()
 
     expected_master = hosts.instances[0]
     nodes_to_check = list(hosts.instances)
     for manager in hosts.instances[1:]:
-        manager.use()
+        if delete_profile:
+            manager.use()
         logger.info('Removing the manager %s from HA cluster',
                     manager.ip_address)
         cfy.cluster.nodes.remove(manager.ip_address)
         nodes_to_check.remove(manager)
         ha_helper.wait_leader_election(nodes_to_check, logger)
 
-    ha_helper.delete_active_profile()
+    if delete_profile:
+        ha_helper.delete_active_profile()
     expected_master.use()
 
     ha_helper.verify_nodes_status(expected_master, cfy, logger)

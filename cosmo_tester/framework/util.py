@@ -594,14 +594,14 @@ def _format_ips(ips):
     return cert_metadata
 
 
-def _generate_ssl_certificate(ips,
-                              cn,
-                              cert_path,
-                              key_path,
-                              sign_cert=None,
-                              sign_key=None,
-                              sign_key_password=None,
-                              logger=logging):
+def generate_ssl_certificate(ips,
+                             cn,
+                             cert_path,
+                             key_path,
+                             sign_cert=None,
+                             sign_key=None,
+                             sign_key_password=None,
+                             logger=logging):
     """Generate a public SSL certificate and a private SSL key
 
     :param ips: the ips (or names) to be used for subjectAltNames

@@ -92,6 +92,10 @@ def test_sanity_scenario(managers,
     manager2 = managers[1]
     manager3 = managers[2]
 
+    manager1.use()
+    manager2.use()
+    manager3.use()
+
     logger.info('Cfy version')
     cfy('--version')
 
@@ -153,16 +157,19 @@ def test_sanity_scenario(managers,
     nodecellar.uninstall()
 
 
-def _create_secrets(cfy, logger, attributes, manager1):
+def _create_secrets(cfy, logger, attributes, manager1, visibility=TENANT_NAME):
     logger.info('Creating secret agent_user as blueprint input')
-    cfy.secrets.create('agent_user', '-s', attributes.default_linux_username)
+    cfy.secrets.create('agent_user', '-s', attributes.default_linux_username,
+                       visibility=visibility)
 
     logger.info('Creating secret agent_private_key_path as blueprint input')
     cfy.secrets.create('agent_private_key_path', '-s',
-                       manager1.remote_private_key_path)
+                       manager1.remote_private_key_path,
+                       visibility=visibility)
 
     logger.info('Creating secret host_ip as blueprint input')
-    cfy.secrets.create('host_ip', '-s', manager1.ip_address)
+    cfy.secrets.create('host_ip', '-s', manager1.ip_address,
+                       visibility=visibility)
 
 
 def _create_and_add_user_to_tenant(cfy, logger):

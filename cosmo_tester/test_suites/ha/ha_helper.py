@@ -103,14 +103,19 @@ def delete_active_profile():
         os.remove(active_profile_path)
 
 
-def setup_cluster(hosts, cfy, logger):
-    manager1 = hosts[0]
+def start_cluster(manager, cfy):
     delete_active_profile()
-    manager1.use()
+    manager.use()
 
     cfy.cluster.start(timeout=600,
-                      cluster_host_ip=manager1.private_ip_address,
-                      cluster_node_name=manager1.ip_address)
+                      cluster_host_ip=manager.private_ip_address,
+                      cluster_node_name=manager.ip_address)
+
+    return manager
+
+
+def setup_cluster(hosts, cfy, logger):
+    manager1 = start_cluster(hosts[0], cfy)
 
     for manager in hosts[1:]:
         manager.use()

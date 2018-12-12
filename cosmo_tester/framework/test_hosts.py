@@ -31,6 +31,7 @@ from fabric import api as fabric_api
 from fabric import context_managers as fabric_context_managers
 
 from cosmo_tester.framework import util
+from ..test_suites.ha.ha_helper import start_cluster
 
 from cloudify_cli.constants import DEFAULT_TENANT_NAME
 
@@ -717,6 +718,11 @@ class CloudifyDistributed_Manager(_CloudifyManager):
     image_name = get_latest_manager_image_name()
 
 
+class CloudifyDistributed_Manager_ClusterJoined(CloudifyDistributed_Manager):
+    def verify_services_are_running(self):
+        pass
+
+
 class CloudifyDistributed_Database(_CloudifyDatabaseOnly):
     branch_name = 'master'
     image_name_attribute = 'cloudify_manager_image_name_prefix'
@@ -734,12 +740,16 @@ IMAGES = {
     '4.5': Cloudify4_5Manager,
     'master': CloudifyMasterManager,
     'master_distributed_manager': CloudifyDistributed_Manager,
+    'master_distributed_manager_cluster_joined':
+        CloudifyDistributed_Manager_ClusterJoined,
     'master_distributed_database': CloudifyDistributed_Database,
     'centos': VM,
 }
 
 CURRENT_MANAGER = IMAGES['master']
 CURRENT_DISTRIBUTED_MANAGER = IMAGES['master_distributed_manager']
+CURRENT_DISTRIBUTED_MANAGER_CLUSTER_JOINED = \
+    IMAGES['master_distributed_manager_cluster_joined']
 CURRENT_DISTRIBUTED_DATABASE = IMAGES['master_distributed_database']
 
 
@@ -972,7 +982,6 @@ class BootstrapBasedCloudifyManagers(TestHosts):
 
         for manager in self.instances:
             manager.bootstrap()
-            manager.use()
 
 
 class DistributedInstallationCloudifyManager(TestHosts):
@@ -980,17 +989,38 @@ class DistributedInstallationCloudifyManager(TestHosts):
     Bootstraps a Cloudify Manager with an external PostgreSQL Database
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, cluster=False, sanity=False, *args, **kwargs):
+        self.cluster = cluster
+        self.sanity = sanity
+
         instances = [
             CURRENT_DISTRIBUTED_DATABASE(),
             CURRENT_DISTRIBUTED_MANAGER(upload_plugins=True)
         ]
+        if cluster:
+            instances += [
+                CURRENT_DISTRIBUTED_MANAGER_CLUSTER_JOINED(
+                    upload_plugins=False),
+                CURRENT_DISTRIBUTED_MANAGER_CLUSTER_JOINED(
+                    upload_plugins=False)
+            ]
+            if sanity:
+                instances += [
+                    CURRENT_MANAGER(upload_plugins=True)
+                ]
         super(DistributedInstallationCloudifyManager, self).__init__(
             instances=instances,
             *args,
             **kwargs)
         for manager in self.instances:
             manager.image_name = self._attributes.default_linux_image_name
+
+        self.database = self.instances[0]
+        self.manager = self.instances[1]
+        if cluster:
+            self.joining_managers = self.instances[2:4]
+        if sanity:
+            self.sanity_manager = self.instances[4]
 
         # CA certificates
         self.ca_cert_path = str(os.path.join(self._tmpdir, 'root.crt'))
@@ -1000,31 +1030,23 @@ class DistributedInstallationCloudifyManager(TestHosts):
         self.server_cert_path = str(os.path.join(self._tmpdir, 'server.crt'))
         self.server_key_path = str(os.path.join(self._tmpdir, 'server.key'))
 
-        # PostgreSQL Client certificates
+        # PostgreSQL Clients certificates
         self.postgresql_cert_path = str(os.path.join(self._tmpdir,
                                                      'postgresql.crt'))
         self.postgresql_key_path = str(os.path.join(self._tmpdir,
                                                     'postgresql.key'))
-
-    @property
-    def database(self):
-        return self.instances[0]
-
-    @property
-    def manager(self):
-        return self.instances[1]
 
     def _create_ssl_certificates_on_instances(self):
         # Generating ROOT CA certificate
         util.generate_ca_cert(self.ca_cert_path, self.ca_key_path)
 
         # Generating server certificates
-        util._generate_ssl_certificate([self.database.private_ip_address],
-                                       self.database.private_ip_address,
-                                       self.server_cert_path,
-                                       self.server_key_path,
-                                       self.ca_cert_path,
-                                       self.ca_key_path)
+        util.generate_ssl_certificate([self.database.private_ip_address],
+                                      self.database.private_ip_address,
+                                      self.server_cert_path,
+                                      self.server_key_path,
+                                      self.ca_cert_path,
+                                      self.ca_key_path)
 
         # Required instead of implementing a deep-copy function with huge
         # overhead
@@ -1042,8 +1064,9 @@ class DistributedInstallationCloudifyManager(TestHosts):
 
         # Generating client certificates for every client instance
         certificates_files_to_copy = []
-        for instance in self.instances[1:]:
-            cert_path, key_path = util._generate_ssl_certificate(
+        cluster_instances = [self.manager] + self.joining_managers
+        for instance in cluster_instances:
+            cert_path, key_path = util.generate_ssl_certificate(
                 [instance.private_ip_address],
                 instance.private_ip_address,
                 self.postgresql_cert_path + str(instance.index),
@@ -1087,7 +1110,8 @@ class DistributedInstallationCloudifyManager(TestHosts):
             (self.server_cert_path, '/tmp/server.crt'),
             (self.server_key_path, '/tmp/server.key')
         ]
-        for instance in self.instances:
+        cluster_instances += [self.database]
+        for instance in cluster_instances:
             for src, dst in certificates_files_to_copy:
                 instance.put_remote_file(dst, src)
 
@@ -1100,3 +1124,10 @@ class DistributedInstallationCloudifyManager(TestHosts):
         self._create_ssl_certificates_on_instances()
         self.database.bootstrap()
         self.manager.bootstrap()
+        if self.cluster:
+            self.manager.use()
+            start_cluster(self.manager, self.manager._cfy)
+            for joining_manager in self.joining_managers:
+                joining_manager.bootstrap()
+            if self.sanity:
+                self.sanity_manager.bootstrap()
