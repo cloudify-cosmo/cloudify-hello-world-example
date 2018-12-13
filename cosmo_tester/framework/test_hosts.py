@@ -941,7 +941,7 @@ class TestHosts(object):
                     + <index_number_in_instances_list>__<terraform_id>__
             """
             prefix = '{}__'.format(instance.__class__.__name__)
-            if self._request:
+            if self._request and hasattr(self._request, 'param'):
                 prefix += '{}__'.format(self._request.param)
             prefix += 'index_{}__'.format(instance_index)
             return prefix
