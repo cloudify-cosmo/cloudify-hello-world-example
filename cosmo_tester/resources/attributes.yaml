@@ -22,6 +22,7 @@ cloudify_manager_install_rpm_url: ''
 cloudify_manager_latest_image: ''
 cloudify_manager_image_name_prefix: cloudify-manager-premium
 cloudify_manager_4_5_image_name: cloudify-manager-premium-4.5
+cloudify_manager_4_4_image_name: cloudify-manager-premium-4.4
 cloudify_manager_4_3_1_image_name: cloudify-manager-premium-4.3.1
 cloudify_manager_4_2_image_name: cloudify-manager-premium-4.2
 cloudify_manager_4_1_image_name: cloudify-manager-premium-4.1
