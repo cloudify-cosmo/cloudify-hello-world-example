@@ -682,3 +682,46 @@ def generate_ca_cert(ca_cert_path, ca_key_path):
         '-out', ca_cert_path,
         '-keyout', ca_key_path
     ])
+
+
+class ExecutionWaiting(Exception):
+    """
+    raised by `wait_for_execution` if it should be retried
+    """
+
+
+class ExecutionFailed(Exception):
+    """
+    raised by `wait_for_execution` if a bad state is reached
+    """
+
+
+def retry_if_not_failed(exception):
+    return not isinstance(exception, ExecutionFailed)
+
+
+@retrying.retry(
+    stop_max_delay=5 * 60 * 1000,
+    wait_fixed=10000,
+    retry_on_exception=retry_if_not_failed,
+)
+def wait_for_execution(manager, execution, logger):
+    logger.info(
+        'Getting workflow execution [id={execution}]'.format(
+            execution=execution['id'],
+        )
+    )
+    execution = manager.client.executions.get(execution['id'])
+    logger.info('- execution.status = %s', execution.status)
+    if execution.status not in execution.END_STATES:
+        raise ExecutionWaiting(execution.status)
+    if execution.status != execution.TERMINATED:
+        logger.warning('Execution failed')
+        raise ExecutionFailed(
+            '{status}: {error}'.format(
+                status=execution.status,
+                error=execution['error'],
+            )
+        )
+    logger.info('Execution complete')
+    return execution

@@ -1,0 +1,43 @@
+tosca_definitions_version: cloudify_dsl_1_3
+
+imports:
+  - https://raw.githubusercontent.com/cloudify-cosmo/cloudify-manager/master/resources/rest-service/cloudify/types/types.yaml
+
+node_templates:
+  fakevm:
+    type: cloudify.nodes.Compute
+    properties:
+      ip: 192.0.2.45
+      agent_config:
+        install_method: provided
+        user: nouser
+        password: nopass
+    instances:
+      deploy: 2
+
+  fakeapp1:
+    type: cloudify.nodes.Root
+    relationships:
+      - type: cloudify.relationships.contained_in
+        target: fakevm
+
+  fakeplatformthing1:
+    type: cloudify.nodes.Root
+    relationships:
+      - type: cloudify.relationships.depends_on
+        target: fakevm
+
+  fakeappconfig1:
+    type: cloudify.nodes.Root
+    relationships:
+      - type: cloudify.relationships.depends_on
+        target: fakeapp1
+
+  fakevm2:
+    type: cloudify.nodes.Compute
+    properties:
+      ip: 192.0.2.45
+      agent_config:
+        install_method: provided
+        user: nouser
+        password: nopass
