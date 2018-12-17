@@ -14,7 +14,6 @@
 #    * limitations under the License.
 
 import base64
-from contextlib import contextmanager
 import hashlib
 import hmac
 import json
@@ -32,9 +31,10 @@ from cosmo_tester.framework.util import (
     assert_snapshot_created,
     create_rest_client,
     is_community,
+    set_client_tenant,
 )
 from cloudify_cli.utils import get_deployment_environment_execution
-from cloudify_cli.constants import CLOUDIFY_TENANT_HEADER, CREATE_DEPLOYMENT
+from cloudify_cli.constants import CREATE_DEPLOYMENT
 from cloudify_rest_client.exceptions import UserUnauthorizedError
 
 
@@ -689,22 +689,6 @@ def verify_services_status(manager, logger):
                 logger.info(logs)
                 raise Exception('Service {0} is in status {1}'.
                                 format(instance, instance['state']))
-
-
-@contextmanager
-def set_client_tenant(manager, tenant):
-    if tenant:
-        original = manager.client._client.headers[CLOUDIFY_TENANT_HEADER]
-
-        manager.client._client.headers[CLOUDIFY_TENANT_HEADER] = tenant
-
-    try:
-        yield
-    except Exception:
-        raise
-    finally:
-        if tenant:
-            manager.client._client.headers[CLOUDIFY_TENANT_HEADER] = original
 
 
 def upload_test_plugin(manager, logger, tenant=None):
