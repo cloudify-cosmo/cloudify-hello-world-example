@@ -240,7 +240,6 @@ def test_distributed_installation_sanity(distributed_installation,
 
     manager1.use()
     verify_nodes_status(manager1, cfy, logger)
-    manager_aio.use()
 
     logger.info('Cfy version')
     cfy('--version')
@@ -252,7 +251,7 @@ def test_distributed_installation_sanity(distributed_installation,
 
     _set_sanity_user(cfy, manager1, logger)
 
-    # Creating secrets
+    # Creating secrets with 'tenant' visibility
     _create_secrets(cfy, logger, attributes, manager1)
 
     distributed_nodecellar.upload_and_verify_install()
@@ -260,10 +259,7 @@ def test_distributed_installation_sanity(distributed_installation,
     _set_admin_user(cfy, manager1, logger)
 
     # Simulate failover (manager2 will be the new cluster master)
-    logger.info('Setting replica manager')
-    _set_admin_user(cfy, manager2, logger)
     set_active(manager2, cfy, logger)
-    # time.sleep(30)
 
     # Create and download snapshots from the new cluster master (manager2)
     snapshot_id = 'SNAPSHOT_ID'
@@ -327,7 +323,6 @@ def distributed_ha_hello_worlds(cfy, distributed_installation, attributes,
 @pytest.fixture(scope='function')
 def distributed_nodecellar(cfy, distributed_installation, attributes,
                            ssh_key, tmpdir, logger):
-    # Uploading to the manager not the database
     manager = distributed_installation.manager
     manager.use()
     tenant = prepare_and_get_test_tenant(TENANT_NAME, manager, cfy)

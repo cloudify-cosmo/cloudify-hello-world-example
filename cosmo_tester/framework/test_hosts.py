@@ -1070,7 +1070,9 @@ class DistributedInstallationCloudifyManager(TestHosts):
 
         # Generating client certificates for every client instance
         certificates_files_to_copy = []
-        cluster_instances = [self.manager] + self.joining_managers
+        cluster_instances = [self.manager]
+        if self.cluster:
+            cluster_instances += self.joining_managers
         for instance in cluster_instances:
             cert_path, key_path = util.generate_ssl_certificate(
                 [instance.private_ip_address],
