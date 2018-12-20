@@ -243,10 +243,7 @@ def get_cli_package_url(platform):
 
 
 def get_manager_install_rpm_url():
-    return os.environ.get(
-        'MANAGER_INSTALL_RPM_URL',
-        yaml.load(_get_package_url('manager-install-rpm.yaml'))
-    )
+    return yaml.load(_get_package_url('manager-install-rpm.yaml'))
 
 
 def _get_contents_from_github(repo, path, auth=None):
