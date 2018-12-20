@@ -173,13 +173,29 @@ def create_rest_client(
 
 def get_plugin_wagon_urls():
     """Get plugin wagon urls from the cloudify-versions repository."""
-    plugin_urls_location = (
-        'https://raw.githubusercontent.com/cloudify-cosmo/'
-        'cloudify-versions/{branch}/packages-urls/plugin-urls.yaml'.format(
-                branch=os.environ.get('BRANCH_NAME_CORE', 'master'),
-        )
-    )
-    return yaml.load(requests.get(plugin_urls_location).text)['plugins']
+
+    def _fetch(branch):
+        plugin_urls_location = url_format.format(branch=branch)
+        return requests.get(plugin_urls_location)
+
+    branch = os.environ.get('BRANCH_NAME_CORE', 'master')
+    url_format = 'https://raw.githubusercontent.com/cloudify-cosmo/' \
+                 'cloudify-versions/{branch}/packages-urls/plugin-urls.yaml'
+    response = _fetch(branch=branch)
+    if response.status_code != 200:
+        if branch == 'master':
+            raise RuntimeError(
+                'Fetching the versions yaml from the {0} branch of '
+                '"cloudify-versions" failed. Status was {1}'.format(
+                    branch, response.status_code))
+        response = _fetch(branch='master')
+        if response.status_code != 200:
+            raise RuntimeError(
+                'Fetching the versions yaml from the master branch of '
+                '"cloudify-versions" failed. '
+                'Status was {0}'.format(response.status_code))
+
+    return yaml.load(response.text)['plugins']
 
 
 def test_cli_package_url(url):
