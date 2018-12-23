@@ -92,9 +92,9 @@ def test_sanity_scenario(managers,
     manager2 = managers[1]
     manager3 = managers[2]
 
-    manager1.use()
-    manager2.use()
     manager3.use()
+    manager2.use()
+    manager1.use()
 
     logger.info('Cfy version')
     cfy('--version')
