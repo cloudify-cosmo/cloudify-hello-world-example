@@ -151,8 +151,8 @@ def test_failover(cfy, hosts, ha_hello_worlds, logger):
         with manager.ssh() as fabric:
             fabric.run('sudo systemctl stop nginx')
         # wait for checks to notice the service failure
-        time.sleep(20)
-        ha_helper.wait_leader_election(hosts.instances, logger)
+        ha_helper.wait_leader_election(hosts.instances, logger,
+                                       wait_before_check=20)
         cfy.cluster.nodes.list()
 
     ha_helper.verify_nodes_status(expected_master, cfy, logger)
@@ -181,25 +181,21 @@ def test_failover(cfy, hosts, ha_hello_worlds, logger):
     _test_hellos(ha_hello_worlds)
 
 
-def test_remove_manager_from_cluster(cfy, hosts, ha_hello_worlds, logger,
-                                     delete_profile=True):
+def test_remove_manager_from_cluster(cfy, hosts, ha_hello_worlds, logger):
     ha_helper.set_active(hosts.instances[1], cfy, logger)
-    if delete_profile:
-        ha_helper.delete_active_profile()
+    ha_helper.delete_active_profile()
 
     expected_master = hosts.instances[0]
     nodes_to_check = list(hosts.instances)
     for manager in hosts.instances[1:]:
-        if delete_profile:
-            manager.use()
+        manager.use()
         logger.info('Removing the manager %s from HA cluster',
                     manager.ip_address)
         cfy.cluster.nodes.remove(manager.ip_address)
         nodes_to_check.remove(manager)
         ha_helper.wait_leader_election(nodes_to_check, logger)
 
-    if delete_profile:
-        ha_helper.delete_active_profile()
+    ha_helper.delete_active_profile()
     expected_master.use()
 
     ha_helper.verify_nodes_status(expected_master, cfy, logger)
@@ -207,7 +203,6 @@ def test_remove_manager_from_cluster(cfy, hosts, ha_hello_worlds, logger,
 
 
 def test_fail_and_recover(cfy, hosts, logger):
-
     def _iptables(manager, block_nodes, flag='-A'):
         with manager.ssh() as _fabric:
             for other_host in block_nodes:

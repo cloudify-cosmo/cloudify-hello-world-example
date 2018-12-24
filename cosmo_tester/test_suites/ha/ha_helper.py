@@ -32,7 +32,9 @@ def set_active(manager, cfy, logger):
         wait_nodes_online([manager], logger)
 
 
-def wait_leader_election(managers, logger):
+def wait_leader_election(managers, logger, wait_before_check=None):
+    if wait_before_check:
+        time.sleep(wait_before_check)
     """Wait until there is a leader in the cluster"""
     def _is_there_a_leader(nodes):
         # we only consider there to be a leader, if it is online and

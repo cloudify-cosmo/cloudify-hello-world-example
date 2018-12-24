@@ -16,6 +16,7 @@
 import time
 
 import pytest
+import fabric.network
 
 from cosmo_tester.framework.examples.nodecellar import NodeCellarExample
 from cosmo_tester.framework.test_hosts import (
@@ -31,7 +32,9 @@ from cosmo_tester.test_suites.snapshots import (
 )
 from ..ha.ha_helper import (
     set_active,
-    verify_nodes_status
+    verify_nodes_status,
+    wait_leader_election,
+    wait_nodes_online
 )
 from sanity_scenario_test import (
     _create_and_add_user_to_tenant,
@@ -41,11 +44,8 @@ from sanity_scenario_test import (
     _set_sanity_user
 )
 from ..ha.ha_cluster_scenarios_test import (
-    test_delete_manager_node,
-    test_failover,
-    test_fail_and_recover,
-    test_remove_manager_from_cluster,
-    centos_hello_world
+    centos_hello_world,
+    _test_hellos
 )
 
 USER_NAME = "test_user"
@@ -198,12 +198,12 @@ def test_distributed_installation_ha(distributed_installation,
                 'database')
     verify_nodes_status(distributed_installation.instances[0], cfy, logger)
 
-    test_failover(cfy, distributed_installation, distributed_ha_hello_worlds,
-                  logger)
+    failover_cluster(cfy, distributed_installation,
+                     distributed_ha_hello_worlds, logger)
     reverse_cluster_test(cfy, distributed_installation, logger)
 
     # Test doesn't affect the cluster - no need to reverse
-    test_fail_and_recover(cfy, distributed_installation, logger)
+    fail_and_recover_cluster(distributed_installation, logger)
 
 
 @pytest.mark.parametrize('distributed_installation', ['cluster'],
@@ -211,9 +211,21 @@ def test_distributed_installation_ha(distributed_installation,
 def test_distributed_installation_ha_remove_from_cluster(
         distributed_installation, cfy, logger, distributed_ha_hello_worlds):
     verify_nodes_status(distributed_installation.instances[0], cfy, logger)
-    test_remove_manager_from_cluster(
-        cfy, distributed_installation, distributed_ha_hello_worlds,
-        logger, delete_profile=False)
+    set_active(distributed_installation.instances[1], cfy, logger)
+
+    expected_master = distributed_installation.instances[0]
+    nodes_to_check = list(distributed_installation.instances)
+    for manager in distributed_installation.instances[1:]:
+        logger.info('Removing the manager %s from HA cluster',
+                    manager.ip_address)
+        cfy.cluster.nodes.remove(manager.ip_address)
+        nodes_to_check.remove(manager)
+        wait_leader_election(nodes_to_check, logger)
+
+    expected_master.use()
+
+    verify_nodes_status(expected_master, cfy, logger)
+    _test_hellos(distributed_ha_hello_worlds)
 
 
 @pytest.mark.parametrize('distributed_installation', ['cluster'],
@@ -221,8 +233,18 @@ def test_distributed_installation_ha_remove_from_cluster(
 def test_distributed_installation_delete_from_cluster(
         distributed_installation, cfy, logger, distributed_ha_hello_worlds):
     verify_nodes_status(distributed_installation.instances[0], cfy, logger)
-    test_delete_manager_node(cfy, distributed_installation,
-                             distributed_ha_hello_worlds, logger)
+    set_active(distributed_installation.instances[1], cfy, logger)
+    expected_master = distributed_installation.instances[0]
+    for manager in distributed_installation.instances[1:]:
+        logger.info('Deleting manager %s', manager.ip_address)
+        manager.delete()
+        not_deleted_managers = [m for m in distributed_installation.instances
+                                if not m.deleted]
+        wait_leader_election(not_deleted_managers, logger)
+
+    logger.info('Expected leader %s', expected_master)
+    verify_nodes_status(expected_master, cfy, logger)
+    _test_hellos(distributed_ha_hello_worlds)
 
 
 @pytest.mark.parametrize('distributed_installation', [('cluster', 'sanity')],
@@ -273,7 +295,8 @@ def test_distributed_installation_sanity(distributed_installation,
     # Upload and restore snapshot to manager3
     logger.info('Uploading and restoring snapshot')
     upload_snapshot(manager_aio, local_snapshot_path, snapshot_id, logger)
-    restore_snapshot(manager_aio, snapshot_id, cfy, logger)
+    restore_snapshot(manager_aio, snapshot_id, cfy, logger,
+                     change_password=False)
     time.sleep(7)
     verify_services_status(manager_aio, logger)
 
@@ -339,7 +362,7 @@ def _set_test_user(cfy, manager, logger):
     cfy.profiles.set('-u', USER_NAME, '-p', USER_PASS, '-t', TENANT_NAME)
 
 
-def toggle_cluster_node(manager, logger, disable=True):
+def toggle_cluster_node(manager, service, logger, disable=True):
     """
     Disable or enable a manager to avoid it from being picked as the leader
     during tests
@@ -347,12 +370,79 @@ def toggle_cluster_node(manager, logger, disable=True):
     action_msg, action = \
         ("Shutting down", 'stop') if disable else ("Starting", 'start')
     with manager.ssh() as fabric:
-        logger.info('{0} nginx service on manager {1}'.format(
-            action_msg, manager.ip_address))
-        fabric.run('sudo systemctl {0} nginx'.format(action))
+        logger.info('{0} {1} service on manager {2}'.format(
+            action_msg, service, manager.ip_address))
+        fabric.run('sudo systemctl {0} {1}'.format(action, service))
 
 
 def reverse_cluster_test(cfy, cluster_machines, logger):
     for manager in cluster_machines.instances:
-        toggle_cluster_node(manager, logger, disable=False)
+        toggle_cluster_node(manager, 'nginx', logger, disable=False)
     set_active(cluster_machines.instances[0], cfy, logger)
+
+
+def failover_cluster(cfy, distributed_installation,
+                     distributed_ha_hello_worlds, logger):
+    """Test that the cluster fails over in case of a service failure
+
+    - stop nginx on leader
+    - check that a new leader is elected
+    - stop mgmtworker on that new leader, and restart nginx on the former
+    - check that the original leader was elected
+    """
+    expected_master = distributed_installation.instances[-1]
+    # stop nginx on all nodes except last - force choosing the last as the
+    # leader (because only the last one has services running)
+    for manager in distributed_installation.instances[:-1]:
+        logger.info('Simulating manager %s failure by stopping'
+                    ' nginx service', manager.ip_address)
+        toggle_cluster_node(manager, 'nginx', logger)
+        # wait for checks to notice the service failure
+        wait_leader_election(distributed_installation.instances, logger,
+                             wait_before_check=20)
+        cfy.cluster.nodes.list()
+
+    verify_nodes_status(expected_master, cfy, logger)
+
+    new_expected_master = distributed_installation.instances[0]
+    # force going back to the original leader - start nginx on it, and
+    # stop mgmtworker on the current leader (simulating failure)
+    toggle_cluster_node(new_expected_master, 'nginx', logger, disable=False)
+    logger.info('Simulating manager %s failure by stopping '
+                'cloudify-mgmtworker service',
+                expected_master.ip_address)
+    toggle_cluster_node(expected_master, 'cloudify-mgmtworker', logger,
+                        disable=True)
+
+    # wait for checks to notice the service failure
+    wait_leader_election(distributed_installation.instances, logger,
+                         wait_before_check=20)
+    cfy.cluster.nodes.list()
+
+    verify_nodes_status(new_expected_master, cfy, logger)
+
+    _test_hellos(distributed_ha_hello_worlds)
+
+
+def fail_and_recover_cluster(distributed_installation, logger):
+    def _iptables(manager, block_nodes, flag='-A'):
+        with manager.ssh() as _fabric:
+            for other_host in block_nodes:
+                _fabric.sudo('iptables {0} INPUT -s {1} -j DROP'
+                             .format(flag, other_host.private_ip_address))
+                _fabric.sudo('iptables {0} OUTPUT -d {1} -j DROP'
+                             .format(flag, other_host.private_ip_address))
+        fabric.network.disconnect_all()
+
+    original_master = distributed_installation.instances[0]
+
+    logger.info('Simulating network failure that isolates the master')
+    _iptables(original_master, distributed_installation.instances[1:])
+
+    wait_leader_election(distributed_installation.instances[1:], logger)
+
+    logger.info('End of simulated network failure')
+    _iptables(original_master, distributed_installation.instances[1:],
+              flag='-D')
+
+    wait_nodes_online(distributed_installation.instances, logger)
