@@ -58,6 +58,7 @@ def manager(request, cfy, ssh_key, module_tmpdir, attributes, logger):
     hosts.preconfigure_callback = _preconfigure_callback
     try:
         hosts.create()
+        hosts.instances[0].use()
         yield hosts.instances[0]
     finally:
         hosts.destroy()
