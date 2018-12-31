@@ -616,7 +616,7 @@ def _assert_cli_results(results, expected, sort_key):
 def test_cli_blueprints_summary(prepared_manager, cfy):
     prepared_manager.use()
     results = json.loads(
-        cfy.summary.blueprints('visibility', '--json').stdout
+        cfy.blueprints.summary('visibility', '--json').stdout
     )
     expected = [{"blueprints": 3, "visibility": "tenant"}]
     _assert_cli_results(results, expected, 'visibility')
@@ -625,7 +625,7 @@ def test_cli_blueprints_summary(prepared_manager, cfy):
 def test_cli_blueprints_summary_subfield(prepared_manager, cfy):
     prepared_manager.use()
     results = json.loads(
-        cfy.summary.blueprints(
+        cfy.blueprints.summary(
             'tenant_name', 'visibility', '--json', '--all-tenants',
         ).stdout
     )
@@ -653,7 +653,7 @@ def test_cli_blueprints_summary_subfield_non_json(prepared_manager, cfy):
         place of the None used in the json output).
     """
     prepared_manager.use()
-    results = cfy.summary.blueprints(
+    results = cfy.blueprints.summary(
         'tenant_name', 'visibility', '--all-tenants',
     ).stdout
     assert 'TOTAL' in results
@@ -662,7 +662,7 @@ def test_cli_blueprints_summary_subfield_non_json(prepared_manager, cfy):
 def test_cli_deployments_summary(prepared_manager, cfy):
     prepared_manager.use()
     results = json.loads(
-        cfy.summary.deployments('blueprint_id', '--json').stdout
+        cfy.deployments.summary('blueprint_id', '--json').stdout
     )
     expected = [
         {"deployments": 2, "blueprint_id": "small"},
@@ -675,7 +675,7 @@ def test_cli_deployments_summary(prepared_manager, cfy):
 def test_cli_deployments_summary_subfield(prepared_manager, cfy):
     prepared_manager.use()
     results = json.loads(
-        cfy.summary.deployments(
+        cfy.deployments.summary(
             'tenant_name', 'blueprint_id', '--json', '--all-tenants',
         ).stdout
     )
@@ -715,7 +715,7 @@ def test_cli_deployments_summary_subfield_non_json(prepared_manager, cfy):
         place of the None used in the json output).
     """
     prepared_manager.use()
-    results = cfy.summary.deployments(
+    results = cfy.deployments.summary(
         'tenant_name', 'blueprint_id', '--all-tenants',
     ).stdout
     assert 'TOTAL' in results
@@ -724,7 +724,7 @@ def test_cli_deployments_summary_subfield_non_json(prepared_manager, cfy):
 def test_cli_executions_summary(prepared_manager, cfy):
     prepared_manager.use()
     results = json.loads(
-        cfy.summary.executions('workflow_id', '--json').stdout
+        cfy.executions.summary('workflow_id', '--json').stdout
     )
     expected = [
         {"workflow_id": "create_deployment_environment", "executions": 6},
@@ -736,7 +736,7 @@ def test_cli_executions_summary(prepared_manager, cfy):
 def test_cli_executions_summary_subfield(prepared_manager, cfy):
     prepared_manager.use()
     results = json.loads(
-        cfy.summary.executions(
+        cfy.executions.summary(
             'tenant_name', 'workflow_id', '--json', '--all-tenants',
         ).stdout
     )
@@ -770,7 +770,7 @@ def test_cli_executions_summary_subfield_non_json(prepared_manager, cfy):
         place of the None used in the json output).
     """
     prepared_manager.use()
-    results = cfy.summary.executions(
+    results = cfy.executions.summary(
         'tenant_name', 'workflow_id', '--all-tenants',
     ).stdout
     assert 'TOTAL' in results
@@ -779,7 +779,7 @@ def test_cli_executions_summary_subfield_non_json(prepared_manager, cfy):
 def test_cli_nodes_summary(prepared_manager, cfy):
     prepared_manager.use()
     results = json.loads(
-        cfy.summary.nodes('deployment_id', '--json').stdout
+        cfy.nodes.summary('deployment_id', '--json').stdout
     )
     expected = [
         {"deployment_id": "small1", "nodes": 1},
@@ -795,7 +795,7 @@ def test_cli_nodes_summary(prepared_manager, cfy):
 def test_cli_nodes_summary_subfield(prepared_manager, cfy):
     prepared_manager.use()
     results = json.loads(
-        cfy.summary.nodes(
+        cfy.nodes.summary(
             'tenant_name', 'deployment_id', '--json', '--all-tenants',
         ).stdout
     )
@@ -853,7 +853,7 @@ def test_cli_nodes_summary_subfield_non_json(prepared_manager, cfy):
         place of the None used in the json output).
     """
     prepared_manager.use()
-    results = cfy.summary.nodes(
+    results = cfy.nodes.summary(
         'tenant_name', 'deployment_id', '--all-tenants',
     ).stdout
     assert 'TOTAL' in results
@@ -862,7 +862,7 @@ def test_cli_nodes_summary_subfield_non_json(prepared_manager, cfy):
 def test_cli_node_instances_summary(prepared_manager, cfy):
     prepared_manager.use()
     results = json.loads(
-        cfy.summary.node_instances('node_id', '--json').stdout
+        cfy.node_instances.summary('node_id', '--json').stdout
     )
     expected = [
         {"node_id": "fakeapp1", "node_instances": 6},
@@ -877,7 +877,7 @@ def test_cli_node_instances_summary(prepared_manager, cfy):
 def test_cli_node_instances_summary_subfield(prepared_manager, cfy):
     prepared_manager.use()
     results = json.loads(
-        cfy.summary.node_instances(
+        cfy.node_instances.summary(
             'tenant_name', 'node_id', '--json', '--all-tenants',
         ).stdout
     )
@@ -929,7 +929,7 @@ def test_cli_node_instances_summary_subfield_non_json(prepared_manager, cfy):
         place of the None used in the json output).
     """
     prepared_manager.use()
-    results = cfy.summary.node_instances(
+    results = cfy.node_instances.summary(
         'tenant_name', 'node_id', '--all-tenants',
     ).stdout
     assert 'TOTAL' in results
