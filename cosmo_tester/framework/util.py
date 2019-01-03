@@ -137,7 +137,7 @@ def sh_bake(command):
 
 
 def pass_stdout(line, input_queue, process):
-    output = line.encode(process.call_args['encoding'])
+    output = line.encode(process.call_args['encoding'], 'replace')
     process._stdout.append(output)
     sys.stdout.write(output)
 
