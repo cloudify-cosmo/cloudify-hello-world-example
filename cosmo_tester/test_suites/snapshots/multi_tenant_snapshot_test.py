@@ -109,7 +109,7 @@ def test_restore_snapshot_and_agents_upgrade_multitenant(
 
     restore_snapshot(new_manager, SNAPSHOT_ID, cfy, logger,
                      wait_for_post_restore_commands=False,
-                     change_password=should_change_pswd)
+                     change_manager_password=should_change_pswd)
 
     if manager_supports_users_in_snapshot_creation(old_manager):
         update_credentials(cfy, logger, new_manager)

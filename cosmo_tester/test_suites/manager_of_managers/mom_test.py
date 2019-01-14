@@ -17,7 +17,6 @@ import pytest
 
 from cosmo_tester.framework import util
 from cosmo_tester.framework.test_hosts import TestHosts
-
 from cosmo_tester.test_suites.snapshots import restore_snapshot
 
 from . import constants
@@ -227,7 +226,6 @@ def test_tier_2_upgrade(floating_ip_2_tier_1_clusters, tier_2_manager,
     tier_2_manager.use()
 
     _upload_resources_to_tier_2_manager(cfy, tier_2_manager, logger)
-
     cfy.snapshots.upload([local_snapshot_path, '-s', constants.TIER_2_SNAP_ID])
     restore_snapshot(tier_2_manager, constants.TIER_2_SNAP_ID, cfy, logger,
                      restore_certificates=True)
@@ -245,9 +243,15 @@ def teardown_module():
     of a Tier 2 manager, as well as the Floating IP Tier 1 cluster, no matter
     whether we run a single test or a whole module.
     """
-    if floating_ip_clusters:
-        for cluster in floating_ip_clusters:
-            cluster.cleanup()
 
+    # Destroy all floating ip clusters
+    for cluster in floating_ip_clusters:
+        cluster.cleanup()
+
+    # Destroy all fixed ip clusters
+    for cluster in fixed_ip_clusters:
+        cluster.cleanup()
+
+    # Destroy Tier 2 manager as a final step
     if tier_2_hosts:
         tier_2_hosts.destroy()

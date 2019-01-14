@@ -296,7 +296,7 @@ def test_distributed_installation_sanity(distributed_installation,
     logger.info('Uploading and restoring snapshot')
     upload_snapshot(manager_aio, local_snapshot_path, snapshot_id, logger)
     restore_snapshot(manager_aio, snapshot_id, cfy, logger,
-                     change_password=False)
+                     change_manager_password=False)
     time.sleep(7)
     verify_services_status(manager_aio, logger)
 
