@@ -190,17 +190,20 @@ def test_tier_1_cluster_inplace_upgrade(fixed_ip_2_tier_1_clusters):
     # same for both Tier 1 deployments
     first_cluster.deploy_and_validate()
 
-    # Install hello world deployment on Tier 1 cluster
+    # Install hello world deployment on Tier 1 first cluster
     first_cluster.execute_hello_world_workflow('install')
 
+    # Uninstall hello world deployment from Tier 1 first cluster
+    first_cluster.execute_hello_world_workflow('uninstall')
+
+    # Take a backup from the first cluster
     first_cluster.backup()
+
+    # Teardown the first cluster
     first_cluster.uninstall()
 
-    try:
-        second_cluster.deploy_and_validate()
-    finally:
-        # Uninstall hello world deployment from Tier 1 cluster
-        second_cluster.execute_hello_world_workflow('uninstall')
+    # Deploy & validate the second cluster
+    second_cluster.deploy_and_validate()
 
 
 @pytest.mark.skipif(util.is_redhat(),
