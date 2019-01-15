@@ -358,8 +358,11 @@ class _CloudifyManager(VM):
 
     @property
     def image_name(self):
-        return ATTRIBUTES['cloudify_manager_{}_image_name'.format(
+        image_name = ATTRIBUTES['cloudify_manager_{}_image_name'.format(
             self.branch_name.replace('.', '_'))]
+        if ATTRIBUTES['default_manager_distro'] == 'rhel':
+            image_name += '-rhel'
+        return image_name
 
     @property
     def api_version(self):
