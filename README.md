@@ -4,7 +4,7 @@
 
 This repository contains several Hello World Application Examples.
 
-If you're only now starting to work with Cloudify see our [Getting Started Guide](http://docs.getcloudify.org/latest/intro/getting-started/).
+If you're only now starting to work with Cloudify see our [Getting Started Guide](https://cloudify.co/getting-started/).
 
 This document will guide you how to run the examples step by step.
 
