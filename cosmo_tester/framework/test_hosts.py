@@ -344,10 +344,9 @@ class _CloudifyManager(VM):
         status = self.client.manager.get_status()
         for service in status['services']:
             for instance in service['instances']:
-                if instance['Id'] != 'manager-ip-setter':
-                    assert instance['SubState'] == 'running', \
-                        'service {0} is in {1} state'.format(
-                            service['display_name'], instance['SubState'])
+                assert instance['SubState'] == 'running', \
+                    'service {0} is in {1} state'.format(
+                        service['display_name'], instance['SubState'])
 
     @abstractproperty
     def branch_name(Self):
