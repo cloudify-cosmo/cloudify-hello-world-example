@@ -344,8 +344,12 @@ class _CloudifyManager(VM):
         status = self.client.manager.get_status()
         for service in status['services']:
             for instance in service['instances']:
-                if not (instance['Id'] == 'cloudify-stage.service' and
-                        not util.is_community()):
+                # TODO
+                # why stage is not verified?
+                # why community is not verified?
+                if not (instance['Id'] in ['cloudify-stage.service',
+                                           'manager-ip-setter']
+                        and not util.is_community()):
                     assert instance['SubState'] == 'running', \
                         'service {0} is in {1} state'.format(
                             service['display_name'], instance['SubState'])
