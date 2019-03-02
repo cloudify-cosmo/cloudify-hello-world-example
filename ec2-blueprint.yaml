@@ -7,7 +7,7 @@ description: >
 
 imports:
   - http://www.getcloudify.org/spec/cloudify/5.0.dev1/types.yaml
-  - plugin:cloudify-aws-plugin?version=1.4.10
+  - http://www.getcloudify.org/spec/aws-plugin/1.4.3/plugin.yaml
 
 inputs:
   webserver_port:
