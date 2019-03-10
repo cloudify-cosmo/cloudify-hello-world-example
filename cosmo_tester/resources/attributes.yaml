@@ -14,12 +14,12 @@ image_type: 'premium'
 
 # If the manager install rpm name is not set, the latest image name will be taken from
 # (cloudify-premium|cloudify-versions)/packages-urls/manager-install-rpm.yaml
-cloudify_manager_install_rpm_url: ''
+cloudify_manager_install_rpm_url: http://cloudify-release-eu.s3.amazonaws.com/cloudify/4.6.0/ga-build/4.6-build/cloudify-manager-install-4.6.0-ga.x86_64.rpm
 
 # If the latest image name is not set, the latest image name will be generated
 # based on the image name prefix and the currently installed CLI version
 # e.g. cloudify-manager-premium-4.2.dev1
-cloudify_manager_latest_image: ''
+cloudify_manager_latest_image: cloudify-manager-premium-4.6
 cloudify_manager_image_name_prefix: cloudify-manager-premium
 cloudify_manager_4_5_image_name: cloudify-manager-premium-4.5
 cloudify_manager_4_4_image_name: cloudify-manager-premium-4.4
@@ -37,11 +37,11 @@ cli_urls_override:
   debian_cli_package_url: null
   osx_cli_package_url: null
 
-default_manager_distro: rhel
-default_linux_username: cloud-user
-default_linux_image_name: rhel-server-7.5
-default_linux_image_id: c0ccd4fc-1521-4864-a7ff-ebe939c0a169
-default_openstack_plugin: openstack_redhat_maipo
+default_manager_distro: centos
+default_linux_username: centos
+default_linux_image_name: CentOS-7-x86_64-GenericCloud
+default_linux_image_id: 70de1e0f-2951-4eae-9a8f-05afd97cd036
+default_openstack_plugin: openstack_centos_core
 
 centos_7_username: centos
 centos_7_image_name: CentOS-7-x86_64-GenericCloud

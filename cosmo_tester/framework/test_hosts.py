@@ -37,7 +37,7 @@ from cloudify_cli.constants import DEFAULT_TENANT_NAME
 
 REMOTE_PRIVATE_KEY_PATH = '/etc/cloudify/key.pem'
 REMOTE_OPENSTACK_CONFIG_PATH = '/etc/cloudify/openstack_config.json'
-
+SANITY_MODE_FILE_PATH = '/opt/manager/sanity_mode'
 RSYNC_SCRIPT_URL = 'https://raw.githubusercontent.com/cloudify-cosmo/cloudify-dev/master/scripts/rsync.sh'  # NOQA
 
 MANAGER_API_VERSIONS = {
@@ -252,6 +252,27 @@ class _CloudifyManager(VM):
             ))
             fabric_ssh.sudo('chmod 440 {key_file}'.format(
                 key_file=REMOTE_PRIVATE_KEY_PATH,
+            ))
+            self._enter_sanity_mode()
+
+    def _enter_sanity_mode(self):
+        """
+        Test Managers should be in sanity mode to skip Cloudify license
+        validations.
+        :return:
+        """
+        with self.ssh() as fabric_ssh:
+
+            fabric_ssh.sudo('mkdir -p "{}"'.format(
+                os.path.dirname(SANITY_MODE_FILE_PATH)))
+
+            fabric_ssh.sudo('echo sanity >> "{0}"'.format(
+                SANITY_MODE_FILE_PATH))
+            fabric_ssh.sudo('chown cfyuser:cfyuser {sanity_mode}'.format(
+                sanity_mode=SANITY_MODE_FILE_PATH,
+            ))
+            fabric_ssh.sudo('chmod 440 {sanity_mode}'.format(
+                sanity_mode=SANITY_MODE_FILE_PATH,
             ))
 
     def upload_plugin(self, plugin_name, tenant_name=DEFAULT_TENANT_NAME):

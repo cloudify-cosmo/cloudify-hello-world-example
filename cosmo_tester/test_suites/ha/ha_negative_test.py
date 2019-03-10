@@ -121,11 +121,11 @@ def test_remove_from_cluster_and_use_negative(cfy, hosts, logger):
     # we've tested the CLI, but let's check rejoin using the rest-client
     # directly. No need to retry because we already waited.
     with pytest.raises(Exception) as exinfo:
-                manager2.client.cluster.join(
-                    host_ip=manager2.private_ip_address,
-                    node_name=manager2.private_ip_address,
-                    join_addrs=[manager1.private_ip_address],
-                    credentials={})
+        manager2.client.cluster.join(
+            host_ip=manager2.private_ip_address,
+            node_name=manager2.private_ip_address,
+            join_addrs=[manager1.private_ip_address],
+            credentials={})
     assert 'This node was removed from the Cloudify Manager cluster' in \
         exinfo.value.message
 
