@@ -152,7 +152,10 @@ resource "openstack_compute_instance_v2" "manager_server" {
       "echo Setting permissions for private key file: ${var.remote_key_path}",
       "sudo cp /tmp/key.pem ${var.remote_key_path}",
       "sudo chown cfyuser: ${var.remote_key_path}",
-      "sudo chmod 400 ${var.remote_key_path}"
+      "sudo chmod 400 ${var.remote_key_path}",
+      "sudo touch /opt/manager/sanity_mode",
+      "sudo chown cfyuser:cfyuser /opt/manager/sanity_mode",
+      "sudo chmod 440 /opt/manager/sanity_mode"
     ]
   }
 
