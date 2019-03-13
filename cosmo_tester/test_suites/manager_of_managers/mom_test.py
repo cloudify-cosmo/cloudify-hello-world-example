@@ -227,7 +227,6 @@ def test_tier_2_upgrade(floating_ip_2_tier_1_clusters, tier_2_manager,
     tier_2_manager.teardown()
     tier_2_manager.bootstrap()
     tier_2_manager.use()
-
     _upload_resources_to_tier_2_manager(cfy, tier_2_manager, logger)
     cfy.snapshots.upload([local_snapshot_path, '-s', constants.TIER_2_SNAP_ID])
     restore_snapshot(tier_2_manager, constants.TIER_2_SNAP_ID, cfy, logger,

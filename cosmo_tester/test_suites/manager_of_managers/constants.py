@@ -76,6 +76,11 @@ sudo chown cfyuser: {ssh_key_path}
 echo "Moving the OS config..."
 sudo cp {tmp_os_config_path} {os_config_path}
 sudo chown cfyuser: {os_config_path}
+
+echo "Entering sanity mode..."
+sudo touch /opt/manager/sanity_mode
+sudo chown cfyuser:cfyuser /opt/manager/sanity_mode
+sudo chmod 440 /opt/manager/sanity_mode
 '''.format(
     tmp_ssh_key_path=SSH_KEY_TMP_PATH,
     ssh_key_path=REMOTE_PRIVATE_KEY_PATH,

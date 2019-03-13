@@ -170,7 +170,6 @@ def test_distributed_installation_scenario(distributed_installation,
                                            attributes,
                                            distributed_nodecellar):
     manager = distributed_installation.manager
-
     _set_admin_user(cfy, manager, logger)
 
     # Creating secrets

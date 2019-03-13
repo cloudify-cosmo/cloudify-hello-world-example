@@ -253,9 +253,9 @@ class _CloudifyManager(VM):
             fabric_ssh.sudo('chmod 440 {key_file}'.format(
                 key_file=REMOTE_PRIVATE_KEY_PATH,
             ))
-            self._enter_sanity_mode()
+            self.enter_sanity_mode()
 
-    def _enter_sanity_mode(self):
+    def enter_sanity_mode(self):
         """
         Test Managers should be in sanity mode to skip Cloudify license
         validations.
@@ -452,7 +452,7 @@ class _CloudifyManager(VM):
         config_file.write_text(install_config_str)
         return config_file
 
-    def bootstrap(self):
+    def bootstrap(self, db=False):
         manager_install_rpm = \
             ATTRIBUTES.cloudify_manager_install_rpm_url.strip() or \
             util.get_manager_install_rpm_url()
@@ -472,6 +472,8 @@ class _CloudifyManager(VM):
                 '/etc/cloudify/config.yaml'
             )
             fabric_ssh.run('cfy_manager install')
+        if not db:
+            self.enter_sanity_mode()
 
     def _create_openstack_config_file(self):
         openstack_config_file = self._tmpdir / 'openstack_config.json'
@@ -873,7 +875,6 @@ class TestHosts(object):
 
             for instance in self.instances:
                 instance.verify_services_are_running()
-
                 instance.upload_necessary_files()
                 if instance.upload_plugins:
                     instance.upload_plugin(
@@ -1151,7 +1152,7 @@ class DistributedInstallationCloudifyManager(TestHosts):
         super(DistributedInstallationCloudifyManager, self).\
             _bootstrap_managers()
         self._create_ssl_certificates_on_instances()
-        self.database.bootstrap()
+        self.database.bootstrap(db=True)
         self.manager.bootstrap()
         if self.cluster:
             self.manager.use()
