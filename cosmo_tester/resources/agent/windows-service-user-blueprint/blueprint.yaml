@@ -1,17 +1,15 @@
 tosca_definitions_version: cloudify_dsl_1_3
 
 imports:
-  - http://www.getcloudify.org/spec/cloudify/4.6/types.yaml
+  - http://www.getcloudify.org/spec/cloudify/5.0.dev1/types.yaml
   - http://www.getcloudify.org/spec/openstack-plugin/2.0.1/plugin.yaml
 
 plugins:
-
   mock:
     source: mock-plugin
     executor: host_agent
 
 inputs:
-
   image:
     description: >
       Image to be used when launching agent VM's
@@ -30,75 +28,81 @@ inputs:
   keypair_name:
     description: >
       The OpenStack keypair name to associate with the VM.
-  name:
-    default: ''
-  file_path:
-    type: string
-  userdata:
-    type: string
   install_method:
     type: string
-  os_family:
+  service_user:
+    type: string
+  service_password:
     type: string
 
+dsl_definitions:
+  - &service_info
+    service_user: { get_input: service_user }
+    service_password: { get_input: service_password }
 
 node_templates:
-
   security_group:
     type: cloudify.openstack.nodes.SecurityGroup
     properties:
       rules:
-        - port: 22
+        - port: 5985
           remote_ip_prefix: 0.0.0.0/0
 
+  keypair:
+    type: cloudify.openstack.nodes.KeyPair
+    properties:
+      use_external_resource: true
+      resource_id: { get_input: keypair_name }
+      private_key_path: { get_input: private_key_path }
+
+  userdata_initializer:
+    type: cloudify.nodes.Root
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create:
+          implementation: mock.mock_plugin.tasks.prepare_userdata
+          executor: central_deployment_agent
+          inputs:
+            <<: *service_info
+            install_method: { get_input: install_method }
+
   host:
-    type: cloudify.openstack.nodes.Server
+    type: cloudify.openstack.nodes.WindowsServer
     properties:
       image: { get_input: image }
       flavor: { get_input: flavor }
-      os_family: { get_input: os_family }
-      management_network_name: { get_input: network_name }
       agent_config:
         install_method: { get_input: install_method }
         user: { get_input: user }
         key: { get_input: private_key_path }
-        env:
-          MY_ENV_VAR: MY_ENV_VAR_VALUE
-        extra:
-          name: { get_input: name }
+        process_management: *service_info
+      management_network_name: { get_input: network_name }
       server:
-        userdata: { get_input: userdata }
+        userdata: { get_attribute: [ userdata_initializer, userdata] }
     interfaces:
-      cloudify.interfaces.cloudify_agent:
-        start:
-          max_retries: 50
       cloudify.interfaces.lifecycle:
         create:
           inputs:
             args:
               security_groups: [{ get_attribute: [ security_group, external_name ]}]
-              key_name: { get_input: keypair_name }
+        start:
+          inputs:
+            max_retries: 50
     relationships:
+      - type: cloudify.relationships.depends_on
+        target: userdata_initializer
+      - type: cloudify.openstack.server_connected_to_keypair
+        target: keypair
       - type: cloudify.openstack.server_connected_to_security_group
         target: security_group
 
-
-  application:
-    type: cloudify.nodes.ApplicationModule
-
+  test_app:
+    type: cloudify.nodes.Root
     interfaces:
-      cloudify.interfaces.lifecycle:
-        create:
-          implementation: mock.mock_plugin.tasks.run
-          inputs:
-            file_path: { get_input: file_path }
-
+      test.interface:
+        test:
+          implementation: mock.mock_plugin.tasks.test_app
+          inputs: *service_info
     relationships:
       - type: cloudify.relationships.contained_in
         target: host
-
-outputs:
-  MY_ENV_VAR:
-    value: { get_attribute: [application, MY_ENV_VAR] }
-  file_content:
-    value: { get_attribute: [application, file_content] }

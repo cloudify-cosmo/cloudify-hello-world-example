@@ -1,4 +1,5 @@
 #ps1_sysnative
+$PSDefaultParameterValues['*:Encoding'] = 'utf8'
 
 Write-Host "## Configuring WinRM and firewall rules.."
 winrm quickconfig -q

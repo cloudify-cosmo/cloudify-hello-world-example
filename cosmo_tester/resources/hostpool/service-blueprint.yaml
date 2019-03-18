@@ -150,6 +150,7 @@ node_templates:
       server:
         userdata: |
           #ps1_sysnative
+          $PSDefaultParameterValues['*:Encoding'] = 'utf8'
           winrm quickconfig -q
           winrm set winrm/config              '@{MaxTimeoutms="1800000"}'
           winrm set winrm/config/winrs        '@{MaxMemoryPerShellMB="300"}'

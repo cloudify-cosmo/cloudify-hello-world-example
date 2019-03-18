@@ -63,3 +63,7 @@ suite-envs/
 
 # pytest
 .cache/
+
+# When running system tests locally, this directory is created.
+.cloudify/
+

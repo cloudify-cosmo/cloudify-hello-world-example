@@ -169,8 +169,8 @@ def test_windows_userdata_agent(cfy,
                                 tenant=None):
     user = attributes.windows_2012_username
     file_path = 'C:\\Users\\{0}\\test_file'.format(user)
-    userdata = '#ps1_sysnative \nSet-Content {1} "{0}"'.format(
-        EXPECTED_FILE_CONTENT, file_path)
+    userdata = '#ps1_sysnative\n' \
+               'Set-Content {1} "{0}"'.format(EXPECTED_FILE_CONTENT, file_path)
     if install_userdata:
         userdata = create_multi_mimetype_userdata([userdata,
                                                    install_userdata])
@@ -202,6 +202,117 @@ def test_windows_userdata_agent(cfy,
         'network_name': attributes.network_name
     }
     _test_userdata_agent(cfy, manager, inputs, tenant)
+
+
+def test_windows_with_service_user_winrm(
+        cfy,
+        manager,
+        attributes,
+        os_name='windows_2012',
+        tenant=None):
+    _test_windows_with_service_user(
+        cfy, manager, attributes, 'remote', os_name, tenant,
+        'winrm_service_user')
+
+
+def test_windows_with_service_user_init_script(
+        cfy,
+        manager,
+        attributes,
+        os_name='windows_2012',
+        tenant=None):
+    _test_windows_with_service_user(
+        cfy, manager, attributes, 'init_script', os_name, tenant,
+        'initscript_service_user')
+
+
+def _test_windows_with_service_user(
+        cfy,
+        manager,
+        attributes,
+        install_method,
+        os_name,
+        tenant,
+        deployment_id_prefix):
+    _test_windows_common(
+        cfy, manager, attributes,
+        'agent/windows-service-user-blueprint/blueprint.yaml',
+        {
+            'service_user': '.\\testuser',
+            'service_password': 'syvcASdn3a$q1',
+            'install_method': install_method
+        },
+        os_name, tenant, deployment_id_prefix)
+
+
+def test_windows_winrm(
+        cfy,
+        manager,
+        attributes,
+        os_name='windows_2012',
+        tenant=None):
+    _test_windows_common(
+        cfy, manager, attributes,
+        'agent/winrm-agent-blueprint/winrm-agent-blueprint.yaml',
+        None,
+        os_name, tenant, 'winrm')
+
+
+def _test_windows_common(
+        cfy,
+        manager,
+        attributes,
+        blueprint_path,
+        inputs,
+        os_name,
+        tenant,
+        deployment_id_prefix):
+    user = attributes.windows_2012_username
+    if not tenant:
+        tenant = prepare_and_get_test_tenant(
+            '{0}_{1}'.format(deployment_id_prefix, os_name),
+            manager,
+            cfy
+        )
+
+    effective_inputs = {
+        'image': attributes.windows_2012_image_name,
+        'flavor': attributes.medium_flavor_name,
+        'user': user,
+        'network_name': attributes.network_name,
+        'private_key_path': manager.remote_private_key_path,
+        'keypair_name': attributes.keypair_name,
+    }
+
+    if inputs:
+        effective_inputs.update(inputs)
+
+    blueprint_id = deployment_id = '{0}_{1}'.format(
+        deployment_id_prefix, time.time())
+    blueprint_path = util.get_resource_path(blueprint_path)
+
+    with set_client_tenant(manager, tenant):
+        manager.client.blueprints.upload(blueprint_path, blueprint_id)
+        manager.client.deployments.create(
+            deployment_id,
+            blueprint_id,
+            inputs=effective_inputs,
+            skip_plugins_validation=True)
+
+    cfy.executions.start.install(['-d', deployment_id,
+                                  '--tenant-name', tenant])
+
+    try:
+        cfy.executions.start.execute_operation(
+            deployment_id=deployment_id,
+            parameters={
+                'operation': 'test.interface.test',
+                'node_ids': ['test_app']
+            },
+            tenant_name=tenant)
+    finally:
+        cfy.executions.start.uninstall(['-d', deployment_id,
+                                        '--tenant-name', tenant])
 
 
 def _test_agent(agent_type, cfy, manager, attributes):

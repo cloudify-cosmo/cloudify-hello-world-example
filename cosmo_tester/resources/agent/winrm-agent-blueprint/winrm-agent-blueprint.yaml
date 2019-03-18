@@ -28,9 +28,16 @@ inputs:
   keypair_name:
     description: >
       The OpenStack keypair name to associate with the VM.
+  service_user:
+    type: string
+    default: ''
+    description: >
+      User to register the service with. If blank, then it's registered under LOCALSYSTEM.
+  service_password:
+    type: string
+    default: ''
 
 node_templates:
-
   security_group:
     type: cloudify.openstack.nodes.SecurityGroup
     properties:
@@ -52,19 +59,18 @@ node_templates:
       flavor: { get_input: flavor }
       agent_config:
         user: { get_input: user }
-        port: 5985
         key: { get_input: private_key_path }
       management_network_name: { get_input: network_name }
       server:
         userdata: |
           #ps1_sysnative
+          $PSDefaultParameterValues['*:Encoding'] = 'utf8'
           winrm quickconfig -q
           winrm set winrm/config              '@{MaxTimeoutms="1800000"}'
           winrm set winrm/config/winrs        '@{MaxMemoryPerShellMB="300"}'
           winrm set winrm/config/service      '@{AllowUnencrypted="true"}'
           winrm set winrm/config/service/auth '@{Basic="true"}'
           &netsh advfirewall firewall add rule name="WinRM 5985" protocol=TCP dir=in localport=5985 action=allow
-          &netsh advfirewall firewall add rule name="WinRM 5986" protocol=TCP dir=in localport=5986 action=allow
     interfaces:
       cloudify.interfaces.lifecycle:
         create:
@@ -74,19 +80,18 @@ node_templates:
         start:
           inputs:
             max_retries: 50
-      cloudify.interfaces.reboot_test:
-        reboot: openstack.nova_plugin.reboot.reboot
     relationships:
       - type: cloudify.openstack.server_connected_to_keypair
         target: keypair
       - type: cloudify.openstack.server_connected_to_security_group
         target: security_group
 
-  application:
+  test_app:
     type: cloudify.nodes.Root
     interfaces:
-      cloudify.interfaces.lifecycle:
-        create: mock.mock_plugin.tasks.run
+      test.interface:
+        test:
+          implementation: mock.mock_plugin.tasks.test_app
     relationships:
       - type: cloudify.relationships.contained_in
         target: host

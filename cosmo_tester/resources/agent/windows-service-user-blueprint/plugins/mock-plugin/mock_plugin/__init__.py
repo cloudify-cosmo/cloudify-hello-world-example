@@ -12,10 +12,3 @@
 #  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  * See the License for the specific language governing permissions and
 #  * limitations under the License.
-
-from cloudify.decorators import operation
-
-
-@operation
-def test_app(ctx, **_):
-    ctx.logger.info("Test worked")
