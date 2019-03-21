@@ -752,7 +752,7 @@ def hosts(
                 'cd /tmp && '
                 'mkdir patch && '
                 'cd patch && '
-                'wget http://repository.cloudifysource.org/cloudify/4.0.1/patch3/cloudify-401-te-patch-3.tar.gz && '  # noqa
+                'wget http://repository.cloudifysource.org/cloudify/old-version/4.0.1/patch3/cloudify-401-te-patch-3.tar.gz && '  # noqa
                 'tar --strip-components=1 -xzf *.tar.gz && '
                 './apply-patch.sh'
             )
