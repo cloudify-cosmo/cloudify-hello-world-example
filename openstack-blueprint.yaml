@@ -7,7 +7,7 @@ description: >
 
 imports:
   - http://www.getcloudify.org/spec/cloudify/5.0.dev1/types.yaml
-  - http://www.getcloudify.org/spec/openstack-plugin/2.0.1/plugin.yaml
+  - plugin:cloudify-openstack-plugin
 
 inputs:
   webserver_port:
