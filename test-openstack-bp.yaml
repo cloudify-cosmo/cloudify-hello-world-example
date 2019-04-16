@@ -36,6 +36,8 @@ node_templates:
     properties:
       floatingip:
         floating_network_id: { get_input: floating_network_id }
+    interfaces:
+      cloudify.interfaces.validation: {}
 
   security_group:
     type: cloudify.openstack.nodes.SecurityGroup
@@ -45,6 +47,8 @@ node_templates:
           remote_ip_prefix: 0.0.0.0/0
         - port: 22
           remote_ip_prefix: 0.0.0.0/0
+    interfaces:
+      cloudify.interfaces.validation: {}
 
   keypair:
     type: cloudify.openstack.nodes.KeyPair
@@ -52,6 +56,8 @@ node_templates:
       use_external_resource: true
       resource_id: { get_input: key_pair_name }
       private_key_path: { get_input: private_key_path }
+    interfaces:
+      cloudify.interfaces.validation: {}
 
   vm:
     type: cloudify.openstack.nodes.Server
@@ -75,6 +81,7 @@ node_templates:
           inputs:
             args:
               security_groups: [{ get_attribute: [ security_group, external_name ]}]
+      cloudify.interfaces.validation: {}
 
   http_web_server:
     type: cloudify.nodes.WebServer
