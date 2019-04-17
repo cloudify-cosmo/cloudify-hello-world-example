@@ -32,7 +32,7 @@ from . import ha_helper
 pytestmark = skip_community
 
 
-@pytest.fixture(scope='function', params=[2])
+@pytest.fixture(scope='function', params=[3])
 def hosts(
         request, cfy, ssh_key, module_tmpdir, attributes, logger):
     """Creates a HA cluster from an image in rackspace OpenStack."""
