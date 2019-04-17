@@ -197,7 +197,7 @@ class VM(object):
 
     image_name = ATTRIBUTES['default_linux_image_name']
     username = ATTRIBUTES['default_linux_username']
-    branch_name = 'master'
+    branch_name = '4.6-build'
 
 
 class _CloudifyManager(VM):
@@ -686,7 +686,7 @@ class Cloudify4_5Manager(_CloudifyManager):
 
 
 class CloudifyMasterManager(_CloudifyManager):
-    branch_name = 'master'
+    branch_name = '4.6-build'
     image_name_attribute = 'cloudify_manager_image_name_prefix'
 
     image_name = get_latest_manager_image_name()
@@ -740,7 +740,7 @@ class CloudifyMasterManager(_CloudifyManager):
 
 
 class CloudifyDistributed_Manager(_CloudifyManager):
-    branch_name = 'master'
+    branch_name = '4.6-build'
     image_name_attribute = 'cloudify_manager_image_name_prefix'
 
     image_name = get_latest_manager_image_name()
