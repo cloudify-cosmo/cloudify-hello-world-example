@@ -7,7 +7,7 @@ description: >
 
 imports:
   - http://www.getcloudify.org/spec/cloudify/5.0.0.dev1/types.yaml
-  - plugin:cloudify-openstack-plugin?version=2.0.1
+  - plugin:cloudify-openstack-plugin
 
 inputs:
   webserver_port:
@@ -41,6 +41,8 @@ node_templates:
         target: virtual_ip
       - type: cloudify.openstack.server_connected_to_security_group
         target: security_group
+    interfaces:
+      cloudify.interfaces.validation: {}
 
 http_web_server:
     type: cloudify.nodes.WebServer

@@ -59,6 +59,8 @@ node_templates:
     relationships:
     - type: cloudify.openstack.server_connected_to_port
       target: port
+    interfaces:
+      cloudify.interfaces.validation: {}
 
   port:
     type: cloudify.openstack.nodes.Port

@@ -75,6 +75,7 @@ node_templates:
           inputs:
             args:
               security_groups: [{ get_attribute: [ security_group, external_name ]}]
+      cloudify.interfaces.validation: {}
 
   http_web_server:
     type: cloudify.nodes.WebServer
