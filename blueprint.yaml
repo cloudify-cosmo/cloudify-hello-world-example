@@ -44,7 +44,7 @@ node_templates:
     interfaces:
       cloudify.interfaces.validation: {}
 
-http_web_server:
+  http_web_server:
     type: cloudify.nodes.WebServer
     properties:
       port: { get_input: webserver_port }
