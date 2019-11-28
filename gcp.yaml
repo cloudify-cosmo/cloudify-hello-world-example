@@ -95,6 +95,7 @@ node_templates:
     type: cloudify.gcp.nodes.Network
     properties:
       name: { get_input: network_name }
+      auto_subnets: false
       gcp_config: *gcp_config
 
 outputs:
