@@ -45,9 +45,9 @@ node_templates:
       agent_config:
         install_method: none
       resource_config:
+        ImageId: { get_attribute: [ ami, aws_resource_id ] }
+        InstanceType: t2.micro
         kwargs:
-          ImageId: { get_attribute: [ ami, aws_resource_id ] }
-          InstanceType: t2.micro
           UserData: { get_input: install_script }
     relationships:
     - type: cloudify.relationships.depends_on
@@ -72,9 +72,6 @@ node_templates:
   ip:
     type: cloudify.nodes.aws.ec2.ElasticIP
     properties:
-      resource_config:
-        kwargs:
-          Domain: 'vpc'
       client_config: *client_config
     relationships:
     - type: cloudify.relationships.depends_on
@@ -101,13 +98,12 @@ node_templates:
     properties:
       client_config: *client_config
       resource_config:
-        kwargs:
-          IpPermissions:
-          - IpProtocol: tcp
-            FromPort: 80
-            ToPort: 80
-            IpRanges:
-            - CidrIp: 0.0.0.0/0
+        IpPermissions:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          IpRanges:
+          - CidrIp: 0.0.0.0/0
     relationships:
     - type: cloudify.relationships.contained_in
       target: security_group
@@ -117,10 +113,9 @@ node_templates:
     properties:
       client_config: *client_config
       resource_config:
-        kwargs:
-          GroupName: CloudifyHelloWorldGroup
-          Description: Created by cloudify-hello-world-example.
-          VpcId: { get_attribute: [ vpc, aws_resource_id ] }
+        GroupName: CloudifyHelloWorldGroup
+        Description: Created by cloudify-hello-world-example.
+        VpcId: { get_attribute: [ vpc, aws_resource_id ] }
     relationships:
     - type: cloudify.relationships.depends_on
       target: vpc
@@ -156,9 +151,8 @@ node_templates:
     properties:
       client_config: *client_config
       resource_config:
-        kwargs:
-          CidrBlock: 10.10.4.0/24
-          AvailabilityZone: { get_input: availability_zone }
+        CidrBlock: 10.10.4.0/24
+        AvailabilityZone: { get_input: availability_zone }
     relationships:
     - type: cloudify.relationships.depends_on
       target: vpc
@@ -176,8 +170,7 @@ node_templates:
     properties:
       client_config: *client_config
       resource_config:
-        kwargs:
-          CidrBlock: 10.10.0.0/16
+        CidrBlock: 10.10.0.0/16
 
 outputs:
 
