@@ -33,6 +33,12 @@ inputs:
     description: A name for your new Openstack Subnet.
     default: cloudify-hello-world-subnet
 
+  keystone_insecure:
+    default: false
+
+  keystone_ca_cert:
+    default: ''
+
 dsl_definitions:
 
   openstack_config: &openstack_config
@@ -41,6 +47,8 @@ dsl_definitions:
     tenant_name: { get_secret: keystone_tenant_name }
     auth_url: { get_secret: keystone_url }
     region: { get_input: region }
+    insecure: { get_input: keystone_insecure }
+    ca_cert: { get_input: keystone_ca_cert }
 
 node_templates:
 
