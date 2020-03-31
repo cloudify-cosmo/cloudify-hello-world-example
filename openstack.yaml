@@ -38,9 +38,13 @@ dsl_definitions:
   openstack_config: &openstack_config
     username: { get_secret: keystone_username }
     password: { get_secret: keystone_password }
-    tenant_name: { get_secret: keystone_tenant_name }
+    # tenant_name: { get_secret: keystone_tenant_name }
     auth_url: { get_secret: keystone_url }
     region: { get_input: region }
+    insecure: true
+    user_domain_name: { get_secret: keystone_domain_name }
+    project_id: { get_secret: keystone_domain_id }
+
 
 node_templates:
 
