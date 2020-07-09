@@ -30,6 +30,9 @@ node_templates:
       agent_config:
         user: { get_input: agent_user }
         key: { get_input: agent_private_key_path }
+        process_management:
+          name: detach
+
   http_web_server:
     type: cloudify.nodes.WebServer
     properties:
