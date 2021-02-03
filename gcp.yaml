@@ -11,6 +11,10 @@ inputs:
     type: string
     description: The GCP region to deploy the application in, such as europe-west1.
 
+  zone:
+    type: string
+    description: The zone in the GCP region.
+
   network_name:
     type: string
     description: The name of your GCP Virtual Network.
@@ -46,7 +50,7 @@ dsl_definitions:
       private_key_id: { get_secret: gcp_private_key_id }
       private_key: { get_secret: gcp_private_key }
     project: { get_secret: gcp_project_id }
-    zone: { get_secret: gcp_zone }
+    zone: { get_input: zone }
 
 node_templates:
 
@@ -58,7 +62,7 @@ node_templates:
         install_method: none
       image_id: { get_input: image }
       instance_type: { get_input: instance_type }
-      zone: { get_secret: gcp_zone }
+      zone: { get_input: zone }
       external_ip: true
       startup_script:
         type: string
@@ -73,7 +77,7 @@ node_templates:
       gcp_config: *gcp_config
       allowed:
         tcp:
-          - 80
+          - !!int 80
       sources:
         - 0.0.0.0/0
     relationships:
