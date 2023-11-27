@@ -9,7 +9,7 @@ description: >
 
 
 imports:
-  - http://www.getcloudify.org/spec/cloudify/7.0.3.dev1/types.yaml
+  - http://www.getcloudify.org/spec/cloudify/7.0.3/types.yaml
   - plugin:cloudify-aws-plugin?version=1.4.10
 
 inputs:
