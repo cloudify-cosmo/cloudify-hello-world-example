@@ -11,14 +11,6 @@ This document will guide you how to run the examples step by step.
 ## Using the CLI
 
 ### Prepering the environment
-Download the example
-```shell
-curl -L https://github.com/cloudify-cosmo/cloudify-hello-world-example/archive/master.zip -o cloudify-hello-world-example.zip
-```
-Extract the example
-```shell
-unzip cloudify-hello-world-example.zip && cd cloudify-hello-world-example-master
-```
 Install Cloudify plugins
 ```shell
 cfy plugins bundle-upload
@@ -67,45 +59,35 @@ cfy secrets create keystone_url --secret-string <value>
          
 ### Running the example
 
+Replace information inside [] with actual values, without the []
 
 For **AWS**:
 
 ```shell
-cfy install aws.yaml -i aws_region_name=eu-central-1
+cfy install https://github.com/cloudify-cosmo/cloudify-hello-world-example/archive/master.zip -n aws.yaml -b hello-world-aws -i aws_region_name=[YOUR REGION]
 ```
 
 For **Azure**:
 
 ```shell
-cfy install azure.yaml -i location=eastus -i agent_password=OpenS3sVm3
+cfy install https://github.com/cloudify-cosmo/cloudify-hello-world-example/archive/master.zip -n aws.yaml -b hello-world-azure -i location=[YOUR REGION] -i agent_password=[YOUR AGENT PASSWORD]
 ```
 
 For **GCP**:
 
 ```shell
-cfy install gcp.yaml region=europe-west1
+cfy install https://github.com/cloudify-cosmo/cloudify-hello-world-example/archive/master.zip -n gcp.yaml -b hello-world-gcp region=[YOUR REGION]
 ```
 
 For **Openstack**:
 
 ```shell
-cfy install openstack.yaml \
-    -i region=RegionOne
-    -i external_network=external_network \
-    -i image=05bb3a46-ca32-4032-bedd-8d7ebd5c8100 \
-    -i flavor=4d798e17-3439-42e1-ad22-fb956ec22b54
+cfy install https://github.com/cloudify-cosmo/cloudify-hello-world-example/archive/master.zip -n openstack.yaml -b hello-world-openstack \
+    -i region=[YOUR REGION]
+    -i external_network=[YOUR NETWORK NAME] \
+    -i image=[YOUR IMAGE ID] \
+    -i flavor=[YOUR FLAVOR ID]
 ```
-
-Another **Openstack** example:
-
-```shell
-cfy install openstack.yaml \
-     -i region=RegionOne \
-     -i external_network_name=GATEWAY_NET \
-     -i image=e41430f7-9131-495b-927f-e7dc4b8994c8 \
-     -i flavor=2
-```
-
 
 ## Using the Web UI
 
